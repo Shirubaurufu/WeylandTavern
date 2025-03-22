@@ -1,8 +1,28 @@
 /* --- Weyland --- */
 
-#qr_container {
+#qr--settings .inline-drawer-content > *:not(#qr--editor) {
     display: none !important;
     visibility: hidden !important;
+}
+
+#qr--editor > *:not(.qr--head) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+.qr--head > *:not(.qr--actions) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+.qr--actions > *:not(#qr--set-import) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+#qr--set-import {
+    display: inline-flex !important;
+    visibility: visible !important;
 }
 
 #spoiler_free_desc_button {
