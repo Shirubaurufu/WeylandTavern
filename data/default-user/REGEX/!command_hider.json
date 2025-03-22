@@ -1,0 +1,18 @@
+{
+    "id": "81d94103-18cb-4a80-b111-d79f28b6459e",
+    "scriptName": "!Command Hider",
+    "findRegex": "(?<!\\S)![\\w]+",
+    "replaceString": "",
+    "trimStrings": [],
+    "placement": [
+        1,
+        2
+    ],
+    "disabled": true,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

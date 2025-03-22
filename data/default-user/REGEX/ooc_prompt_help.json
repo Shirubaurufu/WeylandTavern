@@ -1,0 +1,17 @@
+{
+    "id": "a956b471-0397-437e-96eb-5d7c3d3198a5",
+    "scriptName": "OOC Prompt Help",
+    "findRegex": "\\[CS\\]",
+    "replaceString": "<div style=\"text-align: center;\"><font size=\"7\"><strong>Custom Start</strong></font></div><br><br>__This is the custom start scenario prompt for {{char}}.__<br>__Sonnet is very good at custom starts, though the quality may vary for other models.__<br>__The ooc prompt has already been prepared.__<br>__Simply respond in parenthesis what you what for your custom scenario.__<br>__This can be as complex as you want, or as simple as: (Star Wars)__<br>__*These underlined instructions are invisible to the AI.*__",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

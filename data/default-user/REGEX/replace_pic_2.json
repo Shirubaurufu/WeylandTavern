@@ -1,0 +1,18 @@
+{
+    "id": "e0258378-af13-4f6f-8994-6ed00d6978a5",
+    "scriptName": "Replace Pic 2",
+    "findRegex": "\\[\\s*I(\\d{3})\\s*\\]",
+    "replaceString": "<div style=\"text-align: center;\"><img src=\"{{getglobalvar::$1}}\" height=\"500\"></div>",
+    "trimStrings": [],
+    "placement": [
+        1,
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

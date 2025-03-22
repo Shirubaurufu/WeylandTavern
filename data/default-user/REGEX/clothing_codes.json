@@ -1,0 +1,17 @@
+{
+    "id": "11184a13-3fae-4d78-89d6-6a2561b77250",
+    "scriptName": "Clothing Codes",
+    "findRegex": "\\[(O[1-5]|RC|LG|NK|XX)\\]",
+    "replaceString": "",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

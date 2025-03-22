@@ -1,0 +1,18 @@
+{
+    "id": "367d7121-1d5d-4ea6-86a1-07a82c564961",
+    "scriptName": "Sonnet Think",
+    "findRegex": "<think>[\\s\\S]*?</think>",
+    "replaceString": "",
+    "trimStrings": [],
+    "placement": [
+        1,
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

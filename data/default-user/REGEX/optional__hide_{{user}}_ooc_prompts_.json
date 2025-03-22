@@ -1,0 +1,18 @@
+{
+    "id": "690bfc8a-0549-490b-bd14-a63896ecb526",
+    "scriptName": "Optional: Hide {{user}} ooc prompts.",
+    "findRegex": "\\s*\\(ooc:.*?\\)\\s*",
+    "replaceString": "",
+    "trimStrings": [],
+    "placement": [
+        1,
+        2
+    ],
+    "disabled": true,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

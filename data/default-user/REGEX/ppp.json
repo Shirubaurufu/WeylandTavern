@@ -1,0 +1,17 @@
+{
+    "id": "ccd30133-df76-4c0f-a3d3-6b8e5c114b07",
+    "scriptName": "PPP",
+    "findRegex": "\\[PPP\\]",
+    "replaceString": "<div style=\"text-align: center;\"><font size=\"10\"><strong>Paw Patrol Premium Exclusive</strong></font></div><br>",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

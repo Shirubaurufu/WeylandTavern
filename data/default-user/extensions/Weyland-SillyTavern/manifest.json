@@ -1,0 +1,13 @@
+{
+    "display_name": "Weyland SillyTavern",
+    "description": "A university welcoming all demihumans of all varieties and boasting a large number of facilities to promote growth in its students.",
+    "loading_order": 9999,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "author": "FFFox",
+    "version": "1.0",
+    "license": "AGPL-3.0",
+    "homepage": "https://github.com/FFFox-ST-Manager/WeylandSillyTavern",
+    "auto_update": false
+}

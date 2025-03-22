@@ -1,0 +1,17 @@
+{
+    "id": "5af589be-c9f3-4942-a685-500a979035d5",
+    "scriptName": "Remove **",
+    "findRegex": "/\\*\\*/g",
+    "replaceString": "*",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": false,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

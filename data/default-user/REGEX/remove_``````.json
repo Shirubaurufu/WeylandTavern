@@ -1,0 +1,17 @@
+{
+    "id": "416bcd70-0997-4bbb-989d-fa0f78014344",
+    "scriptName": "Remove ``````",
+    "findRegex": "/\\`\\`\\`\\`\\`\\`/g",
+    "replaceString": "```",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": false,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

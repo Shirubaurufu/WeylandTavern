@@ -1,0 +1,17 @@
+{
+    "id": "02f4e4cc-c67b-4ff3-bee0-818572d37243",
+    "scriptName": "Remove ____",
+    "findRegex": "/\\_\\_\\_\\_/g",
+    "replaceString": "__",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

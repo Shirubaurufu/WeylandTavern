@@ -1,0 +1,17 @@
+{
+    "id": "5130868b-f639-4505-892d-05458454c8e0",
+    "scriptName": "Swap [ for ]",
+    "findRegex": "([.!?]|\\.{3})\\s*\\[\\s*$",
+    "replaceString": "$1]",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": false,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}

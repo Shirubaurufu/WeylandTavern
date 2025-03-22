@@ -1,0 +1,64 @@
+/* --- Weyland --- */
+
+#qr_container {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+#spoiler_free_desc_button {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+#completion_prompt_manager {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+.checkbox_label[for="spoiler_free_mode"] {
+    display: none !important;
+}
+
+.extension_block[data-name="/Weyland-SillyTavern"] {
+    display: none;
+}
+
+#groupAddMemberListToggle {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+#rm_button_create {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+div > span[data-i18n="You can add more"],
+div > button.open_characters_library,
+div > span[data-i18n="or;or_welcome"],
+div > button.external_import_button,
+div > span[data-i18n="from other websites"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+a[href="https://docs.sillytavern.app/usage/update/"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+div.textAlignCenter {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+#advanced_div {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+#showRawPrompt,
+#copyPromptToClipboard {
+    display: none !important;
+    visibility: hidden !important;
+}

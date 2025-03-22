@@ -1,0 +1,17 @@
+{
+    "id": "bbee265c-7c6d-414e-ac02-9396f6fba43f",
+    "scriptName": "Remove ]]",
+    "findRegex": "/\\]\\]/g",
+    "replaceString": "]",
+    "trimStrings": [],
+    "placement": [
+        2
+    ],
+    "disabled": false,
+    "markdownOnly": true,
+    "promptOnly": false,
+    "runOnEdit": true,
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null
+}
