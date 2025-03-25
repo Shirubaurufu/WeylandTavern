@@ -41,7 +41,9 @@
     "main_api": "openai",
     "world_info_settings": {
         "world_info": {
-            "globalSelect": [],
+            "globalSelect": [
+                "Weyland"
+            ],
             "charLore": []
         },
         "world_info_depth": 2,
@@ -656,7 +658,7 @@
                 "placement": [
                     2
                 ],
-                "disabled": false,
+                "disabled": true,
                 "markdownOnly": false,
                 "promptOnly": false,
                 "runOnEdit": true,
@@ -1168,7 +1170,7 @@
             "file_depth_role_db": 0,
             "enabled_world_info": true,
             "enabled_for_all": false,
-            "max_entries": 3
+            "max_entries": 5
         },
         "variables": {
             "global": {
@@ -1258,332 +1260,6 @@
         }
     },
     "tags": [
-        {
-            "id": "1345561466591",
-            "name": "ST Default",
-            "color": "rgba(108, 32, 32, 1)",
-            "color2": ""
-        },
-        {
-            "id": "3bcedefd-bb88-4b0e-92a8-8432e04d3c77",
-            "name": "vol1misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738119784266
-        },
-        {
-            "id": "7635b182-1c57-4edd-b8f0-4ee861741f26",
-            "name": "vol2misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738119789662
-        },
-        {
-            "id": "5a447a15-a9ab-4872-aba3-c0ae247f4c85",
-            "name": "vol3misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738120286836
-        },
-        {
-            "id": "df3bfbbf-427b-40d5-8c79-a8497be154f2",
-            "name": "vol3chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738121345599
-        },
-        {
-            "id": "0db66f06-97c1-4c27-b9b1-74573b735d4b",
-            "name": "vol4chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738125431265
-        },
-        {
-            "id": "72bc6946-c5fe-487b-b995-abff70e8e426",
-            "name": "vol4misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738125451866
-        },
-        {
-            "id": "9aea5769-abb4-4d96-a90e-141bf0fa344c",
-            "name": "vol5misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199065414
-        },
-        {
-            "id": "1de4b881-73fa-445b-9921-4c7f71ffcc74",
-            "name": "vol6misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199070827
-        },
-        {
-            "id": "a1c9558c-902d-4bf3-a158-10c1190c38b8",
-            "name": "vol5chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199077080
-        },
-        {
-            "id": "be0ffd53-bbdd-420e-8e99-60ca9cbf507b",
-            "name": "vol6chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199082078
-        },
-        {
-            "id": "259096c8-fd4d-41fe-a63a-b37b82b2337e",
-            "name": "vol6lovemea",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199087531
-        },
-        {
-            "id": "0790be06-70a9-470d-8fa7-24298d43f77b",
-            "name": "vol7misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199370434
-        },
-        {
-            "id": "cf0c32bf-2df6-479c-8d4a-b0017610bec2",
-            "name": "vol6.5misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199376691
-        },
-        {
-            "id": "3982db02-7c25-401a-90c6-a3b13b211e15",
-            "name": "vol8misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199384610
-        },
-        {
-            "id": "99c2ce88-9197-4f70-ad62-c564e266da53",
-            "name": "vol7chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199393548
-        },
-        {
-            "id": "12d3de20-9e3d-41e6-a69b-a8057826641d",
-            "name": "vol6.5chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199400388
-        },
-        {
-            "id": "ed5ed4b9-568f-4861-9cd6-c0e8744f07a9",
-            "name": "vol6.5lovemea",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199409331
-        },
-        {
-            "id": "0988dac9-fd6c-4174-9c82-fc7a4764c01a",
-            "name": "vol7lovemea",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199416523
-        },
-        {
-            "id": "6ff87c8e-1747-4b7f-b586-3cbafb65ef21",
-            "name": "vol8chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199484712
-        },
-        {
-            "id": "723f2103-c9c3-4245-82f9-e91d6ebd1291",
-            "name": "vol8lovemea",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738199495761
-        },
-        {
-            "id": "3c657602-5d98-46e8-803f-4cf3ff1f7125",
-            "name": "vol9misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738207171634
-        },
-        {
-            "id": "e0ffa770-5921-4821-99e4-e86d2d1a3a51",
-            "name": "vol9lovemea",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738207182876
-        },
-        {
-            "id": "99ffa618-8167-4de0-83ec-9edeff7e47bd",
-            "name": "vol9chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738207187152
-        },
-        {
-            "id": "71dc16bf-db4e-489f-a59a-e32141fc3e19",
-            "name": "vol9natelize",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738207491306
-        },
-        {
-            "id": "251538bb-9496-4bd1-8ea1-6e54d3256763",
-            "name": "vol10misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738240548875
-        },
-        {
-            "id": "b19e6b91-1c6f-4fba-b98e-c698a4d5d096",
-            "name": "vol10chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738240551798
-        },
-        {
-            "id": "db83ad1d-ddce-4b8e-b0c7-d19d48b10850",
-            "name": "vol10lovemea",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738240554759
-        },
-        {
-            "id": "e7f99c49-650a-4614-ab80-a9fb1a27beb0",
-            "name": "vol10natelize",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738240558321
-        },
-        {
-            "id": "d8f12a11-155b-449b-8ac6-c0e59018a694",
-            "name": "vol11misha",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738240565308
-        },
-        {
-            "id": "9bc89c7d-b618-4724-831f-14fb857381d2",
-            "name": "vol11chise",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738240569088
-        },
-        {
-            "id": "75ac013e-3c2d-40ad-bd3e-8570d342e0ed",
-            "name": "vol11lovemea",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738240572243
-        },
-        {
-            "id": "e856c202-235e-4def-809c-c9b37e9a4372",
-            "name": "vol11natelize",
-            "folder_type": "NONE",
-            "filter_state": "UNDEFINED",
-            "sort_order": null,
-            "color": "",
-            "color2": "",
-            "create_date": 1738240575628
-        },
         {
             "id": "c7210ada-96e5-4aa9-99b0-e377e8279fc4",
             "name": "Belle",
@@ -2203,6 +1879,46 @@
             "color": "",
             "color2": "",
             "create_date": 1742091369096
+        },
+        {
+            "id": "8639e5d9-a616-41ae-9ac9-0110fb5ca617",
+            "name": "Aethal",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1742862344545
+        },
+        {
+            "id": "a62d36f4-dd7f-40cc-b942-cfa380a43ec9",
+            "name": "Nara",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1742862350636
+        },
+        {
+            "id": "8088001c-a263-4200-8dbd-cdf0f2a4cf76",
+            "name": "Kressa",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1742862357497
+        },
+        {
+            "id": "879fa2e2-c395-4951-b07e-7ee65a760a7a",
+            "name": "Bastet",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1742862372028
         }
     ],
     "tag_map": {
