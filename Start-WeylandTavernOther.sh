@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    echo "This start script does not work on Windows."
+	echo "Use the windows batch script instead."
+	disown
+    exit 1
+fi
+
 # Make sure pwd is the directory of the script
 cd "$(dirname "$0")" > /dev/null 2>&1
 
