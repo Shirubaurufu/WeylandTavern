@@ -1,8 +1,8 @@
 {
-    "id": "367d7121-1d5d-4ea6-86a1-07a82c564961",
-    "scriptName": "Sonnet Think",
-    "findRegex": "<think>[\\s\\S]*?</think>",
-    "replaceString": "{{getglobalvar::aithink1}}$0{{getglobalvar::aithink2}}",
+    "id": "81573138-ba4c-475b-b82e-8409fda187ec",
+    "scriptName": "2nd !Command Hider",
+    "findRegex": "(?<!\\S)![\\w]+",
+    "replaceString": "{{getglobalvar::commandhide1}}$0{{getglobalvar::commandhide2}}",
     "trimStrings": [],
     "placement": [
         1,

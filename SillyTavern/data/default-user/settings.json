@@ -3,36 +3,22 @@
     "accountStorage": {
         "Assets_SkipConfirm_4806764331143483": "false",
         "NavOpened": "true",
-        "AlertWI_Misha.png": "true",
-        "mediaWarningShown:1738304326869": "true",
-        "mediaWarningShown:Misha.png": "true",
         "world_info_sort_order": "13",
         "GroupCandidates_PerPage": "25",
         "StoryStringValidationCache": "{\"hashCache\":{\"7241261575272609\":{\"fieldsWarned\":{}}}}",
         "WINavOpened": "true",
         "LNavOpened": "false",
-        "mediaWarningShown:Summer.png": "true",
-        "mediaWarningShown:Indigo.png": "true",
-        "mediaWarningShown:Chise.png": "true",
-        "mediaWarningShown:1738203837187": "true",
         "SelectedNavTab": "rm_button_characters",
-        "AlertWI_Chise.png": "true",
-        "mediaWarningShown:1738036163165": "true",
         "NavLockOn": "false",
         "mediaWarningShown:Misha_1.png": "true",
         "__migrated": "1",
         "WI_PerPage": "50",
-        "AlertWI_Test.png": "true",
-        "AlertWI_Summer.png": "true",
         "qr--wrap": "false",
-        "AlertWI_Hannah.png": "true",
         "GroupMembers_PerPage": "5",
         "Assets_SkipConfirm_6537298807992380": "false"
     },
     "currentVersion": "1.12.12",
     "username": "User",
-    "active_character": "Summer.png",
-    "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -352,44 +338,7 @@
             "separator": "\n\n",
             "max_additions": 1
         },
-        "personas": {
-            "user-default.png": "User",
-            "1737953657703-Norun.png": "Norun"
-        },
-        "default_persona": "user-default.png",
-        "persona_descriptions": {
-            "user-default.png": {
-                "description": "",
-                "position": 0,
-                "lorebook": "Weyland {{user}}",
-                "connections": []
-            },
-            "1737953657703-Norun.png": {
-                "description": "Norun has short black hair and purple eyes. Norun has black cat ears and a cat tail. Norun has the 'Monarch's Gift' and can go into heat and mate whenever he wants instead of being limited to once a year, but he keeps this a secret. Norun can use magic freely as well, though he keeps this secret as well.",
-                "position": 0,
-                "depth": 2,
-                "role": 0,
-                "lorebook": "",
-                "connections": [
-                    {
-                        "type": "character",
-                        "id": "Chise.png"
-                    },
-                    {
-                        "type": "character",
-                        "id": "Lovemea.png"
-                    },
-                    {
-                        "type": "character",
-                        "id": "Misha.png"
-                    },
-                    {
-                        "type": "character",
-                        "id": "Natelize.png"
-                    }
-                ]
-            }
-        },
+        "personas": {},
         "persona_description": "",
         "persona_description_position": 0,
         "persona_description_role": 0,
@@ -474,9 +423,7 @@
         "auto_connect": true,
         "auto_load_chat": false,
         "forbid_external_media": false,
-        "external_media_allowed_overrides": [
-            "Summer.png"
-        ],
+        "external_media_allowed_overrides": [],
         "external_media_forbidden_overrides": [],
         "ui_mode": 1,
         "auto_sort_tags": false,
@@ -493,16 +440,7 @@
         "autoConnect": false,
         "notifyUpdates": false,
         "disabledExtensions": [],
-        "expressionOverrides": [
-            {
-                "name": "Hannah",
-                "path": "Hannah/Regular Outfit"
-            },
-            {
-                "name": "Summer",
-                "path": "Summer/Regular Outfit"
-            }
-        ],
+        "expressionOverrides": [],
         "memory": {
             "minLongMemory": 16,
             "maxLongMemory": 1024,
@@ -877,7 +815,7 @@
                 "id": "b9978d54-6d2c-4142-b7ab-334c3f6d18e6",
                 "scriptName": "Title Bar Bolded",
                 "findRegex": "((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\\b.*?\\((?:SM|LM|LLM|TM|EM)\\))",
-                "replaceString": "<strong>$1</strong>",
+                "replaceString": "{{getglobalvar::titlebar1}}$1{{getglobalvar::titlebar2}}",
                 "trimStrings": [],
                 "placement": [
                     1,
@@ -895,7 +833,7 @@
                 "id": "367d7121-1d5d-4ea6-86a1-07a82c564961",
                 "scriptName": "Sonnet Think",
                 "findRegex": "<think>[\\s\\S]*?</think>",
-                "replaceString": "",
+                "replaceString": "{{getglobalvar::aithink1}}$0{{getglobalvar::aithink2}}",
                 "trimStrings": [],
                 "placement": [
                     1,
@@ -913,13 +851,31 @@
                 "id": "81d94103-18cb-4a80-b111-d79f28b6459e",
                 "scriptName": "!Command Hider",
                 "findRegex": "(?<!\\S)![\\w]+",
-                "replaceString": "",
+                "replaceString": "{{getglobalvar::commandhide1}}$0{{getglobalvar::commandhide2}}",
                 "trimStrings": [],
                 "placement": [
                     1,
                     2
                 ],
-                "disabled": true,
+                "disabled": false,
+                "markdownOnly": true,
+                "promptOnly": false,
+                "runOnEdit": true,
+                "substituteRegex": 0,
+                "minDepth": null,
+                "maxDepth": null
+            },
+            {
+                "id": "81573138-ba4c-475b-b82e-8409fda187ec",
+                "scriptName": "2nd !Command Hider",
+                "findRegex": "(?<!\\S)![\\w]+",
+                "replaceString": "{{getglobalvar::commandhide1}}$0{{getglobalvar::commandhide2}}",
+                "trimStrings": [],
+                "placement": [
+                    1,
+                    2
+                ],
+                "disabled": false,
                 "markdownOnly": true,
                 "promptOnly": false,
                 "runOnEdit": true,
@@ -929,15 +885,15 @@
             },
             {
                 "id": "690bfc8a-0549-490b-bd14-a63896ecb526",
-                "scriptName": "Optional: Hide {{user}} ooc prompts.",
-                "findRegex": "\\s*\\(ooc:.*?\\)\\s*",
-                "replaceString": "",
+                "scriptName": "Hide Ooc Prompts",
+                "findRegex": "(\\([oO][oO][cC]:[^)]*\\))",
+                "replaceString": "{{getglobalvar::oochide1}}$0{{getglobalvar::oochide2}}",
                 "trimStrings": [],
                 "placement": [
                     1,
                     2
                 ],
-                "disabled": true,
+                "disabled": false,
                 "markdownOnly": true,
                 "promptOnly": false,
                 "runOnEdit": true,
@@ -1152,7 +1108,7 @@
             "insert": 3,
             "query": 2,
             "message_chunk_size": 400,
-            "score_threshold": 0.35,
+            "score_threshold": 0.15,
             "enabled_files": false,
             "translate_files": false,
             "size_threshold": 10,
@@ -1170,7 +1126,7 @@
             "file_depth_role_db": 0,
             "enabled_world_info": true,
             "enabled_for_all": false,
-            "max_entries": 5
+            "max_entries": 6
         },
         "variables": {
             "global": {
@@ -1246,14 +1202,11 @@
             ],
             "expression": "joy",
             "menuList": [],
-            "lastChat": {
-                "group": null,
-                "character": "Summer.png"
-            },
+            "lastChat": {},
             "hideTopBar": false,
             "bgList": [
                 {
-                    "url": "https://cdn.openart.ai/published/JIfhwtgOgnPYAXpIo29y/6gii3wrX_PhH6_raw.jpg",
+                    "url": "/backgrounds/weyland uni rain.png",
                     "command": "/return true"
                 }
             ]
@@ -1922,54 +1875,7 @@
         }
     ],
     "tag_map": {
-        "default_Seraphina.png": [
-            "1345561466591"
-        ],
-        "undefined": [],
-        "Seraphina.card.png": [],
-        "Seraphina.png": [],
-        "Summer.png": [
-            "34ab59bc-a5a8-4123-8982-1718074b6372",
-            "67c347fe-5684-4cf4-86f6-648091c64863",
-            "aa0e4d7f-202b-4907-ba61-05c0e2112497"
-        ],
-        "Misha.png": [
-            "3bcedefd-bb88-4b0e-92a8-8432e04d3c77"
-        ],
-        "Chise.png": [
-            "df3bfbbf-427b-40d5-8c79-a8497be154f2"
-        ],
-        "null": [],
-        "Lovemea.png": [
-            "723f2103-c9c3-4245-82f9-e91d6ebd1291"
-        ],
-        "Natelize.png": [
-            "71dc16bf-db4e-489f-a59a-e32141fc3e19"
-        ],
-        "Indigo.png": [
-            "77f6c2a5-0eb1-467b-b194-e269315d66f1",
-            "aa0e4d7f-202b-4907-ba61-05c0e2112497"
-        ],
-        "Hannah.png": [
-            "de325bb2-a544-4ed7-a989-878a2a034bd0",
-            "aa0e4d7f-202b-4907-ba61-05c0e2112497"
-        ],
-        "1739661600924": [],
-        "Test.png": [
-            "9b96ba73-b158-4821-99af-1c349f5968e7"
-        ],
-        "Blake.png": [
-            "0ead9e69-cc6a-4754-a1f6-4fe49140a15a",
-            "aa0e4d7f-202b-4907-ba61-05c0e2112497"
-        ],
-        "Warren.png": [
-            "97ff5bd5-c33f-4ac5-bf84-a88fd5921545",
-            "aa0e4d7f-202b-4907-ba61-05c0e2112497"
-        ],
-        "test2.png": [],
-        "Belle.png": []
-    },
-    "nai_settings": {
+    },    "nai_settings": {
         "temperature": 1.5,
         "repetition_penalty": 2.25,
         "repetition_penalty_range": 2048,
@@ -2031,7 +1937,7 @@
     },
     "oai_settings": {
         "preset_settings_openai": "Default",
-        "temp_openai": 1.2,
+        "temp_openai": 1.00,
         "freq_pen_openai": 1,
         "pres_pen_openai": 0,
         "top_p_openai": 0.95,

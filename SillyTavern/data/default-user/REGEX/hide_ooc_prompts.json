@@ -1,8 +1,8 @@
 {
-    "id": "367d7121-1d5d-4ea6-86a1-07a82c564961",
-    "scriptName": "Sonnet Think",
-    "findRegex": "<think>[\\s\\S]*?</think>",
-    "replaceString": "{{getglobalvar::aithink1}}$0{{getglobalvar::aithink2}}",
+    "id": "690bfc8a-0549-490b-bd14-a63896ecb526",
+    "scriptName": "Hide Ooc Prompts",
+    "findRegex": "(\\([oO][oO][cC]:[^)]*\\))",
+    "replaceString": "{{getglobalvar::oochide1}}$0{{getglobalvar::oochide2}}",
     "trimStrings": [],
     "placement": [
         1,

@@ -2,13 +2,13 @@
     "id": "81d94103-18cb-4a80-b111-d79f28b6459e",
     "scriptName": "!Command Hider",
     "findRegex": "(?<!\\S)![\\w]+",
-    "replaceString": "",
+    "replaceString": "{{getglobalvar::commandhide1}}$0{{getglobalvar::commandhide2}}",
     "trimStrings": [],
     "placement": [
         1,
         2
     ],
-    "disabled": true,
+    "disabled": false,
     "markdownOnly": true,
     "promptOnly": false,
     "runOnEdit": true,

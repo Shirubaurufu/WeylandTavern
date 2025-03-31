@@ -2,7 +2,7 @@
     "id": "b9978d54-6d2c-4142-b7ab-334c3f6d18e6",
     "scriptName": "Title Bar Bolded",
     "findRegex": "((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\\b.*?\\((?:SM|LM|LLM|TM|EM)\\))",
-    "replaceString": "<strong>$1</strong>",
+    "replaceString": "{{getglobalvar::titlebar1}}$1{{getglobalvar::titlebar2}}",
     "trimStrings": [],
     "placement": [
         1,
