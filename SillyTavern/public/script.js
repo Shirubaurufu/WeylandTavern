@@ -6261,7 +6261,6 @@ export function syncMesToSwipe(messageId = null) {
     }
 
     const targetMessage = chat[targetMessageId];
-
     if (!targetMessage) {
         return false;
     }
@@ -6290,6 +6289,68 @@ export function syncMesToSwipe(messageId = null) {
     targetSwipeInfo.gen_started = targetMessage.gen_started;
     targetSwipeInfo.gen_finished = targetMessage.gen_finished;
     targetSwipeInfo.extra = structuredClone(targetMessage.extra);
+
+    return true;
+}
+
+/**
+ * Syncs swipe data back to the message data at the given message ID (or the last message if no ID is given).
+ * If the swipe ID is not provided, the current swipe ID in the message object is used.
+ *
+ * If the swipe data is invalid in some way, this function will exit out without doing anything.
+ * @param {number?} [messageId=null] - The ID of the message to sync with the swipe data. If no ID is given, the last message is used.
+ * @param {number?} [swipeId=null] - The ID of the swipe to sync. If no ID is given, the current swipe ID in the message object is used.
+ * @returns {boolean} Whether the swipe data was successfully synced to the message
+ */
+export function syncSwipeToMes(messageId = null, swipeId = null) {
+    if (!chat.length) {
+        return false;
+    }
+
+    const targetMessageId = messageId ?? chat.length - 1;
+    if (targetMessageId >= chat.length || targetMessageId < 0) {
+        console.warn(`[syncSwipeToMes] Invalid message ID: ${messageId}`);
+        return false;
+    }
+
+    const targetMessage = chat[targetMessageId];
+    if (!targetMessage) {
+        return false;
+    }
+
+    if (swipeId !== null) {
+        if (isNaN(swipeId) || swipeId < 0) {
+            console.warn(`[syncSwipeToMes] Invalid swipe ID: ${swipeId}`);
+            return false;
+        }
+        targetMessage.swipe_id = swipeId;
+    }
+
+    // No swipe data there yet, exit out
+    if (typeof targetMessage.swipe_id !== 'number') {
+        return false;
+    }
+    // If swipes structure is invalid, exit out
+    if (!Array.isArray(targetMessage.swipe_info) || !Array.isArray(targetMessage.swipes)) {
+        return false;
+    }
+
+    const targetSwipeId = targetMessage.swipe_id;
+    if (!targetMessage.swipes[targetSwipeId] || !targetMessage.swipe_info[targetSwipeId]) {
+        console.warn(`[syncSwipeToMes] Invalid swipe ID: ${targetSwipeId}`);
+        return false;
+    }
+
+    const targetSwipeInfo = targetMessage.swipe_info[targetSwipeId];
+    if (typeof targetSwipeInfo !== 'object') {
+        return false;
+    }
+
+    targetMessage.mes = targetMessage.swipes[targetSwipeId];
+    targetMessage.send_date = targetSwipeInfo.send_date;
+    targetMessage.gen_started = targetSwipeInfo.gen_started;
+    targetMessage.gen_finished = targetSwipeInfo.gen_finished;
+    targetMessage.extra = structuredClone(targetSwipeInfo.extra);
 
     return true;
 }
@@ -8293,10 +8354,9 @@ export async function deleteSwipe(swipeId = null) {
         lastMessage.swipe_info.splice(swipeId, 1);
     }
 
-    // Select the next swip, or the one before if it was the last one
+    // Select the next swipe, or the one before if it was the last one
     const newSwipeId = Math.min(swipeId, lastMessage.swipes.length - 1);
-    lastMessage.swipe_id = newSwipeId;
-    lastMessage.mes = lastMessage.swipes[newSwipeId];
+    syncSwipeToMes(null, newSwipeId);
 
     await saveChatConditional();
     await reloadCurrentChat();
