@@ -11,7 +11,7 @@ fi
 cd "$(dirname "$0")" > /dev/null 2>&1
 
 echo "======================================================"
-echo "          WEYLAND TAVERN UPDATER"
+echo "                WEYLAND TAVERN UPDATER"
 echo "======================================================"
 echo
 echo "Welcome to the Weyland Tavern update wizard!"

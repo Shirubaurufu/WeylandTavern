@@ -6,7 +6,7 @@ if not "%OS%"=="Windows_NT" (
     exit /b
 )
 echo ======================================================
-echo           WEYLAND TAVERN UPDATER
+echo                 WEYLAND TAVERN UPDATER
 echo ======================================================
 echo.
 echo Welcome to the Weyland Tavern update wizard!
