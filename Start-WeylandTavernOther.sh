@@ -35,12 +35,11 @@ fi
 # Install Node Modules
 echo "Installing Node Modules..."
 export NODE_ENV=production
-npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null 2>&1
+cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null 2>&1
 
 # Start SillyTavern
 echo "Entering SillyTavern..."
 node "server.js" "$@" > /dev/null 2>&1 &
 
 disown
-
 exit
