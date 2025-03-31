@@ -18,7 +18,9 @@ echo "Welcome to the Weyland Tavern update wizard!"
 echo "WeylandTavern will now attempt to update itself."
 echo
 
+git stash
 git pull origin release -q
+git stash pop
 if [ $? -eq 0 ]; then
     echo "There was an error updating WeylandTavern."
 else
