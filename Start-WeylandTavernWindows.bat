@@ -1,8 +1,8 @@
 @echo off
 if not "%OS%"=="Windows_NT" (
     echo This start script only works on Windows.
-	echo Use the script for Other systems instead.
-	pause
+    echo Use the script for Other systems instead.
+    pause
     exit /b
 )
 pushd %~dp0
