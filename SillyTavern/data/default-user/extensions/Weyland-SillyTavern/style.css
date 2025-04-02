@@ -82,3 +82,13 @@ div.textAlignCenter {
     display: none !important;
     visibility: hidden !important;
 }
+
+@media screen and (max-width: 1000px) {
+    body.waifuMode #sheld {
+        height: 50vh;
+        height: 50dvh; 
+        top: 50vh; 
+        top: 50dvh; 
+        bottom: 0 !important;
+    }
+}
