@@ -5,6 +5,20 @@ if not "%OS%"=="Windows_NT" (
     pause
     exit /b
 )
+git fetch origin
+for /f "tokens=*" %%i in ('git rev-list --count HEAD..origin/main') do set BEHIND=%%i
+if %BEHIND% GTR 0 (
+    echo Found updates.
+    echo Updating WeylandTavern...
+    git stash
+    git pull origin release -q
+    git stash pop
+    if errorlevel 1 (
+        echo There was an error updating WeylandTavern.
+    ) else (
+        echo WeylandTavern is now up to date!
+    )
+)
 pushd %~dp0
 set NODE_ENV=production
 cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev
