@@ -10,9 +10,9 @@ for /f "tokens=*" %%i in ('git rev-list --count HEAD..origin/release') do set BE
 if %BEHIND% GTR 0 (
     echo Found updates.
     echo Updating WeylandTavern...
-    git stash
+    git stash -q
     git pull origin release -q
-    git stash pop
+    git stash pop -q
     if errorlevel 1 (
         echo There was an error updating WeylandTavern.
     ) else (
