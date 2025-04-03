@@ -5,7 +5,7 @@ if not "%OS%"=="Windows_NT" (
     pause
     exit /b
 )
-git fetch origin
+git fetch origin -q
 for /f "tokens=*" %%i in ('git rev-list --count HEAD..origin/release') do set BEHIND=%%i
 if %BEHIND% GTR 0 (
     echo Found updates.
