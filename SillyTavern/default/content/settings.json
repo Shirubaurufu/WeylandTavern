@@ -1938,7 +1938,7 @@
     "oai_settings": {
         "preset_settings_openai": "Default",
         "temp_openai": 1.00,
-        "freq_pen_openai": 1,
+        "freq_pen_openai": 0,
         "pres_pen_openai": 0,
         "top_p_openai": 0.95,
         "top_k_openai": 0,
