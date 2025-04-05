@@ -32,6 +32,23 @@ then
     esac
 fi
 
+git fetch origin -q
+BEHIND=$(git rev-list --count HEAD..origin/release)
+if [[ "$BEHIND" -gt 0 ]]; then
+    echo "Found updates."
+    echo "Updating WeylandTavern..."
+
+    git stash -q
+
+    if git pull origin release -q; then
+        echo "WeylandTavern is now up to date!"
+    else
+        echo "There was an error updating WeylandTavern."
+    fi
+
+    git stash pop -q
+fi
+
 # Install Node Modules
 echo "Installing Node Modules..."
 export NODE_ENV=production
