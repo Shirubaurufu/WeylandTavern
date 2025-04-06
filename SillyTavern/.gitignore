@@ -56,6 +56,7 @@ public/error/
 /data/default-user/backups/*
 /data/default-user/thumbnails/*
 /data/default-user/vectors
+/data/default-user/settings.json
 /default/scaffold
 /certs
 .aider*
