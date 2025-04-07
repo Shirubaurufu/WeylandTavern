@@ -33,6 +33,7 @@ then
 fi
 
 git fetch origin -q
+git checkout origin/release -- SillyTavern/data/default-user/QuickReplies/Weyland.json
 BEHIND=$(git rev-list --count HEAD..origin/release)
 if [[ "$BEHIND" -gt 0 ]]; then
     echo "Found updates."
