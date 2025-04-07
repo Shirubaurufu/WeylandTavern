@@ -4375,6 +4375,11 @@ export async function executeSlashCommandsOnChatInput(text, options = {}) {
         clearChatInput: false,
         source: null,
     }, options);
+    
+    if (options.source === null || options.source === 'chat_input') {
+        console.log('Blocked slash command from chat input');
+        return null;
+    }
 
     isExecutingCommandsFromChatInput = true;
     commandsFromChatInputAbortController?.abort('processCommands was called');
@@ -4458,10 +4463,6 @@ export async function executeSlashCommandsOnChatInput(text, options = {}) {
  * @returns {Promise<SlashCommandClosureResult>}
  */
 async function executeSlashCommandsWithOptions(text, options = {}) {
-    if (document.activeElement && document.activeElement.id === 'send_textarea') {
-        console.log('Slash commands disabled for this input field.');
-        return new SlashCommandClosureResult(); // Return an empty result
-    }
     if (!text) {
         return null;
     }
