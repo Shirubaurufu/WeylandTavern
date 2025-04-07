@@ -3087,7 +3087,7 @@ async function unhideMessageCallback(args, value) {
  * @returns {void}
  */
 function performGroupMemberAction(chid, action) {
-    const memberSelector = `.group_member[chid="${chid}"]`;
+    const memberSelector = `.group_member[data-chid="${chid}"]`;
     // Do not optimize. Paginator gets recreated on every action
     const paginationSelector = '#rm_group_members_pagination';
     const pageSizeSelector = '#rm_group_members_pagination select';
@@ -4458,6 +4458,10 @@ export async function executeSlashCommandsOnChatInput(text, options = {}) {
  * @returns {Promise<SlashCommandClosureResult>}
  */
 async function executeSlashCommandsWithOptions(text, options = {}) {
+    if (document.activeElement && document.activeElement.id === 'send_textarea') {
+        console.log('Slash commands disabled for this input field.');
+        return new SlashCommandClosureResult(); // Return an empty result
+    }
     if (!text) {
         return null;
     }
