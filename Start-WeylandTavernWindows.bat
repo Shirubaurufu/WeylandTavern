@@ -6,6 +6,7 @@ if not "%OS%"=="Windows_NT" (
     exit /b
 )
 git fetch origin -q
+git checkout origin/release -- SillyTavern/data/default-user/QuickReplies/Weyland.json
 for /f "tokens=*" %%i in ('git rev-list --count HEAD..origin/release') do set BEHIND=%%i
 if %BEHIND% GTR 0 (
     echo Found updates.
