@@ -116,15 +116,7 @@
         "type": "background"
     },
     {
-        "filename": "default_Seraphina.png",
-        "type": "character"
-    },
-    {
-        "filename": "Seraphina",
-        "type": "sprites"
-    },
-    {
-        "filename": "Eldoria.json",
+        "filename": "Weyland.json",
         "type": "world"
     },
     {

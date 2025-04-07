@@ -3087,7 +3087,7 @@ async function unhideMessageCallback(args, value) {
  * @returns {void}
  */
 function performGroupMemberAction(chid, action) {
-    const memberSelector = `.group_member[chid="${chid}"]`;
+    const memberSelector = `.group_member[data-chid="${chid}"]`;
     // Do not optimize. Paginator gets recreated on every action
     const paginationSelector = '#rm_group_members_pagination';
     const pageSizeSelector = '#rm_group_members_pagination select';
@@ -4375,6 +4375,11 @@ export async function executeSlashCommandsOnChatInput(text, options = {}) {
         clearChatInput: false,
         source: null,
     }, options);
+    
+    if (options.source === null || options.source === 'chat_input') {
+        console.log('Blocked slash command from chat input');
+        return null;
+    }
 
     isExecutingCommandsFromChatInput = true;
     commandsFromChatInputAbortController?.abort('processCommands was called');

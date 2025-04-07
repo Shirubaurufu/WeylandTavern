@@ -245,6 +245,21 @@ function createDefaultFiles() {
         },
         {
             type: 'directory',
+            defaultPath: './default/content/worlds/',
+            productionPath: './data/default-user/worlds/',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/worlds/Weyland.json',
+            productionPath: './data/default-user/worlds/Weyland.json',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/settings.json',
+            productionPath: './data/default-user/settings.json',
+        },
+        {
+            type: 'directory',
             defaultPath: './default/public/',
             productionPath: './public/',
         },
@@ -253,7 +268,11 @@ function createDefaultFiles() {
     for (const defaultItem of defaultItems) {
         try {
             if (defaultItem.type === 'file') {
-                if (!fs.existsSync(defaultItem.productionPath)) {
+                if (defaultItem.productionPath.endsWith('Weyland.json')) {
+                    // Always overwrite Weyland.json
+                    fs.copyFileSync(defaultItem.defaultPath, defaultItem.productionPath);
+                    console.log(color.green(`Overwritten file: ${defaultItem.productionPath}`));
+                } else if (!fs.existsSync(defaultItem.productionPath)) {
                     fs.copyFileSync(
                         defaultItem.defaultPath,
                         defaultItem.productionPath,
