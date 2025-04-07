@@ -245,6 +245,21 @@ function createDefaultFiles() {
         },
         {
             type: 'directory',
+            defaultPath: './default/content/worlds/',
+            productionPath: './data/default-user/worlds/',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/worlds/Weyland.json',
+            productionPath: './data/default-user/worlds/Weyland.json',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/settings.json',
+            productionPath: './data/default-user/settings.json',
+        },
+        {
+            type: 'directory',
             defaultPath: './default/public/',
             productionPath: './public/',
         },
