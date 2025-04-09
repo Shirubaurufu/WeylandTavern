@@ -51,10 +51,10 @@ public/error/
 /data/*
 !/data/default-user
 /data/default-user/characters/*
-/data/default-user/user/*
 /data/default-user/worlds/*
 /data/default-user/backups/*
 /data/default-user/thumbnails/*
+/data/default-user/user/*
 /data/default-user/vectors
 /data/default-user/settings.json
 /default/scaffold

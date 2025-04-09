@@ -41,7 +41,8 @@ if [[ "$BEHIND" -gt 0 ]]; then
 
     git stash -q
 
-    if git pull origin release -q; then
+    git fetch --all
+    if git reset --hard origin/release; then
         echo "WeylandTavern is now up to date!"
     else
         echo "There was an error updating WeylandTavern."
