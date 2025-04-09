@@ -2,8 +2,8 @@
 
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
     echo "This start script does not work on Windows."
-	echo "Use the windows batch script instead."
-	disown
+    echo "Use the windows batch script instead."
+    disown
     exit 1
 fi
 
@@ -32,23 +32,15 @@ then
     esac
 fi
 
-git fetch origin -q
-git checkout origin/release -- SillyTavern/data/default-user/QuickReplies/Weyland.json
-BEHIND=$(git rev-list --count HEAD..origin/release)
-if [[ "$BEHIND" -gt 0 ]]; then
-    echo "Found updates."
-    echo "Updating WeylandTavern..."
 
-    git stash -q
-
-    git fetch --all
-    if git reset --hard origin/release; then
-        echo "WeylandTavern is now up to date!"
-    else
-        echo "There was an error updating WeylandTavern."
-    fi
-
-    git stash pop -q
+echo "Updating WeylandTavern..."
+if git pull -q; then
+    echo "WeylandTavern is now up to date!"
+else
+    echo "There was an error updating WeylandTavern..."
+    echo "Generating log file SillyTavern/WTUpdate.log..."
+    git diff >> SillyTavern/WTUpdate.log
+    echo "Please provide the log file to the Weyland Tavern dev team at your convenience."
 fi
 
 # Install Node Modules

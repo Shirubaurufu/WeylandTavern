@@ -5,22 +5,18 @@ if not "%OS%"=="Windows_NT" (
     pause
     exit /b
 )
-git fetch origin -q
-git checkout origin/release -- SillyTavern/data/default-user/QuickReplies/Weyland.json
-for /f "tokens=*" %%i in ('git rev-list --count HEAD..origin/release') do set BEHIND=%%i
-if %BEHIND% GTR 0 (
-    echo Found updates.
-    echo Updating WeylandTavern...
-    git stash -q
-    git fetch --all
-    git reset --hard origin/release
-    git stash pop -q
-    if errorlevel 1 (
-        echo There was an error updating WeylandTavern.
-    ) else (
-        echo WeylandTavern is now up to date!
-    )
+
+echo Updating WeylandTavern...
+git pull -q
+if errorlevel 1 (
+    echo There was an error updating WeylandTavern...
+    echo Generating log file SillyTavern/WTUpdate.log...
+    git diff > SillyTavern/WTUpdate.log
+    echo Please provide the log file to the Weyland Tavern dev team at your convenience.
+) else (
+    echo WeylandTavern is now up to date!
 )
+
 pushd %~dp0
 set NODE_ENV=production
 cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev
