@@ -17,6 +17,7 @@ public/instruct/
 public/context/
 public/scripts/extensions/third-party/*
 !public/scripts/extensions/third-party/Weyland-SillyTavern
+!public/scripts/extensions/third-party/Weyland-SillyTavern/**
 public/stats.json
 /uploads/
 *.jsonl
@@ -50,15 +51,41 @@ public/error/
 /plugins/
 /data/*
 !/data/default-user
-/data/default-user/characters/*
-/data/default-user/worlds/*
-/data/default-user/backups/*
-/data/default-user/thumbnails/*
+/data/default-user/assets
+/data/default-user/backups
+/data/default-user/characters/**
+!/data/default-user/characters/Phone
+!/data/default-user/characters/Phone/**
+/data/default-user/chats
+/data/default-user/context
+!/data/default-user/extensions
+/data/default-user/group chats
+/data/default-user/groups
+/data/default-user/instruct
+/data/default-user/KoboldAI Settings
+/data/default-user/movingUI
+/data/default-user/NovelAI Settings
+/data/default-user/OpenAI Settings
+!/data/default-user/QuickReplies/
+!/data/default-user/QuickReplies/**
+!/data/default-user/REGEX/
+!/data/default-user/REGEX/**
+/data/default-user/sysprompt
+/data/default-user/TextGen Settings
+/data/default-user/themes
+/data/default-user/thumbnails
 /data/default-user/user/*
+!/data/default-user/user/images
+!/data/default-user/user/images/**
+/data/default-user/User Avatars
 /data/default-user/vectors
+/data/default-user/worlds
+/data/default-user/content.log
+/data/default-user/stats.json
 /data/default-user/settings.json
 /default/scaffold
 /certs
 .aider*
 .env
 /StartDev.bat
+*.log
