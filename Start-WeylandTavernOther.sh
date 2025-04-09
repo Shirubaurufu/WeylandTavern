@@ -35,7 +35,7 @@ fi
 
 echo "Updating WeylandTavern..."
 if git pull -q; then
-    echo "WeylandTavern is now up to date!"
+    echo "WeylandTavern is up to date!"
 else
     echo "There was an error updating WeylandTavern..."
     echo "Generating log file SillyTavern/WTUpdate.log..."

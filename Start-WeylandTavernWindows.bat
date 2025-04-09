@@ -14,7 +14,7 @@ if errorlevel 1 (
     git diff > SillyTavern/WTUpdate.log
     echo Please provide the log file to the Weyland Tavern dev team at your convenience.
 ) else (
-    echo WeylandTavern is now up to date!
+    echo WeylandTavern is up to date!
 )
 
 pushd %~dp0
