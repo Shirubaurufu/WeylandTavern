@@ -54,6 +54,7 @@ public/error/
 /data/default-user/worlds/*
 /data/default-user/backups/*
 /data/default-user/thumbnails/*
+/data/default-user/user/*
 /data/default-user/vectors
 /data/default-user/settings.json
 /default/scaffold
