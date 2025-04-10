@@ -14,7 +14,7 @@ const __dirname = path.dirname(path.dirname(__filename));
 const folderUrl = process.argv[2];
 
 if (!folderUrl) {
-    console.log("❌ Usage: node character-downloader.js <mega_folder_url>");
+    console.log("Usage: node character-downloader.js <mega_folder_url>");
     process.exit(1);
 }
 
@@ -27,7 +27,7 @@ if (files === undefined) {
     console.error("There was a problem getting the character files from the folder.");
     process.exit(1);
 } else if (!files.length) {
-    console.log("📁 No files found in the folder.");
+    console.log("No files found in the folder.");
     process.exit(1);
 }
 
