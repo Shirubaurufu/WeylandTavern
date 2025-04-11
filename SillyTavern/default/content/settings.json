@@ -1108,7 +1108,7 @@
             "insert": 3,
             "query": 2,
             "message_chunk_size": 400,
-            "score_threshold": 0.15,
+            "score_threshold": 0.2,
             "enabled_files": false,
             "translate_files": false,
             "size_threshold": 10,
@@ -1126,7 +1126,7 @@
             "file_depth_role_db": 0,
             "enabled_world_info": true,
             "enabled_for_all": false,
-            "max_entries": 6
+            "max_entries": 7
         },
         "variables": {
             "global": {
@@ -1947,7 +1947,7 @@
         "top_a_openai": 0,
         "repetition_penalty_openai": 1,
         "stream_openai": false,
-        "openai_max_context": 19000,
+        "openai_max_context": 21000,
         "openai_max_tokens": 1000,
         "wrap_in_quotes": false,
         "prompts": [
