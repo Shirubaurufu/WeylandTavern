@@ -1161,6 +1161,7 @@
                 "HideText": "No",
                 "S9J@klE": "69420",
                 "9$DqA7b~3C": "234Sfv~2I"
+                "SettingC1": "true"
             }
         },
         "attachments": [],
@@ -1937,7 +1938,7 @@
     },
     "oai_settings": {
         "preset_settings_openai": "Default",
-        "temp_openai": 1.00,
+        "temp_openai": 0.90,
         "freq_pen_openai": 0,
         "pres_pen_openai": 0,
         "top_p_openai": 0.95,
