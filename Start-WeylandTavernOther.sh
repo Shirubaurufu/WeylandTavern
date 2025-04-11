@@ -52,5 +52,5 @@ cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --om
 echo "Entering SillyTavern..."
 node "server.js" "$@" > /dev/null 2>&1 &
 
-disown
+read -p
 exit
