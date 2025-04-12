@@ -70,7 +70,7 @@
             "addMemo": true,
             "order": 1,
             "position": 0,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -207,7 +207,7 @@
             "addMemo": true,
             "order": 1,
             "position": 0,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -1252,6 +1252,75 @@
                 "delay": 0
             }
         },
+        "20": {
+            "uid": 20,
+            "key": [
+                "!Mark",
+                "!mark",
+                "Mark"
+            ],
+            "keysecondary": [],
+            "comment": "Mark",
+            "content": "{{getvar::MA}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 136,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 162,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": true,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "a7bfb886-a323-4c7f-bd39-a3cda83782a5"
+                ]
+            }
+        },
         "21": {
             "uid": 21,
             "key": [
@@ -1467,7 +1536,7 @@
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -1584,6 +1653,67 @@
                 "tags": [
                     "25cb576f-1c36-49ca-8647-b8e322e75343"
                 ]
+            }
+        },
+        "26": {
+            "uid": 26,
+            "key": [
+                "!Gru",
+                "Gru"
+            ],
+            "keysecondary": [],
+            "comment": "Professor",
+            "content": "{{getvar::GRU}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": true,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 149,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 169,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": true,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
             }
         },
         "27": {
@@ -3994,13 +4124,14 @@
         },
         "99": {
             "key": [
-                "!Mark",
-                "!mark",
-                "Mark"
+                "!Gemini",
+                "!gemini",
+                "Gemini",
+                "Black Barrel"
             ],
             "keysecondary": [],
-            "comment": "Mark",
-            "content": "{{getvar::MA}}",
+            "comment": "Gemini",
+            "content": "{{getvar::GN}}",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -4028,7 +4159,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 99,
-            "displayIndex": 136,
+            "displayIndex": 137,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4057,7 +4188,7 @@
                 "isExclude": true,
                 "names": [],
                 "tags": [
-                    "a7bfb886-a323-4c7f-bd39-a3cda83782a5"
+                    "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
                 ]
             }
         },
@@ -5757,15 +5888,20 @@
         "127": {
             "key": [
                 "Weyland Exchange",
-                "the Exchange",
+                "Exchange",
                 "nightclub",
                 "party",
                 "DJ spot",
-                "exchange's"
+                "exchange's",
+                "Weyland exchange",
+                "weyland exchange",
+                "dj spot",
+                "Nightclub",
+                "Party"
             ],
             "keysecondary": [],
             "comment": "Weyland Exchange",
-            "content": "[THE WEYLAND EXCHANGE]\nPotential Location: The Weyland Exchange (often called just 'The Exchange')\n[Location] nightclub, inside historic stock exchange building, two-tier layout, (1st floor is general access with DJ booth), (2nd floor is VIP access with overlook of 1st floor), VIP 3rd floor greenroom with balcony; [Lighting] colorful neon-lighting, laser lighting; [Atmosphere] lively, inclusive vibe, vibrant music, state-of-the-art sound system, smoke machines; [Interior] modern-industrial design, abstract art & posters from past events, speakers, multiple bars, LED wall behind DJ deck;  [Activities] DJing and other music performances 10pm-3am Fridays and Saturdays (Mika often DJ's here), large dance floor, socializing, celebrations, drinking, photo booth; \n[Regulars] (diverse crowd of students, locals, and music enthusiasts mainly all demi-humans), bouncers;\n[END THE WEYLAND EXCHANGE]\n-----",
+            "content": "[WEYLAND EXCHANGE]\nPotential Location: The Weyland Exchange (often called just 'Exchange' as a single word)\n[Location] nightclub, inside the historic Weyland City stock exchange building, two-tier layout, (1st floor is general access with DJ booth), (2nd floor is VIP access with overlook of 1st floor), VIP 3rd floor greenroom with balcony; [Lighting] colorful neon-lighting, laser lighting; [Atmosphere] lively, inclusive vibe, vibrant music, state-of-the-art sound system, smoke machines; [Interior] modern-industrial design, abstract art & posters from past events, speakers, multiple bars, LED wall behind DJ deck;  [Activities] DJing and other music performances 10pm-3am Fridays and Saturdays (Mika often DJ's here), large dance floor, socializing, celebrations, drinking, photo booth; \n[Regulars] (diverse crowd of students, locals, and music enthusiasts mainly all demi-humans), bouncers;\n[END WEYLAND EXCHANGE]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -5784,7 +5920,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
-            "caseSensitive": false,
+            "caseSensitive": true,
             "matchWholeWords": null,
             "useGroupScoring": false,
             "automationId": "",
@@ -5817,76 +5953,6 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
-        },
-        "128": {
-            "key": [
-                "!Gemini",
-                "!gemini",
-                "Gemini",
-                "Black Barrel"
-            ],
-            "keysecondary": [],
-            "comment": "Gemini",
-            "content": "{{getvar::GN}}",
-            "constant": false,
-            "vectorized": false,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 100,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": false,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 0,
-            "cooldown": 0,
-            "delay": 0,
-            "uid": 128,
-            "displayIndex": 137,
-            "extensions": {
-                "position": 1,
-                "exclude_recursion": false,
-                "display_index": 164,
-                "probability": 100,
-                "useProbability": true,
-                "depth": 4,
-                "selectiveLogic": 0,
-                "group": "",
-                "group_override": false,
-                "group_weight": 100,
-                "prevent_recursion": true,
-                "delay_until_recursion": false,
-                "scan_depth": 2,
-                "match_whole_words": null,
-                "use_group_scoring": false,
-                "case_sensitive": true,
-                "automation_id": "",
-                "role": 0,
-                "vectorized": false,
-                "sticky": 0,
-                "cooldown": 0,
-                "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": true,
-                "names": [],
-                "tags": [
-                    "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
-                ]
             }
         },
         "129": {

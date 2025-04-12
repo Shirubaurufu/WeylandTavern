@@ -1108,7 +1108,7 @@
             "insert": 3,
             "query": 2,
             "message_chunk_size": 400,
-            "score_threshold": 0.15,
+            "score_threshold": 0.2,
             "enabled_files": false,
             "translate_files": false,
             "size_threshold": 10,
@@ -1126,7 +1126,7 @@
             "file_depth_role_db": 0,
             "enabled_world_info": true,
             "enabled_for_all": false,
-            "max_entries": 6
+            "max_entries": 7
         },
         "variables": {
             "global": {
@@ -1161,6 +1161,7 @@
                 "HideText": "No",
                 "S9J@klE": "69420",
                 "9$DqA7b~3C": "234Sfv~2I"
+                "SettingC1": "true"
             }
         },
         "attachments": [],
@@ -1937,7 +1938,7 @@
     },
     "oai_settings": {
         "preset_settings_openai": "Default",
-        "temp_openai": 1.00,
+        "temp_openai": 0.90,
         "freq_pen_openai": 0,
         "pres_pen_openai": 0,
         "top_p_openai": 0.95,
@@ -1946,7 +1947,7 @@
         "top_a_openai": 0,
         "repetition_penalty_openai": 1,
         "stream_openai": false,
-        "openai_max_context": 19000,
+        "openai_max_context": 21000,
         "openai_max_tokens": 1000,
         "wrap_in_quotes": false,
         "prompts": [
