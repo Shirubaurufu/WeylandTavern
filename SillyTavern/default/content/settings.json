@@ -2182,7 +2182,7 @@
         "deepseek_model": "deepseek-chat",
         "custom_model": "claude-3-7-sonnet-20250219",
         "custom_url": "https://helixmind.online/v1",
-        "custom_include_body": "- stop: \n  - \"<user>\"\n  - \"</user>\"",
+        "custom_include_body": "- stop: \n  - \"<user>\"\n  - \"</user>\"\n  - \"User:\"",
         "custom_exclude_body": "",
         "custom_include_headers": "",
         "windowai_model": "",
