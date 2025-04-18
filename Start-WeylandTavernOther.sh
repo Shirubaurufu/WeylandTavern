@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
     echo "This start script does not work on Windows."
     echo "Use the windows batch script instead."
@@ -7,10 +5,8 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; t
     exit 1
 fi
 
-# Make sure pwd is the directory of the script
 cd "$(dirname "$0")" > /dev/null 2>&1
 
-# Check if npm is installed
 if ! command -v npm &> /dev/null
 then
     read -p "npm is not installed. Do you want to install nodejs and npm? (y/n)" choice
@@ -43,14 +39,12 @@ else
     echo "Please provide the log file to the Weyland Tavern dev team at your convenience."
 fi
 
-# Install Node Modules
 echo "Installing Node Modules..."
 export NODE_ENV=production
 cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null 2>&1
 
-# Start SillyTavern
-echo "Entering SillyTavern..."
+echo "Entering WeylandTavern..."
 node "server.js" "$@" > /dev/null 2>&1 &
-
-read -p "Press any key to continue..."
+echo "WeylandTavern is now active on localhost:8000 (By default)"
+read -p "Press any key to exit."
 exit
