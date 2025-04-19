@@ -1199,6 +1199,7 @@
             "numAvatars": 4,
             "showExpression": true,
             "extensions": [
+                "avif",
                 "png"
             ],
             "expression": "joy",
@@ -1207,7 +1208,7 @@
             "hideTopBar": false,
             "bgList": [
                 {
-                    "url": "/backgrounds/weyland uni rain.png",
+                    "url": "/backgrounds/weyland tavern.avif",
                     "command": "/return true"
                 }
             ]
