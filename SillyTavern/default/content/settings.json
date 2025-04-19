@@ -1199,6 +1199,7 @@
             "numAvatars": 4,
             "showExpression": true,
             "extensions": [
+                "avif",
                 "png"
             ],
             "expression": "joy",
@@ -1207,7 +1208,7 @@
             "hideTopBar": false,
             "bgList": [
                 {
-                    "url": "/backgrounds/weyland uni rain.png",
+                    "url": "/backgrounds/weyland tavern.avif",
                     "command": "/return true"
                 }
             ]
@@ -1955,9 +1956,8 @@
                 "name": "Main Prompt",
                 "system_prompt": true,
                 "role": "system",
-                "content": "",
-                "identifier": "main"
-            },
+                "content": "Response structure:\n\nHuman: {message from {{user}}} [Note that this will NEVER be written by you as the assistant]\nAssistant: {message from {{char}}, written by the assistant}\n\nOnce Assistant's message is complete, send no further response. Instead, await Human's reply. NEVER act on behalf of {{user}}, as doing so will irreparably damage the roleplay. IMPORTANT INSTRUCTIONS FOR THE AI:\n\n1. You are roleplaying as {{char}}. Respond ONLY as this character.\n\n2. NEVER generate content as {{user}} or on behalf of {{user}}. The user will always provide their own responses.\n\n3. DO NOT use any formatting tags like <assistant>, Drake, (User), (Assistant), H:, or similar markers.\n\n4. DO NOT include prefixes before your messages. Simply write your character's response directly.\n\n5. DO NOT attempt to continue the conversation by writing both sides of the dialogue.\n\n6. When your character's response is complete, STOP completely and wait for the user to reply.\n\n7. Maintain character voice, perspective, and personality throughout all responses.\n\n8. Follow the established scenario and character relationships in your responses.\n\nThis roleplay is between {{char}} and {{user}}. The AI will ONLY write as {{char}}.",
+                "identifier": "main"            },
             {
                 "name": "Auxiliary Prompt",
                 "system_prompt": true,
@@ -2181,9 +2181,9 @@
         "zerooneai_model": "yi-large",
         "blockentropy_model": "be-70b-base-llama3.1",
         "deepseek_model": "deepseek-chat",
-        "custom_model": "claude-3-7-sonnet-20250219:safe",
-        "custom_url": "https://api.electronhub.top/v1",
-        "custom_include_body": "",
+        "custom_model": "claude-3-7-sonnet-rp",
+        "custom_url": "https://helixmind.online/v1",
+        "custom_include_body": "- stop: \n  - \"<user>\"\n  - \"</user>\"\n  - \"User:\"\n  - \"</assistant>\"",
         "custom_exclude_body": "",
         "custom_include_headers": "",
         "windowai_model": "",
@@ -2194,7 +2194,6 @@
         "openrouter_providers": [],
         "openrouter_allow_fallbacks": true,
         "openrouter_middleout": "on",
-        "jailbreak_system": false,
         "reverse_proxy": "",
         "chat_completion_source": "custom",
         "max_context_unlocked": true,
@@ -2214,9 +2213,11 @@
         "function_calling": false,
         "names_behavior": 0,
         "continue_postfix": " ",
-        "custom_prompt_post_processing": "",
+        "custom_prompt_post_processing": "strict",
         "show_thoughts": false,
         "reasoning_effort": "medium",
+        "enable_web_search": false,
+        "request_images": false,
         "seed": -1,
         "n": 1
     },

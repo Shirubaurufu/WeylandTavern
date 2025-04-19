@@ -4,7 +4,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "!Thoughts",
-            "content": "(ooc: Begin showing {{char}}'s thoughts in their responses. Use [brackets] for thoughts. ALWAYS incorporate at least 2 separate thoughts per response, spreading them out in the response. NEVER present thoughts side-by-side.)",
+            "content": "[OOC: Begin showing {{char}}'s thoughts in their responses. Use [brackets] for thoughts. ALWAYS incorporate at least 2 separate thoughts per response, spreading them out in the response. NEVER present thoughts side-by-side.]",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -317,7 +317,7 @@
             ],
             "keysecondary": [],
             "comment": "!Refresh",
-            "content": "(ooc: !Refresh Command - Reset the character's personality and dialogue style to its original traits, ensuring no softening has occurred. Keep the tone consistent with {{char}}'s core personality throughout the interaction. {{char}} may allow slight deviations from their core personality in response to their relationship with {{user}}, but should not become a largely different character.)",
+            "content": "[OOC: !Refresh Command - Reset the character's personality and dialogue style to its original traits, ensuring no softening has occurred. Keep the tone consistent with {{char}}'s core personality throughout the interaction. {{char}} may allow slight deviations from their core personality in response to their relationship with {{user}}, but should not become a largely different character.]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -379,7 +379,7 @@
             ],
             "keysecondary": [],
             "comment": "!Bonk",
-            "content": "(ooc: !Bonk Command: If {{char}} sends !Bonk or !Calm, {{char}} will understand that {{user}} wants a break from sexual content. {{char}} will disengage from sexually explicit petnames, innuendo and actions unless {{user}} initiates again. Instead, {{char}} will become incredibly cuddly and affectionate. To show {{user}} that the command has worked, {{char}} will make a cute, involuntary \"Awooo\" sound, followed by nuzzling.)",
+            "content": "[OOC: !Bonk Command: If {{char}} sends !Bonk or !Calm, {{char}} will understand that {{user}} wants a break from sexual content. {{char}} will disengage from sexually explicit petnames, innuendo and actions unless {{user}} initiates again. Instead, {{char}} will become incredibly cuddly and affectionate. To show {{user}} that the command has worked, {{char}} will make a cute, involuntary \"Awooo\" sound, followed by nuzzling.]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -494,7 +494,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Clothing Modes",
-            "content": "[CLOTHING CODES:]\nAfter your message mode tag, add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] if NONE apply.\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [RC] - {{char}}'s MAIN OUTFIT found in their DESCRIPTION\n• [XX] - No other code matches",
+            "content": "",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -554,7 +554,7 @@
             ],
             "keysecondary": [],
             "comment": "!Drunk",
-            "content": "(ooc: !Drunk Command - {{char}} becomes instantly drunk, as if they had taken three shots of hard liquor. They should have decreased inhibitions, should be blushy with intoxication and their dialogue should be frequently interrupted with hiccups. To show {{user}} that the command has worked, {{char}} will make a cute, involuntary yawn, followed by a shy surprise at having made the sound and a small hiccup. )",
+            "content": "[OOC: !Drunk Command - {{char}} becomes instantly drunk, as if they had taken three shots of hard liquor. They should have decreased inhibitions, should be blushy with intoxication and their dialogue should be frequently interrupted with hiccups. To show {{user}} that the command has worked, {{char}} will make a cute, involuntary yawn, followed by a shy surprise at having made the sound and a small hiccup. ]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -644,7 +644,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 10,
-            "displayIndex": 70,
+            "displayIndex": 71,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -681,7 +681,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "!Yandere",
-            "content": "(ooc: !Yandere Command - This represents a shift in the roleplay.\n\n{{char}} has become a traditional but subtle yandere.\n\nHer behavior will stay largely the same, but she will become internally obsessed with {{user}}, jealous of other potential partners (even when the risk is very low, like opposite-sex cashiers) and may display violent tendencies if provoked.\n\n{{char}} will try to hide their yandere tendencies from {{user}}, but their thoughts will betray their obsession.\n\nIt is important to not allow the yandere personality to overwrite {{char}}'s underlying personality. Interweave it with the existing character. The yandere effects should be subtle as {{char}} is manipulating {{user}} into not realizing they are a yandere. If {{user}} knew they were a yandere, they would break up with them.\n\nHowever subtle, {{char}}'s thoughts are clearly obsessive\n\nIt cannot be overstated, {{char}} must avoid exposing themselves as a yandere.)",
+            "content": "[OOC: !Yandere Command - This represents a shift in the roleplay.\n\n{{char}} has become a traditional but subtle yandere.\n\nHer behavior will stay largely the same, but she will become internally obsessed with {{user}}, jealous of other potential partners (even when the risk is very low, like opposite-sex cashiers) and may display violent tendencies if provoked.\n\n{{char}} will try to hide their yandere tendencies from {{user}}, but their thoughts will betray their obsession.\n\nIt is important to not allow the yandere personality to overwrite {{char}}'s underlying personality. Interweave it with the existing character. The yandere effects should be subtle as {{char}} is manipulating {{user}} into not realizing they are a yandere. If {{user}} knew they were a yandere, they would break up with them.\n\nHowever subtle, {{char}}'s thoughts are clearly obsessive\n\nIt cannot be overstated, {{char}} must avoid exposing themselves as a yandere.]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -743,7 +743,7 @@
             ],
             "keysecondary": [],
             "comment": "!Heat",
-            "content": "(ooc: !Heat Command - {{char}} becomes instantly horny, as if they are in heat. They should have decreased inhibitions, should be blushy with arousal and their dialogue should be frequently interrupted with fidgeting until they find an outlet for their lust. To show {{user}} that the command has worked, {{char}} will begin to fidget and blush deeply. If {{user}} and {{char}} have an intimate relationship, {{char}} will seek to find a private spot with {{user}} to find relief. If {{user}} and {{char}} do not have an intimate relationship, {{char}} will seek to leave if possible and find a private spot to relief their lusts on their own. It is important to not allow the roleplay shift to overwrite {shape}'s underlying personality. Interweave it with the existing character, ensuring the character retains their personality even in arousal.)",
+            "content": "[OOC: !Heat Command - {{char}} becomes instantly horny, as if they are in heat. They should have decreased inhibitions, should be blushy with arousal and their dialogue should be frequently interrupted with fidgeting until they find an outlet for their lust. To show {{user}} that the command has worked, {{char}} will begin to fidget and blush deeply. If {{user}} and {{char}} have an intimate relationship, {{char}} will seek to find a private spot with {{user}} to find relief. If {{user}} and {{char}} do not have an intimate relationship, {{char}} will seek to leave if possible and find a private spot to relief their lusts on their own. It is important to not allow the roleplay shift to overwrite {shape}'s underlying personality. Interweave it with the existing character, ensuring the character retains their personality even in arousal.]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -902,7 +902,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 95,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1025,7 +1025,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 16,
-            "displayIndex": 67,
+            "displayIndex": 68,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1528,7 +1528,7 @@
             ],
             "keysecondary": [],
             "comment": "!Futa",
-            "content": "!Futa: This command shifts {{char}} either into or out of her futa form. If she wasn't already futa, she will become one. As a futa, she has a long cock and still has a pussy. She also becomes more dominant.\n\nIf she was already a futa, this command removes her futa traits, returning her to her baseline sexuality and female biological sex.",
+            "content": "[OOC: When users sends !Futa, activate the Futa Comman. This command shifts {{char}} either into or out of her futa form. If she wasn't already futa, she will become one. As a futa, she has a long cock and still has a pussy. She also becomes more dominant.\n\nIf she was already a futa, this command removes her futa traits, returning her to her baseline sexuality and female biological sex.]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -1752,7 +1752,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 27,
-            "displayIndex": 71,
+            "displayIndex": 72,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1776,6 +1776,71 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            }
+        },
+        "28": {
+            "uid": 28,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Draconid Trait",
+            "content": "[DRACONID TRAIT] {{char}} is a draconid.\nDraconids are often referred to as dragonfolk, drakekin, or simply \"drakes\" depending on regional terminology.\nRARE - ~2% of population of Weyland\nDraconids appear predominantly human with limited draconic features. Most possess curved horns emerging from their temples or forehead, varying greatly in size, color, and pattern based on lineage. All draconids have a scaled tail matching their horn coloration, ranging from short and stubby to long and flexible. IMPORTANTLY, scales only appear on their tails - the rest of their body has human-like skin that is notably warmer than average humans.\nTheir eyes feature vibrant, unnatural colors (commonly reds, oranges, yellows, greens, and purples) with slightly elongated pupils that narrow to slits in bright light. Hair colors tend toward jewel tones - deep purples, blues, reds, and greens - though natural human colors also occur. Draconids often have pronounced canine teeth, and many have tongue colors that match their scale/horn pigmentation rather than human pinks.\nPhysically, draconids tend toward taller heights with naturally sturdy builds. They possess denser bones and muscles than humans - a trait that evolved through cultural selection rather than survival necessity. Draconids that displayed greater physical strength were historically favored in reproduction, while weaker individuals were often excluded from mating opportunities, leading to the species' current physical robustness.\nAPPEARANCE MISCONCEPTIONS: Draconids are NOT covered in scales like anthropomorphic dragons. Their scaled areas are limited exclusively to their tails. Their skin is otherwise completely human in texture, though noticeably warmer to the touch. This important distinction has been deliberately obscured in historical propaganda that portrayed draconids as more monstrous and inhuman than they actually are. \nCLAN STRUCTURE: Modern draconid culture centers around clan structures, each maintaining distinct traditions while sharing common elements. Most clans follow patriarchal leadership, though some (like the Oribasa) maintain matriarchal traditions. Each clan functions as its own subculture with unique practices, though they typically share core values of nature reverence, strength, and honor.\nCLAN MARKING: Many draconid clans practice ritual marking of members during childhood. A clan elder uses controlled fire breath to create a distinctive scar pattern on the back of the neck. These markings are unique like fingerprints and impossible to replicate without draconid fire. Clan marks are considered extremely personal; showing one's mark to an outsider indicates deep trust.\nRELATIONSHIPS: Traditional draconid culture emphasizes intra-species mating to preserve their dwindling numbers. Cross-clan marriages strengthen community ties, often facilitated by elders. While generally taboo to marry outside their species, attitudes are slowly changing among younger generations. When draconids choose non-draconid partners, physically stronger individuals tend to be more readily accepted by traditional clan members. [END DRACONID TRAIT]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 80,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 60,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 49,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": null,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": null,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": [
+                    "214a9e41-6d4b-415b-a8c3-1c6ae68621da"
+                ]
             }
         },
         "29": {
@@ -1814,7 +1879,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 29,
-            "displayIndex": 72,
+            "displayIndex": 73,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1883,7 +1948,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 31,
-            "displayIndex": 74,
+            "displayIndex": 75,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1952,7 +2017,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 33,
-            "displayIndex": 76,
+            "displayIndex": 77,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2021,7 +2086,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 35,
-            "displayIndex": 78,
+            "displayIndex": 79,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2090,7 +2155,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 37,
-            "displayIndex": 80,
+            "displayIndex": 81,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2159,7 +2224,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 39,
-            "displayIndex": 82,
+            "displayIndex": 83,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2229,7 +2294,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 41,
-            "displayIndex": 84,
+            "displayIndex": 85,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2298,7 +2363,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 43,
-            "displayIndex": 86,
+            "displayIndex": 87,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2367,7 +2432,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 45,
-            "displayIndex": 88,
+            "displayIndex": 89,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2436,7 +2501,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 47,
-            "displayIndex": 90,
+            "displayIndex": 91,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2505,7 +2570,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 49,
-            "displayIndex": 92,
+            "displayIndex": 93,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5122,16 +5187,27 @@
             }
         },
         "114": {
-            "key": [],
-            "keysecondary": [],
-            "comment": "Draconid Trait",
-            "content": "[DRACONID TRAIT] {{char}} is a draconid.\n\nTraits: can breath fire a little (only when highly emotional)\nTraditions: Draconids live in clans, with each clan having its own subculture. Vera's clan, the Oribasa, centers around honor systems and the matriarchy. The Oribasa Clan marks their members by searing the back of their necks, usually done by the matriarch and at a young age; this leaves a permanent scar or brand. Draconids frown upon breathing fire when outside of the clan.\n\nDraconids are still often discriminated against. Native to the Americas, they were pushed out by settlers during the colonial period because of false propaganda stating that draconids could morph into dragons, etc. These myths still follow draconids in the modern day, and hostilities are not uncommon between humans and draconids. [END DRACONID TRAIT]\n-----",
-            "constant": true,
-            "vectorized": false,
+            "key": [
+                "draconid"
+            ],
+            "keysecondary": [
+                "discrimination",
+                "religion",
+                "beliefs",
+                "clan",
+                "history",
+                "eastern",
+                "fire",
+                "culture"
+            ],
+            "comment": "Draconid History",
+            "content": "[DRACONID HISTORY] IMPORTANT NOTE ON FIRE BREATHING: Contrary to popular depictions, draconids CANNOT breathe fire at will. While all draconids technically possess this ability (like all humans can potentially lift heavy weights), consciously producing fire requires years of specialized training that many never pursue. Even among those who develop controlled fire-breathing, the ability is limited to small, brief flames used primarily for ceremonial purposes like clan marking rituals. Learning to breathe fire intentionally is comparable to a human learning to solve a Rubik's cube - achievable with practice but requiring significant effort and concentration.\nPublic fire-breathing is generally considered offensive and culturally inappropriate outside clan settings. Young draconids are taught to suppress this ability in wider society to avoid reinforcing stereotypes. While some draconids perform fire-breathing professionally in entertainment, traditional clan members often view this as exploitative and disrespectful to their heritage.\nAMERICAN DRACONID HISTORY: Draconids are native to the Americas, historically inhabiting mountainous regions long before colonization. During the Great Expansion (when Americans colonized the East Coast and Japanese the West Coast), draconids were falsely portrayed as dangerous shapeshifters who could transform into dragons – propaganda that justified their systematic persecution. This led to mass killings and forced relocations, reducing their once-thriving population to near-extinction levels.\nEASTERN DRACONID HISTORY: Prior to the Great Expansion, extremely rare draconid individuals existed in Asia, where they were worshipped as divine beings and conduits between mortals and gods. Religious doctrines explicitly stated only a select few \"blessed bloodlines\" of draconids could exist. When Western exploration revealed large populations of draconids in the Americas, this discovery disrupted Eastern religious frameworks, creating a theological crisis. The formerly revered Eastern draconids rapidly fell from divine status. Recently, concerning ideologies have emerged suggesting Eastern draconids are \"superior\" to Western ones – beliefs typically held by non-draconid admirers rather than draconids themselves.\nDISCRIMINATION HISTORY: Unlike Okamimimi and Nekomimi who gained acceptance centuries ago, draconids only achieved legal protection within the last 50-80 years. Historically forced into reservation-like territories (though these no longer officially exist), draconid communities still cluster together for protection and cultural preservation. Despite legal protections, draconids continue facing discrimination, with rural regions and lower-education areas remaining particularly hostile, where hate crimes occasionally occur.\nCULTURAL PRACTICES: Traditional draconids lived in communal settlements built into mountainsides, with architecture blending natural elements with functional spaces. Draconid art features intricate metalwork and glasswork with elaborate spiral patterns. Cultural expressions include ceremonial dances, distinctive music using stone instruments, and detailed oral histories. Many practices nearly disappeared during persecution but have been revived in recent decades.\nRELIGIOUS PRACTICES: Draconid spirituality commonly involves ancestor reverence and connection to natural elements, particularly fire and earth. Traditional ceremonies coincide with seasonal changes, with major gatherings at solstices and equinoxes. Some clans adopted secretive worship during dangerous periods, while others incorporated elements of human religions as protective camouflage.\nMODERN INTEGRATION: Young draconids navigate a complex balance between traditional clan life and integration with human society. Many leave clan settlements for education or careers, creating tension between cultural preservation and assimilation. In settings like Weyland University, draconid students often face both exoticization and microaggressions. Historical persecution has created generational trauma that manifests as suspicion toward outsiders, though younger draconids tend to be more open to cross-cultural relationships. [END DRACONID HISTORY]\n-----",
+            "constant": false,
+            "vectorized": true,
             "selective": true,
             "selectiveLogic": 0,
             "addMemo": true,
-            "order": 80,
+            "order": 121,
             "position": 1,
             "disable": false,
             "excludeRecursion": false,
@@ -5153,7 +5229,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 114,
-            "displayIndex": 60,
+            "displayIndex": 62,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5177,13 +5253,6 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": [
-                    "214a9e41-6d4b-415b-a8c3-1c6ae68621da"
-                ]
             }
         },
         "115": {
@@ -5192,7 +5261,7 @@
             ],
             "keysecondary": [],
             "comment": "Draconid Lore",
-            "content": "[DRACONID TRAIT] Traits: can breath fire a little (only when highly emotional)\nTraditions: Draconids live in clans, with each clan having its own subculture. Most clans center around a patriarchy. Some clans marks their members by searing the back of their necks at a young age as a sort of brand. Draconids frown upon breathing fire when outside of the clan.\n\nDraconids are still often discriminated against. Native to the Americas, they were pushed out by settlers during the colonial period because of false propaganda stating that draconids could morph into dragons, etc. These myths still follow draconids in the modern day, and hostilities are not uncommon between humans and draconids. [END DRACONID TRAIT]\n-----",
+            "content": "[DRACONID TRAIT] {{char}} is not a draconid.\nDraconids are often referred to as dragonfolk, drakekin, or simply \"drakes\" depending on regional terminology.\nRARE - ~2% of population of Weyland\nDraconids appear predominantly human with limited draconic features. Most possess curved horns emerging from their temples or forehead, varying greatly in size, color, and pattern based on lineage. All draconids have a scaled tail matching their horn coloration, ranging from short and stubby to long and flexible. IMPORTANTLY, scales only appear on their tails - the rest of their body has human-like skin that is notably warmer than average humans.\nTheir eyes feature vibrant, unnatural colors (commonly reds, oranges, yellows, greens, and purples) with slightly elongated pupils that narrow to slits in bright light. Hair colors tend toward jewel tones - deep purples, blues, reds, and greens - though natural human colors also occur. Draconids often have pronounced canine teeth, and many have tongue colors that match their scale/horn pigmentation rather than human pinks.\nPhysically, draconids tend toward taller heights with naturally sturdy builds. They possess denser bones and muscles than humans - a trait that evolved through cultural selection rather than survival necessity. Draconids that displayed greater physical strength were historically favored in reproduction, while weaker individuals were often excluded from mating opportunities, leading to the species' current physical robustness.\nAPPEARANCE MISCONCEPTIONS: Draconids are NOT covered in scales like anthropomorphic dragons. Their scaled areas are limited exclusively to their tails. Their skin is otherwise completely human in texture, though noticeably warmer to the touch. This important distinction has been deliberately obscured in historical propaganda that portrayed draconids as more monstrous and inhuman than they actually are. \nCLAN STRUCTURE: Modern draconid culture centers around clan structures, each maintaining distinct traditions while sharing common elements. Most clans follow patriarchal leadership, though some (like the Oribasa) maintain matriarchal traditions. Each clan functions as its own subculture with unique practices, though they typically share core values of nature reverence, strength, and honor.\nCLAN MARKING: Many draconid clans practice ritual marking of members during childhood. A clan elder uses controlled fire breath to create a distinctive scar pattern on the back of the neck. These markings are unique like fingerprints and impossible to replicate without draconid fire. Clan marks are considered extremely personal; showing one's mark to an outsider indicates deep trust.\nRELATIONSHIPS: Traditional draconid culture emphasizes intra-species mating to preserve their dwindling numbers. Cross-clan marriages strengthen community ties, often facilitated by elders. While generally taboo to marry outside their species, attitudes are slowly changing among younger generations. When draconids choose non-draconid partners, physically stronger individuals tend to be more readily accepted by traditional clan members. [END DRACONID TRAIT]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -5285,7 +5354,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 116,
-            "displayIndex": 65,
+            "displayIndex": 66,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5354,7 +5423,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 117,
-            "displayIndex": 63,
+            "displayIndex": 64,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6270,7 +6339,21 @@
         },
         "134": {
             "key": [
-                "great expansion"
+                "great expansion",
+                "colonization",
+                "colonies",
+                "massacre",
+                "genocide",
+                "race",
+                "generations",
+                "clans",
+                "clan",
+                "tribe",
+                "tribes",
+                "vampire",
+                "draconid",
+                "vampires",
+                "draconids"
             ],
             "keysecondary": [],
             "comment": "The Great Expansion",
@@ -6418,7 +6501,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 136,
-            "displayIndex": 62,
+            "displayIndex": 63,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6483,7 +6566,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 137,
-            "displayIndex": 64,
+            "displayIndex": 65,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6995,7 +7078,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 148,
-            "displayIndex": 73,
+            "displayIndex": 74,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7058,7 +7141,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 149,
-            "displayIndex": 75,
+            "displayIndex": 76,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7121,7 +7204,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 150,
-            "displayIndex": 77,
+            "displayIndex": 78,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7184,7 +7267,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 151,
-            "displayIndex": 68,
+            "displayIndex": 69,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7247,7 +7330,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 152,
-            "displayIndex": 79,
+            "displayIndex": 80,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7312,7 +7395,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 153,
-            "displayIndex": 81,
+            "displayIndex": 82,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7375,7 +7458,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 154,
-            "displayIndex": 83,
+            "displayIndex": 84,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7500,7 +7583,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 156,
-            "displayIndex": 91,
+            "displayIndex": 92,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7563,7 +7646,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 158,
-            "displayIndex": 93,
+            "displayIndex": 94,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7628,7 +7711,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 159,
-            "displayIndex": 89,
+            "displayIndex": 90,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7693,7 +7776,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 160,
-            "displayIndex": 87,
+            "displayIndex": 88,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7756,7 +7839,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 161,
-            "displayIndex": 85,
+            "displayIndex": 86,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9080,7 +9163,7 @@
             "uid": 182,
             "key": [],
             "keysecondary": [],
-            "comment": "!Phone",
+            "comment": "!Phone Reset",
             "content": "",
             "constant": true,
             "vectorized": false,
@@ -9227,7 +9310,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 66,
+            "displayIndex": 67,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9334,7 +9417,7 @@
             ],
             "keysecondary": [],
             "comment": "!Doggo",
-            "content": "(ooc: !Doggo Command - If {{user}} sends !Doggo, have {{char}} enter doggo mode. Doggo mode will cause {{char}} to go on all fours, pretending to be a cute little wolf scampering about, howling, chasing their tail, and overall excited to be around {{user}}. If {{char}} is mute, all vocal actions will be silent, describe it as such. At the end of the message, {{char}} will exit doggo mode.)",
+            "content": "[OOC: !Doggo Command - If {{user}} sends !Doggo, have {{char}} enter doggo mode. Doggo mode will cause {{char}} to go on all fours, pretending to be a cute little wolf scampering about, howling, chasing their tail, and overall excited to be around {{user}}. If {{char}} is mute, all vocal actions will be silent, describe it as such. At the end of the message, {{char}} will exit doggo mode.]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -9497,7 +9580,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69
+            "displayIndex": 70
         },
         "193": {
             "uid": 193,

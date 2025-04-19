@@ -23,5 +23,7 @@ cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-pr
 echo Starting WeylandTavern...
 echo A browser window will open automatically when ready.
 node server.js %* >nul 2>&1
-pause
+echo WeylandTavern is now active on localhost:8000 (By default)
+echo Press any key to exit.
+pause >nul
 popd

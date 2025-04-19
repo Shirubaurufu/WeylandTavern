@@ -34,5 +34,5 @@ node character-downloader.js https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7f
 echo
 echo "Enjoy your time in Weyland!"
 echo
-disown
+read -p "Press any key to continue..."
 exit
