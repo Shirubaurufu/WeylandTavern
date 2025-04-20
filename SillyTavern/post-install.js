@@ -300,11 +300,6 @@ function createDefaultFiles() {
         },
         {
             type: 'file',
-            defaultPath: './default/content/backgrounds/.jpg',
-            productionPath: './data/default-user/backgrounds/.jpg',
-        },
-        {
-            type: 'file',
             defaultPath: './default/content/backgrounds/forest treehouse fireworks air baloons (by kallmeflocc).jpg',
             productionPath: './data/default-user/backgrounds/forest treehouse fireworks air baloons (by kallmeflocc).jpg',
         },
