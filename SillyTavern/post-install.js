@@ -335,8 +335,8 @@ function createDefaultFiles() {
         },
         {
             type: 'file',
-            defaultPath: './default/content/backgrounds/landscape beach day.jpg',
-            productionPath: './data/default-user/backgrounds/landscape beach day.jpg',
+            defaultPath: './default/content/backgrounds/landscape beach day.png',
+            productionPath: './data/default-user/backgrounds/landscape beach day.png',
         },
         {
             type: 'file',
