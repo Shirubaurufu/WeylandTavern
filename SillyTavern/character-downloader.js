@@ -37,7 +37,7 @@ const fileChoices = files.map(file => ({
     name: `${file.name?.replace(".zip","")} (${file.size ? (file.size / 1024 / 1024).toFixed(2) : 'unknown'} MB)`,
     value: file
 }));
-let answers = {};
+let answers = {selectedFiles: []};
 if (process.argv.length > 3) {
     if (!fs.existsSync(__charactersJSON)) process.exit(1);
     try {
@@ -45,11 +45,13 @@ if (process.argv.length > 3) {
         if (!jsonData) process.exit(1);
         Object.entries(jsonData).forEach(([key, value], index) => {
             const file = files.find(x => x.name?.includes(key));
-            if (!file || file.name?.includes(value)) return;
-            console.log(key + " has an update...");
-            answers.selectedFiles.push(file);
+            if (!(!file || file.name?.includes(value))) {
+                console.log(key + " has an update...");
+                answers['selectedFiles'].push(file);
+            }
         })
     } catch {
+        console.log("Error getting character updates. Exiting.")
         process.exit(1)
     }
 } else {
