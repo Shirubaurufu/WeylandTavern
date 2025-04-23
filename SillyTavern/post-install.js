@@ -255,6 +255,116 @@ function createDefaultFiles() {
         },
         {
             type: 'file',
+            defaultPath: './default/content/backgrounds/__transparent.png',
+            productionPath: './data/default-user/backgrounds/__transparent.png',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/_black.jpg',
+            productionPath: './data/default-user/backgrounds/_black.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/_white.jpg',
+            productionPath: './data/default-user/backgrounds/_white.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/bedroom clean.jpg',
+            productionPath: './data/default-user/backgrounds/bedroom clean.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/bedroom red.jpg',
+            productionPath: './data/default-user/backgrounds/bedroom red.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/bedroom tatami.jpg',
+            productionPath: './data/default-user/backgrounds/bedroom tatami.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/cityscape medieval market.jpg',
+            productionPath: './data/default-user/backgrounds/cityscape medieval market.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/cityscape medieval night.jpg',
+            productionPath: './data/default-user/backgrounds/cityscape medieval night.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/cityscape postapoc.jpg',
+            productionPath: './data/default-user/backgrounds/cityscape postapoc.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/forest treehouse fireworks air baloons (by kallmeflocc).jpg',
+            productionPath: './data/default-user/backgrounds/forest treehouse fireworks air baloons (by kallmeflocc).jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/japan classroom side.jpg',
+            productionPath: './data/default-user/backgrounds/japan classroom side.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/japan classroom.jpg',
+            productionPath: './data/default-user/backgrounds/japan classroom.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/japan path cherry blossom.jpg',
+            productionPath: './data/default-user/backgrounds/japan path cherry blossom.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/japan university.jpg',
+            productionPath: './data/default-user/backgrounds/japan university.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/landscape autumn great tree.jpg',
+            productionPath: './data/default-user/backgrounds/landscape autumn great tree.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/landscape beach day.png',
+            productionPath: './data/default-user/backgrounds/landscape beach day.png',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/landscape beach night.jpg',
+            productionPath: './data/default-user/backgrounds/landscape beach night.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/landscape mountain lake.jpg',
+            productionPath: './data/default-user/backgrounds/landscape mountain lake.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/landscape postapoc.jpg',
+            productionPath: './data/default-user/backgrounds/landscape postapoc.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/landscape winter lake house.jpg',
+            productionPath: './data/default-user/backgrounds/landscape winter lake house.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/royal.jpg',
+            productionPath: './data/default-user/backgrounds/royal.jpg',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/backgrounds/tavern day.jpg',
+            productionPath: './data/default-user/backgrounds/tavern day.jpg',
+        },
+        {
+            type: 'file',
             defaultPath: './default/content/settings.json',
             productionPath: './data/default-user/settings.json',
         },
