@@ -6,7 +6,8 @@ import path, { parse } from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
 import * as cliProgress from 'cli-progress';
-import { forEach } from 'lodash';
+import pkg from 'lodash';
+const { forEach } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(path.dirname(__filename));
