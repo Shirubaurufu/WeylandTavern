@@ -89,3 +89,4 @@ public/error/
 .env
 /StartDev.bat
 *.log
+characters.json
