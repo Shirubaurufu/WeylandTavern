@@ -19,7 +19,7 @@ if errorlevel 1 (
 
 pushd %~dp0
 set NODE_ENV=production
-cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev
+cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev >nul
 echo Checking for character updates...
 node character-downloader.js https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw -u
 echo Starting WeylandTavern...

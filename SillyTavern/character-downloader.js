@@ -49,10 +49,10 @@ if (process.argv[3] && process.argv[3] === "-u") {
                 console.log(key + " has an update...");
                 answers['selectedFiles'].push(file);
             }
-        })
+        });
     } catch {
-        console.log("Error getting character updates. Exiting.")
-        process.exit(1)
+        console.log("Error getting character updates. Exiting.");
+        process.exit(1);
     }
 } else {
     answers = await inquirer.prompt([

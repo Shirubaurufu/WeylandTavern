@@ -5,7 +5,7 @@ if not "%OS%"=="Windows_NT" (
     pause
     exit /b
 )
-cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev
+cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev >nul
 cls
 echo Welcome to Weyland Tavern's character downloader!
 echo:
