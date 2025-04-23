@@ -38,7 +38,7 @@ const fileChoices = files.map(file => ({
     value: file
 }));
 let answers = {selectedFiles: []};
-if (process.argv.length > 3) {
+if (process.argv[3] && process.argv[3] === "-u") {
     if (!fs.existsSync(__charactersJSON)) process.exit(1);
     try {
         const jsonData = JSON.parse(fs.readFileSync(__charactersJSON, 'utf8'));
