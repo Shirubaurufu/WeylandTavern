@@ -38,7 +38,7 @@ const fileChoices = files.map(file => ({
     value: file
 }));
 let answers = {};
-if (process.argv.length > 2) {
+if (process.argv.length > 3) {
     if (!fs.existsSync(__charactersJSON)) process.exit(1);
     try {
         const jsonData = JSON.parse(fs.readFileSync(__charactersJSON, 'utf8'));
@@ -62,7 +62,6 @@ if (process.argv.length > 2) {
         }
         ]);
 }
-
 
 if (!answers.selectedFiles.length) {
     console.log("No characters selected. Exiting.");
