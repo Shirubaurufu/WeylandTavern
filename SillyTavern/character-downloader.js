@@ -1,15 +1,16 @@
 
 import { Storage, File } from 'megajs';
 import fs from 'fs';
-import fsPromises from 'fs/promises';
 import inquirer from 'inquirer';
 import path, { parse } from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
 import * as cliProgress from 'cli-progress';
+import { forEach } from 'lodash';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(path.dirname(__filename));
+const __charactersJSON = path.join(path.dirname(__filename),"characters.json")
 
 const folderUrl = process.argv[2];
 
@@ -35,15 +36,32 @@ const fileChoices = files.map(file => ({
     name: `${file.name?.replace(".zip","")} (${file.size ? (file.size / 1024 / 1024).toFixed(2) : 'unknown'} MB)`,
     value: file
 }));
-
-const answers = await inquirer.prompt([
-{
-    type: 'checkbox',
-    name: 'selectedFiles',
-    message: 'Select characters to download:',
-    choices: fileChoices
+let answers = {};
+if (process.argv.length > 2) {
+    if (!fs.existsSync(__charactersJSON)) process.exit(1);
+    try {
+        const jsonData = JSON.parse(fs.readFileSync(__charactersJSON, 'utf8'));
+        if (!jsonData) process.exit(1);
+        Object.entries(jsonData).forEach(([key, value], index) => {
+            const file = files.find(x => x.name?.includes(key));
+            if (!file || file.name?.includes(value)) return;
+            console.log(key + " has an update...");
+            answers.selectedFiles.push(file);
+        })
+    } catch {
+        process.exit(1)
+    }
+} else {
+    answers = await inquirer.prompt([
+        {
+            type: 'checkbox',
+            name: 'selectedFiles',
+            message: 'Select characters to download:',
+            choices: fileChoices
+        }
+        ]);
 }
-]);
+
 
 if (!answers.selectedFiles.length) {
     console.log("No characters selected. Exiting.");
@@ -59,10 +77,16 @@ const progressBar = new cliProgress.SingleBar({
 
 let i = 1;
 let fails = [];
+let jsonData = {};
 for (const file of answers.selectedFiles) {
     const zipPath = path.join(__dirname, file.name);
     const noZipName = file.name.replace(".zip","");
-    const cleanName = noZipName.split(" ")[0];
+    const split = noZipName.split(" ");
+    const cleanName = split[0];
+    const date = split[1];
+    try {
+        jsonData = JSON.parse(fs.readFileSync(__charactersJSON, 'utf8'));
+    } catch {}
     console.log(`Downloading: ${noZipName} (${i}/${answers.selectedFiles.length})`);
     const fileSize = parseFloat((file.size/1024/1024).toFixed(2));
     progressBar.start(fileSize, 0);
@@ -104,11 +128,14 @@ for (const file of answers.selectedFiles) {
         });
     });
 
+    jsonData[cleanName] = date;
+
     fs.unlink(zipPath, (err) => {
         if (err) throw err.name;
     });
     i++;
 }
 
+fs.writeFileSync(__charactersJSON, JSON.stringify(jsonData, null, 2), 'utf8');
 console.log(`\nSuccessfully downloaded ${i-fails.length-1}/${i-1} characters!`);
 if (fails.length != 0) console.log(`Failed to download: ${fails.join(", ")}`);
