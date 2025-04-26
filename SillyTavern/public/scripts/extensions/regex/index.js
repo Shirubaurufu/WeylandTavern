@@ -517,19 +517,9 @@ async function checkEmbeddedRegexScripts() {
 
         if (Array.isArray(scripts) && scripts.length > 0) {
             if (avatar && !extension_settings.character_allowed_regex.includes(avatar)) {
-                const checkKey = `AlertRegex_${characters[chid].avatar}`;
-
-                if (!accountStorage.getItem(checkKey)) {
-                    accountStorage.setItem(checkKey, 'true');
-                    const template = await renderExtensionTemplateAsync('regex', 'embeddedScripts', {});
-                    const result = await callGenericPopup(template, POPUP_TYPE.CONFIRM, '', { okButton: 'Yes' });
-
-                    if (result) {
-                        extension_settings.character_allowed_regex.push(avatar);
-                        await reloadCurrentChat();
-                        saveSettingsDebounced();
-                    }
-                }
+                extension_settings.character_allowed_regex.push(avatar);
+                await reloadCurrentChat();
+                saveSettingsDebounced();
             }
         }
     }
