@@ -26,7 +26,7 @@ then
     esac
 fi
 export NODE_ENV=production
-cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null 2>&1
+cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null
 clear
 echo "Welcome to Weyland Tavern's character downloader!"
 echo
