@@ -51,7 +51,8 @@ if (process.argv[3] && process.argv[3] === "-u") {
                 answers['selectedFiles'].push(file);
             }
         });
-		console.log("Updating: " + neededUpdates.slice(0, -2) + "...");
+        if (neededUpdates !== "")
+            console.log("Updating: " + neededUpdates.slice(0, -2) + "...");
     } catch {
         console.log("Error getting character updates. Exiting.");
         process.exit(1);
@@ -68,7 +69,6 @@ if (process.argv[3] && process.argv[3] === "-u") {
 }
 
 if (!answers.selectedFiles.length) {
-    console.log("No characters selected. Exiting.");
     process.exit(1);
 }
 
