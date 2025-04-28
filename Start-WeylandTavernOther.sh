@@ -47,5 +47,5 @@ node "character-downloader.js" "https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGv
 echo "Entering WeylandTavern..."
 node "server.js" "$@" > /dev/null 2>&1 &
 echo "WeylandTavern is now active on localhost:8000 (By default)"
-read -p "Press any key to exit WT."
+read -p "Press any key to exit."
 exit
