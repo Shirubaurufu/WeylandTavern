@@ -43,13 +43,15 @@ if (process.argv[3] && process.argv[3] === "-u") {
     try {
         const jsonData = JSON.parse(fs.readFileSync(__charactersJSON, 'utf8'));
         if (!jsonData) process.exit(1);
+        let neededUpdates = "";
         Object.entries(jsonData).forEach(([key, value], index) => {
             const file = files.find(x => x.name?.includes(key));
             if (!(!file || file.name?.includes(value))) {
-                console.log(key + " has an update...");
+                neededUpdates = neededUpdates + key + ", "
                 answers['selectedFiles'].push(file);
             }
         });
+		console.log("Updating: " + neededUpdates.slice(0, -2) + "...");
     } catch {
         console.log("Error getting character updates. Exiting.");
         process.exit(1);

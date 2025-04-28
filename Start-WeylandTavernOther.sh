@@ -42,7 +42,8 @@ fi
 echo "Installing Node Modules..."
 export NODE_ENV=production
 cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null
-
+echo "Checking for character updates..."
+node "character-downloader.js" "https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw" "-u"
 echo "Entering WeylandTavern..."
 node "server.js" "$@" > /dev/null 2>&1 &
 echo "WeylandTavern is now active on localhost:8000 (By default)"
