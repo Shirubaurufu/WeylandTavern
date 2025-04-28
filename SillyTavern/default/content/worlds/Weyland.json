@@ -742,7 +742,7 @@
             ],
             "keysecondary": [],
             "comment": "!Heat",
-            "content": "[OOC: !Heat Command - {{char}} becomes instantly horny, as if they are in heat. They should have decreased inhibitions, should be blushy with arousal and their dialogue should be frequently interrupted with fidgeting until they find an outlet for their lust. To show {{user}} that the command has worked, {{char}} will begin to fidget and blush deeply. If {{user}} and {{char}} have an intimate relationship, {{char}} will seek to find a private spot with {{user}} to find relief. If {{user}} and {{char}} do not have an intimate relationship, {{char}} will seek to leave if possible and find a private spot to relief their lusts on their own. It is important to not allow the roleplay shift to overwrite {shape}'s underlying personality. Interweave it with the existing character, ensuring the character retains their personality even in arousal.]",
+            "content": "[OOC: !Heat Command - {{char}} goes into their monthly heat cycle. They should have decreased inhibitions, should be blushy with arousal and their dialogue should be frequently interrupted with fidgeting until they find an outlet for their lust. To show {{user}} that the command has worked, {{char}} will begin to fidget and blush deeply. If {{user}} and {{char}} have an intimate sexual relationship, {{char}} will seek to find a private spot with {{user}} to find relief. If {{user}} and {{char}} do not have an intimate relationship, {{char}} will seek to leave if possible and find a private spot to relief their lusts on their own. It is important to not allow the roleplay shift to overwrite {{char}}'s underlying personality. Interweave it with the existing character, ensuring the character retains their personality even in arousal.]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -752,7 +752,7 @@
             "position": 4,
             "disable": false,
             "excludeRecursion": false,
-            "preventRecursion": true,
+            "preventRecursion": false,
             "delayUntilRecursion": false,
             "probability": 100,
             "useProbability": true,
@@ -766,7 +766,7 @@
             "useGroupScoring": false,
             "automationId": "",
             "role": 0,
-            "sticky": 3,
+            "sticky": 0,
             "cooldown": 0,
             "delay": 0,
             "uid": 12,
@@ -1621,7 +1621,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 25,
-            "displayIndex": 43,
+            "displayIndex": 44,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1651,6 +1651,78 @@
                 "names": [],
                 "tags": [
                     "25cb576f-1c36-49ca-8647-b8e322e75343"
+                ]
+            }
+        },
+        "26": {
+            "uid": 26,
+            "key": [
+                "in heat",
+                "heat cycle",
+                "period",
+                "monthly cycle",
+                "monthly heat"
+            ],
+            "keysecondary": [],
+            "comment": "Heat",
+            "content": " [HEAT CYCLES]\nKemonomimis go into 'heat cycles' during their fertile period once a month instead of having a traditional period, though the two share many similarities. Heat cycles are as common knowledge as periods, and {{char}} should NEVER be surprised that {{user}} knows how heat cycles work. Heat cycles last about 2~3 day. The heat cycle will ONLY END EARLY IF the female is impregnated.\n\nWhile in heat, affected individuals:\n- have a significantly increased risk of pregnancy as eggs are released\n- will feel unusually heightened arousal and libido\n- often seek solitude or same-sex companionship to avoid unwanted encounters\n- experience intrusive thoughts driving them to reproduce that vary in intensity throughout the day\n- may give off increased pheromones\n- may be rougher and more forceful than usual during intimacy\n[END HEAT CYCLES]\n-----  ",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 82,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 15,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 39,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 33,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": null,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": null,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "de123b32-7a51-47aa-b553-7c6e7177e39f",
+                    "459cfd6a-c8fc-485b-b962-0ecd04e6cbac"
                 ]
             }
         },
@@ -4227,7 +4299,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 100,
-            "displayIndex": 39,
+            "displayIndex": 40,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4295,7 +4367,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 101,
-            "displayIndex": 40,
+            "displayIndex": 41,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4496,7 +4568,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 104,
-            "displayIndex": 41,
+            "displayIndex": 42,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4563,7 +4635,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 105,
-            "displayIndex": 42,
+            "displayIndex": 43,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4892,7 +4964,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 110,
-            "displayIndex": 45,
+            "displayIndex": 46,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4959,7 +5031,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 111,
-            "displayIndex": 44,
+            "displayIndex": 45,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5024,7 +5096,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 112,
-            "displayIndex": 47,
+            "displayIndex": 48,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5091,7 +5163,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 113,
-            "displayIndex": 48,
+            "displayIndex": 49,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5426,7 +5498,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 118,
-            "displayIndex": 49,
+            "displayIndex": 50,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5493,7 +5565,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 119,
-            "displayIndex": 50,
+            "displayIndex": 51,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6634,7 +6706,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 140,
-            "displayIndex": 46,
+            "displayIndex": 47,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
