@@ -22,7 +22,7 @@ const legacyIndicatorTemplate = document.getElementById('typing_indicator_templa
  * @type {TypingIndicatorSettings}
  */
 const defaultSettings = {
-    enabled: false,
+    enabled: true,
     streaming: false,
 };
 
