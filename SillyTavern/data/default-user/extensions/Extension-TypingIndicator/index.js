@@ -22,8 +22,8 @@ const legacyIndicatorTemplate = document.getElementById('typing_indicator_templa
  * @type {TypingIndicatorSettings}
  */
 const defaultSettings = {
-    enabled: false,
-    streaming: false,
+    enabled: true,
+    streaming: true,
 };
 
 /**
@@ -33,6 +33,8 @@ const defaultSettings = {
  */
 function getSettings() {
     if (extension_settings[MODULE] === undefined) {
+        extension_settings[MODULE] = structuredClone(defaultSettings);
+    } else {
         extension_settings[MODULE] = structuredClone(defaultSettings);
     }
 
