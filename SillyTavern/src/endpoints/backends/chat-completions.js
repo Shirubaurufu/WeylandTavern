@@ -228,6 +228,7 @@ async function sendClaudeRequest(request, response) {
             additionalHeaders['anthropic-beta'] = betaHeaders.join(',');
         }
 
+        console.debug('Claude request:', requestBody);
 
         const generateResponse = await fetch(apiUrl + '/messages', {
             method: 'POST',
@@ -254,6 +255,7 @@ async function sendClaudeRequest(request, response) {
             /** @type {any} */
             const generateResponseJson = await generateResponse.json();
             const responseText = generateResponseJson?.content?.[0]?.text || '';
+            console.debug('Claude response:', generateResponseJson);
 
             // Wrap it back to OAI format + save the original content
             const reply = { choices: [{ 'message': { 'content': responseText } }], content: generateResponseJson.content };
@@ -282,6 +284,7 @@ async function sendScaleRequest(request, response) {
     }
 
     const requestPrompt = convertTextCompletionPrompt(request.body.messages);
+    console.debug('Scale request:', requestPrompt);
 
     try {
         const controller = new AbortController();
@@ -306,6 +309,7 @@ async function sendScaleRequest(request, response) {
 
         /** @type {any} */
         const generateResponseJson = await generateResponse.json();
+        console.debug('Scale response:', generateResponseJson);
 
         const reply = { choices: [{ 'message': { 'content': generateResponseJson.output } }] };
         return response.send(reply);
@@ -420,6 +424,7 @@ async function sendMakerSuiteRequest(request, response) {
     }
 
     const body = getGeminiBody();
+    console.debug('Google AI Studio request:', body);
 
     try {
         const controller = new AbortController();
@@ -508,6 +513,7 @@ async function sendAI21Request(request, response) {
     }
 
     const controller = new AbortController();
+    console.debug(request.body.messages);
     request.socket.removeAllListeners('close');
     request.socket.on('close', function () {
         controller.abort();
@@ -534,6 +540,7 @@ async function sendAI21Request(request, response) {
         signal: controller.signal,
     };
 
+    console.debug('AI21 request:', body);
 
     try {
         const generateResponse = await fetch(API_AI21 + '/chat/completions', options);
@@ -547,6 +554,7 @@ async function sendAI21Request(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            console.debug('AI21 response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -611,6 +619,7 @@ async function sendMistralAIRequest(request, response) {
             timeout: 0,
         };
 
+        console.debug('MisralAI request:', requestBody);
 
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
         if (request.body.stream) {
@@ -623,6 +632,7 @@ async function sendMistralAIRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            console.debug('MistralAI response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -688,6 +698,7 @@ async function sendCohereRequest(request, response) {
             requestBody.safety_mode = 'OFF';
         }
 
+        console.debug('Cohere request:', requestBody);
 
         const config = {
             method: 'POST',
@@ -714,6 +725,7 @@ async function sendCohereRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            console.debug('Cohere response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -786,6 +798,7 @@ async function sendDeepSeekRequest(request, response) {
             signal: controller.signal,
         };
 
+        console.debug('DeepSeek request:', requestBody);
 
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
 
@@ -799,6 +812,7 @@ async function sendDeepSeekRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            console.debug('DeepSeek response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -1214,6 +1228,7 @@ router.post('/generate', function (request, response) {
         signal: controller.signal,
     };
 
+    console.debug(requestBody);
 
     makeRequest(config, response, request);
 
@@ -1225,7 +1240,7 @@ router.post('/generate', function (request, response) {
      * @param {Number} retries Number of retries left
      * @param {Number} timeout Request timeout in ms
      */
-    async function makeRequest(config, response, request, retries = 5, timeout = 5000) {
+    async function makeRequest(config, response, request, retries = 1, timeout = 5000) {
         try {
             controller.signal.throwIfAborted();
             const fetchResponse = await fetch(endpointUrl, config);
@@ -1240,6 +1255,8 @@ router.post('/generate', function (request, response) {
                 /** @type {any} */
                 let json = await fetchResponse.json();
                 response.send(json);
+                console.debug(json);
+                console.debug(json?.choices?.[0]?.message);
             } else if (fetchResponse.status === 429 && retries > 0) {
                 console.warn(`Out of quota, retrying in ${Math.round(timeout / 1000)}s`);
                 setTimeout(() => {
@@ -1270,12 +1287,36 @@ router.post('/generate', function (request, response) {
         const responseText = await errorResponse.text();
         const errorData = tryParse(responseText);
 
-        const message = errorResponse.statusText || 'Unknown error occurred';
-        const quota_error = errorResponse.status === 429 && errorData?.error?.type === 'insufficient_quota';
+        // First check for our specific rate limit error format
+        if (errorResponse.status === 429 && errorData?.error?.message) {
+            const rateLimitMessage = errorData?.error?.message || 'Rate limit exceeded';
+            console.error('Rate limit error detected:', errorData.error.message);
+            if (!response.headersSent) {
+                return response.status(429).send({
+                    error: {
+                        message: rateLimitMessage,
+                        type: 'rate_limit_error',
+                        code: 'rate_limit_exceeded',
+                    },
+                    use_generic_error: true
+                });
+            }
+            return;
+        }
+
+        // Fallback to original behavior for other errors
+        const message = errorData?.error?.message || errorResponse.statusText || 'Unknown error occurred';
+        const quota_error = errorResponse.status === 429;
         console.error('Chat completion request error: ', message, responseText);
 
         if (!response.headersSent) {
-            response.send({ error: { message }, quota_error: quota_error });
+            response.send({
+                error: {
+                    message,
+                    ...(errorData?.error || {})
+                },
+                quota_error
+            });
         } else if (!response.writableEnded) {
             response.write(errorResponse);
         } else {
