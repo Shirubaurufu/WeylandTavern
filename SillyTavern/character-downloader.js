@@ -82,15 +82,15 @@ const progressBar = new cliProgress.SingleBar({
 let i = 1;
 let fails = [];
 let jsonData = {};
+try {
+    jsonData = JSON.parse(fs.readFileSync(__charactersJSON, 'utf8'));
+} catch {}
 for (const file of answers.selectedFiles) {
     const zipPath = path.join(__dirname, file.name);
     const noZipName = file.name.replace(".zip","");
     const split = noZipName.split(" ");
     const cleanName = split[0];
     const date = split[1];
-    try {
-        jsonData = JSON.parse(fs.readFileSync(__charactersJSON, 'utf8'));
-    } catch {}
     console.log(`Downloading: ${noZipName} (${i}/${answers.selectedFiles.length})`);
     const fileSize = parseFloat((file.size/1024/1024).toFixed(2));
     progressBar.start(fileSize, 0);
@@ -118,6 +118,7 @@ for (const file of answers.selectedFiles) {
         writeStream.on('finish', () => {
             try {
                 new AdmZip(zipPath).extractEntryTo('SillyTavern/', __dirname, true, true);
+                jsonData[cleanName] = date;
                 resolve(0);
             } catch (err) {
                 console.error(`Extraction error for ${noZipName}:`, err);
@@ -132,13 +133,13 @@ for (const file of answers.selectedFiles) {
         });
     });
 
-    jsonData[cleanName] = date;
-
     fs.unlink(zipPath, (err) => {
         if (err) throw err.name;
     });
     i++;
 }
+
+console.log(JSON.stringify(jsonData, null, 2));
 
 fs.writeFileSync(__charactersJSON, JSON.stringify(jsonData, null, 2), 'utf8');
 console.log(`\nSuccessfully downloaded ${i-fails.length-1}/${i-1} characters!`);
