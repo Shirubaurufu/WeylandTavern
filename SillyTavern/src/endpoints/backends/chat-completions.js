@@ -55,6 +55,54 @@ const API_AI21 = 'https://api.ai21.com/studio/v1';
 const API_NANOGPT = 'https://nano-gpt.com/api/v1';
 const API_DEEPSEEK = 'https://api.deepseek.com/beta';
 
+const usageCache = new Map(); // Tracks { apiKey: { count: number, firstUsed: Date }}
+async function checkUsage(apiKey) {
+    try {
+        // Call HelixMind's usage endpoint
+        const usageResponse = await fetch('https://helixmind.online/v1/usages', {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
+        if (usageResponse.ok) {
+            const data = await usageResponse.json();
+            console.log('[HelixMind Usage]', data);
+            return data; // Expecting { total: number, used: number, remaining: number }
+        }
+    } catch (error) {
+        console.error('Usage check failed:', error);
+    }
+    return null;
+}
+// New tracking function
+async function trackHelixMindUsage(request) {
+    const apiKey = request.headers.authorization?.split(' ')[1];
+    if (!apiKey) return;
+    // Get or create usage record
+    if (!usageCache.has(apiKey)) {
+        usageCache.set(apiKey, {
+            count: 0,
+            firstUsed: new Date(),
+            lastChecked: null
+        });
+    }
+    const usage = usageCache.get(apiKey);
+    usage.count++;
+    usage.lastChecked = new Date();
+    // Check with HelixMind's API every 3 requests
+    if (usage.count % 3 === 0) {
+        const serverUsage = await checkUsage(apiKey);
+        if (serverUsage) {
+            usage.remaining = serverUsage.remaining;
+            usage.limit = serverUsage.total;
+        }
+    }
+    console.groupCollapsed(`[HelixMind Tracking] Key: ${apiKey.slice(0, 8)}...`);
+    console.log('Local Count:', usage.count);
+    console.log('Server Reported:', usage.remaining !== undefined ?
+        `${usage.remaining}/${usage.limit}` : 'Not checked yet');
+    console.log('First Used:', usage.firstUsed.toLocaleTimeString());
+    console.groupEnd();
+}
+
 /**
  * Applies a post-processing step to the generated messages.
  * @param {object[]} messages Messages to post-process
@@ -228,7 +276,6 @@ async function sendClaudeRequest(request, response) {
             additionalHeaders['anthropic-beta'] = betaHeaders.join(',');
         }
 
-        console.debug('Claude request:', requestBody);
 
         const generateResponse = await fetch(apiUrl + '/messages', {
             method: 'POST',
@@ -255,7 +302,6 @@ async function sendClaudeRequest(request, response) {
             /** @type {any} */
             const generateResponseJson = await generateResponse.json();
             const responseText = generateResponseJson?.content?.[0]?.text || '';
-            console.debug('Claude response:', generateResponseJson);
 
             // Wrap it back to OAI format + save the original content
             const reply = { choices: [{ 'message': { 'content': responseText } }], content: generateResponseJson.content };
@@ -284,7 +330,6 @@ async function sendScaleRequest(request, response) {
     }
 
     const requestPrompt = convertTextCompletionPrompt(request.body.messages);
-    console.debug('Scale request:', requestPrompt);
 
     try {
         const controller = new AbortController();
@@ -309,7 +354,6 @@ async function sendScaleRequest(request, response) {
 
         /** @type {any} */
         const generateResponseJson = await generateResponse.json();
-        console.debug('Scale response:', generateResponseJson);
 
         const reply = { choices: [{ 'message': { 'content': generateResponseJson.output } }] };
         return response.send(reply);
@@ -424,7 +468,6 @@ async function sendMakerSuiteRequest(request, response) {
     }
 
     const body = getGeminiBody();
-    console.debug('Google AI Studio request:', body);
 
     try {
         const controller = new AbortController();
@@ -513,7 +556,6 @@ async function sendAI21Request(request, response) {
     }
 
     const controller = new AbortController();
-    console.debug(request.body.messages);
     request.socket.removeAllListeners('close');
     request.socket.on('close', function () {
         controller.abort();
@@ -540,7 +582,6 @@ async function sendAI21Request(request, response) {
         signal: controller.signal,
     };
 
-    console.debug('AI21 request:', body);
 
     try {
         const generateResponse = await fetch(API_AI21 + '/chat/completions', options);
@@ -554,7 +595,6 @@ async function sendAI21Request(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('AI21 response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -619,7 +659,6 @@ async function sendMistralAIRequest(request, response) {
             timeout: 0,
         };
 
-        console.debug('MisralAI request:', requestBody);
 
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
         if (request.body.stream) {
@@ -632,7 +671,6 @@ async function sendMistralAIRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('MistralAI response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -698,7 +736,6 @@ async function sendCohereRequest(request, response) {
             requestBody.safety_mode = 'OFF';
         }
 
-        console.debug('Cohere request:', requestBody);
 
         const config = {
             method: 'POST',
@@ -725,7 +762,6 @@ async function sendCohereRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('Cohere response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -798,7 +834,6 @@ async function sendDeepSeekRequest(request, response) {
             signal: controller.signal,
         };
 
-        console.debug('DeepSeek request:', requestBody);
 
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
 
@@ -812,7 +847,6 @@ async function sendDeepSeekRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('DeepSeek response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -1228,7 +1262,6 @@ router.post('/generate', function (request, response) {
         signal: controller.signal,
     };
 
-    console.debug(requestBody);
 
     makeRequest(config, response, request);
 
@@ -1242,6 +1275,8 @@ router.post('/generate', function (request, response) {
      */
     async function makeRequest(config, response, request, retries = 1, timeout = 5000) {
         try {
+            await trackHelixMindUsage(request);
+            
             controller.signal.throwIfAborted();
             const fetchResponse = await fetch(endpointUrl, config);
 
@@ -1255,8 +1290,6 @@ router.post('/generate', function (request, response) {
                 /** @type {any} */
                 let json = await fetchResponse.json();
                 response.send(json);
-                console.debug(json);
-                console.debug(json?.choices?.[0]?.message);
             } else if (fetchResponse.status === 429 && retries > 0) {
                 console.warn(`Out of quota, retrying in ${Math.round(timeout / 1000)}s`);
                 setTimeout(() => {
@@ -1303,14 +1336,17 @@ router.post('/generate', function (request, response) {
             }
             return;
         }
-
         // Fallback to original behavior for other errors
         const message = errorData?.error?.message || errorResponse.statusText || 'Unknown error occurred';
+        const message = errorResponse.statusText || 'Unknown error occurred';
         const quota_error = errorResponse.status === 429;
+        const quota_error = errorResponse.status === 429 && errorData?.error?.type === 'insufficient_quota';
         console.error('Chat completion request error: ', message, responseText);
-
+        console.error('Chat completion request error: ', message, responseText);
+        if (!response.headersSent) {
         if (!response.headersSent) {
             response.send({
+            response.send({ error: { message }, quota_error: quota_error });
                 error: {
                     message,
                     ...(errorData?.error || {})
@@ -1318,9 +1354,15 @@ router.post('/generate', function (request, response) {
                 quota_error
             });
         } else if (!response.writableEnded) {
+        } else if (!response.writableEnded) {
+            response.write(errorResponse);
             response.write(errorResponse);
         } else {
+        } else {
+            response.end();
             response.end();
         }
+        }
+    }
     }
 });
