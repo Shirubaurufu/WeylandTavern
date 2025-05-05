@@ -139,8 +139,6 @@ for (const file of answers.selectedFiles) {
     i++;
 }
 
-console.log(JSON.stringify(jsonData, null, 2));
-
 fs.writeFileSync(__charactersJSON, JSON.stringify(jsonData, null, 2), 'utf8');
 console.log(`\nSuccessfully downloaded ${i-fails.length-1}/${i-1} characters!`);
 if (fails.length != 0) console.log(`Failed to download: ${fails.join(", ")}`);
