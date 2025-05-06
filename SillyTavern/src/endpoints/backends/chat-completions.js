@@ -1276,7 +1276,7 @@ router.post('/generate', function (request, response) {
     async function makeRequest(config, response, request, retries = 1, timeout = 5000) {
         try {
             await trackHelixMindUsage(request);
-            
+
             controller.signal.throwIfAborted();
             const fetchResponse = await fetch(endpointUrl, config);
 
@@ -1336,17 +1336,14 @@ router.post('/generate', function (request, response) {
             }
             return;
         }
+
         // Fallback to original behavior for other errors
         const message = errorData?.error?.message || errorResponse.statusText || 'Unknown error occurred';
-        const message = errorResponse.statusText || 'Unknown error occurred';
         const quota_error = errorResponse.status === 429;
-        const quota_error = errorResponse.status === 429 && errorData?.error?.type === 'insufficient_quota';
         console.error('Chat completion request error: ', message, responseText);
-        console.error('Chat completion request error: ', message, responseText);
-        if (!response.headersSent) {
+
         if (!response.headersSent) {
             response.send({
-            response.send({ error: { message }, quota_error: quota_error });
                 error: {
                     message,
                     ...(errorData?.error || {})
@@ -1354,15 +1351,9 @@ router.post('/generate', function (request, response) {
                 quota_error
             });
         } else if (!response.writableEnded) {
-        } else if (!response.writableEnded) {
-            response.write(errorResponse);
             response.write(errorResponse);
         } else {
-        } else {
-            response.end();
             response.end();
         }
-        }
-    }
     }
 });
