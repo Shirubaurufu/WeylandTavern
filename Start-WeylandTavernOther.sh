@@ -28,15 +28,18 @@ then
     esac
 fi
 
-
-echo "Updating WeylandTavern..."
-if git pull -q; then
+echo "Attempting to update WeylandTavern..."
+if git pull > SillyTavern/WTUpdate.log 2>&1; then
     echo "WeylandTavern is up to date!"
 else
     echo "There was an error updating WeylandTavern..."
     echo "Generating log file SillyTavern/WTUpdate.log..."
-    git diff >> SillyTavern/WTUpdate.log
-    echo "Please provide the log file to the Weyland Tavern dev team at your convenience."
+    git diff --compact-summary > SillyTavern/WTUpdate.log
+    echo "Please provide the WTUpdate log file to the WeylandTavern dev team at your convenience."
+    read -p "WeylandTavern failed to update. Start anyway? (Y/N) " continue
+    if [[ "$continue" =~ ^[Nn]$ ]]; then
+        exit 0
+    fi
 fi
 
 echo "Installing Node Modules..."
@@ -48,4 +51,4 @@ echo "Entering WeylandTavern..."
 node "server.js" "$@" > /dev/null 2>&1 &
 echo "WeylandTavern is now active on localhost:8000 (By default)"
 read -p "Press any key to exit."
-exit
+exit 0
