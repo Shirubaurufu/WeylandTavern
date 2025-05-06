@@ -5,14 +5,20 @@ if not "%OS%"=="Windows_NT" (
     pause
     exit /b
 )
+setlocal enabledelayedexpansion
+title WeylandTavern
 
-echo Updating WeylandTavern...
-git pull -q
+echo Attempting to update WeylandTavern...
+git pull > SillyTavern/WTUpdate.log 2>&1
 if errorlevel 1 (
     echo There was an error updating WeylandTavern...
     echo Generating log file SillyTavern/WTUpdate.log...
-    git diff > SillyTavern/WTUpdate.log
-    echo Please provide the log file to the Weyland Tavern dev team at your convenience.
+    git diff --compact-summary > SillyTavern/WTUpdate.log
+    echo Please provide the WTUpdate log file to the WeylandTavern dev team at your convenience.
+    set /p continue="Weyland Tavern failed to update. Start anyway? (Y/N) "
+    if /i "!continue!"=="N" (
+        exit /b 0
+    )
 ) else (
     echo WeylandTavern is up to date!
 )
