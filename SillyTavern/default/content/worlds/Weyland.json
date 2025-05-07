@@ -114,6 +114,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "2": {
@@ -190,6 +197,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "3": {
@@ -248,6 +262,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "4": {
@@ -306,6 +327,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "5": {
@@ -485,6 +513,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "8": {
@@ -988,6 +1023,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "16": {
@@ -6933,6 +6975,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "146": {
