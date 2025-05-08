@@ -114,6 +114,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "2": {
@@ -190,6 +197,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "3": {
@@ -248,6 +262,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "4": {
@@ -306,6 +327,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "5": {
@@ -485,6 +513,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "8": {
@@ -988,6 +1023,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "16": {
@@ -1917,6 +1959,77 @@
                 "names": [],
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
+                ]
+            }
+        },
+        "30": {
+            "uid": 30,
+            "key": [
+                "!Kellen",
+                "Kellen",
+                "!kellen",
+                "Jenn's dad",
+                "Jenn's father"
+            ],
+            "keysecondary": [],
+            "comment": "Kellen",
+            "content": "{{getvar::KL}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 138,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 164,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": true,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "759a6477-7e38-4a3c-8c8a-95a61f005b55"
                 ]
             }
         },
@@ -6862,6 +6975,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8088001c-a263-4200-8dbd-cdf0f2a4cf76"
+                ]
             }
         },
         "146": {
