@@ -53,6 +53,8 @@ public/error/
 !/data/default-user
 /data/default-user/assets
 /data/default-user/backups
+/data/default-user/backgrounds/*.jpg
+/data/default-user/backgrounds/*.png
 /data/default-user/characters/**
 !/data/default-user/characters/Phone
 !/data/default-user/characters/Phone/**

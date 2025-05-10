@@ -16,7 +16,6 @@ const __charactersJSON = path.join(path.dirname(__filename),"characters.json")
 const folderUrl = process.argv[2];
 
 if (!folderUrl) {
-    console.log("Usage: node character-downloader.js <mega_folder_url>");
     process.exit(1);
 }
 
@@ -138,7 +137,7 @@ for (const file of answers.selectedFiles) {
     });
     i++;
 }
-
-fs.writeFileSync(__charactersJSON, JSON.stringify(jsonData, null, 2), 'utf8');
+if (folderUrl == "https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw")
+    fs.writeFileSync(__charactersJSON, JSON.stringify(jsonData, null, 2), 'utf8');
 console.log(`\nSuccessfully downloaded ${i-fails.length-1}/${i-1} characters!`);
 if (fails.length != 0) console.log(`Failed to download: ${fails.join(", ")}`);
