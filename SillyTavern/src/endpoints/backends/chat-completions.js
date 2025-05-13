@@ -1289,6 +1289,11 @@ router.post('/generate', function (request, response) {
             if (fetchResponse.ok) {
                 /** @type {any} */
                 let json = await fetchResponse.json();
+                if (json?.choices?.[0]?.message?.content && typeof json?.choices?.[0]?.message?.content !== 'string') {
+                    if (json?.choices?.[0]?.message?.content?.[0]?.["text"]) {
+                        json.choices[0].message.content = json.choices[0].message.content[0].text;
+                    }
+                }
                 response.send(json);
             } else if (fetchResponse.status === 429 && retries > 0) {
                 console.warn(`Out of quota, retrying in ${Math.round(timeout / 1000)}s`);
