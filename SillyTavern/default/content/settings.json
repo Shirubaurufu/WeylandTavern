@@ -529,10 +529,10 @@
                     "exclude": [],
                     "api": "custom",
                     "preset": "Default",
-                    "api-url": "https://api.electronhub.top/v1",
-                    "model": "claude-3-7-sonnet-20250219",
+                    "api-url": "https://helixmind.online/v1",
+                    "model": "claude-3-7-sonnet-rp",
                     "proxy": "None",
-                    "name": "custom claude-3-7-sonnet-20250219 - Default"
+                    "name": "HelixMind (Ratchet's API)"
                 },
                 {
                     "id": "288e2e27-2219-45ae-8b34-72f990dcf7d9",
