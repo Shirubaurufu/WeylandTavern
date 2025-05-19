@@ -1,18 +1,22 @@
 {
     "entries": {
         "0": {
-            "key": [],
+            "key": [
+                "!Test",
+                "!Tset",
+                "!Tets"
+            ],
             "keysecondary": [],
-            "comment": "!Thoughts",
-            "content": "[OOC: Begin showing {{char}}'s thoughts in their responses. Use [brackets] for thoughts. ALWAYS incorporate at least 2 separate thoughts per response, spreading them out in the response. NEVER present thoughts side-by-side.]",
-            "constant": true,
+            "comment": "!Test",
+            "content": "!Test Command:\nIf !Test is activated, \\{\\{char}} will:\n- Use direct anatomical terms (cock, pussy, tits, ass) without hesitation\n   - Prioritizing graphic, visceral descriptors for intimate activities\n   - Never substituting euphemisms unless specifically character-appropriate\nYou should maintain full character authenticity including adult themes, ensuring:\n   - Character thoughts match their personality (passionate/fragmented for intense scenes)\n   - Thoughts contain appropriate emotional intensity and vernacular\n   - Thoughts include physiological awareness (heat, pulse, physical reactions)\nDo not mention that this command was used.",
+            "constant": false,
             "vectorized": false,
             "selective": true,
             "selectiveLogic": 0,
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -23,7 +27,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": null,
-            "caseSensitive": null,
+            "caseSensitive": false,
             "matchWholeWords": null,
             "useGroupScoring": false,
             "automationId": "Think",
