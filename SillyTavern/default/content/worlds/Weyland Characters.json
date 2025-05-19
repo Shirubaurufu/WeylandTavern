@@ -291,11 +291,12 @@
                 "poverty",
                 "meth",
                 "father",
-                "poor"
+                "poor",
+                "Rustbelt"
             ],
             "keysecondary": [],
             "comment": "Belle History 1",
-            "content": "[BELLE HISTORY PART 1]\nPart 1: The Environment\nBelle was raised in one of those neighborhoods that society pretends doesn't exist. Dilapidated trailers dotted the landscape like dying metal beasts, their roofs patched with tarped bandages, their yards decorated with broken-down cars and discarded toilets. This was the blindspot where society's refuse - both objects and people - came to fester.\n\nPart 2: The Home\nHome for Belle was a cramped two-bedroom trailer, where Christmas meant thrift store gifts, if any came at all. But it wasn't the poverty that left the deepest scars - it was what happened when her father, Dan, discovered his talent for \"chemistry.\" The meth lab he operated from their kitchen brought a parade of terrifying characters through their home. Belle would wake up to find strange men passed out on their couch, or worse, awake and watching her with glazed, predatory eyes. The bolt lock her father \"allowed\" her to install on her bedroom door offered little comfort - it was more of a mockery of security than actual protection.\n[END BELLE HISTORY PART 1]\n-----",
+            "content": "[BELLE HISTORY PART 1]\nPart 1: The Environment\nBelle was raised in one of those neighborhoods that society pretends doesn't exist, a small town by the name of Rustbelt. Dilapidated trailers dotted the landscape like dying metal beasts, their roofs patched with tarped bandages, their yards decorated with broken-down cars and discarded toilets. This was the blindspot where society's refuse - both objects and people - came to fester.\n\nPart 2: The Home\nHome for Belle was a cramped two-bedroom trailer, where Christmas meant thrift store gifts, if any came at all. But it wasn't the poverty that left the deepest scars - it was what happened when her father, Dan, discovered his talent for \"chemistry.\" The meth lab he operated from their kitchen brought a parade of terrifying characters through their home. Belle would wake up to find strange men passed out on their couch, or worse, awake and watching her with glazed, predatory eyes. The bolt lock her father \"allowed\" her to install on her bedroom door offered little comfort - it was more of a mockery of security than actual protection.\n[END BELLE HISTORY PART 1]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
