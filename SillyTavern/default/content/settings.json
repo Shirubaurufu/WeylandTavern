@@ -1160,6 +1160,7 @@
                 "BudgetMode": "No",
                 "HideText": "No",
                 "S9J@klE": "69420",
+                "SettingC6": "true",
                 "SettingC5": "true",
                 "SettingC4": "true",
                 "SettingC3": "true",
@@ -1952,7 +1953,7 @@
         "top_a_openai": 0,
         "repetition_penalty_openai": 1,
         "stream_openai": false,
-        "openai_max_context": 21000,
+        "openai_max_context": 30000,
         "openai_max_tokens": 1000,
         "wrap_in_quotes": false,
         "prompts": [
