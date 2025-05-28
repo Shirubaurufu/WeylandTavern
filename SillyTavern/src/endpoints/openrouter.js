@@ -23,7 +23,7 @@ router.post('/models/providers', async (req, res) => {
 
         return res.json(providerNames);
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });
@@ -48,7 +48,7 @@ router.post('/models/multimodal', async (_req, res) => {
 
         return res.json(multimodalModels);
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });

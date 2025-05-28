@@ -23,7 +23,7 @@ router.post('/', async (req, res) => {
 
         return res.json({ caption: text });
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });

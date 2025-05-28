@@ -398,7 +398,7 @@ function runRegexCallback(args, value) {
     for (const script of scripts) {
         if (script.scriptName.toLowerCase() === scriptName.toLowerCase()) {
             if (script.disabled) {
-                toastr.warning(`Regex script "${scriptName}" is disabled.`);
+                toastr.warning(t`Regex script "${scriptName}" is disabled.`);
                 return value;
             }
 
@@ -517,9 +517,19 @@ async function checkEmbeddedRegexScripts() {
 
         if (Array.isArray(scripts) && scripts.length > 0) {
             if (avatar && !extension_settings.character_allowed_regex.includes(avatar)) {
-                extension_settings.character_allowed_regex.push(avatar);
-                await reloadCurrentChat();
-                saveSettingsDebounced();
+                const checkKey = `AlertRegex_${characters[chid].avatar}`;
+
+                if (!accountStorage.getItem(checkKey)) {
+                    accountStorage.setItem(checkKey, 'true');
+                    const template = await renderExtensionTemplateAsync('regex', 'embeddedScripts', {});
+                    const result = await callGenericPopup(template, POPUP_TYPE.CONFIRM, '', { okButton: 'Yes' });
+
+                    if (result) {
+                        extension_settings.character_allowed_regex.push(avatar);
+                        await reloadCurrentChat();
+                        saveSettingsDebounced();
+                    }
+                }
             }
         }
     }

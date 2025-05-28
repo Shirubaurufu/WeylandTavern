@@ -38,7 +38,7 @@ router.post('/list', async (req, res) => {
         const voices = await response.json();
         return res.json(voices);
     } catch (error) {
-        console.error('Azure Request failed', error);
+        
         return res.sendStatus(500);
     }
 });
@@ -82,7 +82,7 @@ router.post('/generate', async (req, res) => {
         res.set('Content-Type', 'audio/ogg');
         return res.send(audio);
     } catch (error) {
-        console.error('Azure Request failed', error);
+        
         return res.sendStatus(500);
     }
 });

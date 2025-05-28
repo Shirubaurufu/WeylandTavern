@@ -17,7 +17,7 @@ export const router = express.Router();
 router.post('/logout', async (request, response) => {
     try {
         if (!request.session) {
-            console.error('Session not available');
+            
             return response.sendStatus(500);
         }
 
@@ -26,7 +26,7 @@ router.post('/logout', async (request, response) => {
         request.session = null;
         return response.sendStatus(204);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -49,7 +49,7 @@ router.get('/me', async (request, response) => {
 
         return response.json(viewModel);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -62,7 +62,7 @@ router.post('/change-avatar', async (request, response) => {
         }
 
         if (request.body.handle !== request.user.profile.handle && !request.user.profile.admin) {
-            console.error('Change avatar failed: Unauthorized');
+            
             return response.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -76,7 +76,7 @@ router.post('/change-avatar', async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.error('Change avatar failed: User not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
@@ -84,7 +84,7 @@ router.post('/change-avatar', async (request, response) => {
 
         return response.sendStatus(204);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -97,7 +97,7 @@ router.post('/change-password', async (request, response) => {
         }
 
         if (request.body.handle !== request.user.profile.handle && !request.user.profile.admin) {
-            console.error('Change password failed: Unauthorized');
+            
             return response.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -105,17 +105,17 @@ router.post('/change-password', async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.error('Change password failed: User not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
         if (!user.enabled) {
-            console.error('Change password failed: User is disabled');
+            
             return response.status(403).json({ error: 'User is disabled' });
         }
 
         if (!request.user.profile.admin && user.password && user.password !== getPasswordHash(request.body.oldPassword, user.salt)) {
-            console.error('Change password failed: Incorrect password');
+            
             return response.status(403).json({ error: 'Incorrect password' });
         }
 
@@ -131,7 +131,7 @@ router.post('/change-password', async (request, response) => {
         await storage.setItem(toKey(request.body.handle), user);
         return response.sendStatus(204);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -146,13 +146,13 @@ router.post('/backup', async (request, response) => {
         }
 
         if (handle !== request.user.profile.handle && !request.user.profile.admin) {
-            console.error('Backup failed: Unauthorized');
+            
             return response.status(403).json({ error: 'Unauthorized' });
         }
 
         await createBackupArchive(handle, response);
     } catch (error) {
-        console.error('Backup failed', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -172,7 +172,7 @@ router.post('/reset-settings', async (request, response) => {
 
         return response.sendStatus(204);
     } catch (error) {
-        console.error('Reset settings failed', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -185,7 +185,7 @@ router.post('/change-name', async (request, response) => {
         }
 
         if (request.body.handle !== request.user.profile.handle && !request.user.profile.admin) {
-            console.error('Change name failed: Unauthorized');
+            
             return response.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -202,7 +202,7 @@ router.post('/change-name', async (request, response) => {
 
         return response.sendStatus(204);
     } catch (error) {
-        console.error('Change name failed', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -216,7 +216,7 @@ router.post('/reset-step1', async (request, response) => {
         RESET_CACHE.set(request.user.profile.handle, resetCode);
         return response.sendStatus(204);
     } catch (error) {
-        console.error('Recover step 1 failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -249,7 +249,7 @@ router.post('/reset-step2', async (request, response) => {
         RESET_CACHE.remove(request.user.profile.handle);
         return response.sendStatus(204);
     } catch (error) {
-        console.error('Recover step 2 failed:', error);
+        
         return response.sendStatus(500);
     }
 });

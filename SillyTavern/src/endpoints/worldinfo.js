@@ -23,7 +23,7 @@ export function readWorldInfoFile(directories, worldInfoName, allowDummy) {
     const pathToWorldInfo = path.join(directories.worlds, filename);
 
     if (!fs.existsSync(pathToWorldInfo)) {
-        console.error(`World info file ${filename} doesn't exist.`);
+        
         return dummyObject;
     }
 
@@ -57,7 +57,7 @@ router.post('/delete', (request, response) => {
         throw new Error(`World info file ${filename} doesn't exist.`);
     }
 
-    fs.rmSync(pathToWorldInfo);
+    fs.unlinkSync(pathToWorldInfo);
 
     return response.sendStatus(200);
 });

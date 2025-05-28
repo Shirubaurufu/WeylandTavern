@@ -30,6 +30,8 @@ function getPresetSettingsByAPI(apiId, directories) {
             return { folder: directories.context, extension: '.json' };
         case 'sysprompt':
             return { folder: directories.sysprompt, extension: '.json' };
+        case 'reasoning':
+            return { folder: directories.reasoning, extension: '.json' };
         default:
             return { folder: null, extension: null };
     }
@@ -95,7 +97,7 @@ router.post('/restore', function (request, response) {
 
         return response.send(result);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -122,7 +124,7 @@ router.post('/delete-openai', function (request, response) {
     const pathToFile = path.join(request.user.directories.openAI_Settings, `${name}.json`);
 
     if (fs.existsSync(pathToFile)) {
-        fs.rmSync(pathToFile);
+        fs.unlinkSync(pathToFile);
         return response.send({ ok: true });
     }
 

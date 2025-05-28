@@ -169,7 +169,7 @@ router.post('/get', async (request, response) => {
         }
     }
     catch (err) {
-        console.error(err);
+        
     }
     return response.send(output);
 });
@@ -193,7 +193,7 @@ router.post('/download', async (request, response) => {
             category = i;
 
     if (category === null) {
-        console.error('Bad request: unsupported asset category.');
+        
         return response.sendStatus(400);
     }
 
@@ -229,18 +229,18 @@ router.post('/download', async (request, response) => {
             const contentType = mime.lookup(temp_path) || 'application/octet-stream';
             response.setHeader('Content-Type', contentType);
             response.send(fileContent);
-            fs.rmSync(temp_path);
+            fs.unlinkSync(temp_path);
             return;
         }
 
         // Move into asset place
         console.info('Download finished, moving file from', temp_path, 'to', file_path);
         fs.copyFileSync(temp_path, file_path);
-        fs.rmSync(temp_path);
+        fs.unlinkSync(temp_path);
         response.sendStatus(200);
     }
     catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -263,7 +263,7 @@ router.post('/delete', async (request, response) => {
             category = i;
 
     if (category === null) {
-        console.error('Bad request: unsupported asset category.');
+        
         return response.sendStatus(400);
     }
 
@@ -284,14 +284,14 @@ router.post('/delete', async (request, response) => {
             console.info('Asset deleted.');
         }
         else {
-            console.error('Asset not found.');
+            
             response.sendStatus(400);
         }
         // Move into asset place
         response.sendStatus(200);
     }
     catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -319,7 +319,7 @@ router.post('/character', async (request, response) => {
             category = i;
 
     if (category === null) {
-        console.error('Bad request: unsupported asset category.');
+        
         return response.sendStatus(400);
     }
 
@@ -357,7 +357,7 @@ router.post('/character', async (request, response) => {
         return response.send(output);
     }
     catch (err) {
-        console.error(err);
+        
         return response.sendStatus(500);
     }
 });

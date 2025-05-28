@@ -20,7 +20,7 @@ router.post('/sanitize-filename', async (request, response) => {
         const sanitizedFilename = sanitize(fileName);
         return response.send({ fileName: sanitizedFilename });
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -46,7 +46,7 @@ router.post('/upload', async (request, response) => {
         console.info(`Uploaded file: ${url} from ${request.user.profile.handle}`);
         return response.send({ path: url });
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -66,11 +66,11 @@ router.post('/delete', async (request, response) => {
             return response.status(404).send('File not found');
         }
 
-        fs.rmSync(pathToDelete);
+        fs.unlinkSync(pathToDelete);
         console.info(`Deleted file: ${request.body.path} from ${request.user.profile.handle}`);
         return response.sendStatus(200);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -95,7 +95,7 @@ router.post('/verify', async (request, response) => {
 
         return response.send(verified);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });

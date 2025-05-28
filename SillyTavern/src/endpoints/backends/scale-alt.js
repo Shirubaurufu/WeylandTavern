@@ -61,6 +61,7 @@ router.post('/generate', async function (request, response) {
             },
         };
 
+        console.debug('Scale request:', body);
 
         const result = await fetch('https://dashboard.scale.com/spellbook/api/trpc/v2.variant.run', {
             method: 'POST',
@@ -81,6 +82,7 @@ router.post('/generate', async function (request, response) {
         const data = await result.json();
         const output = data?.result?.data?.json?.outputs?.[0] || '';
 
+        console.debug('Scale response:', data);
 
         if (!output) {
             console.warn('Scale response is empty');

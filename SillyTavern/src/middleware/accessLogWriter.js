@@ -21,7 +21,7 @@ export function migrateAccessLog() {
         fs.renameSync('access.log', logPath);
         console.log(color.yellow('Migrated access.log to new location:'), logPath);
     } catch (e) {
-        console.error('Failed to migrate access log:', e);
+        
         console.info('Please move access.log to the data directory manually.');
     }
 }
@@ -48,7 +48,7 @@ export default function accessLoggerMiddleware() {
 
                 fs.appendFile(logPath, log, (err) => {
                     if (err) {
-                        console.error('Failed to write access log:', err);
+                        
                     }
                 });
             }

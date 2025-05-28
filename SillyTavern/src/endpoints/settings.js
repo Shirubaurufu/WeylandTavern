@@ -119,7 +119,7 @@ async function backupSettings() {
             backupUserSettings(handle, true);
         }
     } catch (err) {
-        console.error('Could not backup settings file', err);
+        
     }
 }
 
@@ -201,7 +201,7 @@ router.post('/save', function (request, response) {
         triggerAutoSave(request.user.profile.handle);
         response.send({ result: 'ok' });
     } catch (err) {
-        console.error(err);
+        
         response.send(err);
     }
 });
@@ -254,6 +254,7 @@ router.post('/get', (request, response) => {
     const instruct = readAndParseFromDirectory(request.user.directories.instruct);
     const context = readAndParseFromDirectory(request.user.directories.context);
     const sysprompt = readAndParseFromDirectory(request.user.directories.sysprompt);
+    const reasoning = readAndParseFromDirectory(request.user.directories.reasoning);
 
     response.send({
         settings,
@@ -272,6 +273,7 @@ router.post('/get', (request, response) => {
         instruct,
         context,
         sysprompt,
+        reasoning,
         enable_extensions: ENABLE_EXTENSIONS,
         enable_extensions_auto_update: ENABLE_EXTENSIONS_AUTO_UPDATE,
         enable_accounts: ENABLE_ACCOUNTS,
@@ -291,7 +293,7 @@ router.post('/get-snapshots', async (request, response) => {
 
         response.json(result);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -315,7 +317,7 @@ router.post('/load-snapshot', getFileNameValidationFunction('name'), async (requ
 
         response.send(content);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -325,7 +327,7 @@ router.post('/make-snapshot', async (request, response) => {
         backupUserSettings(request.user.profile.handle, false);
         response.sendStatus(204);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -351,7 +353,7 @@ router.post('/restore-snapshot', getFileNameValidationFunction('name'), async (r
 
         response.sendStatus(204);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });

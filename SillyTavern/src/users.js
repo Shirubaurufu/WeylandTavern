@@ -18,6 +18,7 @@ import { USER_DIRECTORY_TEMPLATE, DEFAULT_USER, PUBLIC_DIRECTORIES, SETTINGS_FIL
 import { getConfigValue, color, delay, generateTimestamp } from './util.js';
 import { readSecret, writeSecret } from './endpoints/secrets.js';
 import { getContentOfType } from './endpoints/content-manager.js';
+import { serverDirectory } from './server-directory.js';
 
 export const KEY_PREFIX = 'user:';
 const AVATAR_PREFIX = 'avatar:';
@@ -95,6 +96,7 @@ const STORAGE_KEYS = {
  * @property {string} vectors - The directory where the vectors are stored
  * @property {string} backups - The directory where the backups are stored
  * @property {string} sysprompt - The directory where the system prompt data is stored
+ * @property {string} reasoning - The directory where the reasoning templates are stored
  */
 
 /**
@@ -904,7 +906,7 @@ export async function loginPageMiddleware(request, response) {
         console.error('Error during auto-login:', error);
     }
 
-    return response.sendFile('login.html', { root: path.join(process.cwd(), 'public') });
+    return response.sendFile('login.html', { root: path.join(serverDirectory, 'public') });
 }
 
 /**

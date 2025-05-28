@@ -73,7 +73,7 @@ router.post('/text-workers', async (request, response) => {
         cache.set('workers', data);
         return response.send(data);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -115,13 +115,13 @@ router.post('/text-models', async (request, response) => {
             data = await mergeModelsAndMetadata(data, metadata);
         }
         catch (error) {
-            console.error('Failed to fetch metadata:', error);
+            
         }
 
         cache.set('models', data);
         return response.send(data);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -137,7 +137,7 @@ router.post('/status', async (_, response) => {
 
         return response.send({ ok: fetchResult.ok });
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -157,7 +157,7 @@ router.post('/cancel-task', async (request, response) => {
         console.info(`Cancelled Horde task ${taskId}`);
         return response.send(data);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -176,7 +176,7 @@ router.post('/task-status', async (request, response) => {
         console.info(`Horde task ${taskId} status:`, data);
         return response.send(data);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -199,14 +199,14 @@ router.post('/generate-text', async (request, response) => {
 
         if (!result.ok) {
             const message = await result.text();
-            console.error('Horde returned an error:', message);
+            
             return response.send({ error: { message } });
         }
 
         const data = await result.json();
         return response.send(data);
     } catch (error) {
-        console.error(error);
+        
         return response.send({ error: true });
     }
 });
@@ -216,7 +216,7 @@ router.post('/sd-samplers', async (_, response) => {
         const samplers = Object.values(ModelGenerationInputStableSamplers);
         response.send(samplers);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -227,7 +227,7 @@ router.post('/sd-models', async (_, response) => {
         const models = await ai_horde.getModels();
         response.send(models);
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -242,7 +242,7 @@ router.post('/caption-image', async (request, response) => {
         }, { token: api_key_horde });
 
         if (!result.id) {
-            console.error('Image interrogation request is not satisfyable:', result.message || 'unknown error');
+            
             return response.sendStatus(400);
         }
 
@@ -257,14 +257,14 @@ router.post('/caption-image', async (request, response) => {
             if (status.state === HordeAsyncRequestStates.done) {
 
                 if (status.forms === undefined) {
-                    console.error('Image interrogation request failed: no forms found.');
+                    
                     return response.sendStatus(500);
                 }
 
                 const caption = status?.forms[0]?.result?.caption || '';
 
                 if (!caption) {
-                    console.error('Image interrogation request failed: no caption found.');
+                    
                     return response.sendStatus(500);
                 }
 
@@ -272,13 +272,13 @@ router.post('/caption-image', async (request, response) => {
             }
 
             if (status.state === HordeAsyncRequestStates.faulted || status.state === HordeAsyncRequestStates.cancelled) {
-                console.error('Image interrogation request is not successful.');
+                
                 return response.sendStatus(503);
             }
         }
 
     } catch (error) {
-        console.error(error);
+        
         response.sendStatus(500);
     }
 });
@@ -295,7 +295,7 @@ router.post('/user-info', async (request, response) => {
         const user = await ai_horde.findUser({ token: api_key_horde });
         return response.send(user);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -395,7 +395,7 @@ router.post('/generate-image', async (request, response) => {
 
         return response.sendStatus(504);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });

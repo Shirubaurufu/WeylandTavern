@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { Buffer } from 'node:buffer';
 
 import express from 'express';
@@ -8,15 +7,17 @@ import fetch from 'node-fetch';
 import sanitize from 'sanitize-filename';
 import { sync as writeFileAtomicSync } from  'write-file-atomic';
 
-import { getConfigValue, color } from '../util.js';
+import { getConfigValue, color, setPermissionsSync } from '../util.js';
 import { write } from '../character-card-parser.js';
+import { serverDirectory } from '../server-directory.js';
 
-const contentDirectory = path.join(process.cwd(), 'default/content');
-const scaffoldDirectory = path.join(process.cwd(), 'default/scaffold');
+const contentDirectory = path.join(serverDirectory, 'default/content');
+const scaffoldDirectory = path.join(serverDirectory, 'default/scaffold');
 const contentIndexPath = path.join(contentDirectory, 'index.json');
 const scaffoldIndexPath = path.join(scaffoldDirectory, 'index.json');
 
 const WHITELIST_GENERIC_URL_DOWNLOAD_SOURCES = getConfigValue('whitelistImportDomains', []);
+const USER_AGENT = 'SillyTavern';
 
 /**
  * @typedef {Object} ContentItem
@@ -48,6 +49,7 @@ export const CONTENT_TYPES = {
     MOVING_UI: 'moving_ui',
     QUICK_REPLIES: 'quick_replies',
     SYSPROMPT: 'sysprompt',
+    REASONING: 'reasoning',
 };
 
 /**
@@ -61,7 +63,7 @@ export function getDefaultPresets(directories) {
         const presets = [];
 
         for (const contentItem of contentIndex) {
-            if (contentItem.type.endsWith('_preset') || contentItem.type === 'instruct' || contentItem.type === 'context' || contentItem.type === 'sysprompt') {
+            if (contentItem.type.endsWith('_preset') || ['instruct', 'context', 'sysprompt', 'reasoning'].includes(contentItem.type)) {
                 contentItem.name = path.parse(contentItem.filename).name;
                 contentItem.folder = getTargetByType(contentItem.type, directories);
                 presets.push(contentItem);
@@ -148,6 +150,7 @@ async function seedContentForUser(contentIndex, directories, forceCategories) {
         }
 
         fs.cpSync(contentPath, targetPath, { recursive: true, force: false });
+        setPermissionsSync(targetPath);
         console.info(`Content file ${contentItem.filename} copied to ${contentTarget}`);
         anyContentAdded = true;
     }
@@ -186,7 +189,7 @@ export async function checkForNewContent(directoriesList, forceCategories = []) 
             console.info();
         }
     } catch (err) {
-        console.error('Content check failed', err);
+        
     }
 }
 
@@ -299,6 +302,8 @@ function getTargetByType(type, directories) {
             return directories.quickreplies;
         case CONTENT_TYPES.SYSPROMPT:
             return directories.sysprompt;
+        case CONTENT_TYPES.REASONING:
+            return directories.reasoning;
         default:
             return null;
     }
@@ -319,48 +324,80 @@ function getContentLog(contentLogPath) {
 }
 
 async function downloadChubLorebook(id) {
-    const result = await fetch('https://api.chub.ai/api/lorebooks/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            'fullPath': id,
-            'format': 'SILLYTAVERN',
-        }),
+    const [lorebooks, creatorName, projectName] = id.split('/');
+    const result = await fetch(`https://api.chub.ai/api/${lorebooks}/${creatorName}/${projectName}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'User-Agent': USER_AGENT },
     });
 
     if (!result.ok) {
         const text = await result.text();
-        console.error('Chub returned error', result.statusText, text);
+        
+        throw new Error('Failed to fetch lorebook metadata');
+    }
+
+    /** @type {any} */
+    const metadata = await result.json();
+    const projectId = metadata.node?.id;
+
+    if (!projectId) {
+        throw new Error('Project ID not found in lorebook metadata');
+    }
+
+    const downloadUrl = `https://api.chub.ai/api/v4/projects/${projectId}/repository/files/raw%252Fsillytavern_raw.json/raw`;
+    const downloadResult = await fetch(downloadUrl, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'User-Agent': USER_AGENT },
+    });
+
+    if (!downloadResult.ok) {
+        const text = await downloadResult.text();
+        
         throw new Error('Failed to download lorebook');
     }
 
-    const name = id.split('/').pop();
-    const buffer = Buffer.from(await result.arrayBuffer());
+    const name = projectName;
+    const buffer = Buffer.from(await downloadResult.arrayBuffer());
     const fileName = `${sanitize(name)}.json`;
-    const fileType = result.headers.get('content-type');
+    const fileType = downloadResult.headers.get('content-type');
 
     return { buffer, fileName, fileType };
 }
 
 async function downloadChubCharacter(id) {
-    const result = await fetch('https://api.chub.ai/api/characters/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            'format': 'tavern',
-            'fullPath': id,
-        }),
+    const [creatorName, projectName] = id.split('/');
+    const result = await fetch(`https://api.chub.ai/api/characters/${creatorName}/${projectName}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'User-Agent': USER_AGENT },
     });
 
     if (!result.ok) {
         const text = await result.text();
-        console.error('Chub returned error', result.statusText, text);
+        
+        throw new Error('Failed to fetch character metadata');
+    }
+
+    /** @type {any} */
+    const metadata = await result.json();
+    const downloadUrl = metadata.node?.max_res_url;
+
+    if (!downloadUrl) {
+        throw new Error('Download URL not found in character metadata');
+    }
+
+    const downloadResult = await fetch(downloadUrl);
+
+    if (!downloadResult.ok) {
+        const text = await downloadResult.text();
+        
         throw new Error('Failed to download character');
     }
 
-    const buffer = Buffer.from(await result.arrayBuffer());
-    const fileName = result.headers.get('content-disposition')?.split('filename=')[1] || `${sanitize(id)}.png`;
-    const fileType = result.headers.get('content-type');
+    const buffer = Buffer.from(await downloadResult.arrayBuffer());
+    const fileName =
+        downloadResult.headers.get('content-disposition')?.split('filename=')[1]?.replace(/["']/g, '') ||
+        `${sanitize(projectName)}.png`;
+    const fileType = downloadResult.headers.get('content-type');
 
     return { buffer, fileName, fileType };
 }
@@ -375,7 +412,7 @@ async function downloadPygmalionCharacter(id) {
 
     if (!result.ok) {
         const text = await result.text();
-        console.error('Pygsite returned error', result.status, text);
+        
         throw new Error('Failed to download character');
     }
 
@@ -384,7 +421,7 @@ async function downloadPygmalionCharacter(id) {
     const characterData = jsonData?.character;
 
     if (!characterData || typeof characterData !== 'object') {
-        console.error('Pygsite returned invalid character data', jsonData);
+        
         throw new Error('Failed to download character');
     }
 
@@ -392,7 +429,7 @@ async function downloadPygmalionCharacter(id) {
         const avatarUrl = characterData?.data?.avatar;
 
         if (!avatarUrl) {
-            console.error('Pygsite character does not have an avatar', characterData);
+            
             throw new Error('Failed to download avatar');
         }
 
@@ -407,7 +444,7 @@ async function downloadPygmalionCharacter(id) {
             fileType: 'image/png',
         };
     } catch (e) {
-        console.error('Failed to download avatar, using JSON instead', e);
+        
         return {
             buffer: Buffer.from(JSON.stringify(jsonData)),
             fileName: `${sanitize(id)}.json`,
@@ -484,7 +521,7 @@ async function downloadJannyCharacter(uuid) {
         }
     }
 
-    console.error('Janny returned error', result.statusText, await result.text());
+    
     throw new Error('Failed to download character');
 }
 
@@ -507,7 +544,7 @@ async function downloadAICCCharacter(id) {
             fileType: contentType,
         };
     } catch (error) {
-        console.error('Error downloading character:', error);
+        
         throw error;
     }
 }
@@ -537,8 +574,20 @@ async function downloadGenericPng(url) {
 
         if (result.ok) {
             const buffer = Buffer.from(await result.arrayBuffer());
-            const fileName = sanitize(result.url.split('?')[0].split('/').reverse()[0]);
+            let fileName = sanitize(result.url.split('?')[0].split('/').reverse()[0]);
             const contentType = result.headers.get('content-type') || 'image/png'; //yoink it from AICC function lol
+
+            // The `importCharacter()` function detects the MIME (content-type) of the file
+            // using its file extension. The problem is that not all third-party APIs serve
+            // their cards with a `.png` extension. To support more third-party sites,
+            // dynamically append the `.png` extension to the filename if it doesn't
+            // already have a file extension.
+            if (contentType === 'image/png') {
+                const ext = fileName.match(/\.(\w+)$/); // Same regex used by `importCharacter()`
+                if (!ext) {
+                    fileName += '.png';
+                }
+            }
 
             return {
                 buffer: buffer,
@@ -547,7 +596,7 @@ async function downloadGenericPng(url) {
             };
         }
     } catch (error) {
-        console.error('Error downloading file: ', error);
+        
         throw error;
     }
     return null;
@@ -576,7 +625,7 @@ async function downloadRisuCharacter(uuid) {
 
     if (!result.ok) {
         const text = await result.text();
-        console.error('RisuAI returned error', result.statusText, text);
+        
         throw new Error('Failed to download character');
     }
 
@@ -691,10 +740,11 @@ router.post('/importURL', async (request, response) => {
             type = 'character';
             result = await downloadRisuCharacter(uuid);
         } else if (isGeneric) {
-            console.info('Downloading from generic url.');
+            console.info('Downloading from generic url:', url);
             type = 'character';
             result = await downloadGenericPng(url);
         } else {
+            
             return response.sendStatus(404);
         }
 
@@ -707,7 +757,7 @@ router.post('/importURL', async (request, response) => {
         response.set('X-Custom-Content-Type', type);
         return response.send(result.buffer);
     } catch (error) {
-        console.error('Importing custom content failed', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -755,7 +805,7 @@ router.post('/importUUID', async (request, response) => {
         response.set('X-Custom-Content-Type', uuidType);
         return response.send(result.buffer);
     } catch (error) {
-        console.error('Importing custom content failed', error);
+        
         return response.sendStatus(500);
     }
 });

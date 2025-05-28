@@ -31,7 +31,6 @@ router.post('/caption-image', async (request, response) => {
             max_tokens: 4096,
         };
 
-
         const result = await fetch(url, {
             body: JSON.stringify(body),
             method: 'POST',
@@ -58,7 +57,7 @@ router.post('/caption-image', async (request, response) => {
 
         return response.json({ caption });
     } catch (error) {
-        console.error(error);
+        
         response.status(500).send('Internal server error');
     }
 });

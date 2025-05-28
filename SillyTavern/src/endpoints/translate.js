@@ -34,7 +34,7 @@ function decodeBuffer(buffer) {
     try {
         return iconv.decode(Buffer.from(buffer), 'utf-8');
     } catch (error) {
-        console.error('Failed to decode buffer:', error);
+        
         return Buffer.from(buffer).toString('utf-8');
     }
 }
@@ -68,7 +68,6 @@ router.post('/libre', async (request, response) => {
             return response.sendStatus(400);
         }
 
-
         const result = await fetch(url, {
             method: 'POST',
             body: JSON.stringify({
@@ -92,7 +91,7 @@ router.post('/libre', async (request, response) => {
 
         return response.send(json.translatedText);
     } catch (error) {
-        console.error('Translation error: ' + error.message);
+        
         return response.sendStatus(500);
     }
 });
@@ -105,7 +104,6 @@ router.post('/google', async (request, response) => {
         if (!text || !lang) {
             return response.sendStatus(400);
         }
-
 
         const { generateRequestUrl, normaliseResponse } = getGoogleTranslateClient();
         const requestUrl = generateRequestUrl(text, { to: lang });
@@ -123,7 +121,7 @@ router.post('/google', async (request, response) => {
         response.setHeader('Content-Type', 'text/plain; charset=utf-8');
         return response.send(translatedText);
     } catch (error) {
-        console.error('Translation error', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -156,7 +154,6 @@ router.post('/yandex', async (request, response) => {
         params.append('lang', lang);
         const ucid = uuidv4().replaceAll('-', '');
 
-
         const result = await fetch(`https://translate.yandex.net/api/v1/tr.json/translate?ucid=${ucid}&srv=android&format=text`, {
             method: 'POST',
             body: params,
@@ -177,7 +174,7 @@ router.post('/yandex', async (request, response) => {
 
         return response.send(translated);
     } catch (error) {
-        console.error('Translation error: ' + error.message);
+        
         return response.sendStatus(500);
     }
 });
@@ -206,7 +203,6 @@ router.post('/lingva', async (request, response) => {
             return response.sendStatus(400);
         }
 
-
         const url = urlJoin(baseUrl, 'auto', lang, encodeURIComponent(text));
         const result = await fetch(url);
 
@@ -219,7 +215,7 @@ router.post('/lingva', async (request, response) => {
         const data = await result.json();
         return response.send(data.translation);
     } catch (error) {
-        console.error('Translation error', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -244,7 +240,6 @@ router.post('/deepl', async (request, response) => {
         if (!text || !lang) {
             return response.sendStatus(400);
         }
-
 
         const params = new URLSearchParams();
         params.append('text', text);
@@ -279,7 +274,7 @@ router.post('/deepl', async (request, response) => {
 
         return response.send(json.translations[0].text);
     } catch (error) {
-        console.error('Translation error: ' + error.message);
+        
         return response.sendStatus(500);
     }
 });
@@ -315,7 +310,6 @@ router.post('/onering', async (request, response) => {
         params.append('from_lang', from_lang);
         params.append('to_lang', to_lang);
 
-
         const fetchUrl = new URL(url);
         fetchUrl.search = params.toString();
 
@@ -334,7 +328,7 @@ router.post('/onering', async (request, response) => {
 
         return response.send(data.result);
     } catch (error) {
-        console.error('Translation error: ' + error.message);
+        
         return response.sendStatus(500);
     }
 });
@@ -363,7 +357,6 @@ router.post('/deeplx', async (request, response) => {
             return response.sendStatus(400);
         }
 
-
         const result = await fetch(url, {
             method: 'POST',
             body: JSON.stringify({
@@ -388,7 +381,7 @@ router.post('/deeplx', async (request, response) => {
 
         return response.send(json.data);
     } catch (error) {
-        console.error('DeepLX translation error: ' + error.message);
+        
         return response.sendStatus(500);
     }
 });
@@ -414,12 +407,11 @@ router.post('/bing', async (request, response) => {
             return response.sendStatus(400);
         }
 
-
         const result = await bingTranslate(text, null, lang);
         const translatedText = result?.translation;
         return response.send(translatedText);
     } catch (error) {
-        console.error('Translation error', error);
+        
         return response.sendStatus(500);
     }
 });

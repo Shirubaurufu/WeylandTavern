@@ -6,7 +6,7 @@
     "stop_sequence": "<|eot_id|>",
     "wrap": false,
     "macro": true,
-    "names_behavior": "always",
+    "names_behavior": "force",
     "activation_regex": "",
     "system_sequence_prefix": "",
     "system_sequence_suffix": "",
@@ -16,7 +16,7 @@
     "input_suffix": "<|eot_id|>",
     "system_suffix": "<|eot_id|>",
     "user_alignment_message": "",
-    "system_same_as_user": true,
+    "system_same_as_user": false,
     "last_system_sequence": "",
     "name": "Llama 3 Instruct"
 }

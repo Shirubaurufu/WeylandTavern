@@ -26,6 +26,7 @@ export const SECRET_KEYS = {
     ONERING_URL: 'oneringtranslator_url',
     DEEPLX_URL: 'deeplx_url',
     MAKERSUITE: 'api_key_makersuite',
+    VERTEXAI: 'api_key_vertexai',
     SERPAPI: 'api_key_serpapi',
     TOGETHERAI: 'api_key_togetherai',
     MISTRALAI: 'api_key_mistralai',
@@ -44,7 +45,6 @@ export const SECRET_KEYS = {
     ZEROONEAI: 'api_key_01ai',
     HUGGINGFACE: 'api_key_huggingface',
     STABILITY: 'api_key_stability',
-    BLOCKENTROPY: 'api_key_blockentropy',
     CUSTOM_OPENAI_TTS: 'api_key_custom_openai_tts',
     TAVILY: 'api_key_tavily',
     NANOGPT: 'api_key_nanogpt',
@@ -53,6 +53,7 @@ export const SECRET_KEYS = {
     GENERIC: 'api_key_generic',
     DEEPSEEK: 'api_key_deepseek',
     SERPER: 'api_key_serper',
+    XAI: 'api_key_xai',
 };
 
 // These are the keys that are safe to expose, even if allowKeysExposure is false
@@ -152,7 +153,7 @@ export function getAllSecrets(directories) {
     const filePath = path.join(directories.root, SECRETS_FILE);
 
     if (!fs.existsSync(filePath)) {
-        console.error('Secrets file does not exist');
+        
         return undefined;
     }
 
@@ -176,7 +177,7 @@ router.post('/read', (request, response) => {
         const state = readSecretState(request.user.directories);
         return response.send(state);
     } catch (error) {
-        console.error(error);
+        
         return response.send({});
     }
 });
@@ -185,7 +186,7 @@ router.post('/view', async (request, response) => {
     const allowKeysExposure = getConfigValue('allowKeysExposure', false, 'boolean');
 
     if (!allowKeysExposure) {
-        console.error('secrets.json could not be viewed unless the value of allowKeysExposure in config.yaml is set to true');
+        
         return response.sendStatus(403);
     }
 
@@ -198,7 +199,7 @@ router.post('/view', async (request, response) => {
 
         return response.send(secrets);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -208,7 +209,7 @@ router.post('/find', (request, response) => {
     const key = request.body.key;
 
     if (!allowKeysExposure && !EXPORTABLE_KEYS.includes(key)) {
-        console.error('Cannot fetch secrets unless allowKeysExposure in config.yaml is set to true');
+        
         return response.sendStatus(403);
     }
 
@@ -221,7 +222,7 @@ router.post('/find', (request, response) => {
 
         return response.send({ value: secret });
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
