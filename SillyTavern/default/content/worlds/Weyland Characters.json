@@ -47,7 +47,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 35,
+            "displayIndex": 39,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -98,7 +98,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 36,
+            "displayIndex": 40,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -110,12 +110,11 @@
         "2": {
             "uid": 2,
             "key": [
-                "lecture",
-                "assignment",
-                "homework",
-                "culture",
-                "learn",
-                "draconid"
+                "roommate",
+                "dorm",
+                "room",
+                "bed",
+                "cafe"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -180,7 +179,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 56,
+            "displayIndex": 60,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -510,7 +509,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 55,
+            "displayIndex": 59,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -551,7 +550,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 57,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -798,7 +797,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 22,
+            "displayIndex": 26,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -849,7 +848,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 23,
+            "displayIndex": 27,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -902,7 +901,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 24,
+            "displayIndex": 28,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -962,7 +961,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 25,
+            "displayIndex": 29,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1024,7 +1023,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 26,
+            "displayIndex": 30,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1065,7 +1064,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 59,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1116,7 +1115,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 27,
+            "displayIndex": 31,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1167,7 +1166,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 28,
+            "displayIndex": 32,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1210,7 +1209,7 @@
             "sticky": 10,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 29,
+            "displayIndex": 33,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1251,7 +1250,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1307,7 +1306,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 30,
+            "displayIndex": 34,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1348,7 +1347,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 31,
+            "displayIndex": 35,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1402,7 +1401,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 32,
+            "displayIndex": 36,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1443,7 +1442,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 33,
+            "displayIndex": 37,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1491,7 +1490,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 34,
+            "displayIndex": 38,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1505,7 +1504,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Koshizu Outfit Codes",
-            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (white sweater and black skirt)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT, the \"Going Out\" Outfit (white sweater and black skirt)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - \"Lazy Day in the Dorms\" Outfit (sweater and shorts, no accessories)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -1582,7 +1581,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 37,
+            "displayIndex": 41,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1623,7 +1622,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1672,7 +1671,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 38,
+            "displayIndex": 42,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1721,7 +1720,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 39,
+            "displayIndex": 43,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1803,7 +1802,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 58,
+            "displayIndex": 60,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1854,7 +1853,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 40,
+            "displayIndex": 44,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1902,7 +1901,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 41,
+            "displayIndex": 45,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1950,7 +1949,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 42,
+            "displayIndex": 46,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2042,7 +2041,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 43,
+            "displayIndex": 47,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2089,7 +2088,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 44,
+            "displayIndex": 48,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2137,7 +2136,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 45,
+            "displayIndex": 49,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2233,7 +2232,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Summer Outfit Codes",
-            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (pink t-shirt and black skirt)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Cheerleader outfit\n• [O2] - Yukata/Kimono festival outfit\n• [O3] - Hoodie outfit (black hoodie)\n• [O4] - Fancy dress (red cocktail dress with black sleeves)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (pink t-shirt and black skirt)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Cheerleader outfit\n• [O2] - Yukata/Kimono festival outfit\n• [O3] - Hoodie outfit (black hoodie)\n• [O4] - Fancy dress (red cocktail dress with black sleeves)\n• [O5] - Baker outfit (cream sweater and brown apron)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -2310,7 +2309,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 52,
+            "displayIndex": 56,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2360,7 +2359,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 53,
+            "displayIndex": 57,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2401,7 +2400,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 54,
+            "displayIndex": 58,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2448,7 +2447,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 46,
+            "displayIndex": 50,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2493,7 +2492,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 47,
+            "displayIndex": 51,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2539,7 +2538,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 48,
+            "displayIndex": 52,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2585,7 +2584,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 49,
+            "displayIndex": 53,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2632,7 +2631,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 50,
+            "displayIndex": 54,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2684,12 +2683,212 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 55,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
+                ]
+            }
+        },
+        "57": {
+            "uid": 57,
+            "key": [
+                "gaming",
+                "childhood",
+                "father",
+                "daughter",
+                "son",
+                "mother",
+                "coming out"
+            ],
+            "keysecondary": [],
+            "comment": "Cairo History 1",
+            "content": "[HISTORY PART 1 & 2] \n**Part 1: The Unseen Son (Childhood & Early Identity)**\nCairo was born Caitlyn, the youngest of three, in a modest suburban home in British Columbia. While her two older sisters, Rebecca and Emily, reveled in traditionally feminine play – dolls, dress-up, tea parties – Caitlyn gravitated towards Star Wars figures, Bionicles, and the thrill of backyard Nerf gun battles. Her okamimimi parents, particularly her father, would often chuckle, \"She was supposed to be the son we were hoping for!\" This offhand comment, meant as a jest, resonated deeply within young Caitlyn. It wasn't a joke; it was a quiet truth. Why *couldn't* she be the son they'd waited for?\n\nHer father, a man with a deep love for Star Wars and military history, unfortunately, also harbored some insensitive, loudly proclaimed views about homosexuality and gender non-conformity – a \"neckbeard\" by modern parlance. These views subtly infected her sisters, though her mother, a quieter, more gentle presence, often tried to defuse his pronouncements, her influence too soft to truly counteract his. Despite this, her father adored Caitlyn. He cherished having a child who wanted to discuss the intricacies of the Jedi Council or beg for the latest LEGO Star Destroyer. While her sisters played outside, Caitlyn and her father were an inseparable indoor duo, their bond forged in shared nerdy passions.\n\n**Part 2: A Father's Acceptance (Coming Out & Fragile Hope)**\nAround the age of nine, the quiet truth Caitlyn had been nursing began to surface. He started \"joking\" about wanting to be a boy, testing the waters. His parents initially dismissed it as a phase. But he persisted, his insistence growing until he began referring to himself with male pronouns. This shift made his father deeply uncomfortable. The man who had cherished his \"nerdy daughter\" now faced a son he didn't understand. For three agonizing years, between the ages of nine and twelve, Cairo and his father clashed. The arguments were frequent, painful, and filled with confusion on his father's side and desperate pleading on Cairo's.\n\nThe breaking point came during one such confrontation. Told yet again that he was a girl, something inside Cairo snapped. A torrent of tearful, heartbroken rage erupted – a raw, unfiltered expression of his deepest pain and identity. For the first time, the words seemed to penetrate his father's heart. The anger, the hurt, the undeniable truth in his child's voice finally allowed him to see, to believe. It was a fragile, hard-won acceptance, but it was a start. His mother, throughout this, remained a quiet source of love, her support less vocal but consistently felt.\n[END HISTORY PART 1 & 2]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Cairo",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 22,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": [
+                    "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
+                ]
+            }
+        },
+        "58": {
+            "uid": 58,
+            "key": [
+                "transition",
+                "trans",
+                "accutane",
+                "hair loss",
+                "bald",
+                "balding"
+            ],
+            "keysecondary": [],
+            "comment": "Cairo History 2",
+            "content": "[HISTORY PART 3 & 4]\n**Part 3: The Shifting Reflection (Transition & New Torments)**\nCairo began his medical transition at fourteen with testosterone injections. School, already a place of quiet discomfort due to his innate shyness, became a new landscape of anxieties. While some peers accepted him, he was often treated as a novelty. Nerdy boys, perhaps unsure how to interact with a trans peer who shared their interests, would flirt awkwardly or treat him like a \"gamer girl\" – a label that chafed, invalidating his identity in a new, confusing way. He had a few friends, but genuine connection felt elusive.\n\nA year into hormone therapy, a new torment emerged: severe, cystic acne. These weren't mere pimples; they were large, painful, red boils that colonized his face, further decimating his already fragile self-image. Each glance in the mirror was a fresh wave of disgust, another reason to hide, to withdraw. He felt like a monster, his own body betraying him at every turn.\n\n**Part 4: The Poisoned Cure (Accutane & The First Hoodie)**\nDesperate for relief from the agonizing acne, Cairo and his parents sought help from a dermatologist. After other treatments failed, \"isotretinoin\" (Accutane) was prescribed – a powerful drug with a list of potential side effects, including, rarely, hair loss. The medication worked like a miracle for his skin. The painful cysts receded, leaving his face clearer than it had been in months. A flicker of hope ignited.\n\nThen, the hair. It started subtly, a few extra strands in his comb. One day in the shower, a noticeable clump came away in his hand. Panic seized him. He showed his parents, terrified. The dermatologist offered reassurance: about 5% of patients experienced temporary hair loss, and it would stop once the medication course was complete. Unbeknownst to them all, Cairo was in a much rarer, more devastating subgroup. He donned a hoodie, initially just to cover the thinning patches while he waited for the Accutane to finish its work and his hair, hopefully, to return.\n[END HISTORY PART 3 & 4]",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 2,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 23,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": [
+                    "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
+                ]
+            }
+        },
+        "59": {
+            "uid": 59,
+            "key": [
+                "scar",
+                "follicles",
+                "accutane",
+                "bald",
+                "hair loss",
+                "high school",
+                "testosterone",
+                "balding"
+            ],
+            "keysecondary": [],
+            "comment": "Cairo History 3",
+            "content": "[HISTORY PART 5 & 6]\n**Part 5: The Permanent Scar (Breakdown, Self-Blame & The Shield)**\nMonths later, the Accutane treatment ended. His skin was clear, but his hair showed no signs of regrowth. The dermatologist delivered the final, crushing verdict: the Accutane had caused premature death of hair follicles. The hair loss was permanent. This news triggered an absolute mental breakdown. Compounding his despair was the agonizing realization that the severe acne, the catalyst for this disaster, was likely a *temporary* side effect of his teenage years and hormonal changes. Had he just waited, endured it for a few more years, it might have resolved on its own. Instead, in his desperate attempt to fix one perceived flaw, he had traded a temporary affliction for an irreversible, permanent disfigurement. The self-blame was immense and suffocating.\n\nThe patchy bald spots on the back of his head felt like a cruel, unhideable brand, ripe for judgment and ridicule. Deep depression consumed him. He began to self-harm, cutting his arms in a desperate attempt to release the unbearable internal pain. His parents, perhaps overwhelmed and unsure how to cope with their son's profound despair and the visible evidence of his self-destruction, struggled to offer effective support, leaving Cairo feeling increasingly isolated. The hoodie, once a temporary measure, became his permanent shield, his only defense against a world he was convinced saw him as grotesque.\n\n**Part 6: The Hooded Ghost (High School Years & Tentative Digital Steps)**\nHigh school became a landscape of shadows for Cairo. The hoodie was now a second skin, rarely, if ever, removed outside the confines of his bedroom. He moved through the hallways like a phantom, eyes perpetually downcast, shoulders hunched, trying to make himself as small and unnoticeable as possible. Any friendships he'd tentatively formed before \"the incident\" withered under the weight of his withdrawal. Whispers and curious stares followed him, though whether they were real or imagined, his hypervigilant mind couldn't discern – both felt equally tormenting. He ate lunch alone, often skipping it altogether to avoid the cafeteria's perceived scrutiny.\n\nAcademically, he managed to scrape by, but his focus was shattered. The only classes where he showed flickers of engagement were those that allowed for solitary work, like art or early computer classes, hinting at his future solace in 3D design. At home, he retreated further into his room, the door a firm barrier against a family that didn't understand the depth of his pain. His self-harm continued sporadically, a grim secret kept hidden beneath long sleeves. Online, however, he began to find a tentative lifeline. Anonymous forums and the nascent communities around his favorite video games offered interaction without the terror of physical presence or judgment of his appearance. His voice, still relatively high-pitched due to his age and perhaps the timing of his testosterone therapy, sometimes drew teasing comments from online acquaintances: \"Dude, you sound like you're twelve!\" Cairo, surprisingly, found a strange comfort in this. They thought he was a *boy* with a high-pitched voice, a far cry from the \"gamer girl\" label he’d endured in person. It was a small, flawed affirmation, but an affirmation nonetheless.\n[END HISTORY PART 5 & 6]",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 3,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 24,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": [
+                    "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
+                ]
+            }
+        },
+        "60": {
+            "uid": 60,
+            "key": [
+                "Halo",
+                "healing",
+                "healed",
+                "online",
+                "pc",
+                "computer",
+                "gaming",
+                "xbox",
+                "x-box",
+                "final fantasy",
+                "gamer"
+            ],
+            "keysecondary": [],
+            "comment": "Cairo History 4",
+            "content": "[HISTORY PART 7]\n**Part 7: The Digital Sanctuary (Halo, Healing & Online Reinvention)**\nThe weight of his physical appearance and the trauma of its loss became unbearable. College offered a chance, not for a fresh start in the traditional sense – he knew his scars, both visible and invisible, would follow him – but for a deeper retreat. Weyland University, with its reputation for accepting demihumans, felt marginally safer than other options, but his primary goal was anonymity within a structured environment. His sanctuary became the glowing screen, the anonymous worlds of online gaming. In Halo, in Final Fantasy, in countless digital landscapes, he could be someone else. Someone strong, someone confident, someone whose appearance didn't matter.\n\nHe became deeply engrossed in the Halo community, finding not just an escape, but genuine camaraderie with online squads. These were voices in his headset who knew him only as \"Cairo,\" a skilled player, a witty teammate, a friend. They celebrated victories together, strategized, shared jokes, and, crucially, offered a sense of belonging he'd never experienced in the \"real world.\" As his confidence within this digital sphere grew, and as these connections deepened, something remarkable happened: the urge to self-harm began to fade. The validation and friendship he found online started to fill the aching void that had fueled his self-destructive behaviors. He still bore the scars, but he was no longer actively adding to them. The real world remained a source of profound anxiety, but online, he had found a tribe, a place where he felt seen and valued for who he was, not what he looked like. His dorm room, filled with gaming posters and the hum of his console, became his fortress, the only place he felt a semblance of control, a fragile peace, and the first sparks of genuine self-worth.\n[END HISTORY PART 7]",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 25,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": [
+                    "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
                 ]
             }
         }
