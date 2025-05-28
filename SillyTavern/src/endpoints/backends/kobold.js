@@ -80,7 +80,6 @@ router.post('/generate', async function (request, response_generate) {
         }
     }
 
-    console.debug(this_settings);
     const args = {
         body: JSON.stringify(this_settings),
         headers: Object.assign(
@@ -116,7 +115,6 @@ router.post('/generate', async function (request, response_generate) {
                 }
 
                 const data = await response.json();
-                console.debug('Endpoint response:', data);
                 return response_generate.send(data);
             }
         } catch (error) {
@@ -201,8 +199,6 @@ router.post('/transcribe-audio', async function (request, response) {
             return response.sendStatus(400);
         }
 
-        console.debug('Transcribing audio with KoboldCpp', server);
-
         const fileBase64 = fs.readFileSync(request.file.path).toString('base64');
         fs.unlinkSync(request.file.path);
 
@@ -230,7 +226,6 @@ router.post('/transcribe-audio', async function (request, response) {
         }
 
         const data = await result.json();
-        console.debug('KoboldCpp transcription response', data);
         return response.json(data);
     } catch (error) {
         console.error('KoboldCpp transcription failed', error);

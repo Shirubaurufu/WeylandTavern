@@ -198,7 +198,6 @@ export function cleanUploads() {
                 return;
             }
 
-            console.debug(`Cleaning uploads folder (${uploads.length} files)`);
             uploads.forEach(file => {
                 const pathToFile = path.join(uploadsPath, file);
                 fs.unlinkSync(pathToFile);

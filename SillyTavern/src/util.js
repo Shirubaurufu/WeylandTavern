@@ -570,7 +570,6 @@ export function makeHttp2Request(endpoint, method, body, headers) {
                 });
 
                 req.on('end', () => {
-                    console.debug(data);
                     resolve(data);
                 });
             });

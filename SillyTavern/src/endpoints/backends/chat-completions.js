@@ -244,8 +244,6 @@ async function sendClaudeRequest(request, response) {
             additionalHeaders['anthropic-beta'] = betaHeaders.join(',');
         }
 
-        console.debug('Claude request:', requestBody);
-
         const generateResponse = await fetch(apiUrl + '/messages', {
             method: 'POST',
             signal: controller.signal,
@@ -271,7 +269,6 @@ async function sendClaudeRequest(request, response) {
             /** @type {any} */
             const generateResponseJson = await generateResponse.json();
             const responseText = generateResponseJson?.content?.[0]?.text || '';
-            console.debug('Claude response:', generateResponseJson);
 
             // Wrap it back to OAI format + save the original content
             const reply = { choices: [{ 'message': { 'content': responseText } }], content: generateResponseJson.content };
@@ -300,7 +297,6 @@ async function sendScaleRequest(request, response) {
     }
 
     const requestPrompt = convertTextCompletionPrompt(request.body.messages);
-    console.debug('Scale request:', requestPrompt);
 
     try {
         const controller = new AbortController();
@@ -325,7 +321,6 @@ async function sendScaleRequest(request, response) {
 
         /** @type {any} */
         const generateResponseJson = await generateResponse.json();
-        console.debug('Scale response:', generateResponseJson);
 
         const reply = { choices: [{ 'message': { 'content': generateResponseJson.output } }] };
         return response.send(reply);
@@ -486,7 +481,6 @@ async function sendMakerSuiteRequest(request, response) {
     }
 
     const body = getGeminiBody();
-    console.debug(`${apiName} request:`, body);
 
     try {
         const controller = new AbortController();
@@ -545,7 +539,6 @@ async function sendMakerSuiteRequest(request, response) {
             const responseContent = candidates[0].content ?? candidates[0].output;
             const functionCall = (candidates?.[0]?.content?.parts ?? []).some(part => part.functionCall);
             const inlineData = (candidates?.[0]?.content?.parts ?? []).some(part => part.inlineData);
-            console.debug(`${apiName} response:`, util.inspect(generateResponseJson, { depth: 5, colors: true }));
 
             const responseText = typeof responseContent === 'string' ? responseContent : responseContent?.parts?.filter(part => !part.thought)?.map(part => part.text)?.join('\n\n');
             if (!responseText && !functionCall && !inlineData) {
@@ -581,7 +574,6 @@ async function sendAI21Request(request, response) {
     }
 
     const controller = new AbortController();
-    console.debug(request.body.messages);
     request.socket.removeAllListeners('close');
     request.socket.on('close', function () {
         controller.abort();
@@ -608,8 +600,6 @@ async function sendAI21Request(request, response) {
         signal: controller.signal,
     };
 
-    console.debug('AI21 request:', body);
-
     try {
         const generateResponse = await fetch(API_AI21 + '/chat/completions', options);
         if (request.body.stream) {
@@ -622,7 +612,6 @@ async function sendAI21Request(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('AI21 response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -687,8 +676,6 @@ async function sendMistralAIRequest(request, response) {
             timeout: 0,
         };
 
-        console.debug('MisralAI request:', requestBody);
-
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
         if (request.body.stream) {
             forwardFetchResponse(generateResponse, response);
@@ -700,7 +687,6 @@ async function sendMistralAIRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('MistralAI response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -766,8 +752,6 @@ async function sendCohereRequest(request, response) {
             requestBody.safety_mode = 'OFF';
         }
 
-        console.debug('Cohere request:', requestBody);
-
         const config = {
             method: 'POST',
             headers: {
@@ -793,7 +777,6 @@ async function sendCohereRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('Cohere response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -874,8 +857,6 @@ async function sendDeepSeekRequest(request, response) {
             signal: controller.signal,
         };
 
-        console.debug('DeepSeek request:', requestBody);
-
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
 
         if (request.body.stream) {
@@ -888,7 +869,6 @@ async function sendDeepSeekRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('DeepSeek response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -969,8 +949,6 @@ async function sendXaiRequest(request, response) {
             signal: controller.signal,
         };
 
-        console.debug('xAI request:', requestBody);
-
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
 
         if (request.body.stream) {
@@ -983,7 +961,6 @@ async function sendXaiRequest(request, response) {
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
-            console.debug('xAI response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
     } catch (error) {
@@ -1418,8 +1395,6 @@ router.post('/generate', function (request, response) {
         signal: controller.signal,
     };
 
-    console.debug(requestBody);
-
     makeRequest(config, response, request);
 
     /**
@@ -1450,8 +1425,6 @@ router.post('/generate', function (request, response) {
                     }
                 }
                 response.send(json);
-                console.debug(json);
-                console.debug(json?.choices?.[0]?.message);
             } else if (fetchResponse.status === 429 && retries > 0) {
                 console.warn(`Out of quota, retrying in ${Math.round(timeout / 1000)}s`);
                 setTimeout(() => {
