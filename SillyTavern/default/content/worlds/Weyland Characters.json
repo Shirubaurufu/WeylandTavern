@@ -2232,7 +2232,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Summer Outfit Codes",
-            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (pink t-shirt and black skirt)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Cheerleader outfit\n• [O2] - Yukata/Kimono festival outfit\n• [O3] - Hoodie outfit (black hoodie)\n• [O4] - Fancy dress (red cocktail dress with black sleeves)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (pink t-shirt and black skirt)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Cheerleader outfit\n• [O2] - Yukata/Kimono festival outfit\n• [O3] - Hoodie outfit (black hoodie)\n• [O4] - Fancy dress (red cocktail dress with black sleeves)\n• [O5] - Baker outfit (cream sweater and brown apron)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
