@@ -591,7 +591,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 62,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1064,7 +1064,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 64,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1250,7 +1250,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 65,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1531,7 +1531,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 66,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1622,7 +1622,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 67,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1761,7 +1761,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 62,
+            "displayIndex": 68,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -1990,7 +1990,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 63,
+            "displayIndex": 69,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2177,7 +2177,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 66,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2218,7 +2218,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 64,
+            "displayIndex": 70,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2259,7 +2259,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 65,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2889,6 +2889,47 @@
                 "names": [],
                 "tags": [
                     "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
+                ]
+            }
+        },
+        "61": {
+            "uid": 61,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Hannah Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN WORK OUTFIT (blue nurse scrubs)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Casual outfit (black hoodie and cargo pants)\n• [O1] - Festival yukata/kimono (yellow and white sunflower kimono)\n• [O3] - Babydoll sleepwear (red sheer negligee)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 63,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": [
+                    "de325bb2-a544-4ed7-a989-878a2a034bd0"
                 ]
             }
         }
