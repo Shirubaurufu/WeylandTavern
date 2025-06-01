@@ -7026,7 +7026,7 @@
             ],
             "keysecondary": [],
             "comment": "Blake & {{user}}'s Room",
-            "content": "Potential Location: Blake and {{user}}'s shared Dorm Room \nRoom #271: Shared by Blake and {{user}} as roommates.\n\nBlake's side of the room: (black and red punk posters covering walls, messy desk cluttered with computer parts and coding books, gaming PC with dual monitors, electric guitar leaning against wall, clothes strewn about including ripped jeans and band tees, mini fridge stocked with Sapporo beer, small collection of potted succulents on windowsill, manga volumes stacked haphazardly on nightstand, hidden stash of stuffed animals under couch, concert ticket stubs pinned to corkboard, tangled fairy lights spelling out \"FUCK OFF\", half-empty ashtray, bluetooth speaker playing lofi beats, crumpled sketches of 3D designs)\n\nThe other side of the room contain's {{user}}'s belongings. Utilize {{user}}'s room context if it exists.\n\nBlake and {{user}}'s dorm room is connected directly to Kai and Kiera's dorm room (273) by a conjoined bathroom with no locked doors. This allows free access between rooms 271 and 273 as neighbors.\n\nShared bathroom with room 273 (Kai & Kiera): Two sinks, open shower with small curtain, small lockable room with toilet\n-----",
+            "content": "{{getvar::BlakeRoom}}",
             "constant": false,
             "vectorized": true,
             "selective": true,
