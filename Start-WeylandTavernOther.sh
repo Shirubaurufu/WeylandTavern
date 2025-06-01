@@ -29,16 +29,41 @@ then
 fi
 
 echo "Attempting to update WeylandTavern..."
-if git pull > SillyTavern/WTUpdate.log 2>&1; then
-    echo "WeylandTavern is up to date!"
-else
-    echo "There was an error updating WeylandTavern..."
-    echo "Generating log file SillyTavern/WTUpdate.log..."
-    git diff --compact-summary > SillyTavern/WTUpdate.log
-    echo "Please provide the WTUpdate log file to the WeylandTavern dev team at your convenience."
-    read -p "WeylandTavern failed to update. Start anyway? (Y/N) " continue
-    if [[ "$continue" =~ ^[Nn]$ ]]; then
-        exit 0
+update() {
+    if ! git pull > SillyTavern/WTUpdate.log 2>&1; then
+        echo "There was an error updating WeylandTavern..."
+        echo "Generating log file: SillyTavern/WTUpdate.log..."
+        git diff --compact-summary | tee -a SillyTavern/WTUpdate.log
+
+        read -p "Overwrite incorrect file changes and re-attempt update? (Y/N) [Default: N] " overwrite
+        overwrite=${overwrite:-N}
+
+        if [[ "$overwrite" =~ ^[Yy]$ ]]; then
+            git stash
+            update
+            return
+        fi
+
+        echo "Please provide the WTUpdate log file to the WeylandTavern dev team at your convenience."
+        read -p "WeylandTavern failed to update. Start anyway? (Y/N) [Default: N] " continue
+        continue=${continue:-N}
+        if [[ "$continue" =~ ^[Nn]$ ]]; then
+            exit 0
+        fi
+    else
+        echo "WeylandTavern is up to date!"
+    fi
+}
+
+update
+
+if [[ "$overwrite" =~ ^[Yy]$ ]]; then
+    read -p "Revert differing files post update? (Y/N) [Default: N] " pop
+    pop=${pop:-N}
+    if [[ "$pop" =~ ^[Yy]$ ]]; then
+        git stash pop
+    else
+        git stash clear
     fi
 fi
 

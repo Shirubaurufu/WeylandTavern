@@ -9,18 +9,31 @@ setlocal enabledelayedexpansion
 title WeylandTavern
 
 echo Attempting to update WeylandTavern...
+:update
 git pull > SillyTavern/WTUpdate.log 2>&1
 if errorlevel 1 (
     echo There was an error updating WeylandTavern...
     echo Generating log file SillyTavern/WTUpdate.log...
     git diff --compact-summary > SillyTavern/WTUpdate.log
+    git diff --compact-summary
+    set /p overwrite="Overwrite incorrect file changes and re-attempt update? (Y/N) [Default: N] "
+    if /i "!overwrite!"=="Y" git stash
+    if /i "!overwrite!"=="Y" GOTO update
     echo Please provide the WTUpdate log file to the WeylandTavern dev team at your convenience.
-    set /p continue="Weyland Tavern failed to update. Start anyway? (Y/N) "
-    if /i "!continue!"=="N" (
-        exit /b 0
-    )
+    set /p continue="Weyland Tavern failed to update. Start anyway? (Y/N) [Default: N] "
+    if /i "!continue!"=="" set "continue=N"
+    if /i "!continue!"=="N" exit /b 0
 ) else (
     echo WeylandTavern is up to date!
+)
+
+if /i "!overwrite!"=="Y" (
+    set /p pop="Revert differing files post update? (Y/N) [Default: N] "
+    if /i "!pop!"=="Y" (
+        git stash pop
+    ) else (
+        git stash clear
+    )
 )
 
 pushd %~dp0
