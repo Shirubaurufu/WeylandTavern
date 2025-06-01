@@ -791,7 +791,7 @@ async function getClientVersion() {
         const data = await response.json();
         CLIENT_VERSION = data.agent;
         //displayVersion = `SillyTavern ${data.pkgVersion}`;
-        displayVersion = `WeylandTavern 20250519`;
+        displayVersion = `WeylandTavern 20250531`;
         currentVersion = data.pkgVersion;
 
         if (data.gitRevision && data.gitBranch) {
