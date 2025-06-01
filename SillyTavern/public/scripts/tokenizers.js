@@ -676,6 +676,10 @@ export function getTokenizerModel() {
         return gemmaTokenizer;
     }
 
+    if (oai_settings.chat_completion_source == chat_completion_sources.VERTEXAI) {
+        return gemmaTokenizer;
+    }
+
     if (oai_settings.chat_completion_source == chat_completion_sources.AI21) {
         return jambaTokenizer;
     }
@@ -727,15 +731,6 @@ export function getTokenizerModel() {
 
     if (oai_settings.chat_completion_source === chat_completion_sources.ZEROONEAI) {
         return yiTokenizer;
-    }
-
-    if (oai_settings.chat_completion_source === chat_completion_sources.BLOCKENTROPY) {
-        if (oai_settings.blockentropy_model.includes('llama3')) {
-            return llama3Tokenizer;
-        }
-        if (oai_settings.blockentropy_model.includes('miqu') || oai_settings.blockentropy_model.includes('mixtral')) {
-            return mistralTokenizer;
-        }
     }
 
     // Default to Turbo 3.5

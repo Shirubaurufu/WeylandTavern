@@ -47,7 +47,7 @@ router.post('/recognize', async (req, res) => {
 
         return res.json({ text: result.text });
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });
@@ -71,7 +71,7 @@ router.post('/synthesize', async (req, res) => {
         res.set('Content-Type', 'audio/wav');
         return res.send(Buffer.from(buffer));
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });

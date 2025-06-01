@@ -51,7 +51,7 @@ router.post('/list', async (_request, response) => {
         viewModels.sort((x, y) => (x.created ?? 0) - (y.created ?? 0));
         return response.json(viewModels);
     } catch (error) {
-        console.error('User list failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -70,7 +70,7 @@ router.post('/login', async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.error('Login failed: User', request.body.handle, 'not found');
+            
             return response.status(403).json({ error: 'Incorrect credentials' });
         }
 
@@ -85,7 +85,7 @@ router.post('/login', async (request, response) => {
         }
 
         if (!request.session) {
-            console.error('Session not available');
+            
             return response.sendStatus(500);
         }
 
@@ -95,11 +95,11 @@ router.post('/login', async (request, response) => {
         return response.json({ handle: user.handle });
     } catch (error) {
         if (error instanceof RateLimiterRes) {
-            console.error('Login failed: Rate limited from', getIpAddress(request));
+            
             return response.status(429).send({ error: 'Too many attempts. Try again later or recover your password.' });
         }
 
-        console.error('Login failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -118,12 +118,12 @@ router.post('/recover-step1', async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.error('Recover step 1 failed: User', request.body.handle, 'not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
         if (!user.enabled) {
-            console.error('Recover step 1 failed: User', user.handle, 'is disabled');
+            
             return response.status(403).json({ error: 'User is disabled' });
         }
 
@@ -135,11 +135,11 @@ router.post('/recover-step1', async (request, response) => {
         return response.sendStatus(204);
     } catch (error) {
         if (error instanceof RateLimiterRes) {
-            console.error('Recover step 1 failed: Rate limited from', getIpAddress(request));
+            
             return response.status(429).send({ error: 'Too many attempts. Try again later or contact your admin.' });
         }
 
-        console.error('Recover step 1 failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -156,7 +156,7 @@ router.post('/recover-step2', async (request, response) => {
         const ip = getIpAddress(request);
 
         if (!user) {
-            console.error('Recover step 2 failed: User', request.body.handle, 'not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
@@ -189,11 +189,11 @@ router.post('/recover-step2', async (request, response) => {
         return response.sendStatus(204);
     } catch (error) {
         if (error instanceof RateLimiterRes) {
-            console.error('Recover step 2 failed: Rate limited from', getIpAddress(request));
+            
             return response.status(429).send({ error: 'Too many attempts. Try again later or contact your admin.' });
         }
 
-        console.error('Recover step 2 failed:', error);
+        
         return response.sendStatus(500);
     }
 });

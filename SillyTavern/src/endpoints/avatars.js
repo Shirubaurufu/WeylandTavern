@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 import express from 'express';
 import sanitize from 'sanitize-filename';
-import jimp from 'jimp';
+import { Jimp, JimpMime } from '../jimp.js';
 import { sync as writeFileAtomicSync } from 'write-file-atomic';
 
 import { AVATAR_WIDTH, AVATAR_HEIGHT } from '../constants.js';
@@ -21,14 +21,14 @@ router.post('/delete', getFileNameValidationFunction('avatar'), function (reques
     if (!request.body) return response.sendStatus(400);
 
     if (request.body.avatar !== sanitize(request.body.avatar)) {
-        console.error('Malicious avatar name prevented');
+        
         return response.sendStatus(403);
     }
 
     const fileName = path.join(request.user.directories.avatars, sanitize(request.body.avatar));
 
     if (fs.existsSync(fileName)) {
-        fs.rmSync(fileName);
+        fs.unlinkSync(fileName);
         return response.send({ result: 'ok' });
     }
 
@@ -41,18 +41,19 @@ router.post('/upload', async (request, response) => {
     try {
         const pathToUpload = path.join(request.file.destination, request.file.filename);
         const crop = tryParse(request.query.crop);
-        let rawImg = await jimp.read(pathToUpload);
+        const rawImg = await Jimp.read(pathToUpload);
 
         if (typeof crop == 'object' && [crop.x, crop.y, crop.width, crop.height].every(x => typeof x === 'number')) {
-            rawImg = rawImg.crop(crop.x, crop.y, crop.width, crop.height);
+            rawImg.crop({ w: crop.width, h: crop.height, x: crop.x, y: crop.y });
         }
 
-        const image = await rawImg.cover(AVATAR_WIDTH, AVATAR_HEIGHT).getBufferAsync(jimp.MIME_PNG);
+        rawImg.cover({ w: AVATAR_WIDTH, h: AVATAR_HEIGHT });
+        const image = await rawImg.getBuffer(JimpMime.png);
 
         const filename = request.body.overwrite_name || `${Date.now()}.png`;
         const pathToNewFile = path.join(request.user.directories.avatars, filename);
         writeFileAtomicSync(pathToNewFile, image);
-        fs.rmSync(pathToUpload);
+        fs.unlinkSync(pathToUpload);
         return response.send({ path: filename });
     } catch (err) {
         return response.status(400).send('Is not a valid image');

@@ -10,6 +10,7 @@ import { SECRET_KEYS, writeSecret } from './secrets.js';
 import { delay } from './utils.js';
 import { isMobile } from './RossAscends-mods.js';
 import { autoSelectInstructPreset } from './instruct-mode.js';
+import { t } from './i18n.js';
 
 export {
     horde_settings,
@@ -169,7 +170,7 @@ async function adjustHordeGenerationParams(max_context_length, max_length) {
         }
     }
     console.log(maxContextLength, maxLength);
-    $('#adjustedHordeParams').text(`Context: ${maxContextLength}, Response: ${maxLength}`);
+    $('#adjustedHordeParams').text(t`Context` + `: ${maxContextLength}, ` + t`Response` + `: ${maxLength}`);
     return { maxContextLength, maxLength };
 }
 
@@ -177,7 +178,7 @@ function setContextSizePreview() {
     if (horde_settings.models.length) {
         adjustHordeGenerationParams(max_context, amount_gen);
     } else {
-        $('#adjustedHordeParams').text('Context: --, Response: --');
+        $('#adjustedHordeParams').text(t`Context` + ': --, ' + t`Response` + ': --');
     }
 }
 
@@ -393,7 +394,7 @@ function getHordeModelTemplate(option) {
     `));
 }
 
-jQuery(function () {
+export function initHorde () {
     $('#horde_model').on('mousedown change', async function (e) {
         console.log('Horde model change', e);
         horde_settings.models = $('#horde_model').val();
@@ -404,7 +405,7 @@ jQuery(function () {
         if (horde_settings.models.length) {
             adjustHordeGenerationParams(max_context, amount_gen);
         } else {
-            $('#adjustedHordeParams').text('Context: --, Response: --');
+            $('#adjustedHordeParams').text(t`Context` + ': --, ' + t`Response` + ': --');
         }
 
         saveSettingsDebounced();
@@ -440,7 +441,7 @@ jQuery(function () {
     if (!isMobile()) {
         $('#horde_model').select2({
             width: '100%',
-            placeholder: 'Select Horde models',
+            placeholder: t`Select Horde models`,
             allowClear: true,
             closeOnSelect: false,
             templateSelection: function (data) {
@@ -450,5 +451,5 @@ jQuery(function () {
             templateResult: getHordeModelTemplate,
         });
     }
-});
+}
 

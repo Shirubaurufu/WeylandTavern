@@ -70,7 +70,7 @@ router.post('/upload', async (request, response) => {
         await fs.promises.writeFile(pathToNewFile, new Uint8Array(imageBuffer));
         response.send({ path: clientRelativePath(request.user.directories.root, pathToNewFile) });
     } catch (error) {
-        console.error(error);
+        
         response.status(500).send({ error: 'Failed to save the image' });
     }
 });
@@ -104,7 +104,7 @@ router.post('/list/:folder?', (request, response) => {
         }
         return response.send(images);
     } catch (error) {
-        console.error(error);
+        
         return response.status(500).send({ error: 'Unable to retrieve files' });
     }
 });
@@ -122,7 +122,7 @@ router.post('/folders', (request, response) => {
 
         return response.send(folders);
     } catch (error) {
-        console.error(error);
+        
         return response.status(500).send({ error: 'Unable to retrieve folders' });
     }
 });

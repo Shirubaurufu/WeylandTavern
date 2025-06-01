@@ -44,7 +44,7 @@ router.post('/get', requireAdminMiddleware, async (_request, response) => {
         viewModels.sort((x, y) => (x.created ?? 0) - (y.created ?? 0));
         return response.json(viewModels);
     } catch (error) {
-        console.error('User list failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -65,7 +65,7 @@ router.post('/disable', requireAdminMiddleware, async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.error('Disable user failed: User not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
@@ -73,7 +73,7 @@ router.post('/disable', requireAdminMiddleware, async (request, response) => {
         await storage.setItem(toKey(request.body.handle), user);
         return response.sendStatus(204);
     } catch (error) {
-        console.error('User disable failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -89,7 +89,7 @@ router.post('/enable', requireAdminMiddleware, async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.error('Enable user failed: User not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
@@ -97,7 +97,7 @@ router.post('/enable', requireAdminMiddleware, async (request, response) => {
         await storage.setItem(toKey(request.body.handle), user);
         return response.sendStatus(204);
     } catch (error) {
-        console.error('User enable failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -113,7 +113,7 @@ router.post('/promote', requireAdminMiddleware, async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.error('Promote user failed: User not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
@@ -121,7 +121,7 @@ router.post('/promote', requireAdminMiddleware, async (request, response) => {
         await storage.setItem(toKey(request.body.handle), user);
         return response.sendStatus(204);
     } catch (error) {
-        console.error('User promote failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -142,7 +142,7 @@ router.post('/demote', requireAdminMiddleware, async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.error('Demote user failed: User not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
@@ -150,7 +150,7 @@ router.post('/demote', requireAdminMiddleware, async (request, response) => {
         await storage.setItem(toKey(request.body.handle), user);
         return response.sendStatus(204);
     } catch (error) {
-        console.error('User demote failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -197,7 +197,7 @@ router.post('/create', requireAdminMiddleware, async (request, response) => {
         await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
         return response.json({ handle: newUser.handle });
     } catch (error) {
-        console.error('User create failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -229,7 +229,7 @@ router.post('/delete', requireAdminMiddleware, async (request, response) => {
 
         return response.sendStatus(204);
     } catch (error) {
-        console.error('User delete failed:', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -245,7 +245,7 @@ router.post('/slugify', requireAdminMiddleware, async (request, response) => {
 
         return response.send(text);
     } catch (error) {
-        console.error('Slugify failed:', error);
+        
         return response.sendStatus(500);
     }
 });

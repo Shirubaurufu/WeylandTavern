@@ -20,7 +20,7 @@ export async function getNomicAIBatchVector(texts, source, directories) {
     const config = SOURCES[source];
 
     if (!config) {
-        console.error('Unknown source', source);
+        
         throw new Error('Unknown source');
     }
 

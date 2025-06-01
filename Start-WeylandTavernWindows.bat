@@ -30,7 +30,7 @@ echo Checking for character updates...
 node character-downloader.js https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw -u
 echo Starting WeylandTavern...
 echo A browser window will open automatically when ready.
-node server.js %* >nul 2>&1
+start /b node server.js %* >nul 2>&1
 echo WeylandTavern is now active on localhost:8000 (By default)
 echo Press any key to exit.
 pause >nul

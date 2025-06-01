@@ -56,6 +56,8 @@ import { SlashCommandEnumValue } from '../../slash-commands/SlashCommandEnumValu
 import { callGenericPopup, Popup, POPUP_RESULT, POPUP_TYPE } from '../../popup.js';
 import { commonEnumProviders } from '../../slash-commands/SlashCommandCommonEnumsProvider.js';
 import { ToolManager } from '../../tool-calling.js';
+import { MacrosParser } from '../../macros.js';
+import { t } from '../../i18n.js';
 
 export { MODULE_NAME };
 
@@ -77,11 +79,11 @@ const sources = {
     drawthings: 'drawthings',
     pollinations: 'pollinations',
     stability: 'stability',
-    blockentropy: 'blockentropy',
     huggingface: 'huggingface',
     nanogpt: 'nanogpt',
     bfl: 'bfl',
     falai: 'falai',
+    xai: 'xai',
 };
 
 const initiators = {
@@ -930,6 +932,10 @@ const resolutionOptions = {
     sd_res_768x1344: { width: 768, height: 1344, name: '768x1344 (3:4, SDXL)' },
     sd_res_1536x640: { width: 1536, height: 640, name: '1536x640 (24:10, SDXL)' },
     sd_res_640x1536: { width: 640, height: 1536, name: '640x1536 (10:24, SDXL)' },
+    sd_res_1536x1024: { width: 1536, height: 1024, name: '1536x1024 (3:2, ChatGPT)' },
+    sd_res_1024x1536: { width: 1024, height: 1536, name: '1024x1536 (2:3, ChatGPT)' },
+    sd_res_1024x1792: { width: 1024, height: 1792, name: '1024x1792 (4:7, DALL-E)' },
+    sd_res_1792x1024: { width: 1792, height: 1024, name: '1792x1024 (7:4, DALL-E)' },
 };
 
 function onResolutionChange() {
@@ -1300,11 +1306,11 @@ async function onModelChange() {
         sources.togetherai,
         sources.pollinations,
         sources.stability,
-        sources.blockentropy,
         sources.huggingface,
         sources.nanogpt,
         sources.bfl,
         sources.falai,
+        sources.xai,
     ];
 
     if (cloudSources.includes(extension_settings.sd.source)) {
@@ -1511,9 +1517,6 @@ async function loadSamplers() {
         case sources.stability:
             samplers = ['N/A'];
             break;
-        case sources.blockentropy:
-            samplers = ['N/A'];
-            break;
         case sources.huggingface:
             samplers = ['N/A'];
             break;
@@ -1521,6 +1524,9 @@ async function loadSamplers() {
             samplers = ['N/A'];
             break;
         case sources.bfl:
+            samplers = ['N/A'];
+            break;
+        case sources.xai:
             samplers = ['N/A'];
             break;
     }
@@ -1701,9 +1707,6 @@ async function loadModels() {
         case sources.stability:
             models = await loadStabilityModels();
             break;
-        case sources.blockentropy:
-            models = await loadBlockEntropyModels();
-            break;
         case sources.huggingface:
             models = [{ value: '', text: '<Enter Model ID above>' }];
             break;
@@ -1715,6 +1718,9 @@ async function loadModels() {
             break;
         case sources.falai:
             models = await loadFalaiModels();
+            break;
+        case sources.xai:
+            models = await loadXAIModels();
             break;
     }
 
@@ -1768,6 +1774,12 @@ async function loadFalaiModels() {
     return [];
 }
 
+async function loadXAIModels() {
+    return [
+        { value: 'grok-2-image-1212', text: 'grok-2-image-1212' },
+    ];
+}
+
 async function loadPollinationsModels() {
     const result = await fetch('/api/sd/pollinations/models', {
         method: 'POST',
@@ -1794,26 +1806,6 @@ async function loadTogetherAIModels() {
 
     if (result.ok) {
         return await result.json();
-    }
-
-    return [];
-}
-
-async function loadBlockEntropyModels() {
-    if (!secret_state[SECRET_KEYS.BLOCKENTROPY]) {
-        console.debug('Block Entropy API key is not set.');
-        return [];
-    }
-
-    const result = await fetch('/api/sd/blockentropy/models', {
-        method: 'POST',
-        headers: getRequestHeaders(),
-    });
-    console.log(result);
-    if (result.ok) {
-        const data = await result.json();
-        console.log(data);
-        return data;
     }
 
     return [];
@@ -1961,8 +1953,9 @@ async function loadDrawthingsModels() {
 
 async function loadOpenAiModels() {
     return [
-        { value: 'dall-e-3', text: 'DALL-E 3' },
-        { value: 'dall-e-2', text: 'DALL-E 2' },
+        { value: 'gpt-image-1', text: 'gpt-image-1' },
+        { value: 'dall-e-3', text: 'dall-e-3' },
+        { value: 'dall-e-2', text: 'dall-e-2' },
     ];
 }
 
@@ -2097,9 +2090,6 @@ async function loadSchedulers() {
         case sources.stability:
             schedulers = ['N/A'];
             break;
-        case sources.blockentropy:
-            schedulers = ['N/A'];
-            break;
         case sources.huggingface:
             schedulers = ['N/A'];
             break;
@@ -2110,6 +2100,9 @@ async function loadSchedulers() {
             schedulers = ['N/A'];
             break;
         case sources.falai:
+            schedulers = ['N/A'];
+            break;
+        case sources.xai:
             schedulers = ['N/A'];
             break;
     }
@@ -2188,9 +2181,6 @@ async function loadVaes() {
         case sources.stability:
             vaes = ['N/A'];
             break;
-        case sources.blockentropy:
-            vaes = ['N/A'];
-            break;
         case sources.huggingface:
             vaes = ['N/A'];
             break;
@@ -2198,6 +2188,12 @@ async function loadVaes() {
             vaes = ['N/A'];
             break;
         case sources.bfl:
+            vaes = ['N/A'];
+            break;
+        case sources.falai:
+            vaes = ['N/A'];
+            break;
+        case sources.xai:
             vaes = ['N/A'];
             break;
     }
@@ -2337,10 +2333,10 @@ function processReply(str) {
     str = str.replaceAll('“', '');
     str = str.replaceAll('\n', ', ');
     str = str.normalize('NFD');
-    
+
     // Strip out non-alphanumeric characters barring model syntax exceptions
     str = str.replace(/[^a-zA-Z0-9.,:_(){}<>[\]\-'|#]+/g, ' ');
-    
+
     str = str.replace(/\s+/g, ' '); // Collapse multiple whitespaces into one
     str = str.trim();
 
@@ -2757,9 +2753,6 @@ async function sendGenerationRequest(generationType, prompt, additionalNegativeP
             case sources.stability:
                 result = await generateStabilityImage(prefixedPrompt, negativePrompt, signal);
                 break;
-            case sources.blockentropy:
-                result = await generateBlockEntropyImage(prefixedPrompt, negativePrompt, signal);
-                break;
             case sources.huggingface:
                 result = await generateHuggingFaceImage(prefixedPrompt, signal);
                 break;
@@ -2771,6 +2764,9 @@ async function sendGenerationRequest(generationType, prompt, additionalNegativeP
                 break;
             case sources.falai:
                 result = await generateFalaiImage(prefixedPrompt, negativePrompt, signal);
+                break;
+            case sources.xai:
+                result = await generateXAIImage(prefixedPrompt, negativePrompt, signal);
                 break;
         }
 
@@ -2822,40 +2818,6 @@ async function generateTogetherAIImage(prompt, negativePrompt, signal) {
 
     if (result.ok) {
         return await result.json();
-    } else {
-        const text = await result.text();
-        throw new Error(text);
-    }
-}
-
-async function generateBlockEntropyImage(prompt, negativePrompt, signal) {
-    const result = await fetch('/api/sd/blockentropy/generate', {
-        method: 'POST',
-        headers: getRequestHeaders(),
-        signal: signal,
-        body: JSON.stringify({
-            prompt: prompt,
-            negative_prompt: negativePrompt,
-            model: extension_settings.sd.model,
-            steps: extension_settings.sd.steps,
-            width: extension_settings.sd.width,
-            height: extension_settings.sd.height,
-            seed: extension_settings.sd.seed >= 0 ? extension_settings.sd.seed : undefined,
-        }),
-    });
-
-    if (result.ok) {
-        const data = await result.json();
-
-        // Default format is 'jpg'
-        let format = 'jpg';
-
-        // Check if a format is specified in the result
-        if (data.format) {
-            format = data.format.toLowerCase();
-        }
-
-        return { format: format, data: data.images[0] };
     } else {
         const text = await result.text();
         throw new Error(text);
@@ -3234,7 +3196,7 @@ function getNovelParams() {
         extension_settings.sd.scheduler = 'karras';
     }
 
-    if (extension_settings.sd.sampler === 'ddim' || 
+    if (extension_settings.sd.sampler === 'ddim' ||
         ['nai-diffusion-4-curated-preview', 'nai-diffusion-4-full'].includes(extension_settings.sd.model)) {
         sm = false;
         sm_dyn = false;
@@ -3295,9 +3257,11 @@ function getNovelParams() {
 async function generateOpenAiImage(prompt, signal) {
     const dalle2PromptLimit = 1000;
     const dalle3PromptLimit = 4000;
+    const gptImgPromptLimit = 32000;
 
     const isDalle2 = extension_settings.sd.model === 'dall-e-2';
     const isDalle3 = extension_settings.sd.model === 'dall-e-3';
+    const isGptImg = extension_settings.sd.model === 'gpt-image-1';
 
     if (isDalle2 && prompt.length > dalle2PromptLimit) {
         prompt = prompt.substring(0, dalle2PromptLimit);
@@ -3305,6 +3269,10 @@ async function generateOpenAiImage(prompt, signal) {
 
     if (isDalle3 && prompt.length > dalle3PromptLimit) {
         prompt = prompt.substring(0, dalle3PromptLimit);
+    }
+
+    if (isGptImg && prompt.length > gptImgPromptLimit) {
+        prompt = prompt.substring(0, gptImgPromptLimit);
     }
 
     let width = 1024;
@@ -3317,6 +3285,14 @@ async function generateOpenAiImage(prompt, signal) {
 
     if (isDalle3 && aspectRatio > 1) {
         width = 1792;
+    }
+
+    if (isGptImg && aspectRatio < 1) {
+        height = 1536;
+    }
+
+    if (isGptImg && aspectRatio > 1) {
+        width = 1536;
     }
 
     if (isDalle2 && (extension_settings.sd.width <= 512 && extension_settings.sd.height <= 512)) {
@@ -3335,7 +3311,8 @@ async function generateOpenAiImage(prompt, signal) {
             n: 1,
             quality: isDalle3 ? extension_settings.sd.openai_quality : undefined,
             style: isDalle3 ? extension_settings.sd.openai_style : undefined,
-            response_format: 'b64_json',
+            response_format: isDalle2 || isDalle3 ? 'b64_json' : undefined,
+            moderation: isGptImg ? 'low' : undefined,
         }),
     });
 
@@ -3522,6 +3499,33 @@ async function generateBflImage(prompt, signal) {
             height: clamp(extension_settings.sd.height, 256, 1440),
             prompt_upsampling: !!extension_settings.sd.bfl_upsampling,
             seed: extension_settings.sd.seed >= 0 ? extension_settings.sd.seed : undefined,
+        }),
+    });
+
+    if (result.ok) {
+        const data = await result.json();
+        return { format: 'jpg', data: data.image };
+    } else {
+        const text = await result.text();
+        throw new Error(text);
+    }
+}
+
+/**
+ * Generates an image using the xAI API.
+ * @param {string} prompt The main instruction used to guide the image generation.
+ * @param {string} _negativePrompt Negative prompt is not used in this API
+ * @param {AbortSignal} signal An AbortSignal object that can be used to cancel the request.
+ * @returns {Promise<{format: string, data: string}>} A promise that resolves when the image generation and processing are complete.
+ */
+async function generateXAIImage(prompt, _negativePrompt, signal) {
+    const result = await fetch('/api/sd/xai/generate', {
+        method: 'POST',
+        headers: getRequestHeaders(),
+        signal: signal,
+        body: JSON.stringify({
+            prompt: prompt,
+            model: extension_settings.sd.model,
         }),
     });
 
@@ -3772,7 +3776,6 @@ async function addSDGenButtons() {
     $('#sd_wand_container').append(buttonHtml);
     $(document.body).append(dropdownHtml);
 
-    const messageButton = $('.sd_message_gen');
     const button = $('#sd_gen');
     const dropdown = $('#sd_dropdown');
     dropdown.hide();
@@ -3846,8 +3849,6 @@ function isValidState() {
             return true;
         case sources.stability:
             return secret_state[SECRET_KEYS.STABILITY];
-        case sources.blockentropy:
-            return secret_state[SECRET_KEYS.BLOCKENTROPY];
         case sources.huggingface:
             return secret_state[SECRET_KEYS.HUGGINGFACE];
         case sources.nanogpt:
@@ -3856,6 +3857,8 @@ function isValidState() {
             return secret_state[SECRET_KEYS.BFL];
         case sources.falai:
             return secret_state[SECRET_KEYS.FALAI];
+        case sources.xai:
+            return secret_state[SECRET_KEYS.XAI];
     }
 }
 
@@ -4547,4 +4550,29 @@ jQuery(async () => {
 
     await loadSettings();
     $('body').addClass('sd');
+
+    const getMacroValue = ({ isNegative }) => {
+        if (selected_group || this_chid === undefined) {
+            return '';
+        }
+
+        const key = getCharaFilename(this_chid);
+        let characterPrompt = key ? (extension_settings.sd.character_prompts[key] || '') : '';
+        let negativePrompt = key ? (extension_settings.sd.character_negative_prompts[key] || '') : '';
+
+        const context = getContext();
+        const sharedPromptData = context?.characters[this_chid]?.data?.extensions?.sd_character_prompt;
+
+        if (typeof sharedPromptData?.positive === 'string' && !characterPrompt && sharedPromptData.positive) {
+            characterPrompt = sharedPromptData.positive || '';
+        }
+        if (typeof sharedPromptData?.negative === 'string' && !negativePrompt && sharedPromptData.negative) {
+            negativePrompt = sharedPromptData.negative || '';
+        }
+
+        return isNegative ? negativePrompt : characterPrompt;
+    };
+
+    MacrosParser.registerMacro('charPrefix', () => getMacroValue({ isNegative: false }), t`Character's positive positive Image Generation prompt prefix`);
+    MacrosParser.registerMacro('charNegativePrefix', () => getMacroValue({ isNegative: true }), t`Character's negative Image Generation prompt prefix`);
 });

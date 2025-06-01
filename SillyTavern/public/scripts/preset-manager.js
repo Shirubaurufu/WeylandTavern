@@ -21,7 +21,7 @@ import { groups, selected_group } from './group-chats.js';
 import { instruct_presets } from './instruct-mode.js';
 import { kai_settings } from './kai-settings.js';
 import { convertNovelPreset } from './nai-settings.js';
-import { openai_settings, openai_setting_names, oai_settings } from './openai.js';
+import { openai_settings, openai_setting_names } from './openai.js';
 import { Popup, POPUP_RESULT, POPUP_TYPE } from './popup.js';
 import { context_presets, getContextSettings, power_user } from './power-user.js';
 import { SlashCommand } from './slash-commands/SlashCommand.js';
@@ -36,8 +36,9 @@ import {
     textgenerationwebui_presets,
     textgenerationwebui_settings as textgen_settings,
 } from './textgen-settings.js';
-import { download, parseJsonFile, waitUntilCondition } from './utils.js';
+import { download, equalsIgnoreCaseAndAccents, getSanitizedFilename, parseJsonFile, waitUntilCondition } from './utils.js';
 import { t } from './i18n.js';
+import { reasoning_templates } from './reasoning.js';
 
 const presetManagers = {};
 
@@ -168,6 +169,20 @@ class PresetManager {
             },
             isValid: (data) => PresetManager.isPossiblyTextCompletionData(data),
         },
+        'reasoning': {
+            name: 'Reasoning Formatting',
+            getData: () => {
+                const manager = getPresetManager('reasoning');
+                const name = manager.getSelectedPresetName();
+                return manager.getPresetSettings(name);
+            },
+            setData: (data) => {
+                const manager = getPresetManager('reasoning');
+                const name = data.name;
+                return manager.savePreset(name, data);
+            },
+            isValid: (data) => PresetManager.isPossiblyReasoningData(data),
+        },
     };
 
     static isPossiblyInstructData(data) {
@@ -188,6 +203,11 @@ class PresetManager {
     static isPossiblyTextCompletionData(data) {
         const textCompletionProps = ['temp', 'top_k', 'top_p', 'rep_pen'];
         return data && textCompletionProps.every(prop => Object.keys(data).includes(prop));
+    }
+
+    static isPossiblyReasoningData(data) {
+        const reasoningProps = ['name', 'prefix', 'suffix', 'separator'];
+        return data && reasoningProps.every(prop => Object.keys(data).includes(prop));
     }
 
     /**
@@ -225,6 +245,12 @@ class PresetManager {
         if (this.isPossiblyTextCompletionData(data)) {
             toastr.info(t`Importing as settings preset...`, t`Text Completion settings detected`);
             return await getPresetManager('textgenerationwebui').savePreset(fileName, data);
+        }
+
+        // 5. Reasoning Template
+        if (this.isPossiblyReasoningData(data)) {
+            toastr.info(t`Importing as reasoning template...`, t`Reasoning template detected`);
+            return await getPresetManager('reasoning').savePreset(data.name, data);
         }
 
         const validSections = [];
@@ -428,6 +454,9 @@ class PresetManager {
 
     async renamePreset(newName) {
         const oldName = this.getSelectedPresetName();
+        if (equalsIgnoreCaseAndAccents(oldName, newName)) {
+            throw new Error('New name must be different from old name');
+        }
         try {
             await this.savePreset(newName);
             await this.deletePreset(oldName);
@@ -478,6 +507,10 @@ class PresetManager {
                 presets = system_prompts;
                 preset_names = system_prompts.map(x => x.name);
                 break;
+            case 'reasoning':
+                presets = reasoning_templates;
+                preset_names = reasoning_templates.map(x => x.name);
+                break;
             default:
                 console.warn(`Unknown API ID ${api}`);
         }
@@ -490,7 +523,7 @@ class PresetManager {
     }
 
     isAdvancedFormatting() {
-        return this.apiId == 'context' || this.apiId == 'instruct' || this.apiId == 'sysprompt';
+        return  ['context', 'instruct', 'sysprompt', 'reasoning'].includes(this.apiId);
     }
 
     updateList(name, preset) {
@@ -553,6 +586,11 @@ class PresetManager {
                     sysprompt_preset['name'] = name || power_user.sysprompt.preset;
                     return sysprompt_preset;
                 }
+                case 'reasoning': {
+                    const reasoning_preset = structuredClone(power_user.reasoning);
+                    reasoning_preset['name'] = name || power_user.reasoning.preset;
+                    return reasoning_preset;
+                }
                 default:
                     console.warn(`Unknown API ID ${apiId}`);
                     return {};
@@ -599,6 +637,13 @@ class PresetManager {
             'include_reasoning',
             'global_banned_tokens',
             'send_banned_tokens',
+
+            // Reasoning exclusions
+            'auto_parse',
+            'add_to_prompts',
+            'auto_expand',
+            'show_hidden',
+            'max_additions',
         ];
         const settings = Object.assign({}, getSettingsByApiId(this.apiId));
 
@@ -651,13 +696,14 @@ class PresetManager {
             return;
         }
 
-        $(this.select).find(`option[value="${value}"]`).remove();
-
         if (this.isKeyedApi()) {
+            $(this.select).find(`option[value="${value}"]`).remove();
             const index = preset_names.indexOf(nameToDelete);
             preset_names.splice(index, 1);
             presets.splice(index, 1);
         } else {
+            const index = preset_names[nameToDelete];
+            $(this.select).find(`option[value="${index}"]`).remove();
             delete preset_names[nameToDelete];
         }
 
@@ -845,13 +891,23 @@ export async function initPresetManager() {
 
         const popupHeader = !presetManager.isAdvancedFormatting() ? t`Rename preset` : t`Rename template`;
         const oldName = presetManager.getSelectedPresetName();
-        const newName = await Popup.show.input(popupHeader, t`Enter a new name:`, oldName);
+        const newName = await getSanitizedFilename(await Popup.show.input(popupHeader, t`Enter a new name:`, oldName) || '');
         if (!newName || oldName === newName) {
             console.debug(!presetManager.isAdvancedFormatting() ? 'Preset rename cancelled' : 'Template rename cancelled');
             return;
         }
+        if (equalsIgnoreCaseAndAccents(oldName, newName)) {
+            toastr.warning(t`Name not accepted, as it is the same as before (ignoring case and accents).`, t`Rename Preset`);
+            return;
+        }
 
         await presetManager.renamePreset(newName);
+
+        if (apiId === 'openai') {
+            // This is a horrible mess, but prevents the renamed preset from being corrupted.
+            $('#update_oai_preset').trigger('click');
+            return;
+        }
 
         const successToast = !presetManager.isAdvancedFormatting() ? t`Preset renamed` : t`Template renamed`;
         toastr.success(successToast);

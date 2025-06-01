@@ -31,6 +31,7 @@ const SOURCES = [
     'llamacpp',
     'vllm',
     'webllm',
+    'koboldcpp',
 ];
 
 /**
@@ -65,6 +66,8 @@ async function getVector(source, sourceSettings, text, isQuery, directories) {
         case 'ollama':
             return getOllamaVector(text, sourceSettings.apiUrl, sourceSettings.model, sourceSettings.keep, directories);
         case 'webllm':
+            return sourceSettings.embeddings[text];
+        case 'koboldcpp':
             return sourceSettings.embeddings[text];
     }
 
@@ -117,6 +120,9 @@ async function getBatchVector(source, sourceSettings, texts, isQuery, directorie
                 results.push(...await getOllamaBatchVector(batch, sourceSettings.apiUrl, sourceSettings.model, sourceSettings.keep, directories));
                 break;
             case 'webllm':
+                results.push(...texts.map(x => sourceSettings.embeddings[x]));
+                break;
+            case 'koboldcpp':
                 results.push(...texts.map(x => sourceSettings.embeddings[x]));
                 break;
             default:
@@ -173,8 +179,7 @@ function getSourceSettings(source, request) {
             };
         case 'palm':
             return {
-                // TODO: Add support for multiple models
-                model: 'text-embedding-004',
+                model: String(request.body.model || 'text-embedding-004'),
             };
         case 'mistral':
             return {
@@ -185,6 +190,11 @@ function getSourceSettings(source, request) {
                 model: 'nomic-embed-text-v1.5',
             };
         case 'webllm':
+            return {
+                model: String(request.body.model),
+                embeddings: request.body.embeddings ?? {},
+            };
+        case 'koboldcpp':
             return {
                 model: String(request.body.model),
                 embeddings: request.body.embeddings ?? {},
@@ -377,7 +387,7 @@ async function regenerateCorruptedIndexErrorHandler(req, res, error) {
         }
     }
 
-    console.error(error);
+    
     return res.sendStatus(500);
 }
 
@@ -489,7 +499,7 @@ router.post('/purge-all', async (req, res) => {
 
         return res.sendStatus(200);
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });
@@ -513,7 +523,7 @@ router.post('/purge', async (req, res) => {
 
         return res.sendStatus(200);
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });

@@ -1,7 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { promises as fsPromises } from 'node:fs';
-import readline from 'node:readline';
 import { Buffer } from 'node:buffer';
 
 import express from 'express';
@@ -10,16 +9,19 @@ import { sync as writeFileAtomicSync } from 'write-file-atomic';
 import yaml from 'yaml';
 import _ from 'lodash';
 import mime from 'mime-types';
-import jimp from 'jimp';
+import { Jimp, JimpMime } from '../jimp.js';
+import storage from 'node-persist';
 
 import { AVATAR_WIDTH, AVATAR_HEIGHT } from '../constants.js';
 import { default as validateAvatarUrlMiddleware, getFileNameValidationFunction } from '../middleware/validateFileName.js';
-import { deepMerge, humanizedISO8601DateTime, tryParse, extractFileFromZipBuffer, MemoryLimitedMap, getConfigValue } from '../util.js';
+import { deepMerge, humanizedISO8601DateTime, tryParse, extractFileFromZipBuffer, MemoryLimitedMap, getConfigValue, mutateJsonString } from '../util.js';
 import { TavernCardValidator } from '../validator/TavernCardValidator.js';
-import { parse, write } from '../character-card-parser.js';
+import { parse, read, write } from '../character-card-parser.js';
 import { readWorldInfoFile } from './worldinfo.js';
 import { invalidateThumbnail } from './thumbnails.js';
 import { importRisuSprites } from './sprites.js';
+import { getUserDirectories } from '../users.js';
+import { getChatInfo } from './chats.js';
 const defaultAvatarPath = './public/img/ai4.png';
 
 // With 100 MB limit it would take roughly 3000 characters to reach this limit
@@ -29,6 +31,143 @@ const memoryCache = new MemoryLimitedMap(memoryCacheCapacity);
 const isAndroid = process.platform === 'android';
 // Use shallow character data for the character list
 const useShallowCharacters = !!getConfigValue('performance.lazyLoadCharacters', false, 'boolean');
+const useDiskCache = !!getConfigValue('performance.useDiskCache', true, 'boolean');
+
+class DiskCache {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    static DIRECTORY = 'characters';
+
+    /**
+     * @type {number}
+     * @readonly
+     */
+    static SYNC_INTERVAL = 5 * 60 * 1000;
+
+    /** @type {import('node-persist').LocalStorage} */
+    #instance;
+
+    /** @type {NodeJS.Timeout} */
+    #syncInterval;
+
+    /**
+     * Queue of user handles to sync.
+     * @type {Set<string>}
+     * @readonly
+     */
+    syncQueue = new Set();
+
+    /**
+     * Path to the cache directory.
+     * @returns {string}
+     */
+    get cachePath() {
+        return path.join(globalThis.DATA_ROOT, '_cache', DiskCache.DIRECTORY);
+    }
+
+    /**
+     * Returns the list of hashed keys in the cache.
+     * @returns {string[]}
+     */
+    get hashedKeys() {
+        return fs.readdirSync(this.cachePath);
+    }
+
+    /**
+     * Processes the synchronization queue.
+     * @returns {Promise<void>}
+     */
+    async #syncCacheEntries() {
+        try {
+            if (!useDiskCache || this.syncQueue.size === 0) {
+                return;
+            }
+
+            const directories = [...this.syncQueue].map(entry => getUserDirectories(entry));
+            this.syncQueue.clear();
+
+            await this.verify(directories);
+        } catch (error) {
+            
+        }
+    }
+
+    /**
+     * Gets the disk cache instance.
+     * @returns {Promise<import('node-persist').LocalStorage>}
+     */
+    async instance() {
+        if (this.#instance) {
+            return this.#instance;
+        }
+
+        this.#instance = storage.create({
+            dir: this.cachePath,
+            ttl: false,
+            forgiveParseErrors: true,
+            // @ts-ignore
+            maxFileDescriptors: 100,
+        });
+        await this.#instance.init();
+        this.#syncInterval = setInterval(this.#syncCacheEntries.bind(this), DiskCache.SYNC_INTERVAL);
+        return this.#instance;
+    }
+
+    /**
+     * Verifies disk cache size and prunes it if necessary.
+     * @param {import('../users.js').UserDirectoryList[]} directoriesList List of user directories
+     * @returns {Promise<void>}
+     */
+    async verify(directoriesList) {
+        try {
+            if (!useDiskCache) {
+                return;
+            }
+
+            const cache = await this.instance();
+            const validKeys = new Set();
+            for (const dir of directoriesList) {
+                const files = fs.readdirSync(dir.characters, { withFileTypes: true });
+                for (const file of files.filter(f => f.isFile() && path.extname(f.name) === '.png')) {
+                    const filePath = path.join(dir.characters, file.name);
+                    const cacheKey = getCacheKey(filePath);
+                    validKeys.add(path.parse(cache.getDatumPath(cacheKey)).base);
+                }
+            }
+            for (const key of this.hashedKeys) {
+                if (!validKeys.has(key)) {
+                    await cache.removeItem(key);
+                }
+            }
+        } catch (error) {
+            
+        }
+    }
+
+    dispose() {
+        if (this.#syncInterval) {
+            clearInterval(this.#syncInterval);
+        }
+    }
+}
+
+export const diskCache = new DiskCache();
+
+/**
+ * Gets the cache key for the specified image file.
+ * @param {string} inputFile - Path to the image file
+ * @returns {string} - Cache key
+ */
+function getCacheKey(inputFile) {
+    if (fs.existsSync(inputFile)) {
+        const stat = fs.statSync(inputFile);
+        return `${inputFile}-${stat.mtimeMs}`;
+    }
+
+    return inputFile;
+}
 
 /**
  * Reads the character card from the specified image file.
@@ -37,14 +176,32 @@ const useShallowCharacters = !!getConfigValue('performance.lazyLoadCharacters', 
  * @returns {Promise<string | undefined>} - Character card data
  */
 async function readCharacterData(inputFile, inputFormat = 'png') {
-    const stat = fs.statSync(inputFile);
-    const cacheKey = `${inputFile}-${stat.mtimeMs}`;
+    const cacheKey = getCacheKey(inputFile);
     if (memoryCache.has(cacheKey)) {
         return memoryCache.get(cacheKey);
     }
+    if (useDiskCache) {
+        try {
+            const cache = await diskCache.instance();
+            const cachedData = await cache.getItem(cacheKey);
+            if (cachedData) {
+                return cachedData;
+            }
+        } catch (error) {
+            console.warn('Error while reading from disk cache:', error);
+        }
+    }
 
-    const result = parse(inputFile, inputFormat);
+    const result = await parse(inputFile, inputFormat);
     !isAndroid && memoryCache.set(cacheKey, result);
+    if (useDiskCache) {
+        try {
+            const cache = await diskCache.instance();
+            await cache.setItem(cacheKey, result);
+        } catch (error) {
+            console.warn('Error while writing to disk cache:', error);
+        }
+    }
     return result;
 }
 
@@ -69,7 +226,9 @@ async function writeCharacterData(inputFile, data, outputFile, request, crop = u
                 break;
             }
         }
-
+        if (useDiskCache && !Buffer.isBuffer(inputFile)) {
+            diskCache.syncQueue.add(request.user.profile.handle);
+        }
         /**
          * Read the image, resize, and save it as a PNG into the buffer.
          * @returns {Promise<Buffer>} Image buffer
@@ -97,7 +256,7 @@ async function writeCharacterData(inputFile, data, outputFile, request, crop = u
         writeFileAtomicSync(outputImagePath, outputImage);
         return true;
     } catch (err) {
-        console.error(err);
+        
         return false;
     }
 }
@@ -118,12 +277,12 @@ async function writeCharacterData(inputFile, data, outputFile, request, crop = u
  * @returns {Promise<Buffer>} Image buffer
  */
 async function parseImageBuffer(buffer, crop) {
-    const image = await jimp.read(buffer);
+    const image = await Jimp.fromBuffer(buffer);
     let finalWidth = image.bitmap.width, finalHeight = image.bitmap.height;
 
     // Apply crop if defined
     if (typeof crop == 'object' && [crop.x, crop.y, crop.width, crop.height].every(x => typeof x === 'number')) {
-        image.crop(crop.x, crop.y, crop.width, crop.height);
+        image.crop({ x: crop.x, y: crop.y, w: crop.width, h: crop.height });
         // Apply standard resize if requested
         if (crop.want_resize) {
             finalWidth = AVATAR_WIDTH;
@@ -134,7 +293,8 @@ async function parseImageBuffer(buffer, crop) {
         }
     }
 
-    return image.cover(finalWidth, finalHeight).getBufferAsync(jimp.MIME_PNG);
+    image.cover({ w: finalWidth, h: finalHeight });
+    return await image.getBuffer(JimpMime.png);
 }
 
 /**
@@ -145,12 +305,12 @@ async function parseImageBuffer(buffer, crop) {
  */
 async function tryReadImage(imgPath, crop) {
     try {
-        let rawImg = await jimp.read(imgPath);
+        const rawImg = await Jimp.read(imgPath);
         let finalWidth = rawImg.bitmap.width, finalHeight = rawImg.bitmap.height;
 
         // Apply crop if defined
         if (typeof crop == 'object' && [crop.x, crop.y, crop.width, crop.height].every(x => typeof x === 'number')) {
-            rawImg = rawImg.crop(crop.x, crop.y, crop.width, crop.height);
+            rawImg.crop({ x: crop.x, y: crop.y, w: crop.width, h: crop.height });
             // Apply standard resize if requested
             if (crop.want_resize) {
                 finalWidth = AVATAR_WIDTH;
@@ -161,12 +321,12 @@ async function tryReadImage(imgPath, crop) {
             }
         }
 
-        const image = await rawImg.cover(finalWidth, finalHeight).getBufferAsync(jimp.MIME_PNG);
-        return image;
+        rawImg.cover({ w: finalWidth, h: finalHeight });
+        return await rawImg.getBuffer(JimpMime.png);
     }
     // If it's an unsupported type of image (APNG) - just read the file as buffer
     catch (error) {
-        console.error(`Failed to read image: ${imgPath}`, error);
+        
         return fs.readFileSync(imgPath);
     }
 }
@@ -262,12 +422,12 @@ const processCharacter = async (item, directories, { shallow }) => {
         return shallow ? toShallow(character) : character;
     }
     catch (err) {
-        console.error(`Could not process character: ${item}`);
+        
 
         if (err instanceof SyntaxError) {
-            console.error(`${item} does not contain a valid JSON object.`);
+            
         } else {
-            console.error('An unexpected error occurred: ', err);
+            
         }
 
         return {
@@ -330,10 +490,13 @@ function convertToV2(char, directories) {
     return result;
 }
 
-
-function unsetFavFlag(char) {
+/**
+ * Removes fields that are not meant to be shared.
+ */
+function unsetPrivateFields(char) {
     _.set(char, 'fav', false);
     _.set(char, 'data.extensions.fav', false);
+    _.unset(char, 'chat');
 }
 
 function readFromV2(char) {
@@ -414,10 +577,10 @@ function charaFormatData(data, directories) {
     _.set(char, 'mes_example', data.mes_example || '');
 
     // Old ST extension fields (for backward compatibility, will be deprecated)
-    _.set(char, 'creatorcomment', data.creator_notes);
+    _.set(char, 'creatorcomment', data.creator_notes || '');
     _.set(char, 'avatar', 'none');
     _.set(char, 'chat', data.ch_name + ' - ' + humanizedISO8601DateTime());
-    _.set(char, 'talkativeness', data.talkativeness);
+    _.set(char, 'talkativeness', data.talkativeness || 0.5);
     _.set(char, 'fav', data.fav == 'true');
     _.set(char, 'tags', typeof data.tags == 'string' ? (data.tags.split(',').map(x => x.trim()).filter(x => x)) : data.tags || []);
 
@@ -441,7 +604,7 @@ function charaFormatData(data, directories) {
     _.set(char, 'data.alternate_greetings', getAlternateGreetings(data));
 
     // ST extension fields to V2 object
-    _.set(char, 'data.extensions.talkativeness', data.talkativeness);
+    _.set(char, 'data.extensions.talkativeness', data.talkativeness || 0.5);
     _.set(char, 'data.extensions.fav', data.fav == 'true');
     _.set(char, 'data.extensions.world', data.world || '');
 
@@ -539,6 +702,12 @@ function convertWorldInfoToCharacterBook(name, entries) {
                 sticky: entry.sticky ?? null,
                 cooldown: entry.cooldown ?? null,
                 delay: entry.delay ?? null,
+                match_persona_description: entry.matchPersonaDescription ?? false,
+                match_character_description: entry.matchCharacterDescription ?? false,
+                match_character_personality: entry.matchCharacterPersonality ?? false,
+                match_character_depth_prompt: entry.matchCharacterDepthPrompt ?? false,
+                match_scenario: entry.matchScenario ?? false,
+                match_creator_notes: entry.matchCreatorNotes ?? false,
             },
         };
 
@@ -557,7 +726,7 @@ function convertWorldInfoToCharacterBook(name, entries) {
  */
 async function importFromYaml(uploadPath, context, preservedFileName) {
     const fileText = fs.readFileSync(uploadPath, 'utf8');
-    fs.rmSync(uploadPath);
+    fs.unlinkSync(uploadPath);
     const yamlData = yaml.parse(fileText);
     console.info('Importing from YAML');
     yamlData.name = sanitize(yamlData.name);
@@ -591,7 +760,7 @@ async function importFromYaml(uploadPath, context, preservedFileName) {
  */
 async function importFromCharX(uploadPath, { request }, preservedFileName) {
     const data = fs.readFileSync(uploadPath).buffer;
-    fs.rmSync(uploadPath);
+    fs.unlinkSync(uploadPath);
     console.info('Importing from CharX');
     const cardBuffer = await extractFileFromZipBuffer(data, 'card.json');
 
@@ -619,7 +788,7 @@ async function importFromCharX(uploadPath, { request }, preservedFileName) {
         }
     }
 
-    unsetFavFlag(card);
+    unsetPrivateFields(card);
     card['create_date'] = humanizedISO8601DateTime();
     card.name = sanitize(card.name);
     const fileName = preservedFileName || getPngName(card.name, request.user.directories);
@@ -643,7 +812,7 @@ async function importFromJson(uploadPath, { request }, preservedFileName) {
     if (jsonData.spec !== undefined) {
         console.info(`Importing from ${jsonData.spec} json`);
         importRisuSprites(request.user.directories, jsonData);
-        unsetFavFlag(jsonData);
+        unsetPrivateFields(jsonData);
         jsonData = readFromV2(jsonData);
         jsonData['create_date'] = humanizedISO8601DateTime();
         const pngName = preservedFileName || getPngName(jsonData.data?.name || jsonData.name, request.user.directories);
@@ -726,7 +895,7 @@ async function importFromPng(uploadPath, { request }, preservedFileName) {
     if (jsonData.spec !== undefined) {
         console.info(`Found a ${jsonData.spec} character file.`);
         importRisuSprites(request.user.directories, jsonData);
-        unsetFavFlag(jsonData);
+        unsetPrivateFields(jsonData);
         jsonData = readFromV2(jsonData);
         jsonData['create_date'] = humanizedISO8601DateTime();
         const char = JSON.stringify(jsonData);
@@ -774,7 +943,7 @@ router.post('/create', async function (request, response) {
         request.body.ch_name = sanitize(request.body.ch_name);
 
         const char = JSON.stringify(charaFormatData(request.body, request.user.directories));
-        const internalName = getPngName(request.body.ch_name, request.user.directories);
+        const internalName = request.body.file_name || getPngName(request.body.ch_name, request.user.directories);
         const avatarName = `${internalName}.png`;
         const chatsPath = path.join(request.user.directories.chats, internalName);
 
@@ -791,7 +960,7 @@ router.post('/create', async function (request, response) {
             return response.send(avatarName);
         }
     } catch (err) {
-        console.error(err);
+        
         response.sendStatus(500);
     }
 });
@@ -832,13 +1001,13 @@ router.post('/rename', validateAvatarUrlMiddleware, async function (request, res
         }
 
         // Remove the old character file
-        fs.rmSync(oldAvatarPath);
+        fs.unlinkSync(oldAvatarPath);
 
         // Return new avatar name to ST
         return response.send({ avatar: newAvatarName });
     }
     catch (err) {
-        console.error(err);
+        
         return response.sendStatus(500);
     }
 });
@@ -880,7 +1049,7 @@ router.post('/edit', validateAvatarUrlMiddleware, async function (request, respo
         return response.sendStatus(200);
     }
     catch {
-        console.error('An error occured, character edit invalidated.');
+        
     }
 });
 
@@ -925,7 +1094,7 @@ router.post('/edit-attribute', validateAvatarUrlMiddleware, async function (requ
         await writeCharacterData(avatarPath, newCharJSON, targetFile, request);
         return response.sendStatus(200);
     } catch (err) {
-        console.error('An error occured, character edit invalidated.', err);
+        
     }
 });
 
@@ -948,7 +1117,7 @@ router.post('/merge-attributes', getFileNameValidationFunction('avatar'), async 
         const pngStringData = await readCharacterData(avatarPath);
 
         if (!pngStringData) {
-            console.error('Error: invalid character file.');
+            
             return response.status(400).send('Error: invalid character file.');
         }
 
@@ -977,7 +1146,7 @@ router.post('/delete', validateAvatarUrlMiddleware, async function (request, res
     }
 
     if (request.body.avatar_url !== sanitize(request.body.avatar_url)) {
-        console.error('Malicious filename prevented');
+        
         return response.sendStatus(403);
     }
 
@@ -986,12 +1155,12 @@ router.post('/delete', validateAvatarUrlMiddleware, async function (request, res
         return response.sendStatus(400);
     }
 
-    fs.rmSync(avatarPath);
+    fs.unlinkSync(avatarPath);
     invalidateThumbnail(request.user.directories, 'avatar', request.body.avatar_url);
     let dir_name = (request.body.avatar_url.replace('.png', ''));
 
     if (!dir_name.length) {
-        console.error('Malicious dirname prevented');
+        
         return response.sendStatus(403);
     }
 
@@ -999,7 +1168,7 @@ router.post('/delete', validateAvatarUrlMiddleware, async function (request, res
         try {
             await fs.promises.rm(path.join(request.user.directories.chats, sanitize(dir_name)), { recursive: true, force: true });
         } catch (err) {
-            console.error(err);
+            
             return response.sendStatus(500);
         }
     }
@@ -1029,7 +1198,7 @@ router.post('/all', async function (request, response) {
         const data = (await Promise.all(processingPromises)).filter(c => c.name);
         return response.send(data);
     } catch (err) {
-        console.error(err);
+        
         response.sendStatus(500);
     }
 });
@@ -1048,7 +1217,7 @@ router.post('/get', validateAvatarUrlMiddleware, async function (request, respon
 
         return response.send(data);
     } catch (err) {
-        console.error(err);
+        
         response.sendStatus(500);
     }
 });
@@ -1058,7 +1227,6 @@ router.post('/chats', validateAvatarUrlMiddleware, async function (request, resp
         if (!request.body) return response.sendStatus(400);
 
         const characterDirectory = (request.body.avatar_url).replace('.png', '');
-
         const chatsDirectory = path.join(request.user.directories.chats, characterDirectory);
 
         if (!fs.existsSync(chatsDirectory)) {
@@ -1078,59 +1246,16 @@ router.post('/chats', validateAvatarUrlMiddleware, async function (request, resp
         }
 
         const jsonFilesPromise = jsonFiles.map((file) => {
-            return new Promise(async (res) => {
-                const pathToFile = path.join(request.user.directories.chats, characterDirectory, file);
-                const fileStream = fs.createReadStream(pathToFile);
-                const stats = fs.statSync(pathToFile);
-                const fileSizeInKB = `${(stats.size / 1024).toFixed(2)}kb`;
-
-                if (stats.size === 0) {
-                    console.warn(`Found an empty chat file: ${pathToFile}`);
-                    res({});
-                    return;
-                }
-
-                const rl = readline.createInterface({
-                    input: fileStream,
-                    crlfDelay: Infinity,
-                });
-
-                let lastLine;
-                let itemCounter = 0;
-                rl.on('line', (line) => {
-                    itemCounter++;
-                    lastLine = line;
-                });
-                rl.on('close', () => {
-                    rl.close();
-
-                    if (lastLine) {
-                        const jsonData = tryParse(lastLine);
-                        if (jsonData && (jsonData.name || jsonData.character_name)) {
-                            const chatData = {};
-
-                            chatData['file_name'] = file;
-                            chatData['file_size'] = fileSizeInKB;
-                            chatData['chat_items'] = itemCounter - 1;
-                            chatData['mes'] = jsonData['mes'] || '[The chat is empty]';
-                            chatData['last_mes'] = jsonData['send_date'] || Date.now();
-
-                            res(chatData);
-                        } else {
-                            console.warn('Found an invalid or corrupted chat file:', pathToFile);
-                            res({});
-                        }
-                    }
-                });
-            });
+            const pathToFile = path.join(request.user.directories.chats, characterDirectory, file);
+            return getChatInfo(pathToFile);
         });
 
-        const chatData = await Promise.all(jsonFilesPromise);
+        const chatData = (await Promise.allSettled(jsonFilesPromise)).filter(x => x.status === 'fulfilled').map(x => x.value);
         const validFiles = chatData.filter(i => i.file_name);
 
         return response.send(validFiles);
     } catch (error) {
-        console.error(error);
+        
         return response.send({ error: true });
     }
 });
@@ -1197,7 +1322,7 @@ router.post('/import', async function (request, response) {
 
         response.send({ file_name: fileName });
     } catch (err) {
-        console.error(err);
+        
         response.send({ error: true });
     }
 });
@@ -1210,7 +1335,7 @@ router.post('/duplicate', validateAvatarUrlMiddleware, async function (request, 
         }
         let filename = path.join(request.user.directories.characters, sanitize(request.body.avatar_url));
         if (!fs.existsSync(filename)) {
-            console.error('file for dupe not found', filename);
+            
             return response.sendStatus(404);
         }
         let suffix = 1;
@@ -1242,7 +1367,7 @@ router.post('/duplicate', validateAvatarUrlMiddleware, async function (request, 
         response.send({ path: path.parse(newFilename).base });
     }
     catch (error) {
-        console.error(error);
+        
         return response.send({ error: true });
     }
 });
@@ -1261,17 +1386,21 @@ router.post('/export', validateAvatarUrlMiddleware, async function (request, res
 
         switch (request.body.format) {
             case 'png': {
-                const fileContent = await fsPromises.readFile(filename);
+                const rawBuffer = await fsPromises.readFile(filename);
+                const rawData = read(rawBuffer);
+                const mutatedData = mutateJsonString(rawData, unsetPrivateFields);
+                const mutatedBuffer = write(rawBuffer, mutatedData);
                 const contentType = mime.lookup(filename) || 'image/png';
                 response.setHeader('Content-Type', contentType);
                 response.setHeader('Content-Disposition', `attachment; filename="${encodeURI(path.basename(filename))}"`);
-                return response.send(fileContent);
+                return response.send(mutatedBuffer);
             }
             case 'json': {
                 try {
-                    let json = await readCharacterData(filename);
+                    const json = await readCharacterData(filename);
                     if (json === undefined) return response.sendStatus(400);
-                    let jsonObject = getCharaCardV2(JSON.parse(json), request.user.directories);
+                    const jsonObject = getCharaCardV2(JSON.parse(json), request.user.directories);
+                    unsetPrivateFields(jsonObject);
                     return response.type('json').send(JSON.stringify(jsonObject, null, 4));
                 }
                 catch {
@@ -1282,7 +1411,7 @@ router.post('/export', validateAvatarUrlMiddleware, async function (request, res
 
         return response.sendStatus(400);
     } catch (err) {
-        console.error('Character export failed', err);
+        
         response.sendStatus(500);
     }
 });

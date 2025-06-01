@@ -24,7 +24,7 @@ export default function multerMonkeyPatch(req, _res, next) {
 
         next();
     } catch (error) {
-        console.error('Error in multerMonkeyPatch:', error);
+        
         next();
     }
 }

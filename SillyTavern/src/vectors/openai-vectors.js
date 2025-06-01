@@ -31,7 +31,7 @@ export async function getOpenAIBatchVector(texts, source, directories, model = '
     const config = SOURCES[source];
 
     if (!config) {
-        console.error('Unknown source', source);
+        
         throw new Error('Unknown source');
     }
 

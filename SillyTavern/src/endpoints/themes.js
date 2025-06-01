@@ -26,13 +26,13 @@ router.post('/delete', function (request, response) {
     try {
         const filename = path.join(request.user.directories.themes, sanitize(request.body.name) + '.json');
         if (!fs.existsSync(filename)) {
-            console.error('Theme file not found:', filename);
+            
             return response.sendStatus(404);
         }
-        fs.rmSync(filename);
+        fs.unlinkSync(filename);
         return response.sendStatus(200);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });

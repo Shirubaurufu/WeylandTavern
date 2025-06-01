@@ -23,7 +23,7 @@ let appUrl;
 
 function createSillyTavernWindow() {
     if (!appUrl) {
-        console.error('The server has not started yet.');
+        
         return;
     }
     new BrowserWindow({

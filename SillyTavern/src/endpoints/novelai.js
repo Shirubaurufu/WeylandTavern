@@ -136,7 +136,7 @@ router.post('/status', async function (req, res) {
             const data = await response.json();
             return res.send(data);
         } else if (response.status == 401) {
-            console.error('NovelAI Access Token is incorrect.');
+            
             return res.send({ error: true });
         }
         else {
@@ -144,7 +144,7 @@ router.post('/status', async function (req, res) {
             return res.send({ error: true });
         }
     } catch (error) {
-        console.error(error);
+        
         return res.send({ error: true });
     }
 });
@@ -240,7 +240,6 @@ router.post('/generate', async function (req, res) {
         }
     }
 
-
     const args = {
         body: JSON.stringify(data),
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api_key_novel },
@@ -269,7 +268,7 @@ router.post('/generate', async function (req, res) {
                     // ignore
                 }
 
-                return res.status(response.status).send({ error: { message } });
+                return res.status(500).send({ error: { message } });
             }
 
             /** @type {any} */
@@ -363,7 +362,7 @@ router.post('/generate-image', async (request, response) => {
         const imageBuffer = await extractFileFromZipBuffer(archiveBuffer, '.png');
 
         if (!imageBuffer) {
-            console.error('NovelAI generated an image, but the PNG file was not found.');
+            
             return response.sendStatus(500);
         }
 
@@ -392,7 +391,8 @@ router.post('/generate-image', async (request, response) => {
             });
 
             if (!upscaleResult.ok) {
-                throw new Error('NovelAI returned an error.');
+                const text = await upscaleResult.text();
+                throw new Error('NovelAI returned an error.', { cause: text });
             }
 
             const upscaledArchiveBuffer = await upscaleResult.arrayBuffer();
@@ -406,11 +406,11 @@ router.post('/generate-image', async (request, response) => {
 
             return response.send(upscaledBase64);
         } catch (error) {
-            console.warn('NovelAI generated an image, but upscaling failed. Returning original image.');
+            console.warn('NovelAI generated an image, but upscaling failed. Returning original image.', error);
             return response.send(originalBase64);
         }
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -419,7 +419,7 @@ router.post('/generate-voice', async (request, response) => {
     const token = readSecret(request.user.directories, SECRET_KEYS.NOVEL);
 
     if (!token) {
-        console.error('NovelAI Access Token is missing.');
+        
         return response.sendStatus(400);
     }
 
@@ -442,7 +442,7 @@ router.post('/generate-voice', async (request, response) => {
 
         if (!result.ok) {
             const errorText = await result.text();
-            console.error('NovelAI returned an error.', result.statusText, errorText);
+            
             return response.sendStatus(500);
         }
 
@@ -452,7 +452,7 @@ router.post('/generate-voice', async (request, response) => {
         return response.send(buffer);
     }
     catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });

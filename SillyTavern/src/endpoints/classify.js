@@ -17,7 +17,7 @@ router.post('/labels', async (req, res) => {
         const result = Object.keys(pipe.model.config.label2id);
         return res.json({ labels: result });
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });
@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
 
         return res.json({ classification: result });
     } catch (error) {
-        console.error(error);
+        
         return res.sendStatus(500);
     }
 });

@@ -95,24 +95,23 @@ router.post('/serpapi', async (request, response) => {
         const key = readSecret(request.user.directories, SECRET_KEYS.SERPAPI);
 
         if (!key) {
-            console.error('No SerpApi key found');
+            
             return response.sendStatus(400);
         }
 
         const { query } = request.body;
         const result = await fetch(`https://serpapi.com/search.json?q=${encodeURIComponent(query)}&api_key=${key}`);
 
-
         if (!result.ok) {
             const text = await result.text();
-            console.error('SerpApi request failed', result.statusText, text);
+            
             return response.status(500).send(text);
         }
 
         const data = await result.json();
         return response.json(data);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -128,7 +127,7 @@ router.post('/transcript', async (request, response) => {
         const json = request.body.json;
 
         if (!id) {
-            console.error('Id is required for /transcript');
+            
             return response.sendStatus(400);
         }
 
@@ -153,7 +152,7 @@ router.post('/transcript', async (request, response) => {
             throw error;
         }
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -163,16 +162,15 @@ router.post('/searxng', async (request, response) => {
         const { baseUrl, query, preferences, categories } = request.body;
 
         if (!baseUrl || !query) {
-            console.error('Missing required parameters for /searxng');
+            
             return response.sendStatus(400);
         }
-
 
         const mainPageUrl = new URL(baseUrl);
         const mainPageRequest = await fetch(mainPageUrl, { headers: visitHeaders });
 
         if (!mainPageRequest.ok) {
-            console.error('SearXNG request failed', mainPageRequest.statusText);
+            
             return response.sendStatus(500);
         }
 
@@ -199,14 +197,14 @@ router.post('/searxng', async (request, response) => {
 
         if (!searchResult.ok) {
             const text = await searchResult.text();
-            console.error('SearXNG request failed', searchResult.statusText, text);
+            
             return response.sendStatus(500);
         }
 
         const data = await searchResult.text();
         return response.send(data);
     } catch (error) {
-        console.error('SearXNG request failed', error);
+        
         return response.sendStatus(500);
     }
 });
@@ -216,7 +214,7 @@ router.post('/tavily', async (request, response) => {
         const apiKey = readSecret(request.user.directories, SECRET_KEYS.TAVILY);
 
         if (!apiKey) {
-            console.error('No Tavily key found');
+            
             return response.sendStatus(400);
         }
 
@@ -243,17 +241,16 @@ router.post('/tavily', async (request, response) => {
             body: JSON.stringify(body),
         });
 
-
         if (!result.ok) {
             const text = await result.text();
-            console.error('Tavily request failed', result.statusText, text);
+            
             return response.status(500).send(text);
         }
 
         const data = await result.json();
         return response.json(data);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -263,10 +260,9 @@ router.post('/koboldcpp', async (request, response) => {
         const { query, url } = request.body;
 
         if (!url) {
-            console.error('No URL provided for KoboldCpp search');
+            
             return response.sendStatus(400);
         }
-
 
         const baseUrl = trimV1(url);
         const args = {
@@ -280,14 +276,14 @@ router.post('/koboldcpp', async (request, response) => {
 
         if (!result.ok) {
             const text = await result.text();
-            console.error('KoboldCpp request failed', result.statusText, text);
+            
             return response.status(500).send(text);
         }
 
         const data = await result.json();
         return response.json(data);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -297,7 +293,7 @@ router.post('/serper', async (request, response) => {
         const key = readSecret(request.user.directories, SECRET_KEYS.SERPER);
 
         if (!key) {
-            console.error('No Serper key found');
+            
             return response.sendStatus(400);
         }
 
@@ -317,7 +313,6 @@ router.post('/serper', async (request, response) => {
             body: JSON.stringify({ q: query }),
         });
 
-
         if (!result.ok) {
             const text = await result.text();
             console.warn('Serper request failed', result.statusText, text);
@@ -327,7 +322,7 @@ router.post('/serper', async (request, response) => {
         const data = await result.json();
         return response.json(data);
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });
@@ -338,7 +333,7 @@ router.post('/visit', async (request, response) => {
         const html = Boolean(request.body.html ?? true);
 
         if (!url) {
-            console.error('No url provided for /visit');
+            
             return response.sendStatus(400);
         }
 
@@ -365,7 +360,7 @@ router.post('/visit', async (request, response) => {
                 throw new Error('Invalid hostname');
             }
         } catch (error) {
-            console.error('Invalid url provided for /visit', url);
+            
             return response.sendStatus(400);
         }
 
@@ -374,7 +369,7 @@ router.post('/visit', async (request, response) => {
         const result = await fetch(url, { headers: visitHeaders });
 
         if (!result.ok) {
-            console.error(`Visit failed ${result.status} ${result.statusText}`);
+            
             return response.sendStatus(500);
         }
 
@@ -382,7 +377,7 @@ router.post('/visit', async (request, response) => {
 
         if (html) {
             if (!contentType.includes('text/html')) {
-                console.error(`Visit failed, content-type is ${contentType}, expected text/html`);
+                
                 return response.sendStatus(500);
             }
 
@@ -394,7 +389,7 @@ router.post('/visit', async (request, response) => {
         const buffer = await result.arrayBuffer();
         return response.send(Buffer.from(buffer));
     } catch (error) {
-        console.error(error);
+        
         return response.sendStatus(500);
     }
 });

@@ -408,13 +408,17 @@ jQuery(async function () {
                 // Handle multimodal sources
                 if (settings.source === 'multimodal') {
                     const api = settings.multimodal_api;
+                    const altEndpointEnabled = settings.alt_endpoint_enabled;
+                    const altEndpointUrl = settings.alt_endpoint_url;
 
                     // APIs that support reverse proxy
                     const reverseProxyApis = {
                         'openai': SECRET_KEYS.OPENAI,
                         'mistral': SECRET_KEYS.MISTRALAI,
                         'google': SECRET_KEYS.MAKERSUITE,
+                        'vertexai': SECRET_KEYS.VERTEXAI,
                         'anthropic': SECRET_KEYS.CLAUDE,
+                        'xai': SECRET_KEYS.XAI,
                     };
 
                     if (reverseProxyApis[api]) {
@@ -442,12 +446,16 @@ jQuery(async function () {
                         'vllm': textgen_types.VLLM,
                     };
 
-                    if (textCompletionApis[api] && textgenerationwebui_settings.server_urls[textCompletionApis[api]]) {
+                    if (textCompletionApis[api] && altEndpointEnabled && altEndpointUrl) {
+                        return true;
+                    }
+
+                    if (textCompletionApis[api] && !altEndpointEnabled && textgenerationwebui_settings.server_urls[textCompletionApis[api]]) {
                         return true;
                     }
 
                     // Custom API doesn't need additional checks
-                    if (api === 'custom') {
+                    if (api === 'custom' || api === 'pollinations') {
                         return true;
                     }
                 }
@@ -576,6 +584,14 @@ jQuery(async function () {
     });
     $('#caption_multimodal_model').on('change', () => {
         extension_settings.caption.multimodal_model = String($('#caption_multimodal_model').val());
+        saveSettingsDebounced();
+    });
+    $('#caption_altEndpoint_url').val(extension_settings.caption.alt_endpoint_url).on('input', () => {
+        extension_settings.caption.alt_endpoint_url = String($('#caption_altEndpoint_url').val());
+        saveSettingsDebounced();
+    });
+    $('#caption_altEndpoint_enabled').prop('checked', !!(extension_settings.caption.alt_endpoint_enabled)).on('input', () => {
+        extension_settings.caption.alt_endpoint_enabled = !!$('#caption_altEndpoint_enabled').prop('checked');
         saveSettingsDebounced();
     });
 
