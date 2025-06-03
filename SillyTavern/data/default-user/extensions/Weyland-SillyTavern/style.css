@@ -83,6 +83,11 @@ div.textAlignCenter {
     visibility: hidden !important;
 }
 
+#diffPrevPrompt {
+    display: none !important;
+    visibility: hidden !important;
+}
+
 @media screen and (max-width: 1000px) {
     body.waifuMode #sheld {
         height: 50vh;
