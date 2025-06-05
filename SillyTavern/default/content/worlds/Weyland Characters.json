@@ -110,14 +110,15 @@
         "2": {
             "uid": 2,
             "key": [
-                "party",
-                "alcohol",
-                "Rivera",
-                "flirting",
-                "flirt",
-                "Summer",
                 "drunk",
-                "drinking"
+                "hiccup",
+                "drink",
+                "drinking",
+                "party",
+                "partying",
+                "giggle",
+                "alcohol",
+                "intoxicated"
             ],
             "keysecondary": [],
             "comment": "Scenario",
