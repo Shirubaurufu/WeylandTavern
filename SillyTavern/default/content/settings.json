@@ -556,7 +556,7 @@
             {
                 "id": "14c806ea-83cc-400e-95f7-44e1ab209918",
                 "scriptName": "Trim",
-                "findRegex": "([.!?]|\\.{3})(?!.*[.!?]|\\.{3}).*$",
+                "findRegex": "([.!?\"_*`]|\\.{3})(?!.*[.!?\"_*`]|\\.{3}).*$",
                 "replaceString": "$1",
                 "trimStrings": [],
                 "placement": [
@@ -1160,6 +1160,7 @@
                 "BudgetMode": "No",
                 "HideText": "No",
                 "S9J@klE": "69420",
+                "SettingC7": "true",
                 "SettingC6": "true",
                 "SettingC5": "true",
                 "SettingC4": "true",
