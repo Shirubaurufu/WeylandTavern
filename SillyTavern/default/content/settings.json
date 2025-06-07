@@ -832,7 +832,7 @@
             {
                 "id": "367d7121-1d5d-4ea6-86a1-07a82c564961",
                 "scriptName": "Sonnet Think",
-                "findRegex": "<think>[\\s\\S]*?</think>",
+                "findRegex": "{{getglobalvar::LTMRegexFind}}",
                 "replaceString": "{{getglobalvar::aithink1}}$0{{getglobalvar::aithink2}}",
                 "trimStrings": [],
                 "placement": [
@@ -1160,6 +1160,7 @@
                 "BudgetMode": "No",
                 "HideText": "No",
                 "S9J@klE": "69420",
+                "SettingC8": "true",
                 "SettingC7": "true",
                 "SettingC6": "true",
                 "SettingC5": "true",
