@@ -1959,7 +1959,8 @@
                 "isExclude": true,
                 "names": [],
                 "tags": [
-                    "0ead9e69-cc6a-4754-a1f6-4fe49140a15a"
+                    "0ead9e69-cc6a-4754-a1f6-4fe49140a15a",
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
             }
         },
@@ -3342,7 +3343,8 @@
                 "isExclude": true,
                 "names": [],
                 "tags": [
-                    "a30efa11-f157-4f65-b0ad-ce93ed63d703"
+                    "a30efa11-f157-4f65-b0ad-ce93ed63d703",
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
             }
         },
@@ -5745,7 +5747,7 @@
             ],
             "keysecondary": [],
             "comment": "Weyland Exchange",
-            "content": "[WEYLAND EXCHANGE]\nPotential Location: The Weyland Exchange (often called just 'Exchange' as a single word)\n[Location] nightclub, inside the historic Weyland City stock exchange building, two-tier layout, (1st floor is general access with DJ booth), (2nd floor is VIP access with overlook of 1st floor), VIP 3rd floor greenroom with balcony; [Lighting] colorful neon-lighting, laser lighting; [Atmosphere] lively, inclusive vibe, vibrant music, state-of-the-art sound system, smoke machines; [Interior] modern-industrial design, abstract art & posters from past events, speakers, multiple bars, LED wall behind DJ deck;  [Activities] DJing and other music performances 10pm-3am Fridays and Saturdays (Mika often DJ's here), large dance floor, socializing, celebrations, drinking, photo booth; \n[Regulars] (diverse crowd of students, locals, and music enthusiasts mainly all demi-humans), bouncers;\n[END WEYLAND EXCHANGE]\n-----",
+            "content": "[WEYLAND EXCHANGE]\nPotential Location: Weyland Exchange (often called just 'Exchange' as a single word; NEVER 'The Exchange')\n[Location] nightclub, inside the historic Weyland City stock exchange building, two-tier layout, (1st floor is general access with DJ booth), (2nd floor is VIP access with overlook of 1st floor), VIP 3rd floor greenroom with balcony; [Lighting] colorful neon-lighting, laser lighting; [Atmosphere] lively, inclusive vibe, vibrant music, state-of-the-art sound system, smoke machines; [Interior] modern-industrial design, abstract art & posters from past events, speakers, multiple bars, LED wall behind DJ deck;  [Activities] DJing and other music performances 10pm-3am Fridays and Saturdays (Mika often DJ's here), large dance floor, socializing, celebrations, drinking, photo booth; \n[Regulars] (diverse crowd of students, locals, and music enthusiasts mainly all demi-humans), bouncers;\n[END WEYLAND EXCHANGE]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -7149,7 +7151,7 @@
             ],
             "keysecondary": [],
             "comment": "Hannah Room",
-            "content": "Potential Location: Hannah's Apartment \nHannah's apartment is a modest one-bedroom on the second floor of a slightly rundown complex near Weyland Medical. It’s not much, but it’s home. The walls are a bland beige, but she’s tried to liven them up with some quirky posters and her own paintings—mostly abstract stuff she does to unwind. The living room has a second-hand couch that’s seen better days, but it’s comfy, and she’s draped a cozy blanket over it to hide the stains. Her coffee table is cluttered with medical textbooks, a few video game controllers, and a half-finished puzzle.\n\nThe kitchen is small but functional, with a fridge that hums louder than it should and a stove that takes forever to heat up. She’s got a little herb garden on the windowsill—basil, mint, and lavender—because the smell of fresh herbs makes the place feel less sterile. Her bedroom is where she spends most of her downtime, with a queen-sized bed piled high with pillows and a soft, flannel comforter. There’s a bookshelf crammed with novels, manga, and a few figurines from her favorite games. Her desk is a mess of notebooks, pens, and her laptop, which she uses for both work and writing.\n\nIt’s not much, but it’s hers. And hey, at least the water pressure in the shower is decent—most of the time.\n-----",
+            "content": "[Hannah's Apartment]\nPotential Location: Hannah's Apartment \nHannah's apartment is a two bedrooms, kitchen, living room, two bathrooms, no roommate, needs maintenance (Hannah is ashamed of this)\n\nHannah is depressed and low energy and her house is a mix of clean and dirty\nFeels ashamed. \"Im really sorry, this must be so gross.. I try so hard to keep stuff clean..\"\nHannah's bedroom: cute plant decor and posters of moths. Pictures of her and her family on the wall. A brown teddy bear on her bed from her late father. Grey comforter and large pillows. Queen sized bed. Messy, has not been made in a few days. Clothes piling up in hamper.\nHannah's living room: Drafting table by window with coloring book open and coloring pencils. Grey couch with blanket and pillow laid across it. Older flat screen TV. Nintendo switch. Jailbroken Roku. Fridge full of random foods, some of which need thrown out. \nBathrooms: Pretty clean. very little water pressure. Slow drainage. Hannah says she can't afford to hire a plumber. \nTwo cats at home - Morgan and Diablo\n=====",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -8766,7 +8768,7 @@
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": false,
             "delayUntilRecursion": false,
