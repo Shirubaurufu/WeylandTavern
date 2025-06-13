@@ -47,7 +47,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 39,
+            "displayIndex": 43,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -100,7 +100,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 40,
+            "displayIndex": 44,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -114,15 +114,16 @@
         "2": {
             "uid": 2,
             "key": [
-                "drunk",
-                "hiccup",
-                "drink",
-                "drinking",
-                "party",
-                "partying",
-                "giggle",
-                "alcohol",
-                "intoxicated"
+                "nurse",
+                "patient",
+                "medicine",
+                "care",
+                "appendicitis",
+                "appendectomy",
+                "wristband",
+                "monitor",
+                "call light",
+                "radio"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -187,7 +188,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 63,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -247,7 +248,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 18,
+            "displayIndex": 21,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -332,7 +333,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 14,
+            "displayIndex": 17,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -384,7 +385,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 15,
+            "displayIndex": 18,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -443,7 +444,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 16,
+            "displayIndex": 19,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -486,7 +487,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 17,
+            "displayIndex": 20,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -529,7 +530,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 59,
+            "displayIndex": 62,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -572,7 +573,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 64,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -615,7 +616,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 62,
+            "displayIndex": 69,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -660,7 +661,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 21,
+            "displayIndex": 24,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -713,7 +714,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 19,
+            "displayIndex": 22,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -771,7 +772,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 20,
+            "displayIndex": 23,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -829,7 +830,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 26,
+            "displayIndex": 30,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -882,7 +883,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 27,
+            "displayIndex": 31,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -937,7 +938,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 28,
+            "displayIndex": 32,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -999,7 +1000,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 29,
+            "displayIndex": 33,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1063,7 +1064,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 30,
+            "displayIndex": 34,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1106,7 +1107,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 64,
+            "displayIndex": 67,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1159,7 +1160,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 31,
+            "displayIndex": 35,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1212,7 +1213,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 32,
+            "displayIndex": 36,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1257,7 +1258,7 @@
             "sticky": 10,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 33,
+            "displayIndex": 37,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1300,7 +1301,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 65,
+            "displayIndex": 68,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1358,7 +1359,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 34,
+            "displayIndex": 38,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1401,7 +1402,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 35,
+            "displayIndex": 39,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1457,7 +1458,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 36,
+            "displayIndex": 40,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1500,7 +1501,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 37,
+            "displayIndex": 41,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1550,7 +1551,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 38,
+            "displayIndex": 42,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1593,7 +1594,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 66,
+            "displayIndex": 70,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1654,7 +1655,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 41,
+            "displayIndex": 45,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1697,7 +1698,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 67,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1748,7 +1749,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 42,
+            "displayIndex": 46,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1799,7 +1800,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 43,
+            "displayIndex": 47,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1842,7 +1843,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 68,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1885,7 +1886,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 65,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1938,7 +1939,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 44,
+            "displayIndex": 48,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1988,7 +1989,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 45,
+            "displayIndex": 49,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2038,7 +2039,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 46,
+            "displayIndex": 50,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2081,7 +2082,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2134,7 +2135,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 47,
+            "displayIndex": 51,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2183,7 +2184,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 48,
+            "displayIndex": 52,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2233,7 +2234,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 49,
+            "displayIndex": 53,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2276,7 +2277,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2319,7 +2320,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2362,7 +2363,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2414,7 +2415,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 56,
+            "displayIndex": 60,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2466,7 +2467,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 57,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2509,7 +2510,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 58,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2558,7 +2559,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 50,
+            "displayIndex": 54,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2605,7 +2606,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 55,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2653,7 +2654,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 52,
+            "displayIndex": 56,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2701,7 +2702,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 53,
+            "displayIndex": 57,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2750,7 +2751,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 54,
+            "displayIndex": 58,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2804,7 +2805,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 55,
+            "displayIndex": 59,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2855,7 +2856,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 22,
+            "displayIndex": 25,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2905,7 +2906,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 23,
+            "displayIndex": 26,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2957,7 +2958,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 24,
+            "displayIndex": 27,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3012,7 +3013,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 25,
+            "displayIndex": 28,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3055,7 +3056,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 63,
+            "displayIndex": 66,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3063,6 +3064,275 @@
                 ],
                 "tags": [
                     "de325bb2-a544-4ed7-a989-878a2a034bd0"
+                ]
+            }
+        },
+        "62": {
+            "uid": 62,
+            "key": [
+                "Silverdale",
+                "childhood",
+                "parents",
+                "poor",
+                "child",
+                "flowers",
+                "garden",
+                "medical",
+                "bills",
+                "volleyball"
+            ],
+            "keysecondary": [],
+            "comment": "Ava History 1",
+            "content": "[AVA HISTORY 1]\nPart 1: The Foundation\nAva grew up in Silverdale, a working-class suburb where most families lived paycheck to paycheck but maintained a veneer of middle-class stability. Her parents, both demihumans themselves, worked exhausting hours to provide a modest but stable home. Her father, a fox demihuman, took double shifts at the local manufacturing plant, while her mother, also a foxgirl, cleaned houses on weekends to supplement their income. Their small three-bedroom house was always immaculately maintained - her mother's way of preserving dignity despite their financial struggles.\n\nPart 2: The Early Years\nFrom kindergarten, Ava showed remarkable athletic ability. Her vertical leap was extraordinary even as a child, and her reflexes were sharper than her peers'. While her parents encouraged her talents, they never pressured her - athletics was simply something she excelled at naturally. Her true passion emerged in her mother's small backyard garden, where they would plant Easter lilies together every spring. Those quiet moments with her hands in the soil were her earliest memories of peace and contentment.\n\nPart 3: The Pivot\nEverything changed when Ava turned twelve. Her father's company downsized, cutting his hours and benefits. Medical bills from her mother's unexpected illness further strained their finances. Whispered conversations about mortgage payments and college funds became common. One night, Ava overheard her father sobbing at the kitchen table: \"We've worked so hard... what if we can't give her a future?\" The next day, when her volleyball coach mentioned college scholarships for exceptional players, Ava made a silent commitment - volleyball was no longer just a game but her family's financial salvation.\n[END AVA HISTORY 1]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Ava",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 14,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Ava"
+                ],
+                "tags": [
+                    "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
+                ]
+            }
+        },
+        "63": {
+            "uid": 63,
+            "key": [
+                "scholarship",
+                "trauma",
+                "high school",
+                "damaged",
+                "dominant",
+                "boundaries",
+                "boundary",
+                "relationships",
+                "boyfriend",
+                "girlfriend"
+            ],
+            "keysecondary": [],
+            "comment": "Ava History 3",
+            "content": "[AVA HISTORY 3]\nPart 5: The Transformation\nFollowing the incident, Ava's personality underwent a subtle but profound shift. She threw herself into volleyball with new intensity, not just for the scholarship potential but because it gave her control - over her body, her movements, her success. She cut her hair short, adopted a more tomboyish style, and developed a protective shell of sarcasm and profanity. Most significantly, she established rigid physical boundaries. No one touched her without permission - especially her tail.\n\nHer parents, working endless hours to keep the family afloat, noticed the change but attributed it to teenage development. Ava never told them about the amusement park incident, unwilling to add to their burdens. Instead, she channeled her trauma into determination, becoming the most formidable volleyball player in her district by sophomore year of high school.\n\nAs Ava entered dating age, her trauma manifested in complex ways. Her first boyfriend in junior year seemed patient with her boundaries at first but soon, he reached for her tail. \"Come on, I've been so patient,\" he argued when she pulled away. \"It's just a tail. Why are you being so protective?\" When she tried to explain her discomfort, he told her he was incompatible with someone who was uncomfortable with being touched, accused her of being \"damaged goods\" and broke up with her a week later.\n\nThis pattern repeated through high school - initial respect for her boundaries followed by entitlement and eventual rejection. Each failed relationship reinforced what the boys at the amusement park had taught her: people saw her fox features as something to be consumed, not respected. By graduation, Ava had developed a preemptive approach to relationships - maintaining control at all costs, establishing dominance before anyone could try to dominate her.\n\nDespite these struggles, Ava achieved her goal. Her athletic scholarship to Weyland University meant her parents wouldn't have to drain their savings for her education. On the surface, she'd won. But beneath her confident exterior, the pressure continued to mount - to perform, to maintain her scholarship, to justify the sacrifices her parents made, and to protect herself from a world that seemed determined to violate her boundaries.\n[END AVA HISTORY 3]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 3,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 16,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Ava"
+                ],
+                "tags": [
+                    "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
+                ]
+            }
+        },
+        "64": {
+            "uid": 64,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Ava Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (white jersey and red shorts)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 61,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Ava"
+                ],
+                "tags": [
+                    "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
+                ]
+            }
+        },
+        "65": {
+            "uid": 65,
+            "key": [
+                "alumni",
+                "alumna",
+                "graduation",
+                "graduate",
+                "history",
+                "background",
+                "growing up",
+                "childhood",
+                "parents",
+                "parent",
+                "finances",
+                "money",
+                "bills",
+                "bill",
+                "death",
+                "quit"
+            ],
+            "keysecondary": [],
+            "comment": "Hannah History 1",
+            "content": "[HISTORY]\nHannah grew up in a lower-class household marked by financial instability and emotional neglect. Her father, a kind but overworked mechanic, was the emotional anchor of the family, providing what little stability they had. Her mother was always quiet, withdrawn, and avoidant, never wanting to make a display of affection or love too obvious. The constant financial strain led to frequent moves, making it difficult for Hannah to form lasting friendships and fostering a deep sense of being an outsider. She found solace in hobbies like baking with her father, gardening, and escaping into the worlds of video games like Pokémon and Zelda.\n\nHer father’s death during her freshman year of college was a devastating blow that left a void she has never been able to fill. His death, combined with her mother's emotional absence and her older sister's spiraling addiction, forced the weight of responsibility onto Hannah's shoulders.\n\nShe pursued a Bachelor of Science in Nursing from Weyland University, believing it was a path to the stability she craved. However, after graduating two years ago, the reality of nursing has been a crushing disappointment. The job is emotionally draining, the pay barely covers her bills, and the student loans and credit card debt she accumulated have left her feeling more trapped than ever. Though she works diligently and hides her misery from her patients, the frequent trauma she encounters haunts her, often manifesting as nightmares or sleep-talking through work reports. She desperately wants to quit but feels she has no way out.\n[END HISTORY]\n==========",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Hannah",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 29,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Hannah"
+                ],
+                "tags": [
+                    "de325bb2-a544-4ed7-a989-878a2a034bd0"
+                ]
+            }
+        },
+        "66": {
+            "uid": 66,
+            "key": [
+                "Whitewater",
+                "Amusement Park",
+                "bullies",
+                "bully",
+                "trauma",
+                "middle school",
+                "touch tail",
+                "touch your tail",
+                "touch my tail",
+                "pain",
+                "past",
+                "history",
+                "backstory",
+                "incident"
+            ],
+            "keysecondary": [],
+            "comment": "Ava History 2",
+            "content": "[AVA HISTORY 2]\nPart 4: The Incident\nEighth grade brought Ava's first real trauma. Already developing into a star athlete, she attended a regional volleyball camp at Whitewater Amusement Park. The camp combined training with \"team bonding\" activities in the park. A group of older high school boys from the basketball camp took notice of Ava - specifically her fox tail, which had grown unusually full and beautiful. Initially, they just made comments: \"Bet that tail feels amazing,\" and \"Foxgirls are always the wildest in bed.\" Ava ignored them, but their harassment escalated.\n\nOn the final day, while her teammates were on a ride, three boys cornered her near the restrooms. \"Come on, just let us touch it,\" the tallest one insisted. When Ava refused, he grabbed her tail, yanking it hard enough that she screamed. \"See? They love it rough,\" he laughed to his friends. As she tried to pull away, he twisted her tail, causing excruciating pain. \"This is all you're good for anyway,\" he hissed. \"Pretty tail, pretty face - that's why fox girls exist.\" A passing camp counselor finally intervened, but the damage was done. The boys faced minimal consequences - just removed from their remaining camp activities.\n\nThat night, Ava sat alone in the hotel bathroom, sobbing silently while her roommates slept. The physical pain subsided, but the words echoed: \"That's why fox girls exist.\" The next morning, she wrapped her tail tightly against her body beneath her clothes - a habit she would maintain for months.\n[END AVA HISTORY 2]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 2,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 15,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Ava"
+                ],
+                "tags": [
+                    "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
                 ]
             }
         }
