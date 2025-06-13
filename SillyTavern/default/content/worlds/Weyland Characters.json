@@ -47,7 +47,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 43,
+            "displayIndex": 46,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -100,7 +100,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 44,
+            "displayIndex": 47,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -114,16 +114,18 @@
         "2": {
             "uid": 2,
             "key": [
-                "nurse",
-                "patient",
-                "medicine",
-                "care",
-                "appendicitis",
-                "appendectomy",
-                "wristband",
-                "monitor",
-                "call light",
-                "radio"
+                "Moonlight",
+                "Festival",
+                "lantern",
+                "lanterns",
+                "stalls",
+                "booth",
+                "stall",
+                "booth",
+                "drunk",
+                "hiccup",
+                "drink",
+                "drinking"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -188,7 +190,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 63,
+            "displayIndex": 68,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -530,7 +532,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 62,
+            "displayIndex": 67,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -573,7 +575,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 64,
+            "displayIndex": 69,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -616,7 +618,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -718,10 +720,12 @@
             "characterFilter": {
                 "isExclude": false,
                 "names": [
+                    "Blake & Serra",
                     "Blake"
                 ],
                 "tags": [
-                    "0ead9e69-cc6a-4754-a1f6-4fe49140a15a"
+                    "0ead9e69-cc6a-4754-a1f6-4fe49140a15a",
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
             }
         },
@@ -776,10 +780,12 @@
             "characterFilter": {
                 "isExclude": false,
                 "names": [
+                    "Blake & Serra",
                     "Blake"
                 ],
                 "tags": [
-                    "0ead9e69-cc6a-4754-a1f6-4fe49140a15a"
+                    "0ead9e69-cc6a-4754-a1f6-4fe49140a15a",
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
             }
         },
@@ -830,7 +836,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 30,
+            "displayIndex": 33,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -883,7 +889,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 31,
+            "displayIndex": 34,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -938,7 +944,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 32,
+            "displayIndex": 35,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1000,7 +1006,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 33,
+            "displayIndex": 36,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1064,7 +1070,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 34,
+            "displayIndex": 37,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1107,7 +1113,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 67,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1160,7 +1166,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 35,
+            "displayIndex": 38,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1213,7 +1219,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 36,
+            "displayIndex": 39,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1258,7 +1264,7 @@
             "sticky": 10,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 37,
+            "displayIndex": 40,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1301,7 +1307,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 68,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1359,7 +1365,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 38,
+            "displayIndex": 41,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1402,7 +1408,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 39,
+            "displayIndex": 42,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1458,7 +1464,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 40,
+            "displayIndex": 43,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1501,7 +1507,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 41,
+            "displayIndex": 44,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1551,7 +1557,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 42,
+            "displayIndex": 45,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1594,7 +1600,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1655,7 +1661,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 45,
+            "displayIndex": 48,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1698,7 +1704,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1749,7 +1755,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 46,
+            "displayIndex": 49,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1800,7 +1806,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 47,
+            "displayIndex": 50,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1843,7 +1849,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 77,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1886,7 +1892,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 65,
+            "displayIndex": 70,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1939,7 +1945,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 48,
+            "displayIndex": 51,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1989,7 +1995,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 49,
+            "displayIndex": 52,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2039,7 +2045,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 50,
+            "displayIndex": 53,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2082,7 +2088,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2135,14 +2141,16 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 54,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
+                    "Blake & Serra",
                     "Serra"
                 ],
                 "tags": [
-                    "a30efa11-f157-4f65-b0ad-ce93ed63d703"
+                    "a30efa11-f157-4f65-b0ad-ce93ed63d703",
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
             }
         },
@@ -2184,14 +2192,16 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 52,
+            "displayIndex": 55,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
+                    "Blake & Serra",
                     "Serra"
                 ],
                 "tags": [
-                    "a30efa11-f157-4f65-b0ad-ce93ed63d703"
+                    "a30efa11-f157-4f65-b0ad-ce93ed63d703",
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
             }
         },
@@ -2234,14 +2244,16 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 53,
+            "displayIndex": 56,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
+                    "Blake & Serra",
                     "Serra"
                 ],
                 "tags": [
-                    "a30efa11-f157-4f65-b0ad-ce93ed63d703"
+                    "a30efa11-f157-4f65-b0ad-ce93ed63d703",
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
             }
         },
@@ -2277,7 +2289,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2320,7 +2332,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 79,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2363,7 +2375,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 80,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2415,7 +2427,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 62,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2467,7 +2479,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 63,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2510,7 +2522,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 64,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2559,7 +2571,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 54,
+            "displayIndex": 57,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2606,7 +2618,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 55,
+            "displayIndex": 58,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2654,7 +2666,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 56,
+            "displayIndex": 59,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2702,7 +2714,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 57,
+            "displayIndex": 60,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2751,7 +2763,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 58,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2805,7 +2817,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 59,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2856,7 +2868,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 25,
+            "displayIndex": 26,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2906,7 +2918,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 26,
+            "displayIndex": 27,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2958,7 +2970,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 27,
+            "displayIndex": 28,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3013,7 +3025,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 28,
+            "displayIndex": 29,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3056,7 +3068,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 66,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3207,7 +3219,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 66,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3239,7 +3251,7 @@
                 "quit"
             ],
             "keysecondary": [],
-            "comment": "Hannah History 1",
+            "comment": "Hannah History",
             "content": "[HISTORY]\nHannah grew up in a lower-class household marked by financial instability and emotional neglect. Her father, a kind but overworked mechanic, was the emotional anchor of the family, providing what little stability they had. Her mother was always quiet, withdrawn, and avoidant, never wanting to make a display of affection or love too obvious. The constant financial strain led to frequent moves, making it difficult for Hannah to form lasting friendships and fostering a deep sense of being an outsider. She found solace in hobbies like baking with her father, gardening, and escaping into the worlds of video games like Pokémon and Zelda.\n\nHer father’s death during her freshman year of college was a devastating blow that left a void she has never been able to fill. His death, combined with her mother's emotional absence and her older sister's spiraling addiction, forced the weight of responsibility onto Hannah's shoulders.\n\nShe pursued a Bachelor of Science in Nursing from Weyland University, believing it was a path to the stability she craved. However, after graduating two years ago, the reality of nursing has been a crushing disappointment. The job is emotionally draining, the pay barely covers her bills, and the student loans and credit card debt she accumulated have left her feeling more trapped than ever. Though she works diligently and hides her misery from her patients, the frequent trauma she encounters haunts her, often manifesting as nightmares or sleep-talking through work reports. She desperately wants to quit but feels she has no way out.\n[END HISTORY]\n==========",
             "constant": false,
             "vectorized": true,
@@ -3267,7 +3279,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 29,
+            "displayIndex": 32,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3333,6 +3345,273 @@
                 ],
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
+                ]
+            }
+        },
+        "67": {
+            "uid": 67,
+            "key": [
+                "clan",
+                "protector",
+                "bouncer",
+                "past",
+                "discharge",
+                "dog tag",
+                "dog tags",
+                "marines",
+                "tradition",
+                "traditions",
+                "uncle",
+                "father",
+                "védelmező",
+                "Kovács",
+                "Miklos",
+                "Ilona",
+                "Arcanine",
+                "Hungary",
+                "guardian",
+                "mother"
+            ],
+            "keysecondary": [],
+            "comment": "Gemini History",
+            "content": "[HISTORY]\nPart 1: The Clan\nThe Clan of the Arcanine once served as guardians and protectors in their homeland of Hungary. For generations, they were known for their loyalty, strength, and service to their communities. The clan philosophy centered around the concept of \"védelmező\" - the protector who stands between danger and the innocent. Children were raised with stories of ancestors who sacrificed for the greater good, who found honor in service and protection.\n\nPart 2: The Childhood\nGemini was born to Kovács Miklos and Kovács Ilona, respected elders in a dwindling clan. As traditional ways faded in the modern world, his parents desperately clung to old values, particularly the védelmező tradition. While other children played, young Gemini was trained in vigilance, strength, and service. By age eight, he was working alongside his father in their family's small tavern, learning to read people, anticipate needs, and maintain order. His childhood consisted of endless lessons on responsibility and duty, with little room for frivolity or self-indulgence.\n\nPart 3: The Loss\nWhen Gemini was fourteen, a fire swept through their neighborhood. His parents, true to their védelmező nature, rushed to help neighbors escape. They never returned. Orphaned and alone, Gemini was taken in by his uncle, a bitter man who had rejected clan ways. The uncle saw the boy's size and strength as assets to exploit rather than gifts to nurture. For three years, Gemini worked in his uncle's shipping business, loading cargo for grueling hours while his uncle pocketed most of his wages. The protective traditions of his clan became twisted in this environment - service without honor, sacrifice without purpose.\n\nPart 4: The Escape\nAt seventeen, with nothing but his father's dog tags and a few hundred dollars saved in secret, Gemini left Hungary for America. His size, strength, and work ethic quickly secured him a place in the Marines. During his eight-year service, he deployed to several conflict zones, primarily Afghanistan and Iraq, experiences he rarely discusses. What is known is that during his final deployment, his unit encountered a situation that went catastrophically wrong. Gemini was one of only three survivors, of which he was responsible for saving. The official records were sealed, but the incident left him with both physical scars (the long scar across his left side) and deeper psychological ones. He received an honorable discharge and several commendations that he keeps in a box, never displayed.\n\nPart 5: The Bar\nAfter completing his service, Gemini drifted until finding work as a bouncer at the Black Barrel Bar. When the previous owner retired five years later, he offered Gemini the opportunity to buy the place with a generous payment plan. Under Gemini's stewardship, the bar transformed from a rough dive into a respected establishment known for its safety, quality, and the enigmatic bartender who seemed to anticipate patrons' needs before they spoke them.\n\nThe small apartment above the bar became his home, the patrons his clan, and his role as protector and provider the entirety of his identity. What began as honoring his parents' legacy gradually calcified into a life defined solely by service - one where personal desires, connections, and needs were systematically deprioritized until they became nearly invisible to Gemini himself.\n[END HISTORY]\n==========",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Gemini",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 30,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Gemini"
+                ],
+                "tags": [
+                    "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
+                ]
+            }
+        },
+        "68": {
+            "uid": 68,
+            "key": [
+                "clan",
+                "protector",
+                "father",
+                "mother",
+                "quotes",
+                "wisdom",
+                "védelmező",
+                "Kovács",
+                "Miklos",
+                "Ilona",
+                "Arcanine",
+                "guardian"
+            ],
+            "keysecondary": [],
+            "comment": "Gemini Quotes",
+            "content": "[QUOTES FROM GEMINI'S PARENTS, TOLD TO HIM GROWING UP]\n\"A védelmező stands between others and harm, not beside them in comfort.\"\n\"The clan does not exist for itself, but for those it serves.\"\n\"Your strength is not yours to use, but theirs to rely upon.\"\n\"A guardian's reward is in the peace of those he protects.\"\n\"Some are born to live brightly, others to ensure the light continues for all.\"\n\"Hunger, pain, loneliness - these are a guardian's constant companions. Embrace them.\"\n\"The moment you seek recognition for your sacrifice is the moment it loses its virtue.\"\n\"Your needs come last. Always. This is the way of our people.\"\n[END QUOTES FROM GEMINI'S PARENTS, TOLD TO HIM GROWING UP]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 2,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 31,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Gemini"
+                ],
+                "tags": [
+                    "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
+                ]
+            }
+        },
+        "69": {
+            "uid": 69,
+            "key": [
+                "hiccup"
+            ],
+            "keysecondary": [],
+            "comment": "Blake & Serra Context",
+            "content": "{{getvar::BlaSerDru}}",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 6,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Blake & Serra",
+            "role": null,
+            "sticky": 5,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 25,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Blake & Serra"
+                ],
+                "tags": [
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
+                ]
+            }
+        },
+        "70": {
+            "uid": 70,
+            "key": [
+                "childhood",
+                "mother",
+                "father",
+                "parent",
+                "parents",
+                "protegee",
+                "pianist",
+                "competition",
+                "disown",
+                "high school",
+                "impress",
+                "fail",
+                "failure",
+                "depression",
+                "room to improve"
+            ],
+            "keysecondary": [],
+            "comment": "Warren History",
+            "content": "[HISTORY]\nWarren was born into an elite family of Okamimimi and was expected to inherit her parents' empire after graduating college.\n\nHowever, her family was very abusive to her. As an only child, they frequently told her that she was an imbecile and inadequate to replace them - that she always had to try harder and do more to impress them. Any aced test, any new skill was never enough - she always had \"room to improve\".\n\nDuring her sophomore year of high school, Warren fell into a depression, resenting her parents for always treating her as inadequate and believing her to be an idiot. Her personality shifted into one of laziness, deciding to simply let go and simply drop all attempts to please her family.\n\nHer family, incredibly angry at her newfound indifference, threatened to disown her and take away the company from her inheritance. She responded by disowning her parents instead, leaving unannounced to Weyland University, where she began studies in Psychology and excommunicating her family.\n[END HISTORY]\n-----",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Warren",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 65,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Warren"
+                ],
+                "tags": [
+                    "97ff5bd5-c33f-4ac5-bf84-a88fd5921545"
+                ]
+            }
+        },
+        "71": {
+            "uid": 71,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Warren Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (white button-up shirt and shorts)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 82,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Warren"
+                ],
+                "tags": [
+                    "97ff5bd5-c33f-4ac5-bf84-a88fd5921545"
                 ]
             }
         }
