@@ -308,7 +308,7 @@ function thinkMarkdownExt(){
             replace: `${getGlobalVariable('aithink1')}$0${getGlobalVariable('aithink2')}`
         }];
     } catch (e) {
-        console.error(`[${MODULE_NAME}] Error in headerMarkdownExt extension:`, e);
+        console.error(`[${MODULE_NAME}] Error in thinkMarkdownExt extension:`, e);
         return [];
     }
 }
