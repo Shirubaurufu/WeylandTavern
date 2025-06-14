@@ -1,5 +1,6 @@
 import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor } from '../../../script.js';
 import { power_user } from '../../power-user.js';
+import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
@@ -296,8 +297,25 @@ function headerMarkdownExt(){
     }
 }
 
+/**
+ * @returns {showdown.ShowdownExtension[]}
+ */
+function thinkMarkdownExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: new RegExp(getGlobalVariable('LTMRegexFind')),
+            replace: `${getGlobalVariable('aithink1')}$0${getGlobalVariable('aithink2')}`
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in headerMarkdownExt extension:`, e);
+        return [];
+    }
+}
+
 function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
+    converter.addExtension(thinkMarkdownExt(), 'weylandThink');
     converter.addExtension(headerMarkdownExt(), 'weylandHeader');
     if (settings.markdown) {
         converter.addExtension(hiccupMarkdownExt(), 'hiccup');
