@@ -1405,8 +1405,10 @@ router.post('/generate', function (request, response) {
      * @param {Number} retries Number of retries left
      * @param {Number} timeout Request timeout in ms
      */
-    async function makeRequest(config, response, request, retries = 5, timeout = 5000) {
+    async function makeRequest(config, response, request, retries = 1, timeout = 5000) {
         try {
+            await trackHelixMindUsage(request);
+
             controller.signal.throwIfAborted();
             const fetchResponse = await fetch(endpointUrl, config);
 
