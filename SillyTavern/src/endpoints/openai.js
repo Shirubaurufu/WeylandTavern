@@ -4,6 +4,7 @@ import { Buffer } from 'node:buffer';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 import express from 'express';
+import createError from 'http-errors'; // Added for Out of Messages Message
 
 import { getConfigValue, mergeObjectWithYaml, excludeKeysByYaml, trimV1 } from '../util.js';
 import { setAdditionalHeaders } from '../additional-headers.js';
@@ -11,6 +12,48 @@ import { readSecret, SECRET_KEYS } from './secrets.js';
 import { OPENROUTER_HEADERS } from '../constants.js';
 
 export const router = express.Router();
+
+// Helper function to check for rate limit errors
+
+// Helper function to check for rate limit errors
+async function handleErrorResponse(errorResponse) {
+    const responseText = await errorResponse.text();
+    const errorData = tryParse(responseText);
+
+    // Check for rate limit error first
+    const rateLimitError = handleRateLimitError(responseText);
+    if (rateLimitError) {
+        console.error('Rate limit error detected:', rateLimitError.message);
+        if (!response.headersSent) {
+            return response.status(429).send({
+                error: {
+                    message: rateLimitError.message,
+                    type: 'rate_limit_error'
+                },
+                quota_error: true
+            });
+        }
+        return;
+    }
+
+    const message = errorResponse.statusText || 'Unknown error occurred';
+    const quota_error = errorResponse.status === 429 && errorData?.error?.type === 'insufficient_quota';
+    console.error('Chat completion request error: ', message, responseText);
+
+    if (!response.headersSent) {
+        response.send({
+            error: {
+                message,
+                ...(errorData?.error || {})
+            },
+            quota_error: quota_error
+        });
+    } else if (!response.writableEnded) {
+        response.write(errorResponse);
+    } else {
+        response.end();
+    }
+}
 
 router.post('/caption-image', async (request, response) => {
     try {
@@ -184,6 +227,14 @@ router.post('/caption-image', async (request, response) => {
             const text = await result.text();
             console.warn('Multimodal captioning request failed', result.statusText, text);
             return response.status(500).send(text);
+            
+            // Check for rate limit error
+            const rateLimitError = handleRateLimitError(text);
+            if (rateLimitError) {
+                return response.status(429).send(rateLimitError);
+            }
+
+            return response.status(500).send(text);
         }
 
         /** @type {any} */
@@ -238,6 +289,13 @@ router.post('/transcribe-audio', async (request, response) => {
         if (!result.ok) {
             const text = await result.text();
             console.warn('OpenAI request failed', result.statusText, text);
+
+            // Check for rate limit error
+            const rateLimitError = handleRateLimitError(text);
+            if (rateLimitError) {
+                return response.status(429).send(rateLimitError);
+            }
+
             return response.status(500).send(text);
         }
 
@@ -277,6 +335,13 @@ router.post('/generate-voice', async (request, response) => {
         if (!result.ok) {
             const text = await result.text();
             console.warn('OpenAI request failed', result.statusText, text);
+
+            // Check for rate limit error
+            const rateLimitError = handleRateLimitError(text);
+            if (rateLimitError) {
+                return response.status(429).send(rateLimitError);
+            }
+
             return response.status(500).send(text);
         }
 
@@ -310,6 +375,13 @@ router.post('/generate-image', async (request, response) => {
         if (!result.ok) {
             const text = await result.text();
             console.warn('OpenAI request failed', result.statusText, text);
+
+            // Check for rate limit error
+            const rateLimitError = handleRateLimitError(text);
+            if (rateLimitError) {
+                return response.status(429).send(rateLimitError);
+            }
+
             return response.status(500).send(text);
         }
 
@@ -351,6 +423,13 @@ custom.post('/generate-voice', async (request, response) => {
         if (!result.ok) {
             const text = await result.text();
             console.warn('OpenAI request failed', result.statusText, text);
+
+            // Check for rate limit error
+            const rateLimitError = handleRateLimitError(text);
+            if (rateLimitError) {
+                return response.status(429).send(rateLimitError);
+            }
+
             return response.status(500).send(text);
         }
 

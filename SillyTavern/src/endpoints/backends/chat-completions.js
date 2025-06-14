@@ -60,6 +60,61 @@ const API_DEEPSEEK = 'https://api.deepseek.com/beta';
 const API_XAI = 'https://api.x.ai/v1';
 const API_POLLINATIONS = 'https://text.pollinations.ai/openai';
 
+const usageCache = new Map(); // Tracks { apiKey: { count: number, firstUsed: Date }}
+
+async function checkUsage(apiKey) {
+    try {
+        // Call HelixMind's usage endpoint
+        const usageResponse = await fetch('https://helixmind.online/v1/usages', {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
+
+        if (usageResponse.ok) {
+            const data = await usageResponse.json();
+            console.log('[HelixMind Usage]', data);
+            return data; // Expecting { total: number, used: number, remaining: number }
+        }
+    } catch (error) {
+        console.error('Usage check failed:', error);
+    }
+    return null;
+}
+
+// New tracking function
+async function trackHelixMindUsage(request) {
+    const apiKey = request.headers.authorization?.split(' ')[1];
+    if (!apiKey) return;
+
+    // Get or create usage record
+    if (!usageCache.has(apiKey)) {
+        usageCache.set(apiKey, {
+            count: 0,
+            firstUsed: new Date(),
+            lastChecked: null
+        });
+    }
+
+    const usage = usageCache.get(apiKey);
+    usage.count++;
+    usage.lastChecked = new Date();
+
+    // Check with HelixMind's API every 3 requests
+    if (usage.count % 3 === 0) {
+        const serverUsage = await checkUsage(apiKey);
+        if (serverUsage) {
+            usage.remaining = serverUsage.remaining;
+            usage.limit = serverUsage.total;
+        }
+    }
+
+    console.groupCollapsed(`[HelixMind Tracking] Key: ${apiKey.slice(0, 8)}...`);
+    console.log('Local Count:', usage.count);
+    console.log('Server Reported:', usage.remaining !== undefined ?
+        `${usage.remaining}/${usage.limit}` : 'Not checked yet');
+    console.log('First Used:', usage.firstUsed.toLocaleTimeString());
+    console.groupEnd();
+}
+
 /**
  * Applies a post-processing step to the generated messages.
  * @param {object[]} messages Messages to post-process
@@ -1405,8 +1460,10 @@ router.post('/generate', function (request, response) {
      * @param {Number} retries Number of retries left
      * @param {Number} timeout Request timeout in ms
      */
-    async function makeRequest(config, response, request, retries = 5, timeout = 5000) {
+    async function makeRequest(config, response, request, retries = 1, timeout = 5000) {
         try {
+            await trackHelixMindUsage(request);
+
             controller.signal.throwIfAborted();
             const fetchResponse = await fetch(endpointUrl, config);
 
@@ -1455,12 +1512,36 @@ router.post('/generate', function (request, response) {
         const responseText = await errorResponse.text();
         const errorData = tryParse(responseText);
 
-        const message = errorResponse.statusText || 'Unknown error occurred';
-        const quota_error = errorResponse.status === 429 && errorData?.error?.type === 'insufficient_quota';
+        // First check for our specific rate limit error format
+        if (errorResponse.status === 429 && errorData?.error?.message) {
+            const rateLimitMessage = errorData?.error?.message || 'Rate limit exceeded';
+            console.error('Rate limit error detected:', errorData.error.message);
+            if (!response.headersSent) {
+                return response.status(429).send({
+                    error: {
+                        message: rateLimitMessage,
+                        type: 'rate_limit_error',
+                        code: 'rate_limit_exceeded',
+                    },
+                    use_generic_error: true
+                });
+            }
+            return;
+        }
+
+        // Fallback to original behavior for other errors
+        const message = errorData?.error?.message || errorResponse.statusText || 'Unknown error occurred';
+        const quota_error = errorResponse.status === 429;
         console.error('Chat completion request error: ', message, responseText);
 
         if (!response.headersSent) {
-            response.send({ error: { message }, quota_error: quota_error });
+            response.send({
+                error: {
+                    message,
+                    ...(errorData?.error || {})
+                },
+                quota_error
+            });
         } else if (!response.writableEnded) {
             response.write(errorResponse);
         } else {
