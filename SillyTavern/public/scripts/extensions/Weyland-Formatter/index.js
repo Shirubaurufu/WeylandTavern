@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.0.0";
+const extensionVersion = "1.0.1";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -34,6 +34,8 @@ let settings = undefined;
  * @property {RegExp} detectActionParagraph
  * @property {RegExp} detectWeybotRelations
  * 
+ * @property {RegExp} asterisk
+ * 
  * @property {RegExp} goodStart
  * @property {RegExp} goodEnd
  * 
@@ -61,6 +63,11 @@ let settings = undefined;
  * @property {string} curlyBracketsReplace
  * @property {RegExp} codeBlocks
  * @property {string} codeBlocksReplace
+ * 
+ * @property {RegExp} missingEndAsterisk
+ * @property {string} missingEndAsteriskReplace
+ * @property {RegExp} missingStartAsterisk
+ * @property {string} missingStartAsteriskReplace
  */
 
 /**
@@ -71,6 +78,8 @@ const weylandRegex = {
     detectHeader: /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|freshman|sophomore|junior|senior|\[roleplay)/i,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
+
+    asterisk: /\*/g,
 
     goodStart: /^[\[*"]|^__|^```/,
     goodEnd: /[*"\]]$|__$|```$/,
@@ -100,6 +109,10 @@ const weylandRegex = {
     codeBlocks: /^`{2,}(\w+)\s([\w\W]+?\n?[^`\n]+?)(?:\n+|\n?)`{2,}$/gm,
     codeBlocksReplace: "```$1\n$2\n```",
 
+    missingEndAsterisk: /(?:(?<=["_\]]\s\*)|(?<=^\*))([^\*"_`\[\]]*?)(?:(?=\s["_\[])|(?!["_\]\*])$)/g,
+    missingEndAsteriskReplace: "$1*",
+    missingStartAsterisk: /(?:(?<=["_\]]\s)|(?<=^))([^\*"_`\[\]]*?)(?=\*(?:\s["_\[]|(?!["_\]\*])$))/g,
+    missingStartAsteriskReplace: "*$1"
 };
 
 
@@ -165,6 +178,11 @@ async function formatParagraphs(message) {
             if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph))  paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
             else if (!weylandRegex.goodStart.test(paragraph)) paragraph = weylandRegex.goodEnd.exec(paragraph) + paragraph; //Missing start symbol only, add end symbol to start
             else if (!weylandRegex.goodEnd.test(paragraph)) paragraph = paragraph + weylandRegex.goodStart.exec(paragraph); //Missing end symbol only, add start symbol to end
+        }
+
+        if (paragraph.match(weylandRegex.asterisk) % 2 !== 0) {
+            paragraph = paragraph.replace(weylandRegex.missingEndAsterisk, weylandRegex.missingEndAsteriskReplace);
+            paragraph = paragraph.replace(weylandRegex.missingStartAsterisk, weylandRegex.missingStartAsteriskReplace);
         }
 
         paragraphs[index] = paragraph; //Default loop end
@@ -305,7 +323,7 @@ function thinkMarkdownExt(){
         return [{
             type: 'output',
             regex: new RegExp(getGlobalVariable('LTMRegexFind')),
-            replace: `${getGlobalVariable('aithink1')}$0${getGlobalVariable('aithink2')}`
+            replace: ``
         }];
     } catch (e) {
         console.error(`[${MODULE_NAME}] Error in thinkMarkdownExt extension:`, e);
