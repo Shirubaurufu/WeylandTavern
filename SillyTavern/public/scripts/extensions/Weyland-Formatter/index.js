@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.0.1";
+const extensionVersion = "1.0.2";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -335,8 +335,8 @@ function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
     converter.addExtension(headerMarkdownExt(), 'weylandHeader');
+    converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     if (settings.markdown) {
         converter.addExtension(hiccupMarkdownExt(), 'hiccup');
-        converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     }
 }
