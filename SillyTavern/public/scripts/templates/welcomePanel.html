@@ -1,7 +1,7 @@
 <div class="welcomePanel">
     <div class="welcomeHeaderTitle">
         <img src="img/logo.png" alt="SillyTavern Logo" class="welcomeHeaderLogo">
-        <span class="welcomeHeaderVersionDisplay">{{version}}</span>
+        <span class="welcomeHeaderVersionDisplay">WeylandTavern</span>
         <div class="mes_button showRecentChats" title="Show recent chats" data-i18n="[title]Show recent chats">
             <i class="fa-solid fa-circle-chevron-down fa-fw fa-lg"></i>
         </div>
@@ -18,11 +18,11 @@
                 <i class="fa-solid fa-question-circle"></i>
                 <span data-i18n="Docs">Docs</span>
             </a>
-            <a class="menu_button menu_button_icon" target="_blank" href="https://github.com/SillyTavern/SillyTavern">
-                <i class="fa-brands fa-github"></i>
-                <span data-i18n="GitHub">GitHub</span>
+            <a class="menu_button menu_button_icon" target="_blank" href="https://ko-fi.com/luckypaw">
+                <i class="fa fa-coffee"></i>
+                <span data-i18n="Ko-Fi">Ko-Fi</span>
             </a>
-            <a class="menu_button menu_button_icon" target="_blank" href="https://discord.gg/sillytavern">
+            <a class="menu_button menu_button_icon" target="_blank" href="https://discord.gg/weyland">
                 <i class="fa-brands fa-discord"></i>
                 <span data-i18n="Discord">Discord</span>
             </a>
@@ -79,4 +79,71 @@
         {{/if}}
         </div>
     </div>
+
+    <!-- Add your postcard here -->
+    <div class="welcomePostcard">
+        <div class="postcard-inner">
+            <div class="postcard-front">
+                <img src="img/postcard-front.webp" alt="Postcard from Weyland Front" />
+            </div>
+            <div class="postcard-back">
+                <img src="img/postcard-back.webp" alt="Postcard from Weyland Back" />
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS for the postcard -->
+    <style>
+        .welcomePostcard {
+            text-align: center;
+            margin: 30px auto;
+            perspective: 1000px;
+            width: 80%;
+            max-width: 600px;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            clear: both;
+            display: block;
+        }
+
+        .postcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .welcomePostcard.flipped .postcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .postcard-front, .postcard-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .postcard-front {
+            z-index: 2;
+        }
+
+        .postcard-back {
+            transform: rotateY(180deg);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .postcard-front img, .postcard-back img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
 </div>
