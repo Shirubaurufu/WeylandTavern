@@ -180,6 +180,13 @@ async function sendWelcomePanel(chats) {
                 $(avatar).replaceWith(groupAvatar);
             }
         });
+        // Add event listener for the postcard
+        fragment.querySelectorAll('.welcomePostcard').forEach((postcardElement) => {
+            postcardElement.addEventListener('click', function() {
+                console.log('Postcard clicked!');
+                this.classList.toggle('flipped');
+            });
+        });
         chatElement.append(fragment.firstChild);
     } catch (error) {
         console.error('Welcome screen error:', error);

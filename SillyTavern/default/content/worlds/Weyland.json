@@ -60,7 +60,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "1": {
             "uid": 1,
@@ -118,7 +124,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "5": {
             "key": [
@@ -178,7 +190,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "6": {
             "uid": 6,
@@ -239,7 +257,13 @@
                 "sticky": 0,
                 "cooldown": 2,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "8": {
             "key": [],
@@ -297,7 +321,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "9": {
             "key": [
@@ -357,7 +387,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "10": {
             "key": [
@@ -484,7 +520,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "12": {
             "key": [
@@ -546,7 +588,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "13": {
             "key": [
@@ -805,7 +853,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "18": {
             "uid": 18,
@@ -875,7 +929,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "19": {
             "uid": 19,
@@ -943,7 +1003,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "20": {
             "uid": 20,
@@ -1281,7 +1347,13 @@
                     "c7210ada-96e5-4aa9-99b0-e377e8279fc4",
                     "c8264137-d2e3-442a-b409-134079dc8243"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "25": {
             "key": [],
@@ -1346,7 +1418,13 @@
                 "tags": [
                     "25cb576f-1c36-49ca-8647-b8e322e75343"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "26": {
             "uid": 26,
@@ -1418,7 +1496,13 @@
                     "de123b32-7a51-47aa-b553-7c6e7177e39f",
                     "459cfd6a-c8fc-485b-b962-0ecd04e6cbac"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "27": {
             "key": [
@@ -4097,7 +4181,13 @@
                 "tags": [
                     "aa0e4d7f-202b-4907-ba61-05c0e2112497"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "101": {
             "key": [
@@ -4165,7 +4255,13 @@
                 "tags": [
                     "aa0e4d7f-202b-4907-ba61-05c0e2112497"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "102": {
             "key": [
@@ -4366,7 +4462,13 @@
                 "tags": [
                     "820c0f86-95f3-4dc3-8b53-1f8aa6245744"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "105": {
             "key": [
@@ -4433,7 +4535,13 @@
                 "tags": [
                     "820c0f86-95f3-4dc3-8b53-1f8aa6245744"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "106": {
             "key": [],
@@ -4498,7 +4606,13 @@
                 "tags": [
                     "f501b987-b3a6-44ec-b6da-993971603210"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "107": {
             "key": [
@@ -4565,7 +4679,13 @@
                 "tags": [
                     "f501b987-b3a6-44ec-b6da-993971603210"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "108": {
             "key": [],
@@ -4630,7 +4750,13 @@
                 "tags": [
                     "0f6a775a-8c41-44d1-b16e-1e61c2ecf8ee"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "109": {
             "key": [
@@ -4697,7 +4823,13 @@
                 "tags": [
                     "0f6a775a-8c41-44d1-b16e-1e61c2ecf8ee"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "110": {
             "key": [],
@@ -4762,7 +4894,13 @@
                 "tags": [
                     "eee62801-b454-4b75-8f62-a58616978765"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "111": {
             "key": [
@@ -4829,7 +4967,13 @@
                 "tags": [
                     "25cb576f-1c36-49ca-8647-b8e322e75343"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "112": {
             "key": [],
@@ -4894,7 +5038,13 @@
                 "tags": [
                     "f5509704-0cdf-4cf6-8403-301a34322b00"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "113": {
             "key": [
@@ -4961,7 +5111,13 @@
                 "tags": [
                     "f5509704-0cdf-4cf6-8403-301a34322b00"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "114": {
             "key": [
@@ -5296,7 +5452,13 @@
                 "tags": [
                     "66d956b2-bb53-44ef-8925-c8c312912c42"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "119": {
             "key": [
@@ -5363,7 +5525,13 @@
                 "tags": [
                     "66d956b2-bb53-44ef-8925-c8c312912c42"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "120": {
             "key": [
@@ -5423,7 +5591,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "121": {
             "key": [],
@@ -5481,7 +5655,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "123": {
             "key": [
@@ -5543,7 +5723,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "124": {
             "key": [
@@ -5606,7 +5792,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "125": {
             "key": [
@@ -5671,7 +5863,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "126": {
             "key": [],
@@ -5729,7 +5927,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "127": {
             "key": [
@@ -5799,7 +6003,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "129": {
             "uid": 129,
@@ -5990,7 +6200,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "132": {
             "key": [
@@ -6052,7 +6268,13 @@
                 "sticky": 4,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "133": {
             "key": [
@@ -6112,7 +6334,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "134": {
             "key": [
@@ -6186,7 +6414,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "135": {
             "key": [],
@@ -6244,7 +6478,13 @@
                 "sticky": 1,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "136": {
             "key": [],
@@ -6441,7 +6681,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "140": {
             "key": [
@@ -6508,7 +6754,13 @@
                 "tags": [
                     "eee62801-b454-4b75-8f62-a58616978765"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "141": {
             "uid": 141,
@@ -8301,7 +8553,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "175": {
             "key": [
@@ -8429,7 +8687,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "177": {
             "key": [
@@ -8811,7 +9075,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "185": {
             "uid": 185,
@@ -8869,7 +9139,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "186": {
             "uid": 186,
@@ -9064,7 +9340,13 @@
                 "sticky": 0,
                 "cooldown": 2,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "190": {
             "uid": 190,
@@ -9100,7 +9382,13 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 21
+            "displayIndex": 21,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "191": {
             "uid": 191,
@@ -9136,7 +9424,13 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 20
+            "displayIndex": 20,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "192": {
             "uid": 192,
@@ -9239,7 +9533,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         }
     },
     "originalData": {

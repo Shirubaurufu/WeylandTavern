@@ -56,7 +56,13 @@
                 "tags": [
                     "53353c52-fe2d-4a31-8bd4-2bac9c84db6a"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "1": {
             "uid": 1,
@@ -109,23 +115,27 @@
                 "tags": [
                     "53353c52-fe2d-4a31-8bd4-2bac9c84db6a"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "2": {
             "uid": 2,
             "key": [
-                "Moonlight",
-                "Festival",
-                "lantern",
-                "lanterns",
-                "stalls",
-                "booth",
-                "stall",
-                "booth",
-                "drunk",
-                "hiccup",
-                "drink",
-                "drinking"
+                "nurse",
+                "patient",
+                "medicine",
+                "care",
+                "appendicitis",
+                "appendectomy",
+                "wristband",
+                "monitor",
+                "call light",
+                "radio"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -156,7 +166,13 @@
             "sticky": 15,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 12
+            "displayIndex": 12,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "3": {
             "uid": 3,
@@ -199,7 +215,13 @@
                 "tags": [
                     "c26d7c6f-0e27-4b67-adb7-96361926143b"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "4": {
             "uid": 4,
@@ -259,7 +281,13 @@
                 "tags": [
                     "c26d7c6f-0e27-4b67-adb7-96361926143b"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "5": {
             "uid": 5,
@@ -293,7 +321,13 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 13
+            "displayIndex": 13,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "6": {
             "uid": 6,
@@ -344,7 +378,13 @@
                 "tags": [
                     "c7210ada-96e5-4aa9-99b0-e377e8279fc4"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "7": {
             "uid": 7,
@@ -396,7 +436,13 @@
                 "tags": [
                     "c7210ada-96e5-4aa9-99b0-e377e8279fc4"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "8": {
             "uid": 8,
@@ -455,7 +501,13 @@
                 "tags": [
                     "c7210ada-96e5-4aa9-99b0-e377e8279fc4"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "9": {
             "uid": 9,
@@ -498,7 +550,13 @@
                 "tags": [
                     "c7210ada-96e5-4aa9-99b0-e377e8279fc4"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "10": {
             "uid": 10,
@@ -541,7 +599,13 @@
                 "tags": [
                     "c7210ada-96e5-4aa9-99b0-e377e8279fc4"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "11": {
             "uid": 11,
@@ -584,7 +648,13 @@
                 "tags": [
                     "0ead9e69-cc6a-4754-a1f6-4fe49140a15a"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "12": {
             "uid": 12,
@@ -618,7 +688,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -627,7 +697,13 @@
                 "tags": [
                     "f8118e7d-b0fc-4aa5-9587-854a065a3a5d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "13": {
             "uid": 13,
@@ -672,7 +748,13 @@
                 "tags": [
                     "0ead9e69-cc6a-4754-a1f6-4fe49140a15a"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "14": {
             "uid": 14,
@@ -727,7 +809,13 @@
                     "0ead9e69-cc6a-4754-a1f6-4fe49140a15a",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "15": {
             "uid": 15,
@@ -787,7 +875,13 @@
                     "0ead9e69-cc6a-4754-a1f6-4fe49140a15a",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "16": {
             "uid": 16,
@@ -845,7 +939,13 @@
                 "tags": [
                     "77f6c2a5-0eb1-467b-b194-e269315d66f1"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "17": {
             "uid": 17,
@@ -898,7 +998,13 @@
                 "tags": [
                     "77f6c2a5-0eb1-467b-b194-e269315d66f1"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "18": {
             "uid": 18,
@@ -953,7 +1059,13 @@
                 "tags": [
                     "77f6c2a5-0eb1-467b-b194-e269315d66f1"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "19": {
             "uid": 19,
@@ -1015,7 +1127,13 @@
                 "tags": [
                     "77f6c2a5-0eb1-467b-b194-e269315d66f1"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "20": {
             "uid": 20,
@@ -1079,7 +1197,13 @@
                 "tags": [
                     "77f6c2a5-0eb1-467b-b194-e269315d66f1"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "21": {
             "uid": 21,
@@ -1113,7 +1237,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1122,7 +1246,13 @@
                 "tags": [
                     "77f6c2a5-0eb1-467b-b194-e269315d66f1"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "22": {
             "uid": 22,
@@ -1175,7 +1305,13 @@
                 "tags": [
                     "837c20e2-955f-4f88-809f-23f5c1c9abfd"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "23": {
             "uid": 23,
@@ -1228,7 +1364,13 @@
                 "tags": [
                     "837c20e2-955f-4f88-809f-23f5c1c9abfd"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "24": {
             "uid": 24,
@@ -1273,7 +1415,13 @@
                 "tags": [
                     "837c20e2-955f-4f88-809f-23f5c1c9abfd"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "25": {
             "uid": 25,
@@ -1307,7 +1455,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1316,7 +1464,13 @@
                 "tags": [
                     "837c20e2-955f-4f88-809f-23f5c1c9abfd"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "26": {
             "uid": 26,
@@ -1374,7 +1528,13 @@
                 "tags": [
                     "f8118e7d-b0fc-4aa5-9587-854a065a3a5d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "27": {
             "uid": 27,
@@ -1417,7 +1577,13 @@
                 "tags": [
                     "f8118e7d-b0fc-4aa5-9587-854a065a3a5d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "28": {
             "uid": 28,
@@ -1473,7 +1639,13 @@
                 "tags": [
                     "f8118e7d-b0fc-4aa5-9587-854a065a3a5d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "29": {
             "uid": 29,
@@ -1516,7 +1688,13 @@
                 "tags": [
                     "f8118e7d-b0fc-4aa5-9587-854a065a3a5d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "30": {
             "uid": 30,
@@ -1566,7 +1744,13 @@
                 "tags": [
                     "f8118e7d-b0fc-4aa5-9587-854a065a3a5d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "31": {
             "uid": 31,
@@ -1600,7 +1784,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1609,7 +1793,13 @@
                 "tags": [
                     "53353c52-fe2d-4a31-8bd4-2bac9c84db6a"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "32": {
             "uid": 32,
@@ -1670,7 +1860,13 @@
                 "tags": [
                     "75a09210-d14f-4c67-91df-3a8fef887967"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "33": {
             "uid": 33,
@@ -1704,7 +1900,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 77,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1713,7 +1909,13 @@
                 "tags": [
                     "75a09210-d14f-4c67-91df-3a8fef887967"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "34": {
             "uid": 34,
@@ -1764,7 +1966,13 @@
                 "tags": [
                     "650b853c-6ae0-405a-bcd2-173799175baf"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "35": {
             "uid": 35,
@@ -1815,7 +2023,13 @@
                 "tags": [
                     "650b853c-6ae0-405a-bcd2-173799175baf"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "36": {
             "uid": 36,
@@ -1849,7 +2063,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 77,
+            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1858,7 +2072,13 @@
                 "tags": [
                     "650b853c-6ae0-405a-bcd2-173799175baf"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "37": {
             "uid": 37,
@@ -1892,7 +2112,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1901,7 +2121,13 @@
                 "tags": [
                     "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "38": {
             "uid": 38,
@@ -1954,7 +2180,13 @@
                 "tags": [
                     "3b40b12b-f24b-418f-a786-ca32863583bc"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "39": {
             "uid": 39,
@@ -2004,7 +2236,13 @@
                 "tags": [
                     "3b40b12b-f24b-418f-a786-ca32863583bc"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "40": {
             "uid": 40,
@@ -2054,7 +2292,13 @@
                 "tags": [
                     "3b40b12b-f24b-418f-a786-ca32863583bc"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "41": {
             "uid": 41,
@@ -2088,7 +2332,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 78,
+            "displayIndex": 79,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2097,7 +2341,13 @@
                 "tags": [
                     "3b40b12b-f24b-418f-a786-ca32863583bc"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "42": {
             "uid": 42,
@@ -2152,7 +2402,13 @@
                     "a30efa11-f157-4f65-b0ad-ce93ed63d703",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "43": {
             "uid": 43,
@@ -2203,7 +2459,13 @@
                     "a30efa11-f157-4f65-b0ad-ce93ed63d703",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "44": {
             "uid": 44,
@@ -2255,7 +2517,13 @@
                     "a30efa11-f157-4f65-b0ad-ce93ed63d703",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "45": {
             "uid": 45,
@@ -2289,7 +2557,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 81,
+            "displayIndex": 82,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2298,7 +2566,13 @@
                 "tags": [
                     "c8264137-d2e3-442a-b409-134079dc8243"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "46": {
             "uid": 46,
@@ -2332,7 +2606,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 79,
+            "displayIndex": 80,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2341,7 +2615,13 @@
                 "tags": [
                     "a30efa11-f157-4f65-b0ad-ce93ed63d703"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "47": {
             "uid": 47,
@@ -2375,7 +2655,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 80,
+            "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2384,7 +2664,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "48": {
             "uid": 48,
@@ -2436,7 +2722,13 @@
                 "tags": [
                     "c8264137-d2e3-442a-b409-134079dc8243"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "49": {
             "uid": 49,
@@ -2488,7 +2780,13 @@
                 "tags": [
                     "c8264137-d2e3-442a-b409-134079dc8243"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "50": {
             "uid": 50,
@@ -2531,7 +2829,13 @@
                 "tags": [
                     "c8264137-d2e3-442a-b409-134079dc8243"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "51": {
             "uid": 51,
@@ -2580,7 +2884,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "52": {
             "uid": 52,
@@ -2627,7 +2937,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "53": {
             "uid": 53,
@@ -2675,7 +2991,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "54": {
             "uid": 54,
@@ -2723,7 +3045,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "55": {
             "uid": 55,
@@ -2772,7 +3100,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "56": {
             "uid": 56,
@@ -2826,7 +3160,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "57": {
             "uid": 57,
@@ -2877,7 +3217,13 @@
                 "tags": [
                     "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "58": {
             "uid": 58,
@@ -2927,7 +3273,13 @@
                 "tags": [
                     "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "59": {
             "uid": 59,
@@ -2979,7 +3331,13 @@
                 "tags": [
                     "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "60": {
             "uid": 60,
@@ -3034,7 +3392,13 @@
                 "tags": [
                     "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "61": {
             "uid": 61,
@@ -3068,7 +3432,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3077,7 +3441,13 @@
                 "tags": [
                     "de325bb2-a544-4ed7-a989-878a2a034bd0"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "62": {
             "uid": 62,
@@ -3131,7 +3501,13 @@
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "63": {
             "uid": 63,
@@ -3185,7 +3561,13 @@
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "64": {
             "uid": 64,
@@ -3228,7 +3610,13 @@
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "65": {
             "uid": 65,
@@ -3288,7 +3676,13 @@
                 "tags": [
                     "de325bb2-a544-4ed7-a989-878a2a034bd0"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "66": {
             "uid": 66,
@@ -3346,7 +3740,13 @@
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "67": {
             "uid": 67,
@@ -3410,7 +3810,13 @@
                 "tags": [
                     "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "68": {
             "uid": 68,
@@ -3466,7 +3872,13 @@
                 "tags": [
                     "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "69": {
             "uid": 69,
@@ -3511,7 +3923,13 @@
                 "tags": [
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "70": {
             "uid": 70,
@@ -3570,7 +3988,13 @@
                 "tags": [
                     "97ff5bd5-c33f-4ac5-bf84-a88fd5921545"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "71": {
             "uid": 71,
@@ -3604,7 +4028,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 82,
+            "displayIndex": 83,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3613,7 +4037,62 @@
                 "tags": [
                     "97ff5bd5-c33f-4ac5-bf84-a88fd5921545"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
+        },
+        "72": {
+            "uid": 72,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Blake & Serra Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFITS (Yukata/Kimono festival outfit)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 70,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Blake & Serra"
+                ],
+                "tags": [
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
+                ]
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         }
     }
 }
