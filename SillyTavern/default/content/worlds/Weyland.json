@@ -6206,7 +6206,16 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "characterFilter": {
+                "isExclude": true,
+                "names": [
+                    "Kinsbane Manor"
+                ],
+                "tags": [
+                    "6fe3d154-9b2e-4e0e-9e5e-e37dedd92ad9"
+                ]
+            }
         },
         "132": {
             "key": [
