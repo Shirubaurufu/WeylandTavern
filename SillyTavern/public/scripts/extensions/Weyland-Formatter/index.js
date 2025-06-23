@@ -111,7 +111,7 @@ const weylandRegex = {
 
     missingEndAsterisk: /(?:(?<=["_\]]\s\*)|(?<=^\*))([^\*"_`\[\]]*?)(?:(?=\s["_\[])|(?!["_\]\*])$)/g,
     missingEndAsteriskReplace: "$1*",
-    missingStartAsterisk: /(?:(?<=["_\]]\s)|(?<=^))([^\*"_`\[\]]*?)(?=\*(?:\s["_\[]|(?!["_\]\*])$))/g,
+    missingStartAsterisk: /(?:(?<!\d'\d"\s)(?<=["_\]]\s)|(?<=^))([^\*"_`\[\]]*?)(?=\*(?:\s["_\[]|(?!["_\]\*])$))/g,
     missingStartAsteriskReplace: "*$1"
 };
 
@@ -140,16 +140,16 @@ async function formatParagraphs(message) {
     const formatParagraphsStartTime = performance.now();
 
     //Clean up too many symbols
-    message = message.replace(weylandRegex.tooManyAsterisks, weylandRegex.tooManyAsterisksReplace);
-    message = message.replace(weylandRegex.tooManyQuotes, weylandRegex.tooManyQuotesReplace);
-    message = message.replace(weylandRegex.tooManyUnderscores, weylandRegex.tooManyUnderscoresReplace);
-    message = message.replace(weylandRegex.tooManyGraves, weylandRegex.tooManyGravesReplace);
+    message = replaceText(message, weylandRegex.tooManyAsterisks, weylandRegex.tooManyAsterisksReplace);
+    message = replaceText(message, weylandRegex.tooManyQuotes, weylandRegex.tooManyQuotesReplace);
+    message = replaceText(message, weylandRegex.tooManyUnderscores, weylandRegex.tooManyUnderscoresReplace);
+    message = replaceText(message, weylandRegex.tooManyGraves, weylandRegex.tooManyGravesReplace);
 
     //Fix any mismatched parenthesis, square brackets, curly brackets or codeblocks
-    message = message.replace(weylandRegex.squareBrackets, weylandRegex.squareBracketsReplace);
-    message = message.replace(weylandRegex.parenthesis, weylandRegex.parenthesisReplace);
-    message = message.replace(weylandRegex.curlyBrackets, weylandRegex.curlyBracketsReplace);
-    message = message.replace(weylandRegex.codeBlocks, weylandRegex.codeBlocksReplace);
+    message = replaceText(message, weylandRegex.squareBrackets, weylandRegex.squareBracketsReplace);
+    message = replaceText(message, weylandRegex.parenthesis, weylandRegex.parenthesisReplace);
+    message = replaceText(message, weylandRegex.curlyBrackets, weylandRegex.curlyBracketsReplace);
+    message = replaceText(message, weylandRegex.codeBlocks, weylandRegex.codeBlocksReplace);
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
 
@@ -168,11 +168,11 @@ async function formatParagraphs(message) {
             const actionParagraph = weylandRegex.detectActionParagraph.test(paragraph);
 
             //Stage 1 - Add asterisks to actions between dialogue, if missing
-            if (!actionParagraph) paragraph = paragraph.replace(weylandRegex.actionBetweenDialogue, weylandRegex.actionBetweenDialogueReplace);
+            if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBetweenDialogue, weylandRegex.actionBetweenDialogueReplace);
 
             //Stage 2 - Add asterisks to actions before and after dialogue, if missing
-            if (!actionParagraph) paragraph = paragraph.replace(weylandRegex.actionAfterDialogue, weylandRegex.actionAfterDialogueReplace);
-            if (!actionParagraph) paragraph = paragraph.replace(weylandRegex.actionBeforeDialogue, weylandRegex.actionBeforeDialogueReplace);
+            if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionAfterDialogue, weylandRegex.actionAfterDialogueReplace);
+            if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBeforeDialogue, weylandRegex.actionBeforeDialogueReplace);
 
             //Stage 3 - Add symbols to blank paragraphs
             if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph))  paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
@@ -181,8 +181,8 @@ async function formatParagraphs(message) {
         }
 
         if (paragraph.match(weylandRegex.asterisk) % 2 !== 0) {
-            paragraph = paragraph.replace(weylandRegex.missingEndAsterisk, weylandRegex.missingEndAsteriskReplace);
-            paragraph = paragraph.replace(weylandRegex.missingStartAsterisk, weylandRegex.missingStartAsteriskReplace);
+            paragraph = replaceText(paragraph, weylandRegex.missingEndAsterisk, weylandRegex.missingEndAsteriskReplace);
+            paragraph = replaceText(paragraph, weylandRegex.missingStartAsterisk, weylandRegex.missingStartAsteriskReplace);
         }
 
         paragraphs[index] = paragraph; //Default loop end
@@ -190,6 +190,12 @@ async function formatParagraphs(message) {
     })
     weylandDebug(`formatParagraphs took ${performance.now()-formatParagraphsStartTime} miliseconds`);
     return paragraphs;
+}
+
+function replaceText(text, regex, replace) {
+    const newText = text.replace(regex, replace);
+    if (newText !== text) weylandDebug(`Formatting applied '${regex}' with '${replace}' to text that begins with: ${text.slice(20)}`);
+    return newText;
 }
 
 async function formatMessage(messageId) {
