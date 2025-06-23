@@ -132,6 +132,46 @@
             "matchScenario": false,
             "matchCreatorNotes": false
         },
+        "2": {
+            "uid": 2,
+            "key": [],
+            "keysecondary": [],
+            "comment": "User",
+            "content": ".",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 2,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": 1,
+            "sticky": 1,
+            "cooldown": 999999999999,
+            "delay": 0,
+            "displayIndex": 2
+        },
         "5": {
             "key": [
                 "!Refresh"
@@ -462,7 +502,13 @@
                 "tags": [
                     "5f5e8edd-7cd7-4aff-a1f1-f29c70324802"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "11": {
             "key": [],
@@ -663,7 +709,13 @@
                 "tags": [
                     "1012abb0-c5b8-456a-b71c-60766c1cb508"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "14": {
             "uid": 14,
@@ -732,7 +784,13 @@
                 "tags": [
                     "837c20e2-955f-4f88-809f-23f5c1c9abfd"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "16": {
             "key": [],
@@ -790,7 +848,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "17": {
             "key": [
@@ -1564,7 +1628,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "28": {
             "uid": 28,
@@ -1629,7 +1699,13 @@
                 "tags": [
                     "214a9e41-6d4b-415b-a8c3-1c6ae68621da"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "29": {
             "key": [
@@ -1698,7 +1774,13 @@
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "30": {
             "uid": 30,
@@ -1838,7 +1920,13 @@
                 "tags": [
                     "2dda2f70-8a32-4f36-89da-d77d26e87c11"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "33": {
             "key": [
@@ -1907,7 +1995,13 @@
                 "tags": [
                     "c7210ada-96e5-4aa9-99b0-e377e8279fc4"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "35": {
             "key": [
@@ -1976,7 +2070,13 @@
                 "tags": [
                     "c26d7c6f-0e27-4b67-adb7-96361926143b"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "37": {
             "key": [
@@ -2046,7 +2146,13 @@
                     "0ead9e69-cc6a-4754-a1f6-4fe49140a15a",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "39": {
             "key": [
@@ -2115,7 +2221,13 @@
                 "tags": [
                     "37fd7e1d-1ad1-424c-a3b8-0606cebd527c"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "41": {
             "key": [
@@ -2185,7 +2297,13 @@
                 "tags": [
                     "c7b41bcc-6c2b-4317-ae9e-c9635848e193"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "43": {
             "key": [
@@ -2254,7 +2372,13 @@
                 "tags": [
                     "f26ba09e-8645-4ffb-b0d4-b6ddc7ea5c03"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "45": {
             "key": [
@@ -2323,7 +2447,13 @@
                 "tags": [
                     "aa14d950-544b-443d-895e-114b59b6d82d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "47": {
             "key": [
@@ -2392,7 +2522,13 @@
                 "tags": [
                     "de325bb2-a544-4ed7-a989-878a2a034bd0"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "49": {
             "key": [
@@ -2461,7 +2597,13 @@
                 "tags": [
                     "77f6c2a5-0eb1-467b-b194-e269315d66f1"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "53": {
             "key": [
@@ -2530,7 +2672,13 @@
                 "tags": [
                     "f8118e7d-b0fc-4aa5-9587-854a065a3a5d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "55": {
             "key": [
@@ -2599,7 +2747,13 @@
                 "tags": [
                     "41560840-6d7c-4e84-81b5-643f7cf4f411"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "57": {
             "key": [
@@ -2669,7 +2823,13 @@
                 "tags": [
                     "53353c52-fe2d-4a31-8bd4-2bac9c84db6a"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "59": {
             "key": [
@@ -2738,7 +2898,13 @@
                 "tags": [
                     "10f1d467-b270-4811-a939-72e8698c6771"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "61": {
             "key": [
@@ -2807,7 +2973,13 @@
                 "tags": [
                     "c3acc2e7-c244-4542-8341-83f5c02265b6"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "63": {
             "key": [
@@ -4330,7 +4502,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "103": {
             "key": [
@@ -4397,7 +4575,13 @@
                 "tags": [
                     "67c347fe-5684-4cf4-86f6-648091c64863"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "104": {
             "key": [],
@@ -5186,7 +5370,13 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "115": {
             "key": [
@@ -5253,7 +5443,13 @@
                 "tags": [
                     "214a9e41-6d4b-415b-a8c3-1c6ae68621da"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "116": {
             "key": [],
@@ -5318,7 +5514,13 @@
                 "tags": [
                     "a30efa11-f157-4f65-b0ad-ce93ed63d703"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "117": {
             "key": [
@@ -5387,7 +5589,13 @@
                 "tags": [
                     "de123b32-7a51-47aa-b553-7c6e7177e39f"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "118": {
             "key": [],
@@ -6136,7 +6344,13 @@
                 "tags": [
                     "67c347fe-5684-4cf4-86f6-648091c64863"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "131": {
             "key": [
@@ -6558,7 +6772,13 @@
                 "tags": [
                     "de123b32-7a51-47aa-b553-7c6e7177e39f"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "137": {
             "key": [],
@@ -6623,7 +6843,13 @@
                 "tags": [
                     "f26ba09e-8645-4ffb-b0d4-b6ddc7ea5c03"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "138": {
             "key": [
@@ -6638,7 +6864,7 @@
             ],
             "keysecondary": [],
             "comment": "Sterling Hall Dormitory",
-            "content": "[STERLING HALL DORMITORY] \nMain dormitory of Weyland University. Freshmen and sophomores are required to stay in a dorm room, outside of special cases (such as Serra). Junior and Senior students are allowed to find student housing or apartments.\n[Architecture] modern four-story building, large windows, keycard access;\n[Common Spaces] bright lobby with couches and TVs for student use, study lounges each floor with cozy seating and charging/laptop stations, community kitchen on each floor, laundry facilities on each floor;\n[Hallways] wide corridors, blue-grey carpet, whiteboard messages on doors, soft LED lighting;\n[Rooms] dual-occupancy suites, semi-private bathrooms (each bathroom is shared by two rooms, linking them together), large windows;\n[Atmosphere] multispecies students walking about, faint music from rooms, occasional cooking aromas;\n[Features] high-speed wifi, climate control, soundproofing between rooms;\n[Safety] 24/7 security, cameras in common areas, emergency phones\n\nThe dorm has students of all varieties from Weyland University. Cat and wolf demihumans, mouse and bear demihumans and more (always demihumans, minimal if any magic)\n\nIf {user} is walking thru, mention NPCs\n[END STERLING HALL DORMITORY] \n==========\n[STERLING HALL LAYOUT]\n- Room numbering system: First digit indicates floor (1xx=1st floor, 2xx=2nd floor, 3xx=3rd floor, 4xx=4th floor)\n- Shared bathroom arrangement: Adjacent rooms on same side of hallway share a bathroom. Examples:\n  * Room 271 (Drake/Blake) shares bathroom with 273 (Kai/Kiera)\n  * Room 268 (Lucy/Jenn) shares bathroom with 270 (Rivet)\n  * Room 279 (Summer) shares bathroom with 281 (Belle)\n- Moving between rooms on the same floor NEVER requires stairs\n- Moving between different floors ALWAYS requires using stairs\n- Room Proximity: On each floor, rooms are arranged in sections:\n  * SECTION A: Rooms ending in 67-78, 80, and 82 (e.g., 267-278, 280, 282 on 2nd floor)\n  * SECTION B: Rooms ending in 79, 81, and 83-94 (around the corner from Section A)\n  * SECTION C: Rooms ending in 14, 16, and 18-29 (opposite side of building)\n  * SECTION D: Rooms ending in 02-13, 15, and 17 (around the corner from Section C)\n[END STERLING HALL LAYOUT]\n==========",
+            "content": "[STERLING HALL DORMITORY] \nMain dormitory of Weyland University. Freshmen and sophomores are required to stay in a dorm room, outside of special cases (such as Serra). Junior and Senior students are allowed to find student housing or apartments.\n[Architecture] modern four-story building, large windows, keycard access;\n[Common Spaces] bright lobby with couches and TVs for student use, study lounges each floor with cozy seating and charging/laptop stations, community kitchen on each floor, laundry facilities on each floor;\n[Hallways] wide corridors, blue-grey carpet, whiteboard messages on doors, soft LED lighting;\n[Rooms] dual-occupancy suites, semi-private bathrooms (each bathroom is shared by two rooms, linking them together), large windows;\n[Atmosphere] multispecies students walking about, faint music from rooms, occasional cooking aromas;\n[Features] high-speed wifi, climate control, soundproofing between rooms;\n[Safety] 24/7 security, cameras in common areas, emergency phones\n\nThe dorm has students of all varieties from Weyland University. Cat and wolf demihumans, mouse and bear demihumans and more (always demihumans, minimal if any magic)\n\nIf {user} is walking thru, mention NPCs\n[END STERLING HALL DORMITORY] \n==========\n[STERLING HALL LAYOUT]\n- Room numbering system: First digit indicates floor (1xx=1st floor, 2xx=2nd floor, 3xx=3rd floor, 4xx=4th floor)\n- Shared bathroom arrangement: Adjacent rooms on same side of hallway share a bathroom. Examples:\n  * Room 271 (Blake) shares bathroom with 273 (Kai/Kiera)\n  * Room 268 (Lucy/Jenn) shares bathroom with 270 (Rivet)\n  * Room 279 (Summer) shares bathroom with 281 (Belle)\n- Moving between rooms on the same floor NEVER requires stairs\n- Moving between different floors ALWAYS requires using stairs\n- Room Proximity: On each floor, rooms are arranged in sections:\n  * SECTION A: Rooms ending in 67-78, 80, and 82 (e.g., 267-278, 280, 282 on 2nd floor)\n  * SECTION B: Rooms ending in 79, 81, and 83-94 (around the corner from Section A)\n  * SECTION C: Rooms ending in 14, 16, and 18-29 (opposite side of building)\n  * SECTION D: Rooms ending in 02-13, 15, and 17 (around the corner from Section C)\n[END STERLING HALL LAYOUT]\n==========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -6959,7 +7185,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "149": {
             "key": [
@@ -7022,7 +7254,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "150": {
             "key": [
@@ -7085,7 +7323,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "151": {
             "key": [
@@ -7148,7 +7392,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "152": {
             "key": [
@@ -7211,7 +7461,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "153": {
             "key": [
@@ -7276,7 +7532,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "154": {
             "key": [
@@ -7339,7 +7601,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "155": {
             "key": [
@@ -7402,7 +7670,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "156": {
             "key": [
@@ -7464,7 +7738,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "158": {
             "key": [
@@ -7527,7 +7807,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "159": {
             "key": [
@@ -7592,7 +7878,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "160": {
             "key": [
@@ -7657,7 +7949,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "161": {
             "key": [
@@ -7720,7 +8018,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "162": {
             "key": [
@@ -7741,7 +8045,7 @@
             "addMemo": true,
             "order": 125,
             "position": 1,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -7785,7 +8089,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "163": {
             "key": [
@@ -7850,7 +8160,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "164": {
             "key": [
@@ -8046,7 +8362,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "167": {
             "key": [
@@ -8176,7 +8498,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "169": {
             "key": [
@@ -8195,7 +8523,7 @@
             "addMemo": true,
             "order": 100,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -9220,7 +9548,13 @@
                 "isExclude": true,
                 "names": [],
                 "tags": []
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "187": {
             "uid": 187,
@@ -9479,7 +9813,13 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70
+            "displayIndex": 70,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "193": {
             "uid": 193,
