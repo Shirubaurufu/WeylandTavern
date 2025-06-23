@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.0.2";
+const extensionVersion = "1.0.4";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -337,11 +337,28 @@ function thinkMarkdownExt(){
     }
 }
 
+/**
+ * @returns {showdown.ShowdownExtension[]}
+ */
+function fdiglMarkdownExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: new RegExp(`\\[\\(.+\\)\\]: #`, 'g'),
+            replace: ``
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in thinkMarkdownExt extension:`, e);
+        return [];
+    }
+}
+
 function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
     converter.addExtension(headerMarkdownExt(), 'weylandHeader');
     converter.addExtension(nonItalicsExt(), 'insideAsterisks');
+    converter.addExtension(fdiglMarkdownExt(), 'fdiglSystemMessage');
     if (settings.markdown) {
         converter.addExtension(hiccupMarkdownExt(), 'hiccup');
     }
