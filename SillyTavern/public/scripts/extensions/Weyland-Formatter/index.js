@@ -348,7 +348,7 @@ function fdiglMarkdownExt(){
             replace: ``
         }];
     } catch (e) {
-        console.error(`[${MODULE_NAME}] Error in thinkMarkdownExt extension:`, e);
+        console.error(`[${MODULE_NAME}] Error in fdiglMarkdownExt extension:`, e);
         return [];
     }
 }
