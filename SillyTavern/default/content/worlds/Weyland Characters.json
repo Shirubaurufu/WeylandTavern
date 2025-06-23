@@ -126,14 +126,12 @@
         "2": {
             "uid": 2,
             "key": [
-                "party",
-                "alcohol",
-                "Rivera",
-                "flirting",
-                "flirt",
-                "Summer",
-                "drunk",
-                "drinking"
+                "orientation",
+                "new year",
+                "guide",
+                "brochure",
+                "map",
+                "campus"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -204,7 +202,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 68,
+            "displayIndex": 70,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -588,7 +586,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 67,
+            "displayIndex": 69,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -637,7 +635,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -686,7 +684,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 77,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1235,7 +1233,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1376,7 +1374,7 @@
                 "hiccup"
             ],
             "keysecondary": [],
-            "comment": "Jenn Context 1",
+            "comment": "Jenn Context",
             "content": "{{getvar::J$nnDru}}",
             "constant": false,
             "vectorized": true,
@@ -1453,7 +1451,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1782,7 +1780,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1898,7 +1896,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 77,
+            "displayIndex": 79,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2061,7 +2059,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 78,
+            "displayIndex": 80,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2110,7 +2108,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2330,7 +2328,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 79,
+            "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2555,7 +2553,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 82,
+            "displayIndex": 84,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2604,7 +2602,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 80,
+            "displayIndex": 82,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2653,7 +2651,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 81,
+            "displayIndex": 83,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2711,7 +2709,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 62,
+            "displayIndex": 64,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2769,7 +2767,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 63,
+            "displayIndex": 65,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2818,7 +2816,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 64,
+            "displayIndex": 66,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3089,7 +3087,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 62,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3149,7 +3147,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 63,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3430,7 +3428,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3599,7 +3597,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 66,
+            "displayIndex": 68,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3977,7 +3975,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 65,
+            "displayIndex": 67,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4026,7 +4024,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 83,
+            "displayIndex": 85,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4075,7 +4073,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
