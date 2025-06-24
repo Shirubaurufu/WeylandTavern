@@ -1160,6 +1160,8 @@
                 "BudgetMode": "No",
                 "HideText": "No",
                 "S9J@klE": "69420",
+                "SettingC10": "true",
+                "SettingC9": "true",
                 "SettingC8": "true",
                 "SettingC7": "true",
                 "SettingC6": "true",
@@ -1955,8 +1957,8 @@
         "top_a_openai": 0,
         "repetition_penalty_openai": 1,
         "stream_openai": false,
-        "openai_max_context": 30000,
-        "openai_max_tokens": 1000,
+        "openai_max_context": 33000,
+        "openai_max_tokens": 3000,
         "wrap_in_quotes": false,
         "prompts": [
             {
@@ -2212,7 +2214,7 @@
         "claude_use_sysprompt": false,
         "use_makersuite_sysprompt": true,
         "use_alt_scale": false,
-        "squash_system_messages": true,
+        "squash_system_messages": false,
         "image_inlining": false,
         "inline_image_quality": "low",
         "bypass_status_check": false,
