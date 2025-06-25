@@ -71,6 +71,11 @@ function createDefaultFiles() {
         },
         {
             type: 'file',
+            defaultPath: './default/content/themes/Weyland.json',
+            productionPath: './data/default-user/themes/Weyland.json',
+        },
+        {
+            type: 'file',
             defaultPath: './default/content/worlds/Weyland.json',
             productionPath: './data/default-user/worlds/Weyland.json',
         },
