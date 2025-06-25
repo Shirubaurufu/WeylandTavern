@@ -66,10 +66,14 @@ function createDefaultFiles() {
         },
         {
             type: 'file',
+            defaultPath: './default/content/Character.json',
+            productionPath: './data/default-user/themes/Character.json',
+        },
+        {
+            type: 'file',
             defaultPath: './default/content/worlds/Weyland.json',
             productionPath: './data/default-user/worlds/Weyland.json',
         },
-
         {
             type: 'file',
             defaultPath: './default/content/worlds/Weyland Characters.json',
