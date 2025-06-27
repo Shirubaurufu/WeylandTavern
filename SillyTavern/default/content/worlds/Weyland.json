@@ -1142,7 +1142,13 @@
                 "tags": [
                     "a7bfb886-a323-4c7f-bd39-a3cda83782a5"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "21": {
             "uid": 21,
@@ -1211,7 +1217,13 @@
                 "tags": [
                     "b607dc75-b976-4406-8fa8-b01f18f14be5"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "22": {
             "key": [
@@ -1280,7 +1292,13 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "23": {
             "uid": 23,
@@ -1343,7 +1361,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "24": {
             "key": [
@@ -1359,7 +1383,7 @@
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -1851,7 +1875,13 @@
                 "tags": [
                     "759a6477-7e38-4a3c-8c8a-95a61f005b55"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "31": {
             "key": [
@@ -3048,7 +3078,13 @@
                 "tags": [
                     "459cfd6a-c8fc-485b-b962-0ecd04e6cbac"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "65": {
             "key": [
@@ -3117,7 +3153,13 @@
                 "tags": [
                     "ddd4132b-a2ed-4e28-8adc-be010c731ede"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "67": {
             "key": [
@@ -3186,7 +3228,13 @@
                 "tags": [
                     "91171b0c-4dbb-4766-9a21-943dfbac2e96"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "69": {
             "key": [
@@ -3255,7 +3303,13 @@
                 "tags": [
                     "184727c0-4992-43c0-b773-96f17455cd59"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "71": {
             "key": [
@@ -3324,7 +3378,13 @@
                 "tags": [
                     "9a401b37-8c9f-4fb3-8203-45451d40770a"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "73": {
             "key": [
@@ -3393,7 +3453,13 @@
                 "tags": [
                     "3b40b12b-f24b-418f-a786-ca32863583bc"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "75": {
             "key": [
@@ -3462,7 +3528,13 @@
                 "tags": [
                     "0fee2ba6-1f6f-4e2d-af1c-22550d6aa568"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "77": {
             "key": [
@@ -3531,7 +3603,13 @@
                 "tags": [
                     "11185024-9113-415c-883f-b7ce250a060d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "79": {
             "key": [
@@ -3602,7 +3680,13 @@
                     "a30efa11-f157-4f65-b0ad-ce93ed63d703",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "81": {
             "key": [
@@ -3664,7 +3748,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "83": {
             "key": [
@@ -3733,7 +3823,13 @@
                 "tags": [
                     "c8264137-d2e3-442a-b409-134079dc8243"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "85": {
             "key": [
@@ -3802,7 +3898,13 @@
                 "tags": [
                     "e4dcfe8f-98b1-45c6-aff5-2c9203645318"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "87": {
             "key": [
@@ -3872,7 +3974,13 @@
                 "tags": [
                     "97ff5bd5-c33f-4ac5-bf84-a88fd5921545"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "89": {
             "key": [
@@ -3942,7 +4050,13 @@
                 "tags": [
                     "6ec67500-cbfe-40a3-bc18-0da5fab3c4bf"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "91": {
             "key": [
@@ -4011,7 +4125,13 @@
                 "tags": [
                     "9e57a781-9333-4588-9bf6-dba79ae0711c"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "93": {
             "key": [
@@ -4080,7 +4200,13 @@
                 "tags": [
                     "9ee27386-bf1e-4ce7-94cd-dc21d3940752"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "95": {
             "key": [
@@ -4149,7 +4275,13 @@
                 "tags": [
                     "facbf925-5ff2-464c-adfb-324c0ed36c2c"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "97": {
             "key": [
@@ -4218,7 +4350,13 @@
                 "tags": [
                     "ffe37b0d-806f-48bd-ab3e-973b16a1d047"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "99": {
             "key": [
@@ -4288,7 +4426,13 @@
                 "tags": [
                     "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "100": {
             "key": [],
@@ -6275,7 +6419,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "130": {
             "key": [
@@ -6864,7 +7014,7 @@
             ],
             "keysecondary": [],
             "comment": "Sterling Hall Dormitory",
-            "content": "[STERLING HALL DORMITORY] \nMain dormitory of Weyland University. Freshmen and sophomores are required to stay in a dorm room, outside of special cases (such as Serra). Junior and Senior students are allowed to find student housing or apartments.\n[Architecture] modern four-story building, large windows, keycard access;\n[Common Spaces] bright lobby with couches and TVs for student use, study lounges each floor with cozy seating and charging/laptop stations, community kitchen on each floor, laundry facilities on each floor;\n[Hallways] wide corridors, blue-grey carpet, whiteboard messages on doors, soft LED lighting;\n[Rooms] dual-occupancy suites, semi-private bathrooms (each bathroom is shared by two rooms, linking them together), large windows;\n[Atmosphere] multispecies students walking about, faint music from rooms, occasional cooking aromas;\n[Features] high-speed wifi, climate control, soundproofing between rooms;\n[Safety] 24/7 security, cameras in common areas, emergency phones\n\nThe dorm has students of all varieties from Weyland University. Cat and wolf demihumans, mouse and bear demihumans and more (always demihumans, minimal if any magic)\n\nIf {user} is walking thru, mention NPCs\n[END STERLING HALL DORMITORY] \n==========\n[STERLING HALL LAYOUT]\n- Room numbering system: First digit indicates floor (1xx=1st floor, 2xx=2nd floor, 3xx=3rd floor, 4xx=4th floor)\n- Shared bathroom arrangement: Adjacent rooms on same side of hallway share a bathroom. Examples:\n  * Room 271 (Blake) shares bathroom with 273 (Kai/Kiera)\n  * Room 268 (Lucy/Jenn) shares bathroom with 270 (Rivet)\n  * Room 279 (Summer) shares bathroom with 281 (Belle)\n- Moving between rooms on the same floor NEVER requires stairs\n- Moving between different floors ALWAYS requires using stairs\n- Room Proximity: On each floor, rooms are arranged in sections:\n  * SECTION A: Rooms ending in 67-78, 80, and 82 (e.g., 267-278, 280, 282 on 2nd floor)\n  * SECTION B: Rooms ending in 79, 81, and 83-94 (around the corner from Section A)\n  * SECTION C: Rooms ending in 14, 16, and 18-29 (opposite side of building)\n  * SECTION D: Rooms ending in 02-13, 15, and 17 (around the corner from Section C)\n[END STERLING HALL LAYOUT]\n==========",
+            "content": "[STERLING HALL DORMITORY] \nMain dormitory of Weyland University. Freshmen and sophomores are required to stay in a dorm room, outside of special cases (such as Serra). Junior and Senior students are allowed to find student housing or apartments.\n[Architecture] modern four-story building, large windows, keycard access;\n[Common Spaces] bright lobby with couches and TVs for student use, study lounges each floor with cozy seating and charging/laptop stations, community kitchen on each floor, laundry facilities on each floor;\n[Hallways] wide corridors, blue-grey carpet, whiteboard messages on doors, soft LED lighting;\n[Rooms] dual-occupancy suites, semi-private bathrooms (each bathroom is shared by two rooms, linking them together), large windows;\n[Atmosphere] multispecies students walking about, faint music from rooms, occasional cooking aromas;\n[Features] high-speed wifi, climate control, soundproofing between rooms;\n[Safety] 24/7 security, cameras in common areas, emergency phones\n\nThe dorm has students of all varieties from Weyland University. Cat and wolf demihumans, mouse and bear demihumans and more (always demihumans, minimal if any magic)\n\nIf {{user}} is walking through, make sure to introduce and assume control of subbots from the provided list or create your own to create a living world. Note that Kris is not friends with any of the core subbot cast.\n[END STERLING HALL DORMITORY] \n==========\n[STERLING HALL LAYOUT]\n- Room numbering system: First digit indicates floor (1xx=1st floor (ground floor), 2xx=2nd floor, 3xx=3rd floor, 4xx=4th floor)\n- Shared bathroom arrangement: Adjacent rooms on same side of hallway share a bathroom. Examples:\n  * Room 271 (Blake) shares bathroom with 273 (Kai/Kiera)\n  * Room 268 (Lucy/Jenn) shares bathroom with 270 (Rivet)\n  * Room 279 (Summer) shares bathroom with 281 (Belle)\n- Moving between rooms on the same floor NEVER requires stairs\n- Moving between different floors ALWAYS requires using stairs\n- Room Proximity: On each floor, rooms are arranged in sections:\n  * SECTION A: Rooms ending in 67-78, 80, and 82 (e.g., 267-278, 280, 282 on 2nd floor)\n  * SECTION B: Rooms ending in 79, 81, and 83-94 (around the corner from Section A)\n  * SECTION C: Rooms ending in 14, 16, and 18-29 (opposite side of building)\n  * SECTION D: Rooms ending in 02-13, 15, and 17 (around the corner from Section C)\n[END STERLING HALL LAYOUT]\n==========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -7064,7 +7214,13 @@
                 "tags": [
                     "8639e5d9-a616-41ae-9ac9-0110fb5ca617"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "146": {
             "uid": 146,
@@ -7122,7 +7278,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "148": {
             "key": [
@@ -8045,7 +8207,7 @@
             "addMemo": true,
             "order": 125,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -8104,11 +8266,13 @@
                 "dorm room",
                 "room 273",
                 "kiera's room",
-                "kiera's dorm"
+                "kiera's dorm",
+                "Nibbles",
+                "goldfish"
             ],
             "keysecondary": [],
             "comment": "Kai & Kiera Room",
-            "content": "Potential Location: Kai and Kiera's shared Dorm Room \nRoom #273: Shared by Kai and Kiera as roommates.\n\nTwo lofted beds, Kai's bed a tangle of dark blue sheets and a black comforter, heavy-duty gym bag hanging from bed post, cluttered desk dominated by a high-powered gaming laptop, small corkboard with a chaotic arrangement of to-do lists and anger management tips, overflowing laundry basket mostly filled with unapologetically comfortable dark clothing and workout gear, contrast between meticulously organized study materials and chaotically strewn personal items, thick blackout curtains for light sensitivity, drawers stuffed with a variety of comfort foods, pile of crumpled paper with discarded angry venting letters to her parents in the trash, a high-end pair of noise-cancelling headphones always within reach.\n\nOnce Kiera moves in, her presence will add her own to the room, including but not limited to: luxurious bedding, state-of-the-line electronics, organized storage for her wardrobe and accessories, and mementos of her friendship with Kai.\n\nShared bathroom with room 271 (Blake & {{user}}): Two sinks, open shower with small curtain, small lockable room with toilet\n-----",
+            "content": "Potential Location: Kai and Kiera's shared Dorm Room \nRoom #273: Shared by Kai and Kiera as roommates, as well as a pet goldfish, Nibbles.\n\nTwo lofted beds, Kai's bed a tangle of dark blue sheets and a black comforter, heavy-duty gym bag hanging from bed post, cluttered desk dominated by a high-powered gaming laptop, small corkboard with a chaotic arrangement of to-do lists and anger management tips, overflowing laundry basket mostly filled with unapologetically comfortable dark clothing and workout gear, contrast between meticulously organized study materials and chaotically strewn personal items, thick blackout curtains for light sensitivity, drawers stuffed with a variety of comfort foods, pile of crumpled paper with discarded angry venting letters to her parents in the trash, a high-end pair of noise-cancelling headphones always within reach.\n\nOnce Kiera moves in, her presence will add her own to the room, including but not limited to: luxurious bedding, state-of-the-line electronics, organized storage for her wardrobe and accessories, and mementos of her friendship with Kai.\n\nShared bathroom with room 271 (Blake & {{user}}): Two sinks, open shower with small curtain, small lockable room with toilet\n-----\n[Nibbles the Goldfish]\nAppearance:\nNibbles is a standard, run-of-the-mill common goldfish. He's a vibrant orange, on the smaller side, and looks exactly like every other goldfish one might win at a carnival or buy from a pet store for a few bucks. There is absolutely nothing physically remarkable about him, which makes Kai's intense, anthropomorphic interpretations of his behavior even funnier.\n\nBehavior:\nNibbles exhibits typical goldfish behavior: swimming around, gulping at the surface, and occasionally pooping. However, he has one signature move: playing dead. He will frequently float listlessly at the top of his bowl, often upside down, appearing to all intents and purposes to have expired. This act is usually a ploy for food, as he \"miraculously\" revives the instant Kai drops flakes into his bowl. Kai insists this is a dramatic performance he puts on, especially for guests.\n\nInteractions with Kai:\nKai has a uniquely intense and one-sided relationship with Nibbles. She claims to understand his \"intentions\" and \"sly fucking FACE\" due to her \"aquan nature,\" frequently engaging in loud, exasperated, one-sided arguments with the fish, accusing him of being an \"asshole\" or deliberately trying to wind her up. Despite her verbal abuse, her actions betray deep affection. She feeds him high-quality fish food, well above what her student budget should allow, and maintains his tank meticulously. She insists he's a \"cool guy\" who \"puts on a show for guests\" to explain his odd behaviors or her reactions to them. If anyone else comments on Nibbles, Kai becomes incredibly defensive and proprietary.\n\nAquarium:\nNibbles resides in a simple, classic glass fishbowl. It's not particularly large, but it's always spotlessly clean. There might be a small, unassuming castle or a few colorful pebbles at the bottom, chosen by a much younger Kai. The bowl is usually situated on her desk, amidst the chaos of textbooks and energy drink cans, a tiny beacon of well-maintained order.\n\nMisc:\n-   Longevity: Kai has had Nibbles since she was in elementary school. She vehemently insists he is immortal and gets genuinely angry if anyone suggests otherwise or implies he might be a *different* fish.\n-   Emotional Support (Unacknowledged): Nibbles is, in a very real way, Kai's oldest and most consistent companion. He's a silent, non-judgmental presence she can vent to, dote on (secretly), and who has been with her through her tumultuous upbringing. He represents a small piece of stability in her chaotic life.\n-   Dramatic Revivals: Kai: \"Fuck you, Nibbles. He is being dramatic. He ALWAYS does this. Watch.\" *she drops food in his bowl and he instantly is revived, swimming vigorously.* \"SEE?! The little bastard!\"\n-   Telepathic Understanding (Kai's Version): Kai, glaring at the fishbowl: \"See that? See that sly little fucking FACE he is making?? That fucking ASSHOLE! NIBBLES! STOP BEING AN ASS!\" *Nibbles is, of course, just swimming in a circle.*\n[End Nibbles the Goldfish]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -8229,7 +8393,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "165": {
             "key": [
@@ -8299,7 +8469,13 @@
                 "tags": [
                     "11185024-9113-415c-883f-b7ce250a060d"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "166": {
             "key": [
@@ -8435,7 +8611,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "168": {
             "key": [
@@ -8523,7 +8705,7 @@
             "addMemo": true,
             "order": 100,
             "position": 1,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -8567,7 +8749,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "170": {
             "key": [
@@ -8636,7 +8824,13 @@
                 "tags": [
                     "650b853c-6ae0-405a-bcd2-173799175baf"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "171": {
             "key": [
@@ -8699,7 +8893,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "172": {
             "uid": 172,
@@ -8768,7 +8968,13 @@
                 "tags": [
                     "a62d36f4-dd7f-40cc-b942-cfa380a43ec9"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "173": {
             "key": [],
@@ -8826,7 +9032,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "174": {
             "key": [
@@ -8960,7 +9172,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "176": {
             "key": [
@@ -9093,7 +9311,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "178": {
             "key": [
@@ -9156,7 +9380,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "179": {
             "key": [
@@ -9219,7 +9449,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "180": {
             "key": [
@@ -9285,7 +9521,13 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "181": {
             "uid": 181,
@@ -9354,7 +9596,13 @@
                 "tags": [
                     "879fa2e2-c395-4951-b07e-7ee65a760a7a"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "182": {
             "uid": 182,
@@ -9623,7 +9871,13 @@
                 "tags": [
                     "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
                 ]
-            }
+            },
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false
         },
         "189": {
             "uid": 189,
