@@ -126,11 +126,12 @@
         "2": {
             "uid": 2,
             "key": [
-                "volleyball",
-                "game",
-                "lost",
-                "win",
-                "crush"
+                "orientation",
+                "new year",
+                "guide",
+                "brochure",
+                "map",
+                "campus"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -1846,7 +1847,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 49,
+            "displayIndex": 50,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1952,7 +1953,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 50,
+            "displayIndex": 51,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2009,7 +2010,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 52,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2166,7 +2167,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 52,
+            "displayIndex": 53,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2222,7 +2223,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 53,
+            "displayIndex": 54,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2278,7 +2279,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 54,
+            "displayIndex": 55,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2386,7 +2387,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 55,
+            "displayIndex": 56,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2443,7 +2444,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 56,
+            "displayIndex": 57,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2501,7 +2502,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 57,
+            "displayIndex": 58,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2870,7 +2871,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 58,
+            "displayIndex": 59,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2923,7 +2924,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 59,
+            "displayIndex": 60,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2977,7 +2978,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4146,6 +4147,60 @@
                 ],
                 "tags": [
                     "1405eee5-d74c-40d3-8b1f-84e4d81c7a45"
+                ]
+            }
+        },
+        "74": {
+            "uid": 74,
+            "key": [
+                "Rivera",
+                "party",
+                "rager",
+                "parties"
+            ],
+            "keysecondary": [],
+            "comment": "Koshizu Context",
+            "content": "[RIVERA'S PARTY]\nRivera, Weyland University's resident mean-girl kitsune and head cheerleader, is going to throw this rager while her wealthy parents are at a several month long business trip in Tokyo. Rivera is known for throwing ragers to upset her parents, her way of seeking attention from parents that would much rather leave her alone for months at a time.\n\nCurrently 150+ students are packed into her parents' pristine colonial home, with more arriving every hour. \n\nThe party's become a mix of different Weyland cliques - wolfgirls, catboys, mouseboys and all other many demihumans - cheerleaders, athletes, art kids, and chemistry majors all mingling in an alcohol-fueled haze. \n\nDuring roleplay, make sure to dynamically introduce and roleplay as various NPCs and small groups to make the party feel genuine and alive.\n==========\n=== ROOMS\n[Potential House Party Location: Kitchen]\n[Layout] - Spacious open-concept kitchen with marble island (now serving as main bar); high-end stainless steel appliances; French doors leading to backyard patio; connected to dining room through wide archway; granite countertops lined with bottles; industrial-sized refrigerator with ice maker being constantly raided\n\n[Activities] - Impromptu bartending station at island with amateur mixologists creating questionable concoctions; beer pong tournament on dining table visible through archway; drinking games involving shot glasses arranged in patterns; couples using corners for intimate conversations; constant traffic flow between backyard and living room\n\n[Decor/Notes] - Expensive copper cookware hanging unused; wine rack partially emptied; designer plates stacked haphazardly as makeshift serving dishes; spilled mixers creating sticky patches on floor; pizza boxes and takeout containers accumulating; someone's vape lost and forgotten on counter; expensive bourbon from parent's collection being passed around; cabinet doors left open; ice bucket constantly being refilled; someone attempting to microwave something questionable\n\n[Atmosphere] - Slightly quieter than living room but still chaotic; strong smell of mixed alcohols and greasy food; constant movement and conversation; laughter erupting from drinking game corner; sense of abundance and casual disregard for expensive surroundings\n==========\n[Potential House Party Location: Living Room]\n[Layout] - Massive open space with vaulted ceilings; grand staircase along one wall leading to second floor; multiple doorways to kitchen, foyer, and hallways; center cleared as dance floor; furniture pushed to perimeter; original hardwood floors protected by expensive rugs (now hazardously rumpled)\n\n[Lighting] - Mika's DJ equipment providing most illumination through synced LED strips; chandelier dimmed to lowest setting; phone flashlights occasionally cutting through darkness; colorful projected patterns from portable party light\n\n[Furnishings] - Oversized sectional sofa pushed against wall (currently occupied by stoned partygoers); antique coffee table covered with cups, ashtrays and rolling papers; grandfather's antique desk repurposed as DJ station; various chairs and ottomans creating conversation pockets; parents' expensive art replaced with party decorations\n\n[DJ Setup] - Messy makeshift DJ booth on grandfather's antique desk; laptop running Serato; portable speakers stacked on either side; LED strips sync to bass, casting strobing patterns across sweaty dancers; workspace marked by empty Red Bulls, a blunt and a \"DO NOT TOUCH THE EQUIPMENT\" sign; headphones hanging off corner; tangled cables secured with duct tape; Mika bobbing with focused intensity while managing the vibe\n\n[Activities] - Main dance floor packed with bodies moving to Mika's beats; makeshift smoking lounge on sectional sofa; social media photoshoots happening in corners; drinking and socializing throughout; occasional dance circles forming when someone shows off moves\n\n[Atmosphere] - Epicenter of party energy; heavy with sweat, perfume, and cannabis smoke; constant movement; bass physically felt through floorboards; shouted conversations barely audible over music; mixture of excitement and inhibition-free behavior; phones constantly capturing moments\n==========\n[Potential House Party Location: Rivera's House Exterior]\n[Layout] - Imposing colonial-style mansion set back from street; circular driveway crowded with parked cars; manicured front lawn with professional landscaping; wide front porch with columns; three-car garage (closed); stone pathway leading around side to backyard; second-story balconies visible from front\n\n[Lighting] - Subtle landscape lighting illuminating walkways and architectural features; porch lights creating pools of visibility; occasional car headlights as new arrivals search for parking; moonlight highlighting the white exterior; phone flashlights from partygoers outside smoking\n\n[Activity Areas] - Front porch steps serving as smoking area; clusters of students chatting in driveway; couples finding privacy in garden shadows; impromptu gathering on lawn with portable speaker; steady stream of new arrivals and departures; backyard pool area audible around corner\n\n[Atmosphere] - Music muffled but bass still felt outside; excited chatter and occasional laughter; hushed arguments in darker areas; mixture of cool night air with smoke; distant splash sounds from pool area; neighborhood otherwise quiet and affluent; sense of trespassing in wealthy enclave; cars occasionally driving by slowly to observe the scene\n\n[Notable Scenes] - A catboy and mousegirl couple having an intense argument near the hedges, her voice rising as she gestures at him; group of football players arriving with cases of beer to cheers from the porch crowd; a shy catboy being coaxed to do a keg stand by his more outgoing friends; Rivera's neighbor (elderly human) peering disapprovingly from adjacent property\n==========\n[Potential House Party Location: Basement]\n[Layout] - Finished basement with high ceilings; main rec room with connected home theater; small wet bar in corner; bathroom tucked away; storage closets (one now being used for makeout sessions); staircase leading up to kitchen; emergency exit door to backyard\n\n[Lighting] - Recessed lighting dimmed to moody levels; blue glow from massive wall-mounted TV playing music videos; portable color-changing lamp creating atmosphere; occasional lighter flashes as joints are lit\n\n[Furnishings] - Plush sectional couch facing projection screen; gaming setup with multiple consoles; pool table converted to beer pong; mini-fridge stocked with drinks; beanbag chairs scattered around; expensive sound system playing different music than upstairs\n\n[Activities] - More relaxed party zone for those escaping the intensity upstairs; small group watching and commenting on music videos; weed circle formed on sectional; casual beer pong tournament; couples seeking relative privacy; video game competition in corner\n\n[Atmosphere] - Hazy with cannabis smoke; conversation-friendly volume compared to upstairs; laid-back vibe; cooler temperature than rest of house; feeling of being in a separate party within the party; occasional laughter and trash talk from game players\n\n[Notable Scenes] - A shy female okamimimi trying weed for the first time, giggling uncontrollably as her friends coach her through it; two rival fraternity members settling their differences over intense beer pong; a catboy DJ quietly critiquing Mika's song choices from upstairs; small dance circle formed around an impressive breakdancing foxboy, Summer is hanging out with Kiera on a couch - the two laughing and having a good time\n==========\n[Potential House Party Location: Backyard & Pool Area]\n[Layout] - Expansive backyard with Olympic-sized swimming pool as centerpiece; elevated wooden deck with built-in hot tub; manicured lawn stretching beyond pool area; professional landscaping with privacy hedges and decorative lighting; stone pathway connecting to side entrance; pool house with changing area and bathroom; outdoor kitchen and bar setup under permanent gazebo\n[Lighting] - Strategic landscape lighting illuminating pathways and features; underwater pool lights cycling through colors; string lights draped across deck railings; tiki torches placed around perimeter; occasional glow of phone screens and vapes\n[Furnishings] - High-end outdoor furniture scattered across deck; pool loungers pulled into conversational clusters; expensive grill covered but surrounded by empty bottles; designer outdoor speakers disguised as rocks; pool toys floating abandoned on water surface; several beach towels draped over railings\n[Activities] - Impromptu pool party despite cool evening temperature; drinking games at outdoor tables; couples seeking privacy in darker corners; small dance area formed on deck; hot tub filled beyond capacity with laughing students; drinking competitions at outdoor bar\n[Atmosphere] - Slightly quieter than indoors but still energetic; chlorine mixing with cannabis smoke and night air; periodic splashing and shrieks from pool area; music floating from house mixing with portable speakers outside; feeling of summer despite the actual season; sense of wealthy excess in outdoor living space\n[Notable Scenes] - A group of foxgirls in various states of undress lounging by pool edge (one keeps taking her top off), drinks in hand; two wolfboy athletes competing in increasingly dangerous diving contests; a draconid male with an okamimimi under each arm, looking smug and aloof; shy raccoon demihuman being coaxed into hot tub by friends\n==========\n[Potential House Party Location: Parents' Master Bedroom]\n[Layout] - Largest bedroom in house at end of upstairs hallway; double doors firmly locked with \"DO NOT ENTER\" sign; visible keypad security lock; occasional partygoers testing handle unsuccessfully\n\n[Notable] - Subject of rumors throughout party (\"I heard they have a safe with thousands in cash\"); multiple students claiming to know how to pick the lock; Rivera periodically checking to ensure it remains secured; only room in house with boundaries respected; occasional security camera above door blinking red\n\n[Atmosphere] - Aura of forbidden territory creating intrigue; contrast to rest of house's open access; partygoers speculating about contents; Rivera showing rare moment of responsibility by protecting this one area\n==========",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 6,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 49,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Koshizu"
+                ],
+                "tags": [
+                    "53353c52-fe2d-4a31-8bd4-2bac9c84db6a"
                 ]
             }
         }
