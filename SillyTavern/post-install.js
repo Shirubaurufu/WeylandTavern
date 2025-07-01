@@ -99,7 +99,7 @@ function createDefaultFiles() {
     for (const defaultItem of defaultItems) {
         try {
             if (defaultItem.type === 'file') {
-                if (defaultItem.productionPath.endsWith('Weyland.json')) {
+                if (defaultItem.productionPath.endsWith('worlds/Weyland.json')) {
                     // Always overwrite Weyland.json
                     fs.copyFileSync(defaultItem.defaultPath, defaultItem.productionPath);
                     console.log(color.green(`Overwritten file: ${defaultItem.productionPath}`));
