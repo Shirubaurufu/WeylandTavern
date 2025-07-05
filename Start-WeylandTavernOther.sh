@@ -1,3 +1,4 @@
+#!/bin/bash
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
     echo "This start script does not work on Windows."
     echo "Use the windows batch script instead."
