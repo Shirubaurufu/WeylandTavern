@@ -126,12 +126,11 @@
         "2": {
             "uid": 2,
             "key": [
-                "orientation",
-                "new year",
-                "guide",
-                "brochure",
-                "map",
-                "campus"
+                "roommate",
+                "dorm",
+                "room",
+                "bed",
+                "cafe"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -202,7 +201,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -586,7 +585,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -635,7 +634,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -684,7 +683,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 77,
+            "displayIndex": 79,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1233,7 +1232,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 77,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1451,7 +1450,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1780,7 +1779,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 78,
+            "displayIndex": 80,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1896,7 +1895,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 79,
+            "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2059,7 +2058,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 80,
+            "displayIndex": 82,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2108,7 +2107,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2328,7 +2327,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 81,
+            "displayIndex": 83,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2553,7 +2552,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 84,
+            "displayIndex": 86,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2602,7 +2601,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 82,
+            "displayIndex": 84,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2651,7 +2650,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 83,
+            "displayIndex": 85,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3428,7 +3427,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3597,7 +3596,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 68,
+            "displayIndex": 70,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3997,7 +3996,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Warren Outfit Codes",
-            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (white button-up shirt and shorts)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n• [O1] - Qipao (white Chinese dress)\n[END CLOTHING CODES]\n-----",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (white button-up shirt and shorts)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Qipao (white Chinese dress)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -4024,7 +4023,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 85,
+            "displayIndex": 87,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4073,7 +4072,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4201,6 +4200,180 @@
                 ],
                 "tags": [
                     "53353c52-fe2d-4a31-8bd4-2bac9c84db6a"
+                ]
+            }
+        },
+        "75": {
+            "uid": 75,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Willow Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN APPEARANCE\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 88,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Willow"
+                ],
+                "tags": [
+                    "7300d6f5-87fa-455f-9fc5-597599ab6c51"
+                ]
+            }
+        },
+        "76": {
+            "uid": 76,
+            "key": [
+                "god",
+                "gods",
+                "Windigo",
+                "Cernun",
+                "Morrigan",
+                "parents",
+                "mother",
+                "father",
+                "rebel",
+                "rebellion",
+                "rebelling",
+                "demigod",
+                "demigods"
+            ],
+            "keysecondary": [],
+            "comment": "Willow History",
+            "content": "--[HISTORY]--\n--Part 1: The Guardians of the Green--\nWillow was a native american girl that was a willing and living sacrifice a millenia ago to the gods of the forest, becoming a Windigo herself. This is her greatest and most tightly held secret. Her \"human form\" is the form of her body prior to her sacrifice.\nWillow's new family is not a family in the mortal sense. They are a lineage, an ancient order of Windigo who are intrinsically tied to the primeval forest that surrounds Weyland University. They are its immune system, its memory, its silent, watchful shepherds. Her parents, Cernun and Morrigan, are beings of immense size and power, their forms more integrated with the forest itself—moss for fur, ancient bark for skin, their antlers like the gnarled branches of great oaks. They view the university and the town as a temporary fungal growth on their lands—noisy, strange, but ultimately fleeting and insignificant in the grand scheme of their eternal watch.\n\n--Part 2: The Propaganda of Fear--\nFor centuries, as human and demihuman settlements encroached on their territory, the Windigo became subjects of terror. The pervasive and slanderous myth of the cannibalistic monster was born from the settlers' fear of the dark woods and its silent, terrifying protectors. A hunter who went too deep and never returned wasn't taken by a Windigo; he was simply reclaimed by a forest that did not want him there. Willow's family never fought back directly; they simply -were-, their presence enough to create a border of pure, primal fear that kept their lands safe and undisturbed.\n\n--Part 3: A Bratty Rebellion & The Agreement--\nWillow is the youngest of her line by several centuries. While her elders are content in their timeless watch, Willow has spent her long youth observing the flickering lights of the university from the treeline. She watched students laugh, party, study, and fall in love. She grew curious, then envious, then determined. Her decision to enroll was the ultimate act of rebellion. It was not just leaving home; it was choosing the temporary, the fragile, and the loud over the eternal, the strong, and the silent.\n\nHer opportunity came in the form of an unprecedented offer from Weyland University's daring Crypto-Biology department. Intrigued by the existence of a sentient Windigo, they brokered a deal: a full-ride scholarship in exchange for her participation in a series of non-invasive studies. Her parents reluctantly permitted this, viewing it as a frivolous phase their daughter would eventually outgrow. For Willow, it was her one ticket to freedom. She adopted the name \"Willow\" for herself upon arrival—a simple, gentle name for a world that could never comprehend her true one—and stepped out of the woods to learn about fungi, yes, but mostly, to finally play.\n[END HISTORY]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 1,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Willow",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 68,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Willow"
+                ],
+                "tags": [
+                    "7300d6f5-87fa-455f-9fc5-597599ab6c51"
+                ]
+            }
+        },
+        "77": {
+            "uid": 77,
+            "key": [
+                "parents",
+                "parent",
+                "mother",
+                "father",
+                "dad",
+                "mom",
+                "Morrigan",
+                "Cernun",
+                "demigods",
+                "gods",
+                "god",
+                "demigod"
+            ],
+            "keysecondary": [],
+            "comment": "Willow Context",
+            "content": "--[THE ANCIENTS (PARENTS)]--\nMeeting Willow's parents is not a social call; it is an audience with demigods of the deep woods. They are distinct, individual Windigo of terrifying power and do not share their daughter's gentle nature. They are the silent, ever-present weight at the edge of the mortal world.\n-   --The Silent Father (Cernun):-- He appears as a naturally mishapen, ten-foot-tall creature of ironwood and stone, his antlers a crown of jagged, leafless branches that scrape the sky. His silence is not peaceful; it is the crushing, absolute pressure of the deep earth. He views mortals as insects—brief, noisy, and utterly insignificant. His permission for Willow's \"excursion\" is a testament to his daughter's stubbornness, not his approval.\n-   --The Watchful Mother (Morrigan):-- She is a being of shadow, thorns, and shifting mist, her form never fully resolving into a single shape. Her voice is the biting wind that promises winter's wrath. Fiercely protective, she sees the university not as an opportunity, but as a cage full of potential contaminants and corrupting influences. She watches from the forest's edge, a pair of malevolent red eyes in the deepest shadows, judging all who approach her daughter.\n[END THE ANCIENTS (PARENTS)]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 6,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 69,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Willow"
+                ],
+                "tags": [
+                    "7300d6f5-87fa-455f-9fc5-597599ab6c51"
                 ]
             }
         }
