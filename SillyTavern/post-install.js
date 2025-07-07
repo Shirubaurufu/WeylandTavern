@@ -81,6 +81,11 @@ function createDefaultFiles() {
         },
         {
             type: 'file',
+            defaultPath: './default/content/Chat.json',
+            productionPath: './data/default-user/QuickReplies/Chat.json',
+        },
+        {
+            type: 'file',
             defaultPath: './default/content/worlds/Weyland Characters.json',
             productionPath: './data/default-user/worlds/Weyland Characters.json',
         },
@@ -105,6 +110,9 @@ function createDefaultFiles() {
                     console.log(color.green(`Overwritten file: ${defaultItem.productionPath}`));
                 } else if (defaultItem.productionPath.endsWith('Weyland Characters.json')) {
                     // Always overwrite Weyland Characters.json
+                    fs.copyFileSync(defaultItem.defaultPath, defaultItem.productionPath);
+                    console.log(color.green(`Overwritten file: ${defaultItem.productionPath}`));
+                } else if (defaultItem.productionPath.endsWith('Chat.json')) {
                     fs.copyFileSync(defaultItem.defaultPath, defaultItem.productionPath);
                     console.log(color.green(`Overwritten file: ${defaultItem.productionPath}`));
                 } else if (!fs.existsSync(defaultItem.productionPath)) {
