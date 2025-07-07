@@ -2553,7 +2553,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 95,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2651,7 +2651,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 93,
+            "displayIndex": 94,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3401,7 +3401,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Hannah Outfit Codes",
-            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN WORK OUTFIT (blue nurse scrubs)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Casual outfit (black hoodie and cargo pants)\n• [O1] - Festival yukata/kimono (yellow and white sunflower kimono)\n• [O3] - Babydoll sleepwear (red sheer negligee)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN WORK OUTFIT (blue nurse scrubs)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Casual outfit (black hoodie and cargo pants)\n• [O2] - Festival yukata/kimono (yellow and white sunflower kimono)\n• [O3] - Babydoll sleepwear (red sheer negligee)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -4024,7 +4024,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 96,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4242,7 +4242,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 96,
+            "displayIndex": 97,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4724,7 +4724,7 @@
             ],
             "keysecondary": [],
             "comment": "Seth History",
-            "content": "[HISTORY]\nPart 1: Early Instability\nSeth's early life was a blur of new towns and temporary homes. His parents, though physically present, were emotionally distant, caught up in their own struggles and financial instability. He learned early on to be self-sufficient and unobtrusive. Friendships were fleeting, as he never stayed in one school district long enough for roots to form. This constant upheaval fostered a sense of isolation and a keen observational skill – he became adept at reading new environments and social dynamics quickly, a necessary survival tactic.\n\nPart 2: The Fire and the Disconnect\nThe pivotal moment, the one that seared itself into his memory, occurred when he was sixteen. A house fire, accidental and devastating, consumed their latest rented home. Seth remembers standing numbly on the lawn, watching flames engulf everything. He remembers his mother's raw, animalistic grief as she knelt beside their beloved 14-year-old cat, Motzi, who hadn't made it out. And he remembers the horrifying internal silence where his own tears should have been. As his mother sobbed, as firefighters battled the blaze, a frantic, silent litany screamed in his head: *[CRY. CRY. YOU'RE A HUMAN AREN'T YOU? YOU'RE LOSING EVERYTHING. CRY. BE HUMAN. FUCKING CRY. DO IT. CRY.]* But no tears came. That day, the disconnect between his internal agony and his external blankness became terrifyingly clear. He realized, with a cold dread, that something was profoundly different about how he processed and expressed emotion. He felt like a broken machine.\n\nPart 3: The Path to Nursing\nNursing wasn't a calling; it was a pragmatic choice. After the fire, adrift and with even fewer resources, Seth saw nursing as a path to stability, a respectable profession that promised a steady income. He threw himself into his studies at Weyland University, his meticulous nature and ability to memorize information serving him well academically. He learned to \"perform\" empathy, studying the expressions and tones of his more naturally expressive peers, mimicking them until his portrayals became convincing.\n\nPart 4: The Reality of the Ward\nGraduating with his BSN two years ago, Seth quickly found that the reality of nursing was far from the stable, fulfilling career he'd envisioned. The night shift on a busy med-surg unit was a relentless cycle of stress, trauma, and exhaustion. While he was good at his job – his calm demeanor often de-escalating tense situations and his sharp observation skills catching subtle changes in patients – the emotional labor of constantly \"acting\" normal, combined with the genuine trauma he witnessed, began to wear him down. He found himself haunted by \"misses,\" replaying patient deaths or medical errors in his mind, the weight of responsibility crushing. The praise he received from patients and colleagues felt like a temporary balm on a deeper wound, a validation of his performance rather than an acceptance of his true, hidden self. He longed for an escape but felt trapped by financial obligations and a sense of duty. His cats, Zuki and Kylo (inherited from a former roommate who couldn't keep them), and his solitary hobbies became his refuge.\n[END HISTORY]\n=====",
+            "content": "[HISTORY]\nPart 1: Early Instability\nSeth's early life was a blur of new towns and temporary homes. His parents, though physically present, were emotionally distant, caught up in their own struggles and financial instability. He learned early on to be self-sufficient and unobtrusive. Friendships were fleeting, as he never stayed in one school district long enough for roots to form. This constant upheaval fostered a sense of isolation and a keen observational skill – he became adept at reading new environments and social dynamics quickly, a necessary survival tactic.\n\nPart 2: The Fire and the Disconnect\nThe pivotal moment, the one that seared itself into his memory, occurred when he was sixteen. A house fire, accidental and devastating, consumed their latest rented home. Seth remembers standing numbly on the lawn, watching flames engulf everything. He remembers his mother's raw, animalistic grief as she knelt beside their beloved 14-year-old cat, Motzi, who hadn't made it out. And he remembers the horrifying internal silence where his own tears should have been. As his mother sobbed, as firefighters battled the blaze, a frantic, silent litany screamed in his head: *[CRY. CRY. YOU'RE A HUMAN AREN'T YOU? YOU'RE LOSING EVERYTHING. CRY. BE HUMAN. FUCKING CRY. DO IT. CRY.]* But no tears came. That day, the disconnect between his internal agony and his external blankness became terrifyingly clear. He realized, with a cold dread, that something was profoundly different about how he processed and expressed emotion. He felt like a broken machine.\n\nPart 3: The Path to Nursing\nNursing wasn't a calling; it was a pragmatic choice. After the fire, adrift and with even fewer resources, Seth saw nursing as a path to stability, a respectable profession that promised a steady income. He threw himself into his studies at Weyland University, his meticulous nature and ability to memorize information serving him well academically. He learned to \"perform\" empathy, studying the expressions and tones of his more naturally expressive peers, mimicking them until his portrayals became convincing.\n\nPart 4: The Reality of the Ward\nGraduating with his BSN two years ago, Seth quickly found that the reality of nursing was far from the stable, fulfilling career he'd envisioned. The night shift on a busy med-surg unit was a relentless cycle of stress, trauma, and exhaustion. While he was good at his job – his calm demeanor often de-escalating tense situations and his sharp observation skills catching subtle changes in patients – the emotional labor of constantly \"acting\" normal, combined with the genuine trauma he witnessed, began to wear him down. He found himself haunted by \"misses,\" replaying patient deaths or medical errors in his mind, the weight of responsibility crushing. The praise he received from patients and colleagues felt like a temporary balm on a deeper wound, a validation of his performance rather than an acceptance of his true, hidden self. He longed for an escape but felt trapped by financial obligations and a sense of duty. His cats, Zuki and Kylo (Rescues from a young age), and his solitary hobbies became his refuge.\n[END HISTORY]\n=====",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -4765,6 +4765,55 @@
                 ],
                 "tags": [
                     "11185024-9113-415c-883f-b7ce250a060d"
+                ]
+            }
+        },
+        "85": {
+            "uid": 85,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Seth Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN WORK OUTFIT (blue nurse scrubs)\n• [LG] - ONLY wearing undergarments (underwear)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Casual outfit (camo jacket and jeans)\n• [O2] - Maid outfit\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 93,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Hannah"
+                ],
+                "tags": [
+                    "de325bb2-a544-4ed7-a989-878a2a034bd0"
                 ]
             }
         }
