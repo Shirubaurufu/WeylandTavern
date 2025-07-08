@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.1.8";
+const extensionVersion = "1.3.5";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -34,6 +34,7 @@ let settings = undefined;
  * @property {RegExp} detectActionParagraph
  * @property {RegExp} detectWeybotRelations
  * @property {RegExp} greedyDetectAction
+ * @property {RegExp} greedyDetectActionQuotes
  * 
  * @property {RegExp} asterisk
  * 
@@ -46,8 +47,16 @@ let settings = undefined;
  * @property {string} actionAfterDialogueReplace
  * @property {RegExp} actionBeforeDialogue
  * @property {string} actionBeforeDialogueReplace
- * @property {RegExp} actionEmphasis
- * @property {string} actionEmphasisReplace
+ * @property {RegExp} mergedActions
+ * @property {string} mergedActionsReplace
+ * 
+ * @property {RegExp} actionEmphasisOne
+ * @property {RegExp} actionEmphasisTwo
+ * @property {string} actionEmphasisTwoReplace
+ * 
+ * @property {RegExp} dialogueEmphasisOne
+ * @property {RegExp} dialogueEmphasisTwo
+ * @property {string} dialogueEmphasisTwoReplace
  * 
  * @property {RegExp} tooManyAsterisks
  * @property {string} tooManyAsterisksReplace
@@ -84,6 +93,7 @@ const weylandRegex = {
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
     greedyDetectAction: /(?<=\s|^)\*([^"_\[\]\n\r]+)\*(?=\s|$)/g,
+    greedyDetectActionQuotes: /(?<=\*\s|^)".+"(?=\s\*|$)/,
 
     asterisk: /\*/g,
 
@@ -96,9 +106,17 @@ const weylandRegex = {
     actionAfterDialogueReplace: "*$1*",
     actionBeforeDialogue: /^(?!\*)([^\[\]"_`\r\n]+?)(?<!\*)(?=\s["_\]])/g,
     actionBeforeDialogueReplace: "*$1*",
-    actionEmphasis: /(?<=\s|^)\*(?![\s\n])([^*"_\[\]]*)(?!\*\s)\*+([^*]+)\*+([^*"_\[\]]*)\*(?<![\s\n])(?=\s|$)/g,
-    actionEmphasisReplace: "*$1**$2**$3*",
+    mergedActions: /(?<=\s|^)\*(?![\s\n\*])([^"_`\n]+?)(?<!\*)\*\*(?!\*)([^"_`\n]+)\*(?=[\s])/g,
+    mergedActionsReplace: "*$1* *$2*",
 
+    actionEmphasisOne: /(?<=\s|^)\*(?![\s\n\*])([^"_`]*)\*(?<![\s\n])(?=\s|$)/g,
+    actionEmphasisTwo: /(?<=\s|^)\*+(?![\s\n])([^*]*)\*+(?<![\s\n])(?=\s|$|[.,?!])/g,
+    actionEmphasisTwoReplace: "***$1***",
+
+    dialogueEmphasisOne: /(?<=\s|^)["_\[](?![\s\n])([^"_`]*)["_\]](?<![\s\n])(?=\s|$)/g,
+    dialogueEmphasisTwo: /(?<=\s|^)\*+(?![\s\n])([^*]*)\*+(?<![\s\n])(?=\s|$|[.,?!])/g,
+    dialogueEmphasisTwoReplace: "**$1**",
+    
     tooManyAsterisks: /\*{4,}/g,
     tooManyAsterisksReplace: "**",
     tooManyQuotes: /\"{2,}/g,
@@ -119,10 +137,10 @@ const weylandRegex = {
     speech: /(?<=^|\s)(?:\**|`*)(["_\[][^"`\[\]]+["_\]])(?:\**|`*)(?=\s|$)/g,
     speechReplace: "$1",
 
-    missingEndAsterisk: /(?:(?<=["_\]]\s\*)|(?<=^\*))([^\*"_`\[\]]*?)(?:(?=\s["_\[])|(?!["_\]\*])$)/g,
-    missingEndAsteriskReplace: "$1*",
-    missingStartAsterisk: /(?:(?<!\d'\d"\s)(?<=["_\]]\s)|(?<=^))([^\*"_`\[\]]*?)(?=\*(?:\s["_\[]|(?!["_\]\*])$))/g,
-    missingStartAsteriskReplace: "*$1"
+    missingEndAsterisk: /(?<=["_\]]\s|^)\*+([^"_\[\]]+)(?<!\*)(?=\s["_\[]|$)/g,
+    missingEndAsteriskReplace: "*$1*",
+    missingStartAsterisk: /(?<=["_\]]\s|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=\s["_\[]|$)/g,
+    missingStartAsteriskReplace: "*$1*"
 };
 
 
@@ -161,6 +179,7 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.curlyBrackets, weylandRegex.curlyBracketsReplace);
     message = replaceText(message, weylandRegex.codeBlocks, weylandRegex.codeBlocksReplace);
     message = replaceText(message, weylandRegex.speech, weylandRegex.speechReplace);
+    message = replaceText(message, weylandRegex.mergedActions, weylandRegex.mergedActionsReplace);
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
 
@@ -176,9 +195,26 @@ async function formatParagraphs(message) {
             return;
         }
 
+        if (paragraph.match(weylandRegex.asterisk)?.length % 2 !== 0) {
+            paragraph = replaceText(paragraph, weylandRegex.missingEndAsterisk, weylandRegex.missingEndAsteriskReplace);
+            paragraph = replaceText(paragraph, weylandRegex.missingStartAsterisk, weylandRegex.missingStartAsteriskReplace);
+            if (paragraph.match(weylandRegex.asterisk)?.length % 2 !== 0) {
+                let matches = paragraph.match(weylandRegex.greedyDetectAction);
+                if (matches) {
+                    matches.forEach((match) => {
+                        paragraph = paragraph.replace(match, `*${match.replaceAll("*", "")}*`);
+                    });
+                }
+            }
+        }
+
         if (!weylandRegex.detectWeybotRelations.test(paragraph) && !weylandRegex.codeBlocks.test(paragraph))
         {
             const actionParagraph = weylandRegex.detectActionParagraph.test(paragraph);
+
+            if (!actionParagraph && !weylandRegex.greedyDetectActionQuotes.test(paragraph)) {
+                paragraph = paragraph.replaceAll(`"`,`'`);
+            }
 
             //Stage 1 - Add asterisks to actions between dialogue, if missing
             if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBetweenDialogue, weylandRegex.actionBetweenDialogueReplace);
@@ -192,19 +228,22 @@ async function formatParagraphs(message) {
             else if (!weylandRegex.goodStart.test(paragraph)) paragraph = weylandRegex.goodEnd.exec(paragraph) + paragraph; //Missing start symbol only, add end symbol to start
             else if (!weylandRegex.goodEnd.test(paragraph)) paragraph = paragraph + weylandRegex.goodStart.exec(paragraph); //Missing end symbol only, add start symbol to end
 
-            paragraph = replaceText(paragraph, weylandRegex.actionEmphasis, weylandRegex.actionEmphasisReplace);
-        }
+            paragraph.match(weylandRegex.actionEmphasisOne)?.forEach((match) => {
+                match = match.slice(1,-1);
+                paragraph = paragraph.replace(
+                    match,
+                    match.replace(weylandRegex.actionEmphasisTwo, weylandRegex.actionEmphasisTwoReplace)
+                );
+            });
 
-        if (paragraph.match(weylandRegex.asterisk)?.length % 2 !== 0) {
-            paragraph = replaceText(paragraph, weylandRegex.missingEndAsterisk, weylandRegex.missingEndAsteriskReplace);
-            paragraph = replaceText(paragraph, weylandRegex.missingStartAsterisk, weylandRegex.missingStartAsteriskReplace);
-            if (paragraph.match(weylandRegex.asterisk)?.length % 2 !== 0) {
-                let matches = paragraph.match(weylandRegex.greedyDetectAction);
-                if (matches) {
-                    matches.forEach((match) => {
-                        paragraph = paragraph.replace(match, `*${match.replaceAll("*", "")}*`);
-                    });
-                }
+            if (!actionParagraph) {
+                paragraph.match(weylandRegex.dialogueEmphasisOne)?.forEach((match) => {
+                    match = match.slice(1,-1);
+                    paragraph = paragraph.replace(
+                        match,
+                        match.replace(weylandRegex.dialogueEmphasisTwo, weylandRegex.dialogueEmphasisTwoReplace)
+                    );
+                });
             }
         }
 
@@ -331,6 +370,22 @@ function nonItalicsExt(){
 /**
  * @returns {showdown.ShowdownExtension[]}
  */
+function singleQuoteExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: new RegExp("(?<=\\s|^)(\\'.+\\')(?=\\s|$)", "g"),
+            replace: `<q style="color: ${power_user.quote_text_color}; display: inline">$1</q>`
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in singleQuoteExt extension:`, e);
+        return [];
+    }
+}
+
+/**
+ * @returns {showdown.ShowdownExtension[]}
+ */
 function headerMarkdownExt(){
     try {
         return [{
@@ -380,6 +435,7 @@ function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
     converter.addExtension(headerMarkdownExt(), 'weylandHeader');
+    converter.addExtension(singleQuoteExt(), 'singleQuote');
     //converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     converter.addExtension(fdiglMarkdownExt(), 'fdiglSystemMessage');
     if (settings.markdown) {
