@@ -74,7 +74,7 @@ cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --om
 echo "Checking for character updates..."
 node "character-downloader.js" "https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw" "-u"
 echo "Entering WeylandTavern..."
-node "server.js" "$@" > /dev/null 2>&1 &
+node --max-old-space-size=3072 "server.js" "--listen-host 0.0.0.0" "--listen-port 8000" "$@" > /dev/null 2>&1 &
 echo "WeylandTavern is now active on localhost:8000 (By default)"
 read -p "Press any key to exit."
 exit 0
