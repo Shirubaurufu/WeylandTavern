@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.3.5";
+const extensionVersion = "1.4.4";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -51,6 +51,7 @@ let settings = undefined;
  * @property {string} mergedActionsReplace
  * 
  * @property {RegExp} actionEmphasisOne
+ * @property {RegExp} actionEmphasisOneSingleQuoteGuard
  * @property {RegExp} actionEmphasisTwo
  * @property {string} actionEmphasisTwoReplace
  * 
@@ -89,20 +90,20 @@ let settings = undefined;
  */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|freshman|sophomore|junior|senior|\[roleplay)/i,
+    detectHeader: /^(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|freshman|sophomore|junior|senior|\[roleplay)|~[^~]+?~$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
     greedyDetectAction: /(?<=\s|^)\*([^"_\[\]\n\r]+)\*(?=\s|$)/g,
-    greedyDetectActionQuotes: /(?<=\*\s|^)".+"(?=\s\*|$)/,
+    greedyDetectActionQuotes: /(?<=\*\s|__\s|^)"[^"]+"(?=\s\*|__|$)/,
 
     asterisk: /\*/g,
 
-    goodStart: /^[\[*"]|^__|^```/,
-    goodEnd: /[*"\]]$|__$|```$/,
+    goodStart: /^(?:[\[*'">]|__|```)/,
+    goodEnd: /(?:[*'"\]]|__|```)$/,
 
     actionBetweenDialogue: /(?<=[\["_`]\s)(?!\*)([^\[\]"_`\r\n]+?)(?<!\*)(?=\s["_`\]])/g,
     actionBetweenDialogueReplace: "*$1*",
-    actionAfterDialogue: /(?<=[\["_`]\s)(?!\*)([^\[\]"_`\r\n]+?)(?<!\*)$/g,
+    actionAfterDialogue: /(?<=[\["_`]\s)(?!\*|')([^\[\]"_`\r\n]+?)(?<!\*|')$/g,
     actionAfterDialogueReplace: "*$1*",
     actionBeforeDialogue: /^(?!\*)([^\[\]"_`\r\n]+?)(?<!\*)(?=\s["_\]])/g,
     actionBeforeDialogueReplace: "*$1*",
@@ -110,6 +111,7 @@ const weylandRegex = {
     mergedActionsReplace: "*$1* *$2*",
 
     actionEmphasisOne: /(?<=\s|^)\*(?![\s\n\*])([^"_`]*)\*(?<![\s\n])(?=\s|$)/g,
+    actionEmphasisOneSingleQuoteGuard: /\*\s'.*?'\s\*/g,
     actionEmphasisTwo: /(?<=\s|^)\*+(?![\s\n])([^*]*)\*+(?<![\s\n])(?=\s|$|[.,?!])/g,
     actionEmphasisTwoReplace: "***$1***",
 
@@ -118,7 +120,7 @@ const weylandRegex = {
     dialogueEmphasisTwoReplace: "**$1**",
     
     tooManyAsterisks: /\*{4,}/g,
-    tooManyAsterisksReplace: "**",
+    tooManyAsterisksReplace: "***",
     tooManyQuotes: /\"{2,}/g,
     tooManyQuotesReplace: `"`,
     tooManyUnderscores: /\_{3,}/g,
@@ -134,7 +136,7 @@ const weylandRegex = {
     curlyBracketsReplace: "{$1}",
     codeBlocks: /^`{2,}(text|)(\s+)?([\w\W]+?\n?[^`\n]+?)(?:\n+|\n?)`{2,}$/gm,
     codeBlocksReplace: "```$1\n$3\n```",
-    speech: /(?<=^|\s)(?:\**|`*)(["_\[][^"`\[\]]+["_\]])(?:\**|`*)(?=\s|$)/g,
+    speech: /(?<=^|\s)(?:\**|`*)(["'_\[][^"`\[\]]+?["'_\]])(?:\**|`*)(?=\s|$)/g,
     speechReplace: "$1",
 
     missingEndAsterisk: /(?<=["_\]]\s|^)\*+([^"_\[\]]+)(?<!\*)(?=\s["_\[]|$)/g,
@@ -191,7 +193,7 @@ async function formatParagraphs(message) {
         if (weylandRegex.detectHeader.test(paragraph)) {
             //Format Header?
             paragraphs[index] = paragraph;
-            weylandDebug(`Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
+            weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
             return;
         }
 
@@ -213,6 +215,7 @@ async function formatParagraphs(message) {
             const actionParagraph = weylandRegex.detectActionParagraph.test(paragraph);
 
             if (!actionParagraph && !weylandRegex.greedyDetectActionQuotes.test(paragraph)) {
+                weylandDebug(`#${index} - Greedy Detect Action Quotes`)
                 paragraph = paragraph.replaceAll(`"`,`'`);
             }
 
@@ -224,40 +227,60 @@ async function formatParagraphs(message) {
             if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBeforeDialogue, weylandRegex.actionBeforeDialogueReplace);
 
             //Stage 3 - Add symbols to blank paragraphs
-            if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph))  paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
-            else if (!weylandRegex.goodStart.test(paragraph)) paragraph = weylandRegex.goodEnd.exec(paragraph) + paragraph; //Missing start symbol only, add end symbol to start
-            else if (!weylandRegex.goodEnd.test(paragraph)) paragraph = paragraph + weylandRegex.goodStart.exec(paragraph); //Missing end symbol only, add start symbol to end
+            if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph)) paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
 
             paragraph.match(weylandRegex.actionEmphasisOne)?.forEach((match) => {
                 match = match.slice(1,-1);
-                paragraph = paragraph.replace(
-                    match,
-                    match.replace(weylandRegex.actionEmphasisTwo, weylandRegex.actionEmphasisTwoReplace)
-                );
+                if (weylandRegex.actionEmphasisOneSingleQuoteGuard.test(match)) {
+                    const splitWord = "|SPLIT|"
+                    match = match.replace(weylandRegex.actionEmphasisOneSingleQuoteGuard, splitWord);
+                    const matchSplit = match.split(splitWord);
+                    matchSplit.forEach((split) => {
+                        if (weylandRegex.actionEmphasisTwo.test(split)) {
+                            weylandDebug(`#${index} - Formatting applied '${weylandRegex.actionEmphasisTwo}' with '${weylandRegex.actionEmphasisTwoReplace}' to: ${split}`)
+                            paragraph = paragraph.replace(
+                                split,
+                                split.replace(weylandRegex.actionEmphasisTwo, weylandRegex.actionEmphasisTwoReplace)
+                            );
+                        }
+                    });
+                } else if (weylandRegex.actionEmphasisTwo.test(match)) {
+                    weylandDebug(`#${index} - Formatting applied '${weylandRegex.actionEmphasisTwo}' with '${weylandRegex.actionEmphasisTwoReplace}' to: ${match}`)
+                    paragraph = paragraph.replace(
+                        match,
+                        match.replace(weylandRegex.actionEmphasisTwo, weylandRegex.actionEmphasisTwoReplace)
+                    );
+                }
             });
 
             if (!actionParagraph) {
                 paragraph.match(weylandRegex.dialogueEmphasisOne)?.forEach((match) => {
                     match = match.slice(1,-1);
-                    paragraph = paragraph.replace(
-                        match,
-                        match.replace(weylandRegex.dialogueEmphasisTwo, weylandRegex.dialogueEmphasisTwoReplace)
-                    );
+                    if (weylandRegex.dialogueEmphasisTwo.test(match)) {
+                        weylandDebug(`#${index} - Formatting applied '${weylandRegex.dialogueEmphasisTwo}' with '${weylandRegex.dialogueEmphasisTwoReplace}' to: ${match}`)
+                        paragraph = paragraph.replace(
+                            match,
+                            match.replace(weylandRegex.dialogueEmphasisTwo, weylandRegex.dialogueEmphasisTwoReplace)
+                        );
+                    }
                 });
             }
         }
 
         paragraphs[index] = paragraph; //Default loop end
-        weylandDebug(`Formatting paragraph #${index} took ${performance.now()-paragraphLoopStartTime} miliseconds`);
+        weylandDebug(`#${index} - Formatting paragraph took ${performance.now()-paragraphLoopStartTime} miliseconds`);
     })
     weylandDebug(`formatParagraphs took ${performance.now()-formatParagraphsStartTime} miliseconds`);
     return paragraphs;
 }
 
 function replaceText(text, regex, replace) {
-    const newText = text.replace(regex, replace);
-    if (newText !== text) weylandDebug(`Formatting applied '${regex}' with '${replace}' to: ${text.match(regex)}`);
-    return newText;
+    if (regex.test(text)) {
+        const newText = text.replace(regex, replace);
+        if (newText !== text) weylandDebug(`Formatting applied '${regex}' with '${replace}' to: ${text.match(regex)}`);
+        return newText;
+    }
+    return text;
 }
 
 async function formatMessage(messageId) {
@@ -342,7 +365,7 @@ function hiccupMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: new RegExp('(\\**\\b(?:hic{1,2}(?!up)(?!cup)|hiccup)\\b\\**)', 'gi'),
+            regex: /(\**\b(?:hic{1,2}(?!up)(?!cup)|hiccup)\b\**)/gi,
             replace: `<q style="color: #aeae00; display: inline;">$1</q>`
         }];
     } catch (e) {
@@ -358,7 +381,7 @@ function nonItalicsExt(){
     try {
         return [{
             type: 'output',
-            regex: new RegExp('\\*(?![\\s\\n])([^*"_\\[\\]]*)(?!\\*\\s)\\*([^*]+)\\*([^*"_\\[\\]]*)\\*(?<![\\s\\n])', 'g'),
+            regex: /\*(?![\s\n])([^*"_\[\]]*)(?!\*\s)\*([^*]+)\*([^*"_\[\]]*)\*(?<![\s\n])/g,
             replace: `<em>$1</em><q style="color: ${power_user.italics_text_color}; display: inline">$2</q><em>$3</em>`
         }];
     } catch (e) {
@@ -374,7 +397,7 @@ function singleQuoteExt(){
     try {
         return [{
             type: 'output',
-            regex: new RegExp("(?<=\\s|^)(\\'.+\\')(?=\\s|$)", "g"),
+            regex: /(?<=\s|.>)('.+?')(?=\s|<.)/g,
             replace: `<q style="color: ${power_user.quote_text_color}; display: inline">$1</q>`
         }];
     } catch (e) {
@@ -390,7 +413,7 @@ function headerMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: new RegExp('((?<!\\s)(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|freshman|sophomore|junior|senior|\\[roleplay)[^"*_\\[\\]`\\n\\r]*(?=\\s))', 'i'),
+            regex: /((?<=.>)[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)](?=<.|\s))/,
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
@@ -422,7 +445,7 @@ function fdiglMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: new RegExp(`\\[\\(.+\\)\\]: #`, 'g'),
+            regex: /\[\(.+\)\]: #/g,
             replace: ``
         }];
     } catch (e) {
