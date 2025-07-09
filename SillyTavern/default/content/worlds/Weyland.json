@@ -215,7 +215,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 148,
+            "displayIndex": 149,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -239,6 +239,85 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            }
+        },
+        "4": {
+            "uid": 4,
+            "key": [
+                "Willow",
+                "!Willow",
+                "!willow",
+                "Windigo",
+                "windigo",
+                "wendigo",
+                "Wendigo"
+            ],
+            "keysecondary": [],
+            "comment": "Willow",
+            "content": "{{getvar::WW}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 148,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 149,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": true,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "7300d6f5-87fa-455f-9fc5-597599ab6c51"
+                ]
             }
         },
         "5": {
@@ -373,6 +452,83 @@
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
             "matchCreatorNotes": false
+        },
+        "7": {
+            "uid": 7,
+            "key": [
+                "windigo",
+                "wendigo",
+                "leshen",
+                "demigod",
+                "demigods"
+            ],
+            "keysecondary": [],
+            "comment": "Windigo Lore",
+            "content": "[WINDIGO LORE]\nEXCEEDINGLY RARE - ~0.0001% of population (A handful known to exist)\n\n**Summary:** Commonly known as Wendigo or Leshen depending on cultural origin, they are one and the same: ancient, powerful beings intrinsically tied to the natural world. The pervasive myths of cannibalism are propaganda; they are territorial guardians, not monsters. They are not a naturally breeding species, with their true origin being a closely guarded secret.\n\n**[APPEARANCE]**\n*   **General Form:** Windigo are tall, imposing beings, typically standing over seven feet. Their overall silhouette is monstrous and primal.\n*   **Head:** Their face is always an animal skull, typically that of a great stag or other horned creature native to their region of origin. The skull's features can vary, with some being sharper and more intimidating, while others may have softer, more rounded edges. They have intact, expressive deer-like ears that rest near the base of their antlers.\n*   **Fur:** Their bodies are covered in a thick, shaggy coat of dark brown or black fur. The length and texture can vary slightly between individuals.\n*   **Limbs & Digits:** They possess digitigrade legs ending in hard, cervine hooves. Their hands are large and humanoid with long fingers tipped with formidable, non-retractable claws made of a substance resembling obsidian.\n*   **Tail:** They possess a short, cervine (deer-like) tail.\n*   **Antlers:** A Windigo's antlers are magnificent and firmly connected to their skull. They are shed and regrown every five to ten years. Many Windigo are known to decorate their antlers with trinkets, beads, or natural objects.\n[END APPEARANCE]\n\n**[PHYSIOLOGY]**\n*   **Body Structure:** Beneath their thick fur, a Windigo's body is surprisingly anthropomorphic and cervine in structure, with musculature and secondary sex characteristics (such as humanoid breasts on feminine forms) that are entirely concealed by their dense coat.\n*   **Integument & Coloration:** While their fur is dark, their underlying skin is typically pale. Their lips, nipples (on feminine forms), and genitalia are a contrasting dark color, often a deep mauve, plum, or near-black.\n*   **Eyes:** A Windigo's true eyes are points of colored light (most commonly red) that glow from within the dark, empty sockets of their skull. They have intact, expressive deer-like ears that rest near the base of their antlers.\n*   **Communication & Senses:** Windigo are biologically non-verbal. Their primary communication is a complex biomimicry of natural sounds. As a last resort, they are capable of \"Synaptic Resonance,\" a form of draining, invasive telepathy requiring direct physical contact. Their senses are highly attuned to their natural environment.\n*   **Diet:** Their metabolism is adapted to a largely herbivorous or opportunistic omnivorous diet, primarily consuming forest flora, fungi, and occasionally small game. The myth of cannibalism has no biological basis.\n[END PHYSIOLOGY]\n\n[END WINDIGO LORE]\n-----",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 120,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "Species Lore",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 69,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 54,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "Species Lore",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": false,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": true,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "7300d6f5-87fa-455f-9fc5-597599ab6c51"
+                ]
+            }
         },
         "8": {
             "key": [],
@@ -540,7 +696,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 10,
-            "displayIndex": 71,
+            "displayIndex": 73,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -747,7 +903,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 13,
-            "displayIndex": 101,
+            "displayIndex": 103,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -822,7 +978,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 97,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -893,7 +1049,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 16,
-            "displayIndex": 68,
+            "displayIndex": 70,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1697,7 +1853,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 27,
-            "displayIndex": 72,
+            "displayIndex": 74,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1761,7 +1917,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 61,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1836,7 +1992,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 29,
-            "displayIndex": 73,
+            "displayIndex": 75,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1988,7 +2144,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 31,
-            "displayIndex": 75,
+            "displayIndex": 77,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2063,7 +2219,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 33,
-            "displayIndex": 77,
+            "displayIndex": 79,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2138,7 +2294,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 35,
-            "displayIndex": 79,
+            "displayIndex": 81,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2213,7 +2369,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 37,
-            "displayIndex": 81,
+            "displayIndex": 83,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2289,7 +2445,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 39,
-            "displayIndex": 83,
+            "displayIndex": 85,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2365,7 +2521,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 41,
-            "displayIndex": 85,
+            "displayIndex": 87,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2440,7 +2596,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 43,
-            "displayIndex": 87,
+            "displayIndex": 89,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2515,7 +2671,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 45,
-            "displayIndex": 89,
+            "displayIndex": 91,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2590,7 +2746,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 47,
-            "displayIndex": 91,
+            "displayIndex": 93,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2665,7 +2821,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 49,
-            "displayIndex": 93,
+            "displayIndex": 95,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2740,7 +2896,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 53,
-            "displayIndex": 97,
+            "displayIndex": 99,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2815,7 +2971,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 55,
-            "displayIndex": 99,
+            "displayIndex": 101,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2871,7 +3027,7 @@
             "addMemo": true,
             "order": 100,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -2891,7 +3047,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 57,
-            "displayIndex": 101,
+            "displayIndex": 104,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2966,7 +3122,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 59,
-            "displayIndex": 103,
+            "displayIndex": 106,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4684,7 +4840,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 102,
-            "displayIndex": 58,
+            "displayIndex": 59,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4757,7 +4913,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 103,
-            "displayIndex": 59,
+            "displayIndex": 60,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5559,7 +5715,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 114,
-            "displayIndex": 62,
+            "displayIndex": 63,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5625,7 +5781,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 115,
-            "displayIndex": 61,
+            "displayIndex": 62,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5696,7 +5852,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 116,
-            "displayIndex": 66,
+            "displayIndex": 67,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5771,7 +5927,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 117,
-            "displayIndex": 64,
+            "displayIndex": 65,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6532,7 +6688,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 130,
-            "displayIndex": 57,
+            "displayIndex": 58,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6960,7 +7116,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 136,
-            "displayIndex": 63,
+            "displayIndex": 64,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7031,7 +7187,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 137,
-            "displayIndex": 65,
+            "displayIndex": 66,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7392,7 +7548,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 148,
-            "displayIndex": 74,
+            "displayIndex": 76,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7461,7 +7617,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 149,
-            "displayIndex": 76,
+            "displayIndex": 78,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7530,7 +7686,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 150,
-            "displayIndex": 78,
+            "displayIndex": 80,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7599,7 +7755,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 151,
-            "displayIndex": 69,
+            "displayIndex": 71,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7668,7 +7824,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 152,
-            "displayIndex": 80,
+            "displayIndex": 82,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7739,7 +7895,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 153,
-            "displayIndex": 82,
+            "displayIndex": 84,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7808,7 +7964,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 154,
-            "displayIndex": 84,
+            "displayIndex": 86,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7877,7 +8033,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 155,
-            "displayIndex": 100,
+            "displayIndex": 102,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7945,7 +8101,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 156,
-            "displayIndex": 92,
+            "displayIndex": 94,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8014,7 +8170,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 158,
-            "displayIndex": 94,
+            "displayIndex": 96,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8085,7 +8241,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 159,
-            "displayIndex": 90,
+            "displayIndex": 92,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8156,7 +8312,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 160,
-            "displayIndex": 88,
+            "displayIndex": 90,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8225,7 +8381,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 161,
-            "displayIndex": 86,
+            "displayIndex": 88,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8296,7 +8452,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 162,
-            "displayIndex": 96,
+            "displayIndex": 98,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8369,7 +8525,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 163,
-            "displayIndex": 98,
+            "displayIndex": 100,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8583,7 +8739,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 166,
-            "displayIndex": 102,
+            "displayIndex": 105,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9836,7 +9992,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 67,
+            "displayIndex": 68,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10136,7 +10292,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 72,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
