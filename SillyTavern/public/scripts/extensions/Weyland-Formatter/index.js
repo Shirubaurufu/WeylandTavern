@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.4.4";
+const extensionVersion = "1.4.9";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -79,6 +79,14 @@ let settings = undefined;
  * @property {RegExp} speech
  * @property {string} speechReplace
  * 
+ * @property {RegExp} normalizeQuotes
+ * @property {RegExp} normalizeSingleQuotes
+ * @property {RegExp} normalizeHyphens
+ * @property {RegExp} normalizeElipses
+ * @property {RegExp} normalizeSpaces
+ * @property {RegExp} normalizeAsterisks
+ * @property {RegExp} normalizeSwungDash
+ * 
  * @property {RegExp} missingEndAsterisk
  * @property {string} missingEndAsteriskReplace
  * @property {RegExp} missingStartAsterisk
@@ -116,7 +124,7 @@ const weylandRegex = {
     actionEmphasisTwoReplace: "***$1***",
 
     dialogueEmphasisOne: /(?<=\s|^)["_\[](?![\s\n])([^"_`]*)["_\]](?<![\s\n])(?=\s|$)/g,
-    dialogueEmphasisTwo: /(?<=\s|^)\*+(?![\s\n])([^*]*)\*+(?<![\s\n])(?=\s|$|[.,?!])/g,
+    dialogueEmphasisTwo: /(?<=\s|^)\*+(?![\s\n])([^*]*)(?<!hiccup|hic)\*+(?<![\s\n])(?=\s|$|[.,?!])/g,
     dialogueEmphasisTwoReplace: "**$1**",
     
     tooManyAsterisks: /\*{4,}/g,
@@ -138,6 +146,14 @@ const weylandRegex = {
     codeBlocksReplace: "```$1\n$3\n```",
     speech: /(?<=^|\s)(?:\**|`*)(["'_\[][^"`\[\]]+?["'_\]])(?:\**|`*)(?=\s|$)/g,
     speechReplace: "$1",
+
+    normalizeQuotes: /[\u00AB\u00BB\u201C\u201D\u02BA\u02EE\u201F\u275D\u275E\u301D\u301E\uFF02]/g,
+    normalizeSingleQuotes: /[\u2018\u2019\u2039\u203A\u02BB\u02C8\u02BC\u02BD\u02B9\u201B\uFF07\u02CA\u275B\u275C]/g,
+    normalizeHyphens: /[\u2010\u2043\u23BC\u23BD\uFE63\uFF0D\u2013]/g,
+    normalizeElipses: /\u2026/g,
+    normalizeSpaces: /[\u00A0\u2000\u2014\u2015\u200A\u202F\u205F\u3000\uFEFF]/g,
+    normalizeAsterisks: /[\u2043\u2219\u25D8\u25E6\u2619\u2765\u2767]/g,
+    normalizeSwungDash: /\u2053/g,
 
     missingEndAsterisk: /(?<=["_\]]\s|^)\*+([^"_\[\]]+)(?<!\*)(?=\s["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
@@ -168,6 +184,15 @@ function weylandDebug(text) {
 async function formatParagraphs(message) {
     if (!message) return [];
     const formatParagraphsStartTime = performance.now();
+
+    //Normalize Unicode Symbols
+    message = replaceText(message, weylandRegex.normalizeQuotes, `"`);
+    message = replaceText(message, weylandRegex.normalizeSingleQuotes, `'`);
+    message = replaceText(message, weylandRegex.normalizeHyphens, `-`);
+    message = replaceText(message, weylandRegex.normalizeElipses, `...`);
+    message = replaceText(message, weylandRegex.normalizeSpaces, ` `);
+    message = replaceText(message, weylandRegex.normalizeAsterisks, `*`);
+    message = replaceText(message, weylandRegex.normalizeSwungDash, `~`);
 
     //Clean up too many symbols
     message = replaceText(message, weylandRegex.tooManyAsterisks, weylandRegex.tooManyAsterisksReplace);
@@ -214,11 +239,6 @@ async function formatParagraphs(message) {
         {
             const actionParagraph = weylandRegex.detectActionParagraph.test(paragraph);
 
-            if (!actionParagraph && !weylandRegex.greedyDetectActionQuotes.test(paragraph)) {
-                weylandDebug(`#${index} - Greedy Detect Action Quotes`)
-                paragraph = paragraph.replaceAll(`"`,`'`);
-            }
-
             //Stage 1 - Add asterisks to actions between dialogue, if missing
             if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBetweenDialogue, weylandRegex.actionBetweenDialogueReplace);
 
@@ -228,6 +248,11 @@ async function formatParagraphs(message) {
 
             //Stage 3 - Add symbols to blank paragraphs
             if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph)) paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
+
+            if (!actionParagraph && !weylandRegex.greedyDetectActionQuotes.test(paragraph)) {
+                weylandDebug(`#${index} - Greedy Detect Action Quotes`)
+                paragraph = paragraph.replaceAll(`"`,`'`);
+            }
 
             paragraph.match(weylandRegex.actionEmphasisOne)?.forEach((match) => {
                 match = match.slice(1,-1);
@@ -256,7 +281,7 @@ async function formatParagraphs(message) {
             if (!actionParagraph) {
                 paragraph.match(weylandRegex.dialogueEmphasisOne)?.forEach((match) => {
                     match = match.slice(1,-1);
-                    if (weylandRegex.dialogueEmphasisTwo.test(match)) {
+                    if (weylandRegex.dialogueEmphasisTwo.test(match) && !weylandRegex.dialogueEmphasisHiccupGuard.test(match)) {
                         weylandDebug(`#${index} - Formatting applied '${weylandRegex.dialogueEmphasisTwo}' with '${weylandRegex.dialogueEmphasisTwoReplace}' to: ${match}`)
                         paragraph = paragraph.replace(
                             match,
@@ -288,7 +313,6 @@ async function formatMessage(messageId) {
     if (!settings.enabled) return;
 
     const formatMessageStartTime = performance.now();
-    weylandDebug(`Formatting message with ID: '${messageId}'`);
     //weylandDebug(JSON.stringify(chat[messageId]));
 
     const isUser = chat[messageId].is_user;
@@ -298,15 +322,11 @@ async function formatMessage(messageId) {
 
     const characterName = chat[messageId].name;
 
-    if (characterName == "Phone Status") return; //Never format !Phone messages
-
     const originalMessage = chat[messageId].mes;
 
-    if (characterName == "Kressa" && !originalMessage.startsWith("ROLEPLAY", 1)) return; //Don't format Kressa's messages, unless in roleplay mode
-
-    weylandDebug(`Formatting character: ${characterName}`);
-
     if (weylandRegex.detectHeader.test(originalMessage)) {
+        weylandDebug(`Formatting message with ID: '${messageId}'`);
+        weylandDebug(`Formatting character: ${characterName}`);
         const paragraphs = await formatParagraphs(originalMessage);
     
         chat[messageId].mes = paragraphs.join("\n\n");
