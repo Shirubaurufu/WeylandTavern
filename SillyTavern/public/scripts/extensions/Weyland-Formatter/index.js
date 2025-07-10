@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.4.9";
+const extensionVersion = "1.5.2";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -86,6 +86,7 @@ let settings = undefined;
  * @property {RegExp} normalizeSpaces
  * @property {RegExp} normalizeAsterisks
  * @property {RegExp} normalizeSwungDash
+ * @property {RegExp} normalizePosessives
  * 
  * @property {RegExp} missingEndAsterisk
  * @property {string} missingEndAsteriskReplace
@@ -98,7 +99,7 @@ let settings = undefined;
  */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|freshman|sophomore|junior|senior|\[roleplay)|~[^~]+?~$/im,
+    detectHeader: /^[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)]$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
     greedyDetectAction: /(?<=\s|^)\*([^"_\[\]\n\r]+)\*(?=\s|$)/g,
@@ -154,6 +155,7 @@ const weylandRegex = {
     normalizeSpaces: /[\u00A0\u2000\u2014\u2015\u200A\u202F\u205F\u3000\uFEFF]/g,
     normalizeAsterisks: /[\u2043\u2219\u25D8\u25E6\u2619\u2765\u2767]/g,
     normalizeSwungDash: /\u2053/g,
+    normalizePosessives: /(?<=.)'(?=s)|(?<=s)'(?=\s)/ig,
 
     missingEndAsterisk: /(?<=["_\]]\s|^)\*+([^"_\[\]]+)(?<!\*)(?=\s["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
@@ -193,6 +195,7 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.normalizeSpaces, ` `);
     message = replaceText(message, weylandRegex.normalizeAsterisks, `*`);
     message = replaceText(message, weylandRegex.normalizeSwungDash, `~`);
+    message = replaceText(message, weylandRegex.normalizePosessives, `\u2019`);
 
     //Clean up too many symbols
     message = replaceText(message, weylandRegex.tooManyAsterisks, weylandRegex.tooManyAsterisksReplace);
@@ -213,88 +216,112 @@ async function formatParagraphs(message) {
     weylandDebug(`Paragraph count: ${paragraphs.length}`);
 
     paragraphs.forEach((paragraph, index) => {
-        const paragraphLoopStartTime = performance.now();
-        paragraph = paragraph.trim();
-        if (weylandRegex.detectHeader.test(paragraph)) {
-            //Format Header?
-            paragraphs[index] = paragraph;
-            weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
-            return;
-        }
+        try {
+            const paragraphLoopStartTime = performance.now();
+            paragraph = paragraph.trim();
+            if (weylandRegex.detectHeader.test(paragraph)) {
+                //Format Header?
+                paragraphs[index] = paragraph;
+                weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
+                return;
+            }
 
-        if (paragraph.match(weylandRegex.asterisk)?.length % 2 !== 0) {
-            paragraph = replaceText(paragraph, weylandRegex.missingEndAsterisk, weylandRegex.missingEndAsteriskReplace);
-            paragraph = replaceText(paragraph, weylandRegex.missingStartAsterisk, weylandRegex.missingStartAsteriskReplace);
-            if (paragraph.match(weylandRegex.asterisk)?.length % 2 !== 0) {
-                let matches = paragraph.match(weylandRegex.greedyDetectAction);
-                if (matches) {
-                    matches.forEach((match) => {
-                        paragraph = paragraph.replace(match, `*${match.replaceAll("*", "")}*`);
-                    });
+            try {
+                if (paragraph.match(weylandRegex.asterisk)?.length % 2 !== 0) {
+                    paragraph = replaceText(paragraph, weylandRegex.missingEndAsterisk, weylandRegex.missingEndAsteriskReplace);
+                    paragraph = replaceText(paragraph, weylandRegex.missingStartAsterisk, weylandRegex.missingStartAsteriskReplace);
+                    if (paragraph.match(weylandRegex.asterisk)?.length % 2 !== 0) {
+                        let matches = paragraph.match(weylandRegex.greedyDetectAction);
+                        if (matches) {
+                            matches.forEach((match) => {
+                                paragraph = paragraph.replace(match, `*${match.replaceAll("*", "")}*`);
+                            });
+                        }
+                    }
                 }
+            } catch (e) {
+                weylandDebug(`#${index} - MissingAsterisks error: ${e}`);
             }
-        }
+            
 
-        if (!weylandRegex.detectWeybotRelations.test(paragraph) && !weylandRegex.codeBlocks.test(paragraph))
-        {
-            const actionParagraph = weylandRegex.detectActionParagraph.test(paragraph);
+            if (!weylandRegex.detectWeybotRelations.test(paragraph) && !weylandRegex.codeBlocks.test(paragraph))
+            {
+                const actionParagraph = weylandRegex.detectActionParagraph.test(paragraph);
 
-            //Stage 1 - Add asterisks to actions between dialogue, if missing
-            if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBetweenDialogue, weylandRegex.actionBetweenDialogueReplace);
+                try {
+                    if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBetweenDialogue, weylandRegex.actionBetweenDialogueReplace);
 
-            //Stage 2 - Add asterisks to actions before and after dialogue, if missing
-            if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionAfterDialogue, weylandRegex.actionAfterDialogueReplace);
-            if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBeforeDialogue, weylandRegex.actionBeforeDialogueReplace);
+                    if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionAfterDialogue, weylandRegex.actionAfterDialogueReplace);
+                    if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBeforeDialogue, weylandRegex.actionBeforeDialogueReplace);
 
-            //Stage 3 - Add symbols to blank paragraphs
-            if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph)) paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
+                    if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph)) paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
+                } catch (e) {
+                    weylandDebug(`#${index} - ActionDialogueFix error: ${e}`);
+                }
+                
+                try {
+                    if (!actionParagraph && !weylandRegex.greedyDetectActionQuotes.test(paragraph)) {
+                        weylandDebug(`#${index} - Greedy Detect Action Quotes`)
+                        paragraph = paragraph.replaceAll(`"`,`'`);
+                    }
+                } catch (e) {
+                    weylandDebug(`#${index} - ActionQuotes error: ${e}`);
+                }
 
-            if (!actionParagraph && !weylandRegex.greedyDetectActionQuotes.test(paragraph)) {
-                weylandDebug(`#${index} - Greedy Detect Action Quotes`)
-                paragraph = paragraph.replaceAll(`"`,`'`);
-            }
-
-            paragraph.match(weylandRegex.actionEmphasisOne)?.forEach((match) => {
-                match = match.slice(1,-1);
-                if (weylandRegex.actionEmphasisOneSingleQuoteGuard.test(match)) {
-                    const splitWord = "|SPLIT|"
-                    match = match.replace(weylandRegex.actionEmphasisOneSingleQuoteGuard, splitWord);
-                    const matchSplit = match.split(splitWord);
-                    matchSplit.forEach((split) => {
-                        if (weylandRegex.actionEmphasisTwo.test(split)) {
-                            weylandDebug(`#${index} - Formatting applied '${weylandRegex.actionEmphasisTwo}' with '${weylandRegex.actionEmphasisTwoReplace}' to: ${split}`)
+                try {
+                    paragraph.match(weylandRegex.actionEmphasisOne)?.forEach((match) => {
+                        match = match.slice(1,-1);
+                        if (weylandRegex.actionEmphasisOneSingleQuoteGuard.test(match)) {
+                            const splitWord = "|SPLIT|"
+                            match = match.replace(weylandRegex.actionEmphasisOneSingleQuoteGuard, splitWord);
+                            const matchSplit = match.split(splitWord);
+                            matchSplit.forEach((split) => {
+                                if (weylandRegex.actionEmphasisTwo.test(split)) {
+                                    weylandDebug(`#${index} - Formatting applied '${weylandRegex.actionEmphasisTwo}' with '${weylandRegex.actionEmphasisTwoReplace}' to: ${split}`)
+                                    paragraph = paragraph.replace(
+                                        split,
+                                        split.replace(weylandRegex.actionEmphasisTwo, weylandRegex.actionEmphasisTwoReplace)
+                                    );
+                                }
+                            });
+                        } else if (weylandRegex.actionEmphasisTwo.test(match)) {
+                            weylandDebug(`#${index} - Formatting applied '${weylandRegex.actionEmphasisTwo}' with '${weylandRegex.actionEmphasisTwoReplace}' to: ${match}`)
                             paragraph = paragraph.replace(
-                                split,
-                                split.replace(weylandRegex.actionEmphasisTwo, weylandRegex.actionEmphasisTwoReplace)
+                                match,
+                                match.replace(weylandRegex.actionEmphasisTwo, weylandRegex.actionEmphasisTwoReplace)
                             );
                         }
                     });
-                } else if (weylandRegex.actionEmphasisTwo.test(match)) {
-                    weylandDebug(`#${index} - Formatting applied '${weylandRegex.actionEmphasisTwo}' with '${weylandRegex.actionEmphasisTwoReplace}' to: ${match}`)
-                    paragraph = paragraph.replace(
-                        match,
-                        match.replace(weylandRegex.actionEmphasisTwo, weylandRegex.actionEmphasisTwoReplace)
-                    );
+                } catch (e) {
+                    weylandDebug(`#${index} - ActionEmphasis error: ${e}`);
                 }
-            });
-
-            if (!actionParagraph) {
-                paragraph.match(weylandRegex.dialogueEmphasisOne)?.forEach((match) => {
-                    match = match.slice(1,-1);
-                    if (weylandRegex.dialogueEmphasisTwo.test(match) && !weylandRegex.dialogueEmphasisHiccupGuard.test(match)) {
-                        weylandDebug(`#${index} - Formatting applied '${weylandRegex.dialogueEmphasisTwo}' with '${weylandRegex.dialogueEmphasisTwoReplace}' to: ${match}`)
-                        paragraph = paragraph.replace(
-                            match,
-                            match.replace(weylandRegex.dialogueEmphasisTwo, weylandRegex.dialogueEmphasisTwoReplace)
-                        );
+                
+                try {
+                    if (!actionParagraph) {
+                        paragraph.match(weylandRegex.dialogueEmphasisOne)?.forEach((match) => {
+                            match = match.slice(1,-1);
+                            if (weylandRegex.dialogueEmphasisTwo.test(match)) {
+                                weylandDebug(`#${index} - Formatting applied '${weylandRegex.dialogueEmphasisTwo}' with '${weylandRegex.dialogueEmphasisTwoReplace}' to: ${match}`)
+                                paragraph = paragraph.replace(
+                                    match,
+                                    match.replace(weylandRegex.dialogueEmphasisTwo, weylandRegex.dialogueEmphasisTwoReplace)
+                                );
+                            }
+                        });
                     }
-                });
+                } catch (e) {
+                    weylandDebug(`#${index} - DialogueEmphasis error: ${e}`);
+                }
+                
             }
-        }
 
-        paragraphs[index] = paragraph; //Default loop end
-        weylandDebug(`#${index} - Formatting paragraph took ${performance.now()-paragraphLoopStartTime} miliseconds`);
-    })
+            paragraphs[index] = paragraph; //Default loop end
+            weylandDebug(`#${index} - Formatting paragraph took ${performance.now()-paragraphLoopStartTime} miliseconds`);
+        } catch (e) {
+            weylandDebug(`#${index} - Paragraph error: ${e}`);
+        }
+    });
+
     weylandDebug(`formatParagraphs took ${performance.now()-formatParagraphsStartTime} miliseconds`);
     return paragraphs;
 }
@@ -330,9 +357,8 @@ async function formatMessage(messageId) {
         const paragraphs = await formatParagraphs(originalMessage);
     
         chat[messageId].mes = paragraphs.join("\n\n");
+        weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
     }
-
-    weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
 }
 
 (async function () {
