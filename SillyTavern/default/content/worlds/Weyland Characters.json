@@ -126,17 +126,12 @@
         "2": {
             "uid": 2,
             "key": [
-                "bear",
-                "pastries",
-                "pastry",
-                "Jericho",
-                "bakery",
-                "cafe",
-                "Rustwood",
-                "food",
-                "hungry",
-                "growling",
-                "Cafe"
+                "orientation",
+                "new year",
+                "guide",
+                "brochure",
+                "map",
+                "campus"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -2353,19 +2348,19 @@
         "42": {
             "uid": 42,
             "key": [
-                "Blake",
                 "childhood",
-                "sister",
                 "parents",
                 "parent",
+                "father",
+                "mother",
                 "mom",
                 "dad",
-                "father",
-                "mother"
+                "Summer",
+                "queen"
             ],
             "keysecondary": [],
-            "comment": "Serra History 1",
-            "content": "[SERRA HISTORY 1]\nCHILDHOOD: Serra grew up in a modest suburban home as the younger of two sisters. While her older sister Blake was fiery and confrontational, Serra was always the quiet, sensitive child who preferred books and drawing to Blake's loud rebellions. Serra was born with a neurological stutter, a condition that made social situations increasingly difficult as she grew older. Serra's parents initially sought speech therapy, but specialists confirmed her stutter was neurological rather than developmental - something she would likely manage her entire life. Despite this challenge, her early childhood was relatively stable - her parents, though young and sometimes overwhelmed, provided a loving if imperfect home. The sisters developed a unique bond despite their differences. When Blake's temper flared, Serra often served as the mediator who could calm her sister with her gentle presence. In return, Blake became fiercely protective of Serra, especially when classmates mocked her stutter. Blake's first suspension came in elementary school after she physically confronted a boy who had been cruelly imitating Serra's speech patterns. This dynamic laid the foundation for their adult relationship - Blake as protector, Serra as emotional anchor.\n[END SERRA HISTORY 1]\n=====================",
+            "comment": "Rivera History 1",
+            "content": "[RIVERA HISTORY]\n**Part 1: The Empty Mansion**\nRivera grew up not in a home, but in a house—a sprawling, modern mansion that echoed with silence. Her parents, both high-powered executives, were ghosts in her life, communicating via notes left by secretaries and gifts sent from foreign countries. Love was measured in credit card limits, not hugs. From a young age, Rivera learned that the only time her parents truly noticed her was when something went wrong—a bad grade, a call from the principal. Negative attention was still attention.\n\n**Part 2: The First and Last Real Friend**\nIn elementary school, she met Summer. Their friendship was genuine and easy. They were inseparable, sharing secrets and dreams in Rivera's cavernously large bedroom. For a few years, Rivera had someone to fill the silence. Summer knew the real Rivera—the girl who was scared of the dark and secretly loved cheesy romance movies.\n\n**Part 3: The Birth of a Queen**\nMiddle school changed everything. A boy came between them, and in the ensuing rivalry, Rivera discovered a new, intoxicating power. When arguments based on logic failed, she tried a different tactic: she targeted Summer's deepest insecurity. The attack was surgical, cruel, and devastatingly effective. Summer crumbled, and Rivera felt a surge of control she had never experienced before. She won the argument, got the boy, and learned a vital lesson: kindness is a weakness, and cruelty is a weapon.\n\n**Part 4: The Reign**\nThis became her operating model. Throughout high school, she honed her skills, assembling a clique of popular girls around her. She kept Summer close, transforming her from best friend to court jester—a constant, living reminder to everyone else of the consequences of crossing the queen. The parties started then, a desperate attempt to fill the empty house with noise and people, creating the illusion of a vibrant life to mask the crushing loneliness she felt the moment the last guest left.\n\n**Part 5: The Diamond Crown**\nNow at Weyland, her reign continues. She is the Prom Queen, her crown forged from the tears of others and the diamonds of her parents' wealth. She is trapped by her own success. To apologize to Summer, to be kind, would mean admitting the last eight years of her life were a monstrous mistake driven by petty jealousy and loneliness. It would mean dismantling the entire fortress of her identity, leaving her vulnerable and alone in the silence of her big, empty house. And that is a fate she finds more terrifying than being hated.\n[END RIVERA HISTORY]\n==========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -2387,29 +2382,27 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": false,
-            "automationId": "Serra",
+            "automationId": "Rivera",
             "role": null,
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 59,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Blake & Serra",
-                    "Serra"
-                ],
-                "tags": [
-                    "a30efa11-f157-4f65-b0ad-ce93ed63d703",
-                    "72c095af-8314-4026-8888-f1c2fce68e32"
-                ]
-            },
+            "displayIndex": 60,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Rivera"
+                ],
+                "tags": [
+                    "9e57a781-9333-4588-9bf6-dba79ae0711c"
+                ]
+            }
         },
         "43": {
             "uid": 43,
@@ -2449,7 +2442,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2558,7 +2551,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 96,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2607,7 +2600,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 92,
+            "displayIndex": 93,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2656,7 +2649,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 95,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4029,7 +4022,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 96,
+            "displayIndex": 97,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4247,7 +4240,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 97,
+            "displayIndex": 98,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4809,7 +4802,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 93,
+            "displayIndex": 94,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4817,6 +4810,116 @@
                 ],
                 "tags": [
                     "de325bb2-a544-4ed7-a989-878a2a034bd0"
+                ]
+            }
+        },
+        "86": {
+            "uid": 86,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Rivera Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (crop top and high waisted shorts)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 92,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Rivera"
+                ],
+                "tags": [
+                    "9e57a781-9333-4588-9bf6-dba79ae0711c"
+                ]
+            }
+        },
+        "87": {
+            "uid": 87,
+            "key": [
+                "Blake",
+                "childhood",
+                "sister",
+                "parents",
+                "parent",
+                "mom",
+                "dad",
+                "father",
+                "mother"
+            ],
+            "keysecondary": [],
+            "comment": "Serra History 1",
+            "content": "[SERRA HISTORY 1]\nCHILDHOOD: Serra grew up in a modest suburban home as the younger of two sisters. While her older sister Blake was fiery and confrontational, Serra was always the quiet, sensitive child who preferred books and drawing to Blake's loud rebellions. Serra was born with a neurological stutter, a condition that made social situations increasingly difficult as she grew older. Serra's parents initially sought speech therapy, but specialists confirmed her stutter was neurological rather than developmental - something she would likely manage her entire life. Despite this challenge, her early childhood was relatively stable - her parents, though young and sometimes overwhelmed, provided a loving if imperfect home. The sisters developed a unique bond despite their differences. When Blake's temper flared, Serra often served as the mediator who could calm her sister with her gentle presence. In return, Blake became fiercely protective of Serra, especially when classmates mocked her stutter. Blake's first suspension came in elementary school after she physically confronted a boy who had been cruelly imitating Serra's speech patterns. This dynamic laid the foundation for their adult relationship - Blake as protector, Serra as emotional anchor.\n[END SERRA HISTORY 1]\n=====================",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Serra",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 59,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Blake & Serra",
+                    "Serra"
+                ],
+                "tags": [
+                    "a30efa11-f157-4f65-b0ad-ce93ed63d703",
+                    "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
             }
         }
