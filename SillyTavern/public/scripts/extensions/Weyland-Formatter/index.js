@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.5.5";
+const extensionVersion = "1.5.6";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -84,6 +84,7 @@ let settings = undefined;
  * @property {RegExp} normalizeHyphens
  * @property {RegExp} normalizeElipses
  * @property {RegExp} normalizeSpaces
+ * @property {RegExp} normalizeEmDashes
  * @property {RegExp} normalizeAsterisks
  * @property {RegExp} normalizeSwungDash
  * @property {RegExp} normalizePosessives
@@ -152,7 +153,8 @@ const weylandRegex = {
     normalizeSingleQuotes: /[\u2018\u2019\u2039\u203A\u02BB\u02C8\u02BC\u02BD\u02B9\u201B\uFF07\u02CA\u275B\u275C]/g,
     normalizeHyphens: /[\u2010\u2043\u23BC\u23BD\uFE63\uFF0D\u2013]/g,
     normalizeElipses: /\u2026/g,
-    normalizeSpaces: /[\u00A0\u2000\u2014\u2015\u200A\u202F\u205F\u3000\uFEFF]/g,
+    normalizeSpaces: /[\u00A0\u2000\u200A\u202F\u205F\u3000\uFEFF]/g,
+    normalizeEmDashes: /\u2015/g,
     normalizeAsterisks: /[\u2043\u2219\u25D8\u25E6\u2619\u2765\u2767]/g,
     normalizeSwungDash: /\u2053/g,
     normalizePosessives: /(?<=[^\s])'(?=s)|(?<=s)'(?=\s)/ig,
@@ -193,6 +195,7 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.normalizeHyphens, `-`);
     message = replaceText(message, weylandRegex.normalizeElipses, `...`);
     message = replaceText(message, weylandRegex.normalizeSpaces, ` `);
+    message = replaceText(message, weylandRegex.normalizeEmDashes, `\u2014`);
     message = replaceText(message, weylandRegex.normalizeAsterisks, `*`);
     message = replaceText(message, weylandRegex.normalizeSwungDash, `~`);
     message = replaceText(message, weylandRegex.normalizePosessives, `\u2019`);
