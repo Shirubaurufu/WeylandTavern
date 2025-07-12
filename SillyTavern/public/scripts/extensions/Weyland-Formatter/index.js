@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.5.6";
+const extensionVersion = "1.5.7";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -117,7 +117,7 @@ const weylandRegex = {
     actionAfterDialogueReplace: "*$1*",
     actionBeforeDialogue: /^(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?!["_`\]]))(?=\s["_\]])/g,
     actionBeforeDialogueReplace: "*$1*",
-    mergedActions: /(?<=\s|^)\*(?![\s\n\*])([^"_`\n]+?)(?<!\*)\*\*(?!\*)([^"_`\n]+)\*(?=[\s])/g,
+    mergedActions: /(?<=\s|^)\*(?![\s\n\*])([^"_`\n]+?)(?<!\*|\s)\*\*(?!\*|[\s.,!?])([^"_`\n]+)\*(?=\s|$)/g,
     mergedActionsReplace: "*$1* *$2*",
 
     actionEmphasisOne: /(?<=\s|^)\*(?![\s\n\*])([^"_`]*)\*(?<![\s\n])(?=\s|$)/g,
@@ -212,7 +212,6 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.curlyBrackets, weylandRegex.curlyBracketsReplace);
     message = replaceText(message, weylandRegex.codeBlocks, weylandRegex.codeBlocksReplace);
     message = replaceText(message, weylandRegex.speech, weylandRegex.speechReplace);
-    message = replaceText(message, weylandRegex.mergedActions, weylandRegex.mergedActionsReplace);
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
 
@@ -238,7 +237,7 @@ async function formatParagraphs(message) {
                         let matches = paragraph.match(weylandRegex.greedyDetectAction);
                         if (matches) {
                             matches.forEach((match) => {
-                                paragraph = paragraph.replace(match, `*${match.replaceAll("*", "")}*`);
+                                paragraph = paragraph.replace(match, `*${replaceText(match, weylandRegex.asterisk, '')}*`);
                             });
                         }
                     }
@@ -246,19 +245,22 @@ async function formatParagraphs(message) {
             } catch (e) {
                 weylandDebug(`#${index} - MissingAsterisks error: ${e}`);
             }
-            
 
             if (!weylandRegex.detectWeybotRelations.test(paragraph) && !weylandRegex.codeBlocks.test(paragraph))
             {
                 const actionParagraph = weylandRegex.detectActionParagraph.test(paragraph);
 
                 try {
+                    paragraph = replaceText(paragraph, weylandRegex.mergedActions, weylandRegex.mergedActionsReplace);
                     if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBetweenDialogue, weylandRegex.actionBetweenDialogueReplace);
 
                     if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionAfterDialogue, weylandRegex.actionAfterDialogueReplace);
                     if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBeforeDialogue, weylandRegex.actionBeforeDialogueReplace);
 
-                    if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph)) paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
+                    if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph)) {
+                        weylandDebug(`#${index} - Adding asterisks to blank paragraph`);
+                        paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
+                    }
                 } catch (e) {
                     weylandDebug(`#${index} - ActionDialogueFix error: ${e}`);
                 }
