@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.5.2";
+const extensionVersion = "1.5.4";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -107,14 +107,14 @@ const weylandRegex = {
 
     asterisk: /\*/g,
 
-    goodStart: /^(?:[\[*'">]|__|```)/,
-    goodEnd: /(?:[*'"\]]|__|```)$/,
+    goodStart: /^(?:[\[*'"`>]|__)/,
+    goodEnd: /(?:[*'"`\]]|__)$/,
 
     actionBetweenDialogue: /(?<=[\["_`]\s)(?!\*)([^\[\]"_`\r\n]+?)(?<!\*)(?=\s["_`\]])/g,
     actionBetweenDialogueReplace: "*$1*",
-    actionAfterDialogue: /(?<=[\["_`]\s)(?!\*|')([^\[\]"_`\r\n]+?)(?<!\*|')$/g,
+    actionAfterDialogue: /(?<=[\["_`]\s)(?!\*|')([^\[\]"_`\r\n]+?)\*(?<!')$/g,
     actionAfterDialogueReplace: "*$1*",
-    actionBeforeDialogue: /^(?!\*)([^\[\]"_`\r\n]+?)(?<!\*)(?=\s["_\]])/g,
+    actionBeforeDialogue: /^(?!')\*([^\[\]"_`\r\n]+?)(?<!\*)(?=\s["_\]])/g,
     actionBeforeDialogueReplace: "*$1*",
     mergedActions: /(?<=\s|^)\*(?![\s\n\*])([^"_`\n]+?)(?<!\*)\*\*(?!\*)([^"_`\n]+)\*(?=[\s])/g,
     mergedActionsReplace: "*$1* *$2*",
@@ -145,7 +145,7 @@ const weylandRegex = {
     curlyBracketsReplace: "{$1}",
     codeBlocks: /^`{2,}(text|)(\s+)?([\w\W]+?\n?[^`\n]+?)(?:\n+|\n?)`{2,}$/gm,
     codeBlocksReplace: "```$1\n$3\n```",
-    speech: /(?<=^|\s)(?:\**|`*)(["'_\[][^"`\[\]]+?["'_\]])(?:\**|`*)(?=\s|$)/g,
+    speech: /(?<=^|\s)(?:\**|`*)(["_\[][^"`\[\]]+?["_\]])(?:\**|`*)(?=\s|$)/g,
     speechReplace: "$1",
 
     normalizeQuotes: /[\u00AB\u00BB\u201C\u201D\u02BA\u02EE\u201F\u275D\u275E\u301D\u301E\uFF02]/g,
@@ -155,7 +155,7 @@ const weylandRegex = {
     normalizeSpaces: /[\u00A0\u2000\u2014\u2015\u200A\u202F\u205F\u3000\uFEFF]/g,
     normalizeAsterisks: /[\u2043\u2219\u25D8\u25E6\u2619\u2765\u2767]/g,
     normalizeSwungDash: /\u2053/g,
-    normalizePosessives: /(?<=.)'(?=s)|(?<=s)'(?=\s)/ig,
+    normalizePosessives: /(?<=[^\s])'(?=s)|(?<=s)'(?=\s)/ig,
 
     missingEndAsterisk: /(?<=["_\]]\s|^)\*+([^"_\[\]]+)(?<!\*)(?=\s["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
@@ -217,6 +217,7 @@ async function formatParagraphs(message) {
 
     paragraphs.forEach((paragraph, index) => {
         try {
+            weylandDebug(`#${index} - Formatting...`);
             const paragraphLoopStartTime = performance.now();
             paragraph = paragraph.trim();
             if (weylandRegex.detectHeader.test(paragraph)) {
@@ -443,7 +444,7 @@ function singleQuoteExt(){
     try {
         return [{
             type: 'output',
-            regex: /(?<=\s|.>)('.+?')(?=\s|<.)/g,
+            regex: /(?<=\s|.>)('[^"]+?')(?=\s|<.)/g,
             replace: `<q style="color: ${power_user.quote_text_color}; display: inline">$1</q>`
         }];
     } catch (e) {
