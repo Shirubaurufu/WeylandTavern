@@ -449,7 +449,7 @@ function singleQuoteExt(){
     try {
         return [{
             type: 'output',
-            regex: /(?<=\s|.>)('[^"]+?')(?=\s|<.)/g,
+            regex: /(?<=[\s—]|.>)('[^"]+?')(?=[\s—]|<.)/g,
             replace: `<q style="color: ${power_user.quote_text_color}; display: inline">$1</q>`
         }];
     } catch (e) {
