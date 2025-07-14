@@ -159,7 +159,7 @@ const weylandRegex = {
     normalizeAsterisks: /[\u2043\u2219\u25D8\u25E6\u2619\u2765\u2767]/g,
     normalizeSwungDash: /\u2053/g,
     normalizePosessives: /(?<=[^\s—])'(?=s)(?=\b)|(?<=s)'(?=[\s—.,!?])/ig,
-    normalizeContractions: /(?<=[^\s—])'(?=t|ll|ve)(?=\b)/ig,
+    normalizeContractions: /(?<=[^\s—])'(?=t|ll|ve|re)(?=\b)/ig,
 
     missingEndAsterisk: /(?<=["_\]][\s—]|^)\*+([^"_\[\]]+)(?<!\*)(?=[\s—]["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
