@@ -125,14 +125,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "orientation",
-                "new year",
-                "guide",
-                "brochure",
-                "map",
-                "campus"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -202,7 +195,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 78,
+            "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -586,7 +579,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 77,
+            "displayIndex": 80,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -635,7 +628,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 79,
+            "displayIndex": 82,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -684,7 +677,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 85,
+            "displayIndex": 88,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1233,7 +1226,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 83,
+            "displayIndex": 86,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1451,7 +1444,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 84,
+            "displayIndex": 87,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1780,7 +1773,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 87,
+            "displayIndex": 90,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1896,7 +1889,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 88,
+            "displayIndex": 91,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1953,7 +1946,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 54,
+            "displayIndex": 55,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2010,7 +2003,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 55,
+            "displayIndex": 56,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2059,7 +2052,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 89,
+            "displayIndex": 93,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2108,7 +2101,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 81,
+            "displayIndex": 84,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2167,7 +2160,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 56,
+            "displayIndex": 58,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2223,7 +2216,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 57,
+            "displayIndex": 59,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2279,7 +2272,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 58,
+            "displayIndex": 60,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2328,7 +2321,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 91,
+            "displayIndex": 96,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2387,7 +2380,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 61,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -2442,7 +2435,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 64,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2500,7 +2493,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 63,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2551,7 +2544,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 96,
+            "displayIndex": 101,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2600,7 +2593,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 93,
+            "displayIndex": 98,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2649,7 +2642,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 100,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2707,7 +2700,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2765,7 +2758,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2814,7 +2807,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2869,7 +2862,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 63,
+            "displayIndex": 66,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2922,7 +2915,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 64,
+            "displayIndex": 67,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2976,7 +2969,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 65,
+            "displayIndex": 68,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3030,7 +3023,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 66,
+            "displayIndex": 69,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3085,7 +3078,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 67,
+            "displayIndex": 70,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3145,7 +3138,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 68,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3426,7 +3419,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 82,
+            "displayIndex": 85,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3595,7 +3588,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 79,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3973,7 +3966,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4022,7 +4015,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 97,
+            "displayIndex": 102,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4071,7 +4064,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 80,
+            "displayIndex": 83,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4240,7 +4233,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 98,
+            "displayIndex": 103,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4301,7 +4294,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 77,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4363,7 +4356,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4478,7 +4471,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 90,
+            "displayIndex": 94,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4538,7 +4531,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4587,7 +4580,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 86,
+            "displayIndex": 89,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4753,7 +4746,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 62,
+            "displayIndex": 65,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4802,7 +4795,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 99,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4818,7 +4811,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Rivera Outfit Codes",
-            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (crop top and high waisted shorts)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (crop top and high waisted shorts)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Cheerleader outfit\n• [O2] - Laundry day outfit (black sports bra and green dolphin-style shorts)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -4851,7 +4844,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 92,
+            "displayIndex": 97,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4910,7 +4903,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 59,
+            "displayIndex": 62,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4920,6 +4913,234 @@
                 "tags": [
                     "a30efa11-f157-4f65-b0ad-ce93ed63d703",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
+                ]
+            }
+        },
+        "88": {
+            "uid": 88,
+            "key": [
+                "history",
+                "childhood",
+                "parents",
+                "mom",
+                "dad",
+                "Fiji",
+                "Penguin",
+                "turtle",
+                "Los Angeles",
+                "seafood",
+                "allergy",
+                "allergies",
+                "boyfriend",
+                "dreams",
+                "dream",
+                "cheating",
+                "infidelity",
+                "cheater"
+            ],
+            "keysecondary": [],
+            "comment": "Mika History",
+            "content": "[MIKA HISTORY]\nMika’s story begins not in Weyland, but in the sprawling, sun-baked metropolis of Los Angeles. She grew up in a lower-class but loving household where money was a constant, unspoken strain. Her mother, a college music instructor, filled their small home with classical melodies, teaching Mika the language of the piano and guitar from a young age. Her father, a tech enthusiast, nurtured a different passion in her, introducing her to the logic and possibility within computer hardware. It was her younger sister who first suggested she merge these two worlds, planting the seed that would eventually blossom into her love for digital music production. A constant backdrop to her childhood was her severe asthma and a lethal seafood allergy, health issues that taught her a harsh lesson in vigilance from a young age. A bright spot came ten years ago when she found a baby red-eared slider turtle on her doorstep, whom she named Fiji Penguin and has cared for ever since.\n\nThis foundation of passions, however, became a battleground in high school. She was in a long-term relationship with a boy who slowly revealed a controlling, corrosive nature. He saw her dreams of a music career as \"unrealistic\" and childish, chipping away at her self-worth by trying to steer her toward a more \"practical\" life he could approve of. When she began to seriously resist his attempts to control her future, he retaliated. The final, devastating blow came just last summer. Arriving home early one evening, she was met with a closed bedroom door. In the suffocating darkness of the hallway, she heard it—the unmistakable sounds of his betrayal with another girl. The discovery didn't just break her heart; it shattered her perception of self-worth, embedding a deep-seated belief that she was fundamentally unworthy of genuine love.\n\nThe trauma was the quiet, malignant architect of her current state. In the immediate, painful aftermath, she didn't invent a new personality; her own bubbly self simply intensified, trying to overwhelm her negative thoughts with positive words and actions. Her escape came in the form of her grandmother's dying wish to see her attend a good school. Her proud parents, who had always been reluctant to touch it, finally dipped into a trust fund from an estranged side of the family to send her to Weyland University. She chose Computer Science as a financially \"safe\" path and Music as a minor—a concession to the passion that now felt both like a dream and a foolish risk. She carries the weight of her past into every interaction, her fear of abandonment and betrayal dictating the rigid, unspoken rules of every new relationship she attempts to build.\n[END MIKA HISTORY]\n----------",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Mika",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 57,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Mika"
+                ],
+                "tags": [
+                    "9a401b37-8c9f-4fb3-8203-45451d40770a"
+                ]
+            }
+        },
+        "89": {
+            "uid": 89,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Mika Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black t-shirt and black pants)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 95,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Mika"
+                ],
+                "tags": [
+                    "9a401b37-8c9f-4fb3-8203-45451d40770a"
+                ]
+            }
+        },
+        "90": {
+            "uid": 90,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Luna Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (blue hoodie and khakis)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 92,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Luna"
+                ],
+                "tags": [
+                    "ddd4132b-a2ed-4e28-8adc-be010c731ede"
+                ]
+            }
+        },
+        "91": {
+            "uid": 91,
+            "key": [
+                "history",
+                "childhood",
+                "parents",
+                "mom",
+                "dad",
+                "Moonvale",
+                "village",
+                "restaurant",
+                "Aria",
+                "Leon",
+                "ADHD",
+                "grandmother"
+            ],
+            "keysecondary": [],
+            "comment": "Luna History",
+            "content": "[LUNA HISTORY]\nPart 1: The Middle Child\nLuna grew up in Moonvale, a small village about an hour from Weyland University. Her parents ran a modest family restaurant that served traditional dishes to the tight-knit community. As the middle child between an older brother who is a chef and an exceptionally talented sister, Luna often found herself invisible. Her younger sister Aria excelled academically and was being groomed to take over the restaurant business side, while her older brother, Leon, was in school to become a chef and leave the family business. Luna, with her boundless energy and inability to focus, was often seen as the \"problem child\" - the one who broke dishes, forgot instructions, and couldn't sit still during family meals.\n\nPart 2: The Diagnosis That Changed Nothing\nWhen Luna was eleven, a traveling doctor finally put a name to her struggles: severe ADHD. But in their small village with limited resources, this diagnosis changed very little. Her parents, struggling to keep their restaurant afloat during an economic downturn, couldn't afford specialized education or medication. Instead, they dealt with her condition the only way they knew how - by putting her hyperactivity to use. \"Just work harder,\" became the unofficial family motto for Luna. While her sisters received praise for their achievements, Luna received acknowledgment only when she managed to control her \"excessive\" energy.\n\nPart 3: Kitchen Salvation\nThe kitchen became Luna's sanctuary when she was thirteen. Unlike the classroom where her ADHD made her a target for ridicule, the kitchen embraced her ability to multitask and her creative impulses. Her grandmother, a former chef with arthritic hands, took Luna under her wing, teaching her to channel her energy into cooking. \"Your mind moves like lightning,\" her grandmother would say, \"The kitchen needs that speed.\" For three years, Luna found purpose under her grandmother's tutelage, until her grandmother suffered a stroke that left her unable to cook or speak. The family couldn't afford proper care, forcing Luna's mother to divide her time between the restaurant and home care, placing even more responsibility on the sisters.\n\nThe Long Road to Weyland\nAt seventeen, Luna's apprenticeship with a renowned chef ended in dismissal after six months, leaving her family financially strained and Luna devastated. The following years brought both hardship and healing – her grandmother's condition stabilized through a community care program, allowing her mother to refocus on the restaurant. Luna worked alongside her family, gradually earning back their trust through her innovative dishes that attracted new customers.\n\nWhen a Weyland professor offered her a culinary scholarship, her family's reaction surprised her. Her father, now two years sober, quietly helped pack her belongings. Her mother prepared Luna's favorite meal and pressed a book of family recipes into her hands. \"Share our traditions, but make them yours,\" she said.\n[END LUNA HISTORY]\n-----",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Luna",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 54,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Luna"
+                ],
+                "tags": [
+                    "ddd4132b-a2ed-4e28-8adc-be010c731ede"
                 ]
             }
         }
