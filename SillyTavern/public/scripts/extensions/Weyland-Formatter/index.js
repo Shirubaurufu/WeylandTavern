@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.5.9";
+const extensionVersion = "1.6.1";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -88,6 +88,7 @@ let settings = undefined;
  * @property {RegExp} normalizeAsterisks
  * @property {RegExp} normalizeSwungDash
  * @property {RegExp} normalizePosessives
+ * @property {RegExp} normalizeContractions
  * 
  * @property {RegExp} missingEndAsterisk
  * @property {string} missingEndAsteriskReplace
@@ -113,7 +114,7 @@ const weylandRegex = {
 
     actionBetweenDialogue: /(?<=[\["_`][\s—])(?:\*|(?<!["'_`\]]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?=[\s—]["_`\]])/g,
     actionBetweenDialogueReplace: "*$1*",
-    actionAfterDialogue: /(?<=[\["_`][\s—])(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))$/g,
+    actionAfterDialogue: /(?<=[\["_`][\s—]|[\["_`],[\s—])(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?:(?=\n)|$)/g,
     actionAfterDialogueReplace: "*$1*",
     actionBeforeDialogue: /^(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?!["_`\]]))(?=[\s—]["_\]])/g,
     actionBeforeDialogueReplace: "*$1*",
@@ -157,7 +158,8 @@ const weylandRegex = {
     normalizeEmDashes: /\u2015/g,
     normalizeAsterisks: /[\u2043\u2219\u25D8\u25E6\u2619\u2765\u2767]/g,
     normalizeSwungDash: /\u2053/g,
-    normalizePosessives: /(?<=[^\s—])'(?=s)|(?<=s)'(?=[\s—])/ig,
+    normalizePosessives: /(?<=[^\s—])'(?=s)(?=\b)|(?<=s)'(?=[\s—.,!?])/ig,
+    normalizeContractions: /(?<=[^\s—])'(?=t|ll|ve)(?=\b)/ig,
 
     missingEndAsterisk: /(?<=["_\]][\s—]|^)\*+([^"_\[\]]+)(?<!\*)(?=[\s—]["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
@@ -199,6 +201,7 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.normalizeAsterisks, `*`);
     message = replaceText(message, weylandRegex.normalizeSwungDash, `~`);
     message = replaceText(message, weylandRegex.normalizePosessives, `\u2019`);
+    message = replaceText(message, weylandRegex.normalizeContractions, `\u2019`);
 
     //Clean up too many symbols
     message = replaceText(message, weylandRegex.tooManyAsterisks, weylandRegex.tooManyAsterisksReplace);
@@ -449,7 +452,7 @@ function singleQuoteExt(){
     try {
         return [{
             type: 'output',
-            regex: /(?<=[\s—]|.>)('[^"]+?')(?=[\s—]|<.)/g,
+            regex: /(?<=[\s—]|.>)('[^"]+?')(?=[\s—".,!?]|<.)/g,
             replace: `<q style="color: ${power_user.quote_text_color}; display: inline">$1</q>`
         }];
     } catch (e) {
