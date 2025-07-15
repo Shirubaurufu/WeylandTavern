@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.6.1";
+const extensionVersion = "1.6.4";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -49,6 +49,9 @@ let settings = undefined;
  * @property {string} actionBeforeDialogueReplace
  * @property {RegExp} mergedActions
  * @property {string} mergedActionsReplace
+ * 
+ * @property {RegExp} singleQuoteBetweenAction
+ * @property {string} singleQuoteBetweenActionReplace
  * 
  * @property {RegExp} actionEmphasisOne
  * @property {RegExp} actionEmphasisOneSingleQuoteGuard
@@ -112,14 +115,17 @@ const weylandRegex = {
     goodStart: /^(?:[\[*'"`>]|__)/,
     goodEnd: /(?:[*'"`\]]|__)$/,
 
-    actionBetweenDialogue: /(?<=[\["_`][\s—])(?:\*|(?<!["'_`\]]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?=[\s—]["_`\]])/g,
+    actionBetweenDialogue: /(?<=[\["_`][\s—]|[\["_`][.,?!][\s—])(?:\*|(?<!["'_`\]]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?=[\s—]["_`\]])/g,
     actionBetweenDialogueReplace: "*$1*",
-    actionAfterDialogue: /(?<=[\["_`][\s—]|[\["_`],[\s—])(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?:(?=\n)|$)/g,
+    actionAfterDialogue: /(?<=[\["_`][\s—]|[\["_`][.,?!][\s—])(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?:(?=\n)|$)/g,
     actionAfterDialogueReplace: "*$1*",
     actionBeforeDialogue: /^(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?!["_`\]]))(?=[\s—]["_\]])/g,
     actionBeforeDialogueReplace: "*$1*",
     mergedActions: /(?<=[\s—]|^)\*(?![\s—\*])([^"_`\n]+?)(?<!\*|[\s—])\*\*(?!\*|[\s—.,!?])([^"_`\n]+)\*(?=[\s—]|$)/g,
     mergedActionsReplace: "*$1* *$2*",
+
+    singleQuoteBetweenAction: /\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*/g,
+    singleQuoteBetweenActionReplace: "—'$1'—",
 
     actionEmphasisOne: /(?<=[\s—]|^)\*(?![\s—\*])([^"_`]*)\*(?<![\s—])(?=[\s—]|$)/g,
     actionEmphasisOneSingleQuoteGuard: /\*[\s—]'[^']*?'\s\*/g,
@@ -275,6 +281,12 @@ async function formatParagraphs(message) {
                     }
                 } catch (e) {
                     weylandDebug(`#${index} - ActionQuotes error: ${e}`);
+                }
+
+                try {
+                    paragraph = replaceText(paragraph, weylandRegex.singleQuoteBetweenAction, weylandRegex.singleQuoteBetweenActionReplace);
+                } catch (e) {
+                    weylandDebug(`#${index} - ActionSingleQuoteFix error: ${e}`);
                 }
 
                 try {
