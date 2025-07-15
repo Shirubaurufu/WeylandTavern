@@ -1021,12 +1021,11 @@
             "uid": 15,
             "key": [
                 "Rivera's dorm",
-                "Rivera's room",
-                "room 279"
+                "Rivera's room"
             ],
             "keysecondary": [],
             "comment": "Rivera Room",
-            "content": "Potential Location: Rivera's Dorm room\nRoom # 279, mini-fridge stocked with blood juice boxes, wolf plushie hidden under blankets, discarded energy drink cans, tear-stained pillow hastily hidden, crumpled letters from Jericho, prescription bottle for antidepressants partially visible, messy, two lofted bunk beds, two small desks, mini fridge with fruity drinks and prepackaged blood products,  a couch, TV,  tapestry with succulent art, half written journals full of self-loathing journal entries, unnamed roommate, dim lighting, soft lofi music playing\n\nShared bathroom with room 281 (Belle): Two sinks, open shower with small curtain, small lockable room with toilet\n-----",
+            "content": "Potential Location: Rivera's Dorm room\n\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -1034,7 +1033,7 @@
             "addMemo": true,
             "order": 125,
             "position": 1,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "matchPersonaDescription": false,
