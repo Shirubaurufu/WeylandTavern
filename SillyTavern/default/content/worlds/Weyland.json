@@ -215,7 +215,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 149,
+            "displayIndex": 151,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -287,7 +287,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 148,
+            "displayIndex": 150,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1017,6 +1017,74 @@
             "matchScenario": false,
             "matchCreatorNotes": false
         },
+        "15": {
+            "uid": 15,
+            "key": [
+                "Rivera's dorm",
+                "Rivera's room",
+                "room 279"
+            ],
+            "keysecondary": [],
+            "comment": "Rivera Room",
+            "content": "Potential Location: Rivera's Dorm room\nRoom # 279, mini-fridge stocked with blood juice boxes, wolf plushie hidden under blankets, discarded energy drink cans, tear-stained pillow hastily hidden, crumpled letters from Jericho, prescription bottle for antidepressants partially visible, messy, two lofted bunk beds, two small desks, mini fridge with fruity drinks and prepackaged blood products,  a couch, TV,  tapestry with succulent art, half written journals full of self-loathing journal entries, unnamed roommate, dim lighting, soft lofi music playing\n\nShared bathroom with room 281 (Belle): Two sinks, open shower with small curtain, small lockable room with toilet\n-----",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 125,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "Dorm",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": true,
+            "automationId": "",
+            "role": null,
+            "sticky": 2,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 135,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 143,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "Dorm",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": true,
+                "case_sensitive": false,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": true,
+                "sticky": 2,
+                "cooldown": 0,
+                "delay": 0
+            }
+        },
         "16": {
             "key": [],
             "keysecondary": [],
@@ -1336,7 +1404,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 136,
+            "displayIndex": 138,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1411,7 +1479,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 140,
+            "displayIndex": 142,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1486,7 +1554,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 22,
-            "displayIndex": 125,
+            "displayIndex": 126,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1562,7 +1630,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 141,
+            "displayIndex": 143,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2069,7 +2137,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 138,
+            "displayIndex": 140,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3122,7 +3190,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 59,
-            "displayIndex": 106,
+            "displayIndex": 107,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3272,7 +3340,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 63,
-            "displayIndex": 110,
+            "displayIndex": 111,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3347,7 +3415,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 65,
-            "displayIndex": 109,
+            "displayIndex": 110,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3422,7 +3490,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 67,
-            "displayIndex": 112,
+            "displayIndex": 113,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3497,7 +3565,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 69,
-            "displayIndex": 114,
+            "displayIndex": 115,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3572,7 +3640,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 71,
-            "displayIndex": 115,
+            "displayIndex": 116,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3647,7 +3715,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 73,
-            "displayIndex": 117,
+            "displayIndex": 118,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3722,7 +3790,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 75,
-            "displayIndex": 119,
+            "displayIndex": 120,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3797,7 +3865,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 77,
-            "displayIndex": 123,
+            "displayIndex": 124,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3873,7 +3941,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 79,
-            "displayIndex": 121,
+            "displayIndex": 122,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3949,7 +4017,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 81,
-            "displayIndex": 126,
+            "displayIndex": 127,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4017,7 +4085,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 83,
-            "displayIndex": 127,
+            "displayIndex": 128,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4092,7 +4160,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 85,
-            "displayIndex": 128,
+            "displayIndex": 129,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4168,7 +4236,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 87,
-            "displayIndex": 129,
+            "displayIndex": 130,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4244,7 +4312,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 89,
-            "displayIndex": 131,
+            "displayIndex": 132,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4319,7 +4387,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 91,
-            "displayIndex": 133,
+            "displayIndex": 134,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4394,7 +4462,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 93,
-            "displayIndex": 132,
+            "displayIndex": 133,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4469,7 +4537,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 95,
-            "displayIndex": 134,
+            "displayIndex": 136,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4544,7 +4612,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 97,
-            "displayIndex": 135,
+            "displayIndex": 137,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4620,7 +4688,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 99,
-            "displayIndex": 137,
+            "displayIndex": 139,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6620,7 +6688,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 143,
+            "displayIndex": 145,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7408,7 +7476,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 142,
+            "displayIndex": 144,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7479,7 +7547,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 145,
+            "displayIndex": 147,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8213,7 +8281,7 @@
             ],
             "keysecondary": [],
             "comment": "Gem & Luna Room",
-            "content": "Potential Location: Gem and Luna's shared Dorm Room \nRoom #274: Shared by Luna and Gem as roommates.\nA cheerful chaos split perfectly down the middle. The room contains two lofted beds, a worn green couch, a mini-fridge covered in recipe cards, and a TV.\n*   **Gem's Side:** Cool-toned blues and greys. A desk converted into a Warhammer miniature painting station with meticulous organization. Fantasy art posters.\n*   **Luna's Side:** An explosion of purple and warm colors. Her bed is a mountain of plush pillows and blankets, with fairy lights strung above. Her desk is a mini kitchen prep station, complete with a small indoor herb garden. Walls are covered in photos and art from friends.\n*   **Shared Space:** A coffee table crowded with textbooks, game controllers, and snacks. The atmosphere is one of creative, cozy, and hyperactive harmony.\n-----",
+            "content": "Potential Location: Gem and Luna's shared Dorm Room \n(Dorm room #274: A cheerful chaos split perfectly down the middle between two personalities. The room features standard dorm furniture transformed by personal touches - two lofted beds creating space underneath, a worn but comfortable green couch adorned with handmade throw pillows, a small TV mounted on the wall, and a mid-sized refrigerator humming quietly in the corner. The mini-fridge door is plastered with food magazine cutouts and magnetized recipe cards, while inside it's stocked with an array of fruity alcohols - pink moscato, peach schnapps, blueberry vodka, and hard ciders with quirky labels.\n\nThe right side belongs to Gem, Luna's roommate - a nonbinary feminine grey and blue okamimimi whose organizational chaos mirrors Luna's energy. Their lofted bed features cool-toned bedding in various blue and grey patterns, while the desk below is dominated by an impressive Warhammer miniature painting station. Dozens of tiny figurines in various stages of completion line meticulously labeled shelves, with specialized brushes arranged by size and precision. A magnifying lamp extends from the desk, positioned over a half-painted dragon figure with extraordinary detail. Posters of fantasy art and gaming conventions cover this half of the room.\n\nLuna's dorm room  side explodes with color - her lofted bed is practically hidden beneath a mountain of plush pillows in various purple shades and at least six different blankets in competing patterns. Fairy lights are strung across her headboard, giving a perpetual warm glow. The walls feature hand-painted canvases - a watercolor galaxy scene signed \"Vera\" and an impressionist style rendering of the campus cafe signed \"Lucy\" - alongside dozens of photos showing Luna with various friend groups, always in the center with the same beaming smile. Her desk below the bed has been converted into a miniature kitchen prep station, with a small herb garden growing in specialized pots along the windowsill, each labeled with both scientific and pet names (\"Basil/Mr. Leafington\"). A collection of unique spice jars lines a small shelf, and a recipe development journal lies open, pages covered in excited handwriting and food stains.\nLuna has a box of exotic sex toys under her bed. Exotic fantasy dildos, vibrators and much more.\n\nThe shared center space features a low coffee table crowded with textbooks, gaming controllers, snack wrappers, and two neglected succulents somehow thriving despite minimal care. The overall atmosphere is one of creative, cozy chaos - a space where two hyperactive individuals have achieved a harmonious balance within their shared excitement.)\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -8663,7 +8731,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 165,
-            "displayIndex": 124,
+            "displayIndex": 125,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8812,7 +8880,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 167,
-            "displayIndex": 113,
+            "displayIndex": 114,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8950,7 +9018,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 169,
-            "displayIndex": 108,
+            "displayIndex": 109,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9018,7 +9086,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 170,
-            "displayIndex": 107,
+            "displayIndex": 108,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9094,7 +9162,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 171,
-            "displayIndex": 111,
+            "displayIndex": 112,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9162,7 +9230,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 144,
+            "displayIndex": 146,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9233,7 +9301,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 173,
-            "displayIndex": 147,
+            "displayIndex": 149,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9373,7 +9441,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 175,
-            "displayIndex": 130,
+            "displayIndex": 131,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9513,7 +9581,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 177,
-            "displayIndex": 116,
+            "displayIndex": 117,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9582,7 +9650,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 178,
-            "displayIndex": 118,
+            "displayIndex": 119,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9651,7 +9719,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 179,
-            "displayIndex": 120,
+            "displayIndex": 121,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9723,7 +9791,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 180,
-            "displayIndex": 122,
+            "displayIndex": 123,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9791,7 +9859,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 146,
+            "displayIndex": 148,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10066,7 +10134,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 139,
+            "displayIndex": 141,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
