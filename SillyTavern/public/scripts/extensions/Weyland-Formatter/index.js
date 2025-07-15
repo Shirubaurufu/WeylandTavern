@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.5.7";
+const extensionVersion = "1.6.1";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -88,6 +88,7 @@ let settings = undefined;
  * @property {RegExp} normalizeAsterisks
  * @property {RegExp} normalizeSwungDash
  * @property {RegExp} normalizePosessives
+ * @property {RegExp} normalizeContractions
  * 
  * @property {RegExp} missingEndAsterisk
  * @property {string} missingEndAsteriskReplace
@@ -103,30 +104,30 @@ const weylandRegex = {
     detectHeader: /^[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)]$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
-    greedyDetectAction: /(?<=\s|^)\*([^"_\[\]\n\r]+)\*(?=\s|$)/g,
-    greedyDetectActionQuotes: /(?<=\*\s|__\s|^)"[^"]+"(?=\s\*|__|$)/,
+    greedyDetectAction: /(?<=[\s—]|^)\*([^"_\[\]\n\r]+)\*(?=[\s—]|$)/g,
+    greedyDetectActionQuotes: /(?<=\*[\s—]|__[\s—]|^)"[^"]+"(?=[\s—]\*|[\s—]__|$)/,
 
     asterisk: /\*/g,
 
     goodStart: /^(?:[\[*'"`>]|__)/,
     goodEnd: /(?:[*'"`\]]|__)$/,
 
-    actionBetweenDialogue: /(?<=[\["_`]\s)(?:\*|(?<!["'_`\]]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?=\s["_`\]])/g,
+    actionBetweenDialogue: /(?<=[\["_`][\s—])(?:\*|(?<!["'_`\]]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?=[\s—]["_`\]])/g,
     actionBetweenDialogueReplace: "*$1*",
-    actionAfterDialogue: /(?<=[\["_`]\s)(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))$/g,
+    actionAfterDialogue: /(?<=[\["_`][\s—]|[\["_`],[\s—])(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?:(?=\n)|$)/g,
     actionAfterDialogueReplace: "*$1*",
-    actionBeforeDialogue: /^(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?!["_`\]]))(?=\s["_\]])/g,
+    actionBeforeDialogue: /^(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?!["_`\]]))(?=[\s—]["_\]])/g,
     actionBeforeDialogueReplace: "*$1*",
-    mergedActions: /(?<=\s|^)\*(?![\s\n\*])([^"_`\n]+?)(?<!\*|\s)\*\*(?!\*|[\s.,!?])([^"_`\n]+)\*(?=\s|$)/g,
+    mergedActions: /(?<=[\s—]|^)\*(?![\s—\*])([^"_`\n]+?)(?<!\*|[\s—])\*\*(?!\*|[\s—.,!?])([^"_`\n]+)\*(?=[\s—]|$)/g,
     mergedActionsReplace: "*$1* *$2*",
 
-    actionEmphasisOne: /(?<=\s|^)\*(?![\s\n\*])([^"_`]*)\*(?<![\s\n])(?=\s|$)/g,
-    actionEmphasisOneSingleQuoteGuard: /\*\s'.*?'\s\*/g,
-    actionEmphasisTwo: /(?<=\s|^)\*+(?![\s\n])([^*]*)\*+(?<![\s\n])(?=\s|$|[.,?!])/g,
+    actionEmphasisOne: /(?<=[\s—]|^)\*(?![\s—\*])([^"_`]*)\*(?<![\s—])(?=[\s—]|$)/g,
+    actionEmphasisOneSingleQuoteGuard: /\*[\s—]'[^']*?'\s\*/g,
+    actionEmphasisTwo: /(?<=[\s—]|^)\*+(?![\s—])([^*]*)\*+(?<![\s—])(?=[\s—]|$|[.,?!])/g,
     actionEmphasisTwoReplace: "***$1***",
 
-    dialogueEmphasisOne: /(?<=\s|^)["_\[](?![\s\n])([^"_`]*)["_\]](?<![\s\n])(?=\s|$)/g,
-    dialogueEmphasisTwo: /(?<=\s|^)\*+(?![\s\n])([^*]*)(?<!hiccup|hic)\*+(?<![\s\n])(?=\s|$|[.,?!])/g,
+    dialogueEmphasisOne: /(?<=[\s—]|^)["_\[](?![\s—])([^"_`]*)["_\]](?<![\s—])(?=[\s—]|$)/g,
+    dialogueEmphasisTwo: /(?<=[\s—]|^)\*+(?![\s—])([^*]*)(?<!hiccup|hic)\*+(?<![\s—])(?=[\s—]|$|[.,?!])/g,
     dialogueEmphasisTwoReplace: "**$1**",
     
     tooManyAsterisks: /\*{4,}/g,
@@ -138,15 +139,15 @@ const weylandRegex = {
     tooManyGraves: /\`{4,}/g,
     tooManyGravesReplace: "```",
 
-    squareBrackets: /[\[\]]+((?!\s)[^\]\[]+)(?<!\s)[\[\]]+/g,
+    squareBrackets: /[\[\]]+((?![\s—])[^\]\[]+)(?<![\s—])[\[\]]+/g,
     squareBracketsReplace: "[$1]",
-    parenthesis: /[\(\)]+((?!\s)[^\)\()]+)(?<!\s)[\(\)]+/g,
+    parenthesis: /[\(\)]+((?![\s—])[^\)\()]+)(?<![\s—])[\(\)]+/g,
     parenthesisReplace: "($1)",
-    curlyBrackets: /[\{\}]+((?!\s)[^\}\{})]+)(?<!\s)[\{\}]+/g,
+    curlyBrackets: /[\{\}]+((?![\s—])[^\}\{})]+)(?<![\s—])[\{\}]+/g,
     curlyBracketsReplace: "{$1}",
-    codeBlocks: /^`{2,}(text|)(\s+)?([\w\W]+?\n?[^`\n]+?)(?:\n+|\n?)`{2,}$/gm,
+    codeBlocks: /^`{2,}(text|)([\s—]+)?([\w\W]+?\n?[^`\n]+?)(?:\n+|\n?)`{2,}$/gm,
     codeBlocksReplace: "```$1\n$3\n```",
-    speech: /(?<=^|\s)(?:\**|`*)(["_\[][^"`\[\]]+?["_\]])(?:\**|`*)(?=\s|$)/g,
+    speech: /(?<=^|[\s—])(?:\**|`*)(["_\[][^"`\[\]]+?["_\]])(?:\**|`*)(?=[\s—]|$)/g,
     speechReplace: "$1",
 
     normalizeQuotes: /[\u00AB\u00BB\u201C\u201D\u02BA\u02EE\u201F\u275D\u275E\u301D\u301E\uFF02]/g,
@@ -157,11 +158,12 @@ const weylandRegex = {
     normalizeEmDashes: /\u2015/g,
     normalizeAsterisks: /[\u2043\u2219\u25D8\u25E6\u2619\u2765\u2767]/g,
     normalizeSwungDash: /\u2053/g,
-    normalizePosessives: /(?<=[^\s])'(?=s)|(?<=s)'(?=\s)/ig,
+    normalizePosessives: /(?<=[^\s—])'(?=s)(?=\b)|(?<=s)'(?=[\s—.,!?])/ig,
+    normalizeContractions: /(?<=[^\s—])'(?=t|ll|ve|re)(?=\b)/ig,
 
-    missingEndAsterisk: /(?<=["_\]]\s|^)\*+([^"_\[\]]+)(?<!\*)(?=\s["_\[]|$)/g,
+    missingEndAsterisk: /(?<=["_\]][\s—]|^)\*+([^"_\[\]]+)(?<!\*)(?=[\s—]["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
-    missingStartAsterisk: /(?<=["_\]]\s|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=\s["_\[]|$)/g,
+    missingStartAsterisk: /(?<=["_\]][\s—]|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=[\s—]["_\[]|$)/g,
     missingStartAsteriskReplace: "*$1*"
 };
 
@@ -199,6 +201,7 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.normalizeAsterisks, `*`);
     message = replaceText(message, weylandRegex.normalizeSwungDash, `~`);
     message = replaceText(message, weylandRegex.normalizePosessives, `\u2019`);
+    message = replaceText(message, weylandRegex.normalizeContractions, `\u2019`);
 
     //Clean up too many symbols
     message = replaceText(message, weylandRegex.tooManyAsterisks, weylandRegex.tooManyAsterisksReplace);
@@ -449,7 +452,7 @@ function singleQuoteExt(){
     try {
         return [{
             type: 'output',
-            regex: /(?<=\s|.>)('[^"]+?')(?=\s|<.)/g,
+            regex: /(?<=[\s—]|.>)('[^"]+?')(?=[\s—".,!?]|<.)/g,
             replace: `<q style="color: ${power_user.quote_text_color}; display: inline">$1</q>`
         }];
     } catch (e) {
