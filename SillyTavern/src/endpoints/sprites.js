@@ -81,14 +81,14 @@ export function importRisuSprites(directories, data) {
             return;
         }
 
-        console.info(`RisuAI: Found ${images.length} sprites for ${name}. Writing to disk.`);
+        
         const files = fs.readdirSync(spritesPath);
 
         outer: for (const [label, fileBase64] of images) {
             // Remove existing sprite with the same label
             for (const file of files) {
                 if (path.parse(file).name === label) {
-                    console.warn(`RisuAI: The sprite ${label} for ${name} already exists. Skipping.`);
+                    
                     continue outer;
                 }
             }

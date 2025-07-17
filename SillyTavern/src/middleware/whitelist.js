@@ -63,10 +63,10 @@ async function addDockerHostsToWhitelist() {
     for (const entry of whitelistHosts) {
         try {
             const result = await dns.promises.lookup(entry);
-            console.info(`Resolved whitelist hostname ${color.green(entry)} to IPv${result.family} address ${color.green(result.address)}`);
+            
             whitelist.push(result.address);
         } catch (e) {
-            console.warn(`Failed to resolve whitelist hostname ${color.red(entry)}: ${e.message}`);
+            
         }
     }
 }

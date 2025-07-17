@@ -4,56 +4,13 @@ import { Buffer } from 'node:buffer';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 import express from 'express';
-import createError from 'http-errors'; // Added for Out of Messages Message
 
 import { getConfigValue, mergeObjectWithYaml, excludeKeysByYaml, trimV1 } from '../util.js';
 import { setAdditionalHeaders } from '../additional-headers.js';
 import { readSecret, SECRET_KEYS } from './secrets.js';
-import { OPENROUTER_HEADERS } from '../constants.js';
+import { AIMLAPI_HEADERS, OPENROUTER_HEADERS } from '../constants.js';
 
 export const router = express.Router();
-
-// Helper function to check for rate limit errors
-
-// Helper function to check for rate limit errors
-async function handleErrorResponse(errorResponse) {
-    const responseText = await errorResponse.text();
-    const errorData = tryParse(responseText);
-
-    // Check for rate limit error first
-    const rateLimitError = handleRateLimitError(responseText);
-    if (rateLimitError) {
-        console.error('Rate limit error detected:', rateLimitError.message);
-        if (!response.headersSent) {
-            return response.status(429).send({
-                error: {
-                    message: rateLimitError.message,
-                    type: 'rate_limit_error'
-                },
-                quota_error: true
-            });
-        }
-        return;
-    }
-
-    const message = errorResponse.statusText || 'Unknown error occurred';
-    const quota_error = errorResponse.status === 429 && errorData?.error?.type === 'insufficient_quota';
-    console.error('Chat completion request error: ', message, responseText);
-
-    if (!response.headersSent) {
-        response.send({
-            error: {
-                message,
-                ...(errorData?.error || {})
-            },
-            quota_error: quota_error
-        });
-    } else if (!response.writableEnded) {
-        response.write(errorResponse);
-    } else {
-        response.end();
-    }
-}
 
 router.post('/caption-image', async (request, response) => {
     try {
@@ -108,6 +65,10 @@ router.post('/caption-image', async (request, response) => {
             key = readSecret(request.user.directories, SECRET_KEYS.ZEROONEAI);
         }
 
+        if (request.body.api === 'aimlapi') {
+            key = readSecret(request.user.directories, SECRET_KEYS.AIMLAPI);
+        }
+
         if (request.body.api === 'groq') {
             key = readSecret(request.user.directories, SECRET_KEYS.GROQ);
         }
@@ -118,7 +79,7 @@ router.post('/caption-image', async (request, response) => {
 
         const noKeyTypes = ['custom', 'ooba', 'koboldcpp', 'vllm', 'llamacpp', 'pollinations'];
         if (!key && !request.body.reverse_proxy && !noKeyTypes.includes(request.body.api)) {
-            console.warn('No key found for API', request.body.api);
+            
             return response.sendStatus(400);
         }
 
@@ -171,6 +132,11 @@ router.post('/caption-image', async (request, response) => {
             apiUrl = 'https://api.lingyiwanwu.com/v1/chat/completions';
         }
 
+        if (request.body.api === 'aimlapi') {
+            apiUrl = 'https://api.aimlapi.com/v1/chat/completions';
+            Object.assign(headers, AIMLAPI_HEADERS);
+        }
+
         if (request.body.api === 'groq') {
             apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
             if (body.messages?.[0]?.role === 'system') {
@@ -191,6 +157,7 @@ router.post('/caption-image', async (request, response) => {
         }
 
         if (request.body.api === 'pollinations') {
+            headers = { Authorization: '' };
             apiUrl = 'https://text.pollinations.ai/openai/chat/completions';
         }
 
@@ -212,6 +179,7 @@ router.post('/caption-image', async (request, response) => {
         }
 
         setAdditionalHeaders(request, { headers }, apiUrl);
+        
 
         const result = await fetch(apiUrl, {
             method: 'POST',
@@ -225,21 +193,13 @@ router.post('/caption-image', async (request, response) => {
 
         if (!result.ok) {
             const text = await result.text();
-            console.warn('Multimodal captioning request failed', result.statusText, text);
-            return response.status(500).send(text);
             
-            // Check for rate limit error
-            const rateLimitError = handleRateLimitError(text);
-            if (rateLimitError) {
-                return response.status(429).send(rateLimitError);
-            }
-
             return response.status(500).send(text);
         }
 
         /** @type {any} */
         const data = await result.json();
-        console.info('Multimodal captioning response', data);
+        
         const caption = data?.choices?.[0]?.message?.content ?? data?.message?.content?.[0]?.text;
 
         if (!caption) {
@@ -259,17 +219,17 @@ router.post('/transcribe-audio', async (request, response) => {
         const key = readSecret(request.user.directories, SECRET_KEYS.OPENAI);
 
         if (!key) {
-            console.warn('No OpenAI key found');
+            
             return response.sendStatus(400);
         }
 
         if (!request.file) {
-            console.warn('No audio file found');
+            
             return response.sendStatus(400);
         }
 
         const formData = new FormData();
-        console.info('Processing audio file', request.file.path);
+        
         formData.append('file', fs.createReadStream(request.file.path), { filename: 'audio.wav', contentType: 'audio/wav' });
         formData.append('model', request.body.model);
 
@@ -288,19 +248,13 @@ router.post('/transcribe-audio', async (request, response) => {
 
         if (!result.ok) {
             const text = await result.text();
-            console.warn('OpenAI request failed', result.statusText, text);
-
-            // Check for rate limit error
-            const rateLimitError = handleRateLimitError(text);
-            if (rateLimitError) {
-                return response.status(429).send(rateLimitError);
-            }
-
+            
             return response.status(500).send(text);
         }
 
         fs.unlinkSync(request.file.path);
         const data = await result.json();
+        
         return response.json(data);
     } catch (error) {
         
@@ -313,7 +267,7 @@ router.post('/generate-voice', async (request, response) => {
         const key = readSecret(request.user.directories, SECRET_KEYS.OPENAI);
 
         if (!key) {
-            console.warn('No OpenAI key found');
+            
             return response.sendStatus(400);
         }
 
@@ -334,14 +288,7 @@ router.post('/generate-voice', async (request, response) => {
 
         if (!result.ok) {
             const text = await result.text();
-            console.warn('OpenAI request failed', result.statusText, text);
-
-            // Check for rate limit error
-            const rateLimitError = handleRateLimitError(text);
-            if (rateLimitError) {
-                return response.status(429).send(rateLimitError);
-            }
-
+            
             return response.status(500).send(text);
         }
 
@@ -359,9 +306,11 @@ router.post('/generate-image', async (request, response) => {
         const key = readSecret(request.user.directories, SECRET_KEYS.OPENAI);
 
         if (!key) {
-            console.warn('No OpenAI key found');
+            
             return response.sendStatus(400);
         }
+
+        
 
         const result = await fetch('https://api.openai.com/v1/images/generations', {
             method: 'POST',
@@ -374,14 +323,7 @@ router.post('/generate-image', async (request, response) => {
 
         if (!result.ok) {
             const text = await result.text();
-            console.warn('OpenAI request failed', result.statusText, text);
-
-            // Check for rate limit error
-            const rateLimitError = handleRateLimitError(text);
-            if (rateLimitError) {
-                return response.status(429).send(rateLimitError);
-            }
-
+            
             return response.status(500).send(text);
         }
 
@@ -401,7 +343,7 @@ custom.post('/generate-voice', async (request, response) => {
         const { input, provider_endpoint, response_format, voice, speed, model } = request.body;
 
         if (!provider_endpoint) {
-            console.warn('No OpenAI-compatible TTS provider endpoint provided');
+            
             return response.sendStatus(400);
         }
 
@@ -422,14 +364,7 @@ custom.post('/generate-voice', async (request, response) => {
 
         if (!result.ok) {
             const text = await result.text();
-            console.warn('OpenAI request failed', result.statusText, text);
-
-            // Check for rate limit error
-            const rateLimitError = handleRateLimitError(text);
-            if (rateLimitError) {
-                return response.status(429).send(rateLimitError);
-            }
-
+            
             return response.status(500).send(text);
         }
 

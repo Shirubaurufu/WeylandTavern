@@ -61,7 +61,7 @@ async function getExtrasVectorImpl(text, apiUrl, apiKey) {
 
     if (!response.ok) {
         const text = await response.text();
-        console.warn('Extras request failed', response.statusText, text);
+        
         throw new Error('Extras request failed');
     }
 

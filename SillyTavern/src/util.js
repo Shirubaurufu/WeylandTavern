@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 import { Buffer } from 'node:buffer';
 import { promises as dnsPromise } from 'node:dns';
 import os from 'node:os';
+import crypto from 'node:crypto';
 
 import yaml from 'yaml';
 import { sync as commandExistsSync } from 'command-exists';
@@ -39,7 +40,7 @@ export const keyToEnv = (key) => 'SILLYTAVERN_' + String(key).toUpperCase().repl
  */
 export function setConfigFilePath(configFilePath) {
     if (CONFIG_PATH !== null) {
-        console.error(color.red('Config file path already set. Please restart the server to change the config file path.'));
+        
     }
     CONFIG_PATH = path.resolve(configFilePath);
 }
@@ -51,15 +52,15 @@ export function setConfigFilePath(configFilePath) {
 export function getConfig() {
     if (CONFIG_PATH === null) {
         console.trace();
-        console.error(color.red('No config file path set. Please set the config file path using setConfigFilePath().'));
+        
         process.exit(1);
     }
     if (CACHED_CONFIG) {
         return CACHED_CONFIG;
     }
     if (!fs.existsSync(CONFIG_PATH)) {
-        console.error(color.red('No config file found. Please create a config.yaml file. The default config file can be found in the /default folder.'));
-        console.error(color.red('The program will now exit.'));
+        
+        
         process.exit(1);
     }
 
@@ -68,8 +69,8 @@ export function getConfig() {
         CACHED_CONFIG = config;
         return config;
     } catch (error) {
-        console.error(color.red('FATAL: Failed to read config.yaml. Please check the file for syntax errors.'));
-        console.error(error.message);
+        
+        
         process.exit(1);
     }
 }
@@ -111,7 +112,7 @@ export function getConfigValue(key, defaultValue = null, typeConverter = null) {
  * @deprecated Configs are read-only. Use environment variables instead.
  */
 export function setConfigValue(_key, _value) {
-    console.trace(color.yellow('setConfigValue is deprecated and should not be used.'));
+    
 }
 
 /**
@@ -211,7 +212,7 @@ export async function extractFileFromZipBuffer(archiveBuffer, fileExtension) {
         try {
             yauzl.fromBuffer(Buffer.from(archiveBuffer), { lazyEntries: true }, (err, zipfile) => {
                 if (err) {
-                    console.warn(`Error opening ZIP file: ${err.message}`);
+                    
                     return resolve(null);
                 }
 
@@ -219,10 +220,10 @@ export async function extractFileFromZipBuffer(archiveBuffer, fileExtension) {
 
                 zipfile.on('entry', (entry) => {
                     if (entry.fileName.endsWith(fileExtension) && !entry.fileName.startsWith('__MACOSX')) {
-                        console.info(`Extracting ${entry.fileName}`);
+                        
                         zipfile.openReadStream(entry, (err, readStream) => {
                             if (err) {
-                                console.warn(`Error opening read stream: ${err.message}`);
+                                
                                 return zipfile.readEntry();
                             } else {
                                 const chunks = [];
@@ -237,7 +238,7 @@ export async function extractFileFromZipBuffer(archiveBuffer, fileExtension) {
                                 });
 
                                 readStream.on('error', (err) => {
-                                    console.warn(`Error reading stream: ${err.message}`);
+                                    
                                     zipfile.readEntry();
                                 });
                             }
@@ -248,14 +249,14 @@ export async function extractFileFromZipBuffer(archiveBuffer, fileExtension) {
                 });
 
                 zipfile.on('error', (err) => {
-                    console.warn('ZIP processing error', err);
+                    
                     resolve(null);
                 });
 
                 zipfile.on('end', () => resolve(null));
             });
         } catch (error) {
-            console.warn('Failed to process ZIP buffer', error);
+            
             resolve(null);
         }
     });
@@ -284,7 +285,7 @@ export async function getImageBuffers(zipFilePath) {
                 zipfile.on('entry', (entry) => {
                     const mimeType = mime.lookup(entry.fileName);
                     if (mimeType && mimeType.startsWith('image/') && !entry.fileName.startsWith('__MACOSX')) {
-                        console.info(`Extracting ${entry.fileName}`);
+                        
                         zipfile.openReadStream(entry, (err, readStream) => {
                             if (err) {
                                 reject(err);
@@ -331,12 +332,12 @@ export async function readAllChunks(readableStream) {
         });
 
         readableStream.on('end', () => {
-            //console.log('Finished reading the stream.');
+            //
             resolve(chunks);
         });
 
         readableStream.on('error', (error) => {
-            console.error('Error while reading the stream:', error);
+            
             reject();
         });
     });
@@ -371,9 +372,15 @@ export const color = chalk;
  * @returns {string} A UUIDv4 string
  */
 export function uuidv4() {
+    // Node v16.7.0+
     if ('crypto' in globalThis && 'randomUUID' in globalThis.crypto) {
         return globalThis.crypto.randomUUID();
     }
+    // Node v14.17.0+
+    if ('randomUUID' in crypto) {
+        return crypto.randomUUID();
+    }
+    // Very insecure UUID generator, but it's better than nothing.
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0;
         const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -500,7 +507,7 @@ export function forwardFetchResponse(from, to) {
     let statusText = from.statusText;
 
     if (!from.ok) {
-        console.warn(`Streaming request failed with status ${statusCode} ${statusText}`);
+        
     }
 
     // Avoid sending 401 responses as they reset the client Basic auth.
@@ -525,7 +532,7 @@ export function forwardFetchResponse(from, to) {
         });
 
         from.body.on('end', function () {
-            console.info('Streaming request finished');
+            
             to.end();
         });
     } else {
@@ -655,6 +662,15 @@ export function excludeKeysByYaml(obj, yamlString) {
  */
 export function trimV1(str) {
     return String(str ?? '').replace(/\/$/, '').replace(/\/v1$/, '');
+}
+
+/**
+ * Removes trailing slash from a string.
+ * @param {string} str Input string
+ * @returns {string} String with trailing slash removed
+ */
+export function trimTrailingSlash(str) {
+    return String(str ?? '').replace(/\/$/, '');
 }
 
 /**
@@ -1105,7 +1121,7 @@ export function mutateJsonString(jsonString, mutation) {
         mutation(json);
         return JSON.stringify(json);
     } catch (error) {
-        console.error('Error parsing or mutating JSON:', error);
+        
         return jsonString;
     }
 }
@@ -1142,6 +1158,57 @@ export function setPermissionsSync(targetPath) {
             appendWritablePermission(targetPath, stats);
         }
     } catch (error) {
-        console.error(`Error setting write permissions for ${targetPath}:`, error);
+        
     }
+}
+
+/**
+ * Checks if a child path is under a parent path.
+ * @param {string} parentPath Parent path
+ * @param {string} childPath Child path
+ * @returns {boolean} Returns true if the child path is under the parent path, false otherwise
+ */
+export function isPathUnderParent(parentPath, childPath) {
+    const normalizedParent = path.normalize(parentPath);
+    const normalizedChild = path.normalize(childPath);
+
+    const relativePath = path.relative(normalizedParent, normalizedChild);
+
+    return !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
+}
+
+/**
+ * Checks if the given request is a file URL.
+ * @param {string | URL | Request} request The request to check
+ * @return {boolean} Returns true if the request is a file URL, false otherwise
+ */
+export function isFileURL(request) {
+    if (typeof request === 'string') {
+        return request.startsWith('file://');
+    }
+    if (request instanceof URL) {
+        return request.protocol === 'file:';
+    }
+    if (request instanceof Request) {
+        return request.url.startsWith('file://');
+    }
+    return false;
+}
+
+/**
+ * Gets the URL from the request.
+ * @param {string | URL | Request} request The request to get the URL from
+ * @return {string} The URL of the request
+ */
+export function getRequestURL(request) {
+    if (typeof request === 'string') {
+        return request;
+    }
+    if (request instanceof URL) {
+        return request.href;
+    }
+    if (request instanceof Request) {
+        return request.url;
+    }
+    throw new TypeError('Invalid request type');
 }

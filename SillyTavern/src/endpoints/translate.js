@@ -45,7 +45,7 @@ router.post('/libre', async (request, response) => {
         const url = readSecret(request.user.directories, SECRET_KEYS.LIBRE_URL);
 
         if (!url) {
-            console.warn('LibreTranslate URL is not configured.');
+            
             return response.sendStatus(400);
         }
 
@@ -68,6 +68,8 @@ router.post('/libre', async (request, response) => {
             return response.sendStatus(400);
         }
 
+        
+
         const result = await fetch(url, {
             method: 'POST',
             body: JSON.stringify({
@@ -82,12 +84,13 @@ router.post('/libre', async (request, response) => {
 
         if (!result.ok) {
             const error = await result.text();
-            console.warn('LibreTranslate error: ', result.statusText, error);
+            
             return response.sendStatus(500);
         }
 
         /** @type {any} */
         const json = await result.json();
+        
 
         return response.send(json.translatedText);
     } catch (error) {
@@ -105,12 +108,14 @@ router.post('/google', async (request, response) => {
             return response.sendStatus(400);
         }
 
+        
+
         const { generateRequestUrl, normaliseResponse } = getGoogleTranslateClient();
         const requestUrl = generateRequestUrl(text, { to: lang });
         const result = await fetch(requestUrl);
 
         if (!result.ok) {
-            console.warn('Google Translate error: ', result.statusText);
+            
             return response.sendStatus(500);
         }
 
@@ -119,6 +124,7 @@ router.post('/google', async (request, response) => {
         const translatedText = translateResponse.text;
 
         response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        
         return response.send(translatedText);
     } catch (error) {
         
@@ -154,6 +160,8 @@ router.post('/yandex', async (request, response) => {
         params.append('lang', lang);
         const ucid = uuidv4().replaceAll('-', '');
 
+        
+
         const result = await fetch(`https://translate.yandex.net/api/v1/tr.json/translate?ucid=${ucid}&srv=android&format=text`, {
             method: 'POST',
             body: params,
@@ -164,13 +172,14 @@ router.post('/yandex', async (request, response) => {
 
         if (!result.ok) {
             const error = await result.text();
-            console.warn('Yandex error: ', result.statusText, error);
+            
             return response.sendStatus(500);
         }
 
         /** @type {any} */
         const json = await result.json();
         const translated = json.text.join();
+        
 
         return response.send(translated);
     } catch (error) {
@@ -185,7 +194,7 @@ router.post('/lingva', async (request, response) => {
         const baseUrl = secretUrl || LINGVA_DEFAULT;
 
         if (!secretUrl && baseUrl === LINGVA_DEFAULT) {
-            console.warn('Lingva URL is using default value.', LINGVA_DEFAULT);
+            
         }
 
         if (request.body.lang === 'zh-CN' || request.body.lang === 'zh-TW') {
@@ -203,16 +212,19 @@ router.post('/lingva', async (request, response) => {
             return response.sendStatus(400);
         }
 
+        
+
         const url = urlJoin(baseUrl, 'auto', lang, encodeURIComponent(text));
         const result = await fetch(url);
 
         if (!result.ok) {
             const error = await result.text();
-            console.warn('Lingva error: ', result.statusText, error);
+            
         }
 
         /** @type {any} */
         const data = await result.json();
+        
         return response.send(data.translation);
     } catch (error) {
         
@@ -225,7 +237,7 @@ router.post('/deepl', async (request, response) => {
         const key = readSecret(request.user.directories, SECRET_KEYS.DEEPL);
 
         if (!key) {
-            console.warn('DeepL key is not configured.');
+            
             return response.sendStatus(400);
         }
 
@@ -240,6 +252,8 @@ router.post('/deepl', async (request, response) => {
         if (!text || !lang) {
             return response.sendStatus(400);
         }
+
+        
 
         const params = new URLSearchParams();
         params.append('text', text);
@@ -265,12 +279,13 @@ router.post('/deepl', async (request, response) => {
 
         if (!result.ok) {
             const error = await result.text();
-            console.warn('DeepL error: ', result.statusText, error);
+            
             return response.sendStatus(500);
         }
 
         /** @type {any} */
         const json = await result.json();
+        
 
         return response.send(json.translations[0].text);
     } catch (error) {
@@ -285,12 +300,12 @@ router.post('/onering', async (request, response) => {
         const url = secretUrl || ONERING_URL_DEFAULT;
 
         if (!url) {
-            console.warn('OneRing URL is not configured.');
+            
             return response.sendStatus(400);
         }
 
         if (!secretUrl && url === ONERING_URL_DEFAULT) {
-            console.info('OneRing URL is using default value.', ONERING_URL_DEFAULT);
+            
         }
 
         if (request.body.lang === 'pt-BR' || request.body.lang === 'pt-PT') {
@@ -310,6 +325,8 @@ router.post('/onering', async (request, response) => {
         params.append('from_lang', from_lang);
         params.append('to_lang', to_lang);
 
+        
+
         const fetchUrl = new URL(url);
         fetchUrl.search = params.toString();
 
@@ -319,12 +336,13 @@ router.post('/onering', async (request, response) => {
 
         if (!result.ok) {
             const error = await result.text();
-            console.warn('OneRing error: ', result.statusText, error);
+            
             return response.sendStatus(500);
         }
 
         /** @type {any} */
         const data = await result.json();
+        
 
         return response.send(data.result);
     } catch (error) {
@@ -339,12 +357,12 @@ router.post('/deeplx', async (request, response) => {
         const url = secretUrl || DEEPLX_URL_DEFAULT;
 
         if (!url) {
-            console.warn('DeepLX URL is not configured.');
+            
             return response.sendStatus(400);
         }
 
         if (!secretUrl && url === DEEPLX_URL_DEFAULT) {
-            console.info('DeepLX URL is using default value.', DEEPLX_URL_DEFAULT);
+            
         }
 
         const text = request.body.text;
@@ -356,6 +374,8 @@ router.post('/deeplx', async (request, response) => {
         if (!text || !lang) {
             return response.sendStatus(400);
         }
+
+        
 
         const result = await fetch(url, {
             method: 'POST',
@@ -372,12 +392,13 @@ router.post('/deeplx', async (request, response) => {
 
         if (!result.ok) {
             const error = await result.text();
-            console.warn('DeepLX error: ', result.statusText, error);
+            
             return response.sendStatus(500);
         }
 
         /** @type {any} */
         const json = await result.json();
+        
 
         return response.send(json.data);
     } catch (error) {
@@ -407,8 +428,11 @@ router.post('/bing', async (request, response) => {
             return response.sendStatus(400);
         }
 
+        
+
         const result = await bingTranslate(text, null, lang);
         const translatedText = result?.translation;
+        
         return response.send(translatedText);
     } catch (error) {
         

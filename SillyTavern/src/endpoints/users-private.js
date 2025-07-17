@@ -57,7 +57,7 @@ router.get('/me', async (request, response) => {
 router.post('/change-avatar', async (request, response) => {
     try {
         if (!request.body.handle) {
-            console.warn('Change avatar failed: Missing required fields');
+            
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -68,7 +68,7 @@ router.post('/change-avatar', async (request, response) => {
 
         // Avatar is not a data URL or not an empty string
         if (!request.body.avatar.startsWith('data:image/') && request.body.avatar !== '') {
-            console.warn('Change avatar failed: Invalid data URL');
+            
             return response.status(400).json({ error: 'Invalid data URL' });
         }
 
@@ -92,7 +92,7 @@ router.post('/change-avatar', async (request, response) => {
 router.post('/change-password', async (request, response) => {
     try {
         if (!request.body.handle) {
-            console.warn('Change password failed: Missing required fields');
+            
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -141,7 +141,7 @@ router.post('/backup', async (request, response) => {
         const handle = request.body.handle;
 
         if (!handle) {
-            console.warn('Backup failed: Missing required fields');
+            
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -162,7 +162,7 @@ router.post('/reset-settings', async (request, response) => {
         const password = request.body.password;
 
         if (request.user.profile.password && request.user.profile.password !== getPasswordHash(password, request.user.profile.salt)) {
-            console.warn('Reset settings failed: Incorrect password');
+            
             return response.status(403).json({ error: 'Incorrect password' });
         }
 
@@ -180,7 +180,7 @@ router.post('/reset-settings', async (request, response) => {
 router.post('/change-name', async (request, response) => {
     try {
         if (!request.body.name || !request.body.handle) {
-            console.warn('Change name failed: Missing required fields');
+            
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -193,7 +193,7 @@ router.post('/change-name', async (request, response) => {
         const user = await storage.getItem(toKey(request.body.handle));
 
         if (!user) {
-            console.warn('Change name failed: User not found');
+            
             return response.status(404).json({ error: 'User not found' });
         }
 
@@ -211,7 +211,7 @@ router.post('/reset-step1', async (request, response) => {
     try {
         const resetCode = String(crypto.randomInt(1000, 9999));
         console.log();
-        console.log(color.magenta(`${request.user.profile.name}, your account reset code is: `) + color.red(resetCode));
+        
         console.log();
         RESET_CACHE.set(request.user.profile.handle, resetCode);
         return response.sendStatus(204);
@@ -224,23 +224,23 @@ router.post('/reset-step1', async (request, response) => {
 router.post('/reset-step2', async (request, response) => {
     try {
         if (!request.body.code) {
-            console.warn('Recover step 2 failed: Missing required fields');
+            
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
         if (request.user.profile.password && request.user.profile.password !== getPasswordHash(request.body.password, request.user.profile.salt)) {
-            console.warn('Recover step 2 failed: Incorrect password');
+            
             return response.status(400).json({ error: 'Incorrect password' });
         }
 
         const code = RESET_CACHE.get(request.user.profile.handle);
 
         if (!code || code !== request.body.code) {
-            console.warn('Recover step 2 failed: Incorrect code');
+            
             return response.status(400).json({ error: 'Incorrect code' });
         }
 
-        console.info('Resetting account data:', request.user.profile.handle);
+        
         await fsPromises.rm(request.user.directories.root, { recursive: true, force: true });
 
         await ensurePublicDirectoriesExist();

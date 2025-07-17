@@ -31,6 +31,8 @@ router.post('/caption-image', async (request, response) => {
             max_tokens: 4096,
         };
 
+        
+
         const result = await fetch(url, {
             body: JSON.stringify(body),
             method: 'POST',
@@ -43,13 +45,14 @@ router.post('/caption-image', async (request, response) => {
 
         if (!result.ok) {
             const text = await result.text();
-            console.warn(`Claude API returned error: ${result.status} ${result.statusText}`, text);
+            
             return response.status(result.status).send({ error: true });
         }
 
         /** @type {any} */
         const generateResponseJson = await result.json();
         const caption = generateResponseJson.content[0].text;
+        
 
         if (!caption) {
             return response.status(500).send('No caption found');

@@ -19,10 +19,10 @@ export function migrateAccessLog() {
             return;
         }
         fs.renameSync('access.log', logPath);
-        console.log(color.yellow('Migrated access.log to new location:'), logPath);
+        
     } catch (e) {
         
-        console.info('Please move access.log to the data directory manually.');
+        
     }
 }
 
@@ -37,7 +37,7 @@ export default function accessLoggerMiddleware() {
 
         if (!knownIPs.has(clientIp)) {
             // Log new connection
-            console.info(color.yellow(`New connection from ${clientIp}; User Agent: ${userAgent}\n`));
+            
             knownIPs.add(clientIp);
 
             // Write to access log if enabled

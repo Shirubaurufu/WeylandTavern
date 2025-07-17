@@ -19,6 +19,7 @@ body:not(.tts) #ttsExtensionNarrateAll {
 }
 
 body.no-hotswap .hotswap,
+body.no-hotswap .hotswap~hr,
 body.no-timer .mes_timer,
 body.no-timestamps .timestamp,
 body.no-tokenCount .tokenCounterDisplay,
@@ -26,6 +27,12 @@ body.no-mesIDDisplay .mesIDDisplay,
 body.no-modelIcons .icon-svg,
 body.hideChatAvatars .mesAvatarWrapper .avatar {
     display: none !important;
+}
+
+body.no-hotswap #CharListButtonAndHotSwaps .flex-container {
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    flex-flow: row;
 }
 
 body.hideChatAvatars .last_mes:not(.smallSysMes) {
@@ -376,7 +383,7 @@ body.no-blur #send_form {
     background-color: var(--SmartThemeBlurTintColor) !important;
 }
 
-/* wAIfu mode - Base styling */
+/* wAIfu mode*/
 
 body.waifuMode #top-bar {
     border-radius: 0 0 20px 20px;
@@ -384,9 +391,9 @@ body.waifuMode #top-bar {
 }
 
 body.waifuMode #sheld {
-    height: 60vh;
-    height: 60dvh;
-    top: calc(100% - 60vh);
+    height: 40vh;
+    height: 40dvh;
+    top: calc(100% - 40vh);
     bottom: 0;
 }
 
@@ -399,7 +406,6 @@ body.waifuMode #expression-wrapper {
     justify-content: center;
 }
 
-/* Basic styling for all expression holders */
 body.waifuMode .expression-holder {
     max-height: 90vh;
     max-width: 90vw;
@@ -411,38 +417,6 @@ body.waifuMode .expression-holder {
     margin: 0 auto;
     left: 0;
     right: 0;
-}
-
-/* Combined selector for all left-side characters */
-body.waifuMode #visual-novel-wrapper:is(
-    :has(#expression-Blake\.png):has(#expression-Serra\.png):not(:has(.expression-holder:not(#expression-Blake\.png):not(#expression-Serra\.png))),
-    :has(#expression-Jenn\.png):has(#expression-Lucy\.png):not(:has(.expression-holder:not(#expression-Jenn\.png):not(#expression-Lucy\.png))),
-    :has(#expression-Lyris\.png):has(#expression-Vesper\.png):not(:has(.expression-holder:not(#expression-Lyris\.png):not(#expression-Vesper\.png)))
-) {
-    position: relative;
-    width: 100%;
-}
-
-/* Left-side characters positioning */
-body.waifuMode #visual-novel-wrapper:has(#expression-Blake\.png):has(#expression-Serra\.png):not(:has(.expression-holder:not(#expression-Blake\.png):not(#expression-Serra\.png))) #expression-Blake\.png,
-body.waifuMode #visual-novel-wrapper:has(#expression-Jenn\.png):has(#expression-Lucy\.png):not(:has(.expression-holder:not(#expression-Jenn\.png):not(#expression-Lucy\.png))) #expression-Jenn\.png,
-body.waifuMode #visual-novel-wrapper:has(#expression-Lyris\.png):has(#expression-Vesper\.png):not(:has(.expression-holder:not(#expression-Lyris\.png):not(#expression-Vesper\.png))) #expression-Lyris\.png {
-    position: fixed !important;
-    left: 0 !important;
-    right: auto !important;
-    margin-left: 0px !important;
-    margin-right: auto !important;
-    transform: none !important;
-}
-
-/* Right-side characters positioning */
-body.waifuMode #visual-novel-wrapper:has(#expression-Blake\.png):has(#expression-Serra\.png):not(:has(.expression-holder:not(#expression-Blake\.png):not(#expression-Serra\.png))) #expression-Serra\.png,
-body.waifuMode #visual-novel-wrapper:has(#expression-Jenn\.png):has(#expression-Lucy\.png):not(:has(.expression-holder:not(#expression-Jenn\.png):not(#expression-Lucy\.png))) #expression-Lucy\.png,
-body.waifuMode #visual-novel-wrapper:has(#expression-Lyris\.png):has(#expression-Vesper\.png):not(:has(.expression-holder:not(#expression-Lyris\.png):not(#expression-Vesper\.png))) #expression-Vesper\.png {
-    position: fixed !important;
-    right: 0px !important;
-    left: auto !important;
-    margin: 0 !important;
 }
 
 body.waifuMode .zoomed_avatar {

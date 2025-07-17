@@ -78,13 +78,13 @@ export async function loadPlugins(app, pluginsPath) {
         }
 
         if (loadedPlugins.size > 0) {
-            console.log(`${loadedPlugins.size} server plugin(s) are currently loaded. Make sure you know exactly what they do, and only install plugins from trusted sources!`);
+            
         }
 
         // Call all plugin "exit" functions at once and wait for them to finish
         return () => Promise.all(exitHooks.map(exitFn => exitFn()));
     } catch (error) {
-        console.error('Plugin loading failed.', error);
+        
         return () => { };
     }
 }
@@ -134,7 +134,7 @@ async function loadFromPackage(app, packageJsonPath, exitHooks) {
             return await loadFromFile(app, pluginFilePath, exitHooks);
         }
     } catch (error) {
-        console.error(`Failed to load plugin from ${packageJsonPath}: ${error}`);
+        
     }
     return false;
 }
@@ -151,10 +151,10 @@ async function loadFromFile(app, pluginFilePath, exitHooks) {
     try {
         const fileUrl = url.pathToFileURL(pluginFilePath).toString();
         const plugin = await import(fileUrl);
-        console.log(`Initializing plugin from ${pluginFilePath}`);
+        
         return await initPlugin(app, plugin, exitHooks);
     } catch (error) {
-        console.error(`Failed to load plugin from ${pluginFilePath}: ${error}`);
+        
         return false;
     }
 }
@@ -179,7 +179,7 @@ function isValidPluginID(id) {
 async function initPlugin(app, plugin, exitHooks) {
     const info = plugin.info || plugin.default?.info;
     if (typeof info !== 'object') {
-        console.error('Failed to load plugin module; plugin info not found');
+        
         return false;
     }
 
@@ -187,26 +187,26 @@ async function initPlugin(app, plugin, exitHooks) {
     // require them now just to be safe
     for (const field of ['id', 'name', 'description']) {
         if (typeof info[field] !== 'string') {
-            console.error(`Failed to load plugin module; plugin info missing field '${field}'`);
+            
             return false;
         }
     }
 
     const init = plugin.init || plugin.default?.init;
     if (typeof init !== 'function') {
-        console.error('Failed to load plugin module; no init function');
+        
         return false;
     }
 
     const { id } = info;
 
     if (!isValidPluginID(id)) {
-        console.error(`Failed to load plugin module; invalid plugin ID '${id}'`);
+        
         return false;
     }
 
     if (loadedPlugins.has(id)) {
-        console.error(`Failed to load plugin module; plugin ID '${id}' is already in use`);
+        
         return false;
     }
 
@@ -247,10 +247,10 @@ async function updatePlugins(pluginsPath) {
         return;
     }
 
-    console.log(color.blue('Auto-updating server plugins... Set'), color.yellow('enableServerPluginsAutoUpdate: false'), color.blue('in config.yaml to disable this feature.'));
+    
 
     if (!commandExistsSync('git')) {
-        console.error(color.red('Git is not installed. Please install Git to enable auto-updating of server plugins.'));
+        
         return;
     }
 
@@ -281,13 +281,13 @@ async function updatePlugins(pluginsPath) {
             pluginsToUpdate++;
             await pluginRepo.pull();
             const latestCommit = await pluginRepo.revparse(['HEAD']);
-            console.log(`Plugin ${color.green(directory)} updated to commit ${color.cyan(latestCommit)}`);
+            
         } catch (error) {
-            console.error(color.red(`Failed to update plugin ${directory}: ${error.message}`));
+            
         }
     }
 
     if (pluginsToUpdate === 0) {
-        console.log('All plugins are up to date.');
+        
     }
 }
