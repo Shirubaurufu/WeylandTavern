@@ -380,7 +380,7 @@ async function regenerateCorruptedIndexErrorHandler(req, res, error) {
 
             if (exists) {
                 const path = index.folderPath;
-                console.warn(`Corrupted index detected at ${path}, regenerating...`);
+                
                 await index.deleteIndex();
                 return res.redirect(307, req.originalUrl + '?regenerated=true');
             }
@@ -494,7 +494,7 @@ router.post('/purge-all', async (req, res) => {
                 continue;
             }
             await fs.promises.rm(sourcePath, { recursive: true });
-            console.info(`Deleted vector source store at ${sourcePath}`);
+            
         }
 
         return res.sendStatus(200);
@@ -518,7 +518,7 @@ router.post('/purge', async (req, res) => {
                 continue;
             }
             await fs.promises.rm(sourcePath, { recursive: true });
-            console.info(`Deleted vector index at ${sourcePath}`);
+            
         }
 
         return res.sendStatus(200);

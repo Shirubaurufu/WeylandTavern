@@ -340,7 +340,7 @@ export class SettingsUi {
             this.prepareGlobalSetList();
             this.prepareChatSetList();
 
-            console.info(`Quick Reply Set renamed from ""${oldName}" to "${newName}".`);
+            
         }
     }
 

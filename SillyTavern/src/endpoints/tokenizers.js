@@ -95,7 +95,7 @@ async function getPathToTokenizer(model, fallbackModel) {
             throw new Error('Downloading tokenizers is disabled, the model is not cached');
         }
 
-        console.info('Downloading tokenizer model:', model);
+        
         const response = await fetch(model);
         if (!response.ok) {
             throw new Error(`Failed to fetch the model: ${response.status} ${response.statusText}`);
@@ -155,7 +155,7 @@ class SentencePieceTokenizer {
             const pathToModel = await getPathToTokenizer(this.#model, this.#fallbackModel);
             this.#instance = new SentencePieceProcessor();
             await this.#instance.load(pathToModel);
-            console.info('Instantiated the tokenizer for', path.parse(pathToModel).name);
+            
             return this.#instance;
         } catch (error) {
             
@@ -204,7 +204,7 @@ class WebTokenizer {
             const pathToModel = await getPathToTokenizer(this.#model, this.#fallbackModel);
             const arrayBuffer = fs.readFileSync(pathToModel).buffer;
             this.#instance = await Tokenizer.fromJSON(arrayBuffer);
-            console.info('Instantiated the tokenizer for', path.parse(pathToModel).name);
+            
             return this.#instance;
         } catch (error) {
             
@@ -497,7 +497,7 @@ export function getTiktokenTokenizer(model) {
     }
 
     const tokenizer = tiktoken.encoding_for_model(model);
-    console.info('Instantiated the tokenizer for', model);
+    
     tokenizersCache[model] = tokenizer;
     return tokenizer;
 }
@@ -977,7 +977,7 @@ router.post('/openai/count', async function (req, res) {
                     }
                 }
             } catch {
-                console.warn('Error tokenizing message:', msg);
+                
             }
         }
         num_tokens += tokensPadding;
@@ -1020,7 +1020,7 @@ router.post('/remote/kobold/count', async function (request, response) {
         const result = await fetch(url, args);
 
         if (!result.ok) {
-            console.warn(`API returned error: ${result.status} ${result.statusText}`);
+            
             return response.send({ error: true });
         }
 
@@ -1084,7 +1084,7 @@ router.post('/remote/textgenerationwebui/encode', async function (request, respo
         const result = await fetch(url, args);
 
         if (!result.ok) {
-            console.warn(`API returned error: ${result.status} ${result.statusText}`);
+            
             return response.send({ error: true });
         }
 

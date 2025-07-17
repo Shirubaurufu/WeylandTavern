@@ -27,7 +27,7 @@ export async function getNomicAIBatchVector(texts, source, directories) {
     const key = readSecret(directories, config.secretKey);
 
     if (!key) {
-        console.warn('No API key found');
+        
         throw new Error('No API key found');
     }
 
@@ -47,14 +47,14 @@ export async function getNomicAIBatchVector(texts, source, directories) {
 
     if (!response.ok) {
         const text = await response.text();
-        console.warn('API request failed', response.statusText, text);
+        
         throw new Error('API request failed');
     }
 
     /** @type {any} */
     const data = await response.json();
     if (!Array.isArray(data?.embeddings)) {
-        console.warn('API response was not an array');
+        
         throw new Error('API response was not an array');
     }
 

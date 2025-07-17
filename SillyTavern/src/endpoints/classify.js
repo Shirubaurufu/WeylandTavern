@@ -43,7 +43,9 @@ router.post('/', async (req, res) => {
             }
         }
 
+        
         const result = await getResult(text);
+        
 
         return res.json({ classification: result });
     } catch (error) {

@@ -10,14 +10,14 @@ router.post('/list', async (req, res) => {
         const key = readSecret(req.user.directories, SECRET_KEYS.AZURE_TTS);
 
         if (!key) {
-            console.warn('Azure TTS API Key not set');
+            
             return res.sendStatus(403);
         }
 
         const region = req.body.region;
 
         if (!region) {
-            console.warn('Azure TTS region not set');
+            
             return res.sendStatus(400);
         }
 
@@ -31,7 +31,7 @@ router.post('/list', async (req, res) => {
         });
 
         if (!response.ok) {
-            console.warn('Azure Request failed', response.status, response.statusText);
+            
             return res.sendStatus(500);
         }
 
@@ -48,13 +48,13 @@ router.post('/generate', async (req, res) => {
         const key = readSecret(req.user.directories, SECRET_KEYS.AZURE_TTS);
 
         if (!key) {
-            console.warn('Azure TTS API Key not set');
+            
             return res.sendStatus(403);
         }
 
         const { text, voice, region } = req.body;
         if (!text || !voice || !region) {
-            console.warn('Missing required parameters');
+            
             return res.sendStatus(400);
         }
 
@@ -74,7 +74,7 @@ router.post('/generate', async (req, res) => {
         });
 
         if (!response.ok) {
-            console.warn('Azure Request failed', response.status, response.statusText);
+            
             return res.sendStatus(500);
         }
 

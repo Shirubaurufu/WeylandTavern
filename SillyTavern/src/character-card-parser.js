@@ -57,7 +57,7 @@ export const read = (image) => {
     const textChunks = chunks.filter((chunk) => chunk.name === 'tEXt').map((chunk) => PNGtext.decode(chunk.data));
 
     if (textChunks.length === 0) {
-        console.error('PNG metadata does not contain any text chunks.');
+        
         throw new Error('No PNG metadata.');
     }
 
@@ -73,7 +73,7 @@ export const read = (image) => {
         return Buffer.from(textChunks[charaIndex].text, 'base64').toString('utf8');
     }
 
-    console.error('PNG metadata does not contain any character data.');
+    
     throw new Error('No PNG metadata.');
 };
 

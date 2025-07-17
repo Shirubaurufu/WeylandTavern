@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { SECRET_KEYS, readSecret } from '../endpoints/secrets.js';
+import { trimTrailingSlash } from '../util.js';
 const API_MAKERSUITE = 'https://generativelanguage.googleapis.com';
 
 /**
@@ -23,13 +24,13 @@ export async function getMakerSuiteVector(text, directories) {
     const key = readSecret(directories, SECRET_KEYS.MAKERSUITE);
 
     if (!key) {
-        console.warn('No Google AI Studio key found');
+        
         throw new Error('No Google AI Studio key found');
     }
 
-    const apiUrl = new URL(API_MAKERSUITE);
+    const apiUrl = trimTrailingSlash(API_MAKERSUITE);
     const model = 'text-embedding-004';
-    const url = `${apiUrl.origin}/v1beta/models/${model}:embedContent?key=${key}`;
+    const url = `${apiUrl}/v1beta/models/${model}:embedContent?key=${key}`;
     const body = {
         content: {
             parts: [
@@ -48,7 +49,7 @@ export async function getMakerSuiteVector(text, directories) {
 
     if (!response.ok) {
         const text = await response.text();
-        console.warn('Google AI Studio request failed', response.statusText, text);
+        
         throw new Error('Google AI Studio request failed');
     }
 

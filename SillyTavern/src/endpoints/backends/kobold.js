@@ -21,17 +21,17 @@ router.post('/generate', async function (request, response_generate) {
     request.socket.on('close', async function () {
         if (request.body.can_abort && !response_generate.writableEnded) {
             try {
-                console.info('Aborting Kobold generation...');
+                
                 // send abort signal to koboldcpp
                 const abortResponse = await fetch(`${request.body.api_server}/extra/abort`, {
                     method: 'POST',
                 });
 
                 if (!abortResponse.ok) {
-                    console.error('Error sending abort request to Kobold:', abortResponse.status);
+                    
                 }
             } catch (error) {
-                console.error(error);
+                
             }
         }
         controller.abort();
@@ -80,6 +80,7 @@ router.post('/generate', async function (request, response_generate) {
         }
     }
 
+    
     const args = {
         body: JSON.stringify(this_settings),
         headers: Object.assign(
@@ -103,7 +104,7 @@ router.post('/generate', async function (request, response_generate) {
             } else {
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.warn(`Kobold returned error: ${response.status} ${response.statusText} ${errorText}`);
+                    
 
                     try {
                         const errorJson = JSON.parse(errorText);
@@ -115,6 +116,7 @@ router.post('/generate', async function (request, response_generate) {
                 }
 
                 const data = await response.json();
+                
                 return response_generate.send(data);
             }
         } catch (error) {
@@ -122,19 +124,19 @@ router.post('/generate', async function (request, response_generate) {
             switch (error?.status) {
                 case 403:
                 case 503: // retry in case of temporary service issue, possibly caused by a queue failure?
-                    console.warn(`KoboldAI is busy. Retry attempt ${i + 1} of ${MAX_RETRIES}...`);
+                    
                     await delay(delayAmount);
                     break;
                 default:
                     if ('status' in error) {
-                        console.error('Status Code from Kobold:', error.status);
+                        
                     }
                     return response_generate.send({ error: true });
             }
         }
     }
 
-    console.error('Max retries exceeded. Giving up.');
+    
     return response_generate.send({ error: true });
 });
 
@@ -190,14 +192,16 @@ router.post('/transcribe-audio', async function (request, response) {
         const server = request.body.server;
 
         if (!server) {
-            console.error('Server is not set');
+            
             return response.sendStatus(400);
         }
 
         if (!request.file) {
-            console.error('No audio file found');
+            
             return response.sendStatus(400);
         }
+
+        
 
         const fileBase64 = fs.readFileSync(request.file.path).toString('base64');
         fs.unlinkSync(request.file.path);
@@ -221,14 +225,15 @@ router.post('/transcribe-audio', async function (request, response) {
 
         if (!result.ok) {
             const text = await result.text();
-            console.error('KoboldCpp request failed', result.statusText, text);
+            
             return response.status(500).send(text);
         }
 
         const data = await result.json();
+        
         return response.json(data);
     } catch (error) {
-        console.error('KoboldCpp transcription failed', error);
+        
         response.status(500).send('Internal server error');
     }
 });
@@ -238,7 +243,7 @@ router.post('/embed', async function (request, response) {
         const { server, items } = request.body;
 
         if (!server) {
-            console.warn('KoboldCpp URL is not set');
+            
             return response.sendStatus(400);
         }
 
@@ -262,7 +267,7 @@ router.post('/embed', async function (request, response) {
         const data = await embeddingsResult.json();
 
         if (!Array.isArray(data?.data)) {
-            console.warn('KoboldCpp API response was not an array');
+            
             return response.sendStatus(500);
         }
 
@@ -270,7 +275,7 @@ router.post('/embed', async function (request, response) {
         const embeddings = data.data.map(x => Array.isArray(x) ? x[0] : x).sort((a, b) => a.index - b.index).map(x => x.embedding);
         return response.json({ model, embeddings });
     } catch (error) {
-        console.error('KoboldCpp embedding failed', error);
+        
         response.status(500).send('Internal server error');
     }
 });

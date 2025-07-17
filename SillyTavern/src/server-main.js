@@ -14,13 +14,12 @@ import multer from 'multer';
 import responseTime from 'response-time';
 import helmet from 'helmet';
 import bodyParser from 'body-parser';
-import open from 'open';
 
 // local library imports
 import './fetch-patch.js';
 import { serverDirectory } from './server-directory.js';
 
-console.log(`Node version: ${process.version}. Running in ${process.env.NODE_ENV} environment. Server directory: ${serverDirectory}`);
+
 
 // Work around a node v20.0.0, v20.1.0, and v20.2.0 bug. The issue was fixed in v20.3.0.
 // https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
@@ -65,6 +64,7 @@ import {
     safeReadFileSync,
     setupLogLevel,
     setWindowTitle,
+    getConfigValue,
 } from './util.js';
 import { UPLOADS_DIRECTORY } from './constants.js';
 import { ensureThumbnailCache } from './endpoints/thumbnails.js';
@@ -76,6 +76,7 @@ import { checkForNewContent } from './endpoints/content-manager.js';
 import { init as settingsInit } from './endpoints/settings.js';
 import { redirectDeprecatedEndpoints, ServerStartup, setupPrivateEndpoints } from './server-startup.js';
 import { diskCache } from './endpoints/characters.js';
+import { migrateFlatSecrets } from './endpoints/secrets.js';
 
 console.log = function() {};
 console.debug = function() {};
@@ -86,23 +87,24 @@ util.inspect.defaultOptions.maxArrayLength = null;
 util.inspect.defaultOptions.maxStringLength = null;
 util.inspect.defaultOptions.depth = 4;
 
+/** @type {import('./command-line.js').CommandLineArguments} */
 const cliArgs = globalThis.COMMAND_LINE_ARGS;
 
 if (!cliArgs.enableIPv6 && !cliArgs.enableIPv4) {
-    console.error('error: You can\'t disable all internet protocols: at least IPv6 or IPv4 must be enabled.');
+    
     process.exit(1);
 }
 
 try {
     if (cliArgs.dnsPreferIPv6) {
         dns.setDefaultResultOrder('ipv6first');
-        console.log('Preferring IPv6 for DNS resolution');
+        
     } else {
         dns.setDefaultResultOrder('ipv4first');
-        console.log('Preferring IPv4 for DNS resolution');
+        
     }
 } catch (error) {
-    console.warn('Failed to set DNS resolution order. Possibly unsupported in this Node version.');
+    
 }
 
 const app = express();
@@ -141,7 +143,7 @@ if (cliArgs.enableCorsProxy) {
 } else {
     app.use('/proxy/:url(*)', async (_, res) => {
         const message = 'CORS proxy is disabled. Enable it in config.yaml or use the --corsProxy flag.';
-        console.log(message);
+        
         res.status(404).send(message);
     });
 }
@@ -161,7 +163,7 @@ if (!cliArgs.disableCsrf) {
     const csrfSyncProtection = csrfSync({
         getTokenFromState: (req) => {
             if (!req.session) {
-                console.error('(CSRF error) getTokenFromState: Session object not initialized');
+                
                 return;
             }
             return req.session.csrfToken;
@@ -171,7 +173,7 @@ if (!cliArgs.disableCsrf) {
         },
         storeTokenInState: (req, token) => {
             if (!req.session) {
-                console.error('(CSRF error) storeTokenInState: Session object not initialized');
+                
                 return;
             }
             req.session.csrfToken = token;
@@ -191,7 +193,7 @@ if (!cliArgs.disableCsrf) {
 
     app.use(csrfSyncProtection.csrfSynchronisedProtection);
 } else {
-    console.warn('\nCSRF protection is disabled. This will make your server vulnerable to CSRF attacks.\n');
+    
     app.get('/csrf-token', (req, res) => {
         res.json({
             'token': 'disabled',
@@ -262,23 +264,12 @@ setupPrivateEndpoints(app);
  */
 async function preSetupTasks() {
     const version = await getVersion();
-
-    // Print formatted header
-    console.log();
-    console.log(`SillyTavern ${version.pkgVersion}`);
-    if (version.gitBranch) {
-        console.log(`Running '${version.gitBranch}' (${version.gitRevision}) - ${version.commitDate}`);
-        if (!version.isLatest && ['staging', 'release'].includes(version.gitBranch)) {
-            console.log('INFO: Currently not on the latest commit.');
-            console.log('      Run \'git pull\' to update. If you have any merge conflicts, run \'git reset --hard\' and \'git pull\' to reset your branch.');
-        }
-    }
-    console.log();
-
+    
     const directories = await getUserDirectoriesList();
     await checkForNewContent(directories);
     await ensureThumbnailCache(directories);
     await diskCache.verify(directories);
+    migrateFlatSecrets(directories);
     cleanUploads();
     migrateAccessLog();
 
@@ -306,7 +297,7 @@ async function preSetupTasks() {
     process.on('SIGINT', exitProcess);
     process.on('SIGTERM', exitProcess);
     process.on('uncaughtException', (err) => {
-        console.error('Uncaught exception:', err);
+        
         exitProcess();
     });
 
@@ -323,15 +314,36 @@ async function preSetupTasks() {
  * @returns {Promise<void>}
  */
 async function postSetupTasks(result) {
-    const autorunHostname = await cliArgs.getAutorunHostname(result);
-    const autorunUrl = cliArgs.getAutorunUrl(autorunHostname);
+    const browserLaunchHostname = await cliArgs.getBrowserLaunchHostname(result);
+    const browserLaunchUrl = cliArgs.getBrowserLaunchUrl(browserLaunchHostname);
+    const browserLaunchApp = String(getConfigValue('browserLaunch.browser', 'default') ?? '');
 
-    if (cliArgs.autorun) {
+    if (cliArgs.browserLaunchEnabled) {
         try {
-            console.log('Launching in a browser...');
-            await open(autorunUrl.toString());
+            // TODO: This should be converted to a regular import when support for Node 18 is dropped
+            const openModule = await import('open');
+            const { default: open, apps } = openModule;
+
+            function getBrowsers() {
+                const isAndroid = process.platform === 'android';
+                if (isAndroid) {
+                    return {};
+                }
+                return {
+                    'firefox': apps.firefox,
+                    'chrome': apps.chrome,
+                    'edge': apps.edge,
+                };
+            }
+
+            const validBrowsers = getBrowsers();
+            const appName = validBrowsers[browserLaunchApp.trim().toLowerCase()];
+            const openOptions = appName ? { app: { name: appName } } : {};
+
+            
+            await open(browserLaunchUrl.toString(), openOptions);
         } catch (error) {
-            console.error('Failed to launch the browser. Open the URL manually.');
+            
         }
     }
 
@@ -351,21 +363,11 @@ async function postSetupTasks(result) {
         );
     }
 
-    const goToLog = 'Go to: ' + color.blue(autorunUrl) + ' to open SillyTavern';
+    const goToLog = `Go to: ${color.blue(browserLaunchUrl)} to open SillyTavern`;
     const plainGoToLog = removeColorFormatting(goToLog);
 
-    console.log(logListen);
-    if (cliArgs.listen) {
-        console.log();
-        console.log('To limit connections to internal localhost only ([::1] or 127.0.0.1), change the setting in config.yaml to "listen: false".');
-        console.log('Check the "access.log" file in the data directory to inspect incoming connections:', color.green(getAccessLogPath()));
-    }
-    console.log('\n' + getSeparator(plainGoToLog.length) + '\n');
-    console.log(goToLog);
-    console.log('\n' + getSeparator(plainGoToLog.length) + '\n');
-
     setupLogLevel();
-    serverEvents.emit(EVENT_NAMES.SERVER_STARTED, { url: autorunUrl });
+    serverEvents.emit(EVENT_NAMES.SERVER_STARTED, { url: browserLaunchUrl });
 }
 
 /**

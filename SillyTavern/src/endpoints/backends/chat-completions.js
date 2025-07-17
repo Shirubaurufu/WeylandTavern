@@ -4,6 +4,7 @@ import express from 'express';
 import fetch from 'node-fetch';
 
 import {
+    AIMLAPI_HEADERS,
     CHAT_COMPLETION_SOURCES,
     GEMINI_SAFETY,
     OPENROUTER_HEADERS,
@@ -16,6 +17,7 @@ import {
     mergeObjectWithYaml,
     excludeKeysByYaml,
     color,
+    trimTrailingSlash,
 } from '../../util.js';
 import {
     convertClaudeMessages,
@@ -25,12 +27,14 @@ import {
     convertMistralMessages,
     convertAI21Messages,
     convertXAIMessages,
-    mergeMessages,
     cachingAtDepthForOpenRouterClaude,
     cachingAtDepthForClaude,
     getPromptNames,
     calculateClaudeBudgetTokens,
     calculateGoogleBudgetTokens,
+    postProcessPrompt,
+    PROMPT_PROCESSING_TYPE,
+    addAssistantPrefix,
 } from '../../prompt-converters.js';
 
 import { readSecret, SECRET_KEYS } from '../secrets.js';
@@ -43,6 +47,7 @@ import {
     webTokenizers,
     getWebTokenizer,
 } from '../tokenizers.js';
+import { getVertexAIAuth, getProjectIdFromServiceAccount } from '../google.js';
 
 const API_OPENAI = 'https://api.openai.com/v1';
 const API_CLAUDE = 'https://api.anthropic.com/v1';
@@ -58,6 +63,7 @@ const API_AI21 = 'https://api.ai21.com/studio/v1';
 const API_NANOGPT = 'https://nano-gpt.com/api/v1';
 const API_DEEPSEEK = 'https://api.deepseek.com/beta';
 const API_XAI = 'https://api.x.ai/v1';
+const API_AIMLAPI = 'https://api.aimlapi.com/v1';
 const API_POLLINATIONS = 'https://text.pollinations.ai/openai';
 
 const usageCache = new Map(); // Tracks { apiKey: { count: number, firstUsed: Date }}
@@ -116,34 +122,6 @@ async function trackHelixMindUsage(request) {
 }
 
 /**
- * Applies a post-processing step to the generated messages.
- * @param {object[]} messages Messages to post-process
- * @param {string} type Prompt conversion type
- * @param {import('../../prompt-converters.js').PromptNames} names Prompt names
- * @returns
- */
-function postProcessPrompt(messages, type, names) {
-    const addAssistantPrefix = x => x.length && (x[x.length - 1].role !== 'assistant' || (x[x.length - 1].prefix = true)) ? x : x;
-    switch (type) {
-        case 'merge':
-        case 'claude':
-            return mergeMessages(messages, names, { strict: false, placeholders: false, single: false });
-        case 'semi':
-            return mergeMessages(messages, names, { strict: true, placeholders: false, single: false });
-        case 'strict':
-            return mergeMessages(messages, names, { strict: true, placeholders: true, single: false });
-        case 'deepseek':
-            return addAssistantPrefix(mergeMessages(messages, names, { strict: true, placeholders: false, single: false }));
-        case 'deepseek-reasoner':
-            return addAssistantPrefix(mergeMessages(messages, names, { strict: true, placeholders: true, single: false }));
-        case 'single':
-            return mergeMessages(messages, names, { strict: true, placeholders: false, single: true });
-        default:
-            return messages;
-    }
-}
-
-/**
  * Gets OpenRouter transforms based on the request.
  * @param {import('express').Request} request Express request
  * @returns {string[] | undefined} OpenRouter transforms
@@ -192,7 +170,7 @@ async function sendClaudeRequest(request, response) {
     }
 
     if (!apiKey) {
-        console.warn(color.red(`Claude API key is missing.\n${divider}`));
+        
         return response.status(400).send({ error: true });
     }
 
@@ -276,8 +254,8 @@ async function sendClaudeRequest(request, response) {
             const minThinkTokens = 1024;
             if (requestBody.max_tokens <= minThinkTokens) {
                 const newValue = requestBody.max_tokens + minThinkTokens;
-                console.warn(color.yellow(`Claude thinking requires a minimum of ${minThinkTokens} response tokens.`));
-                console.info(color.blue(`Increasing response length to ${newValue}.`));
+                
+                
                 requestBody.max_tokens = newValue;
             }
             requestBody.thinking = {
@@ -299,6 +277,8 @@ async function sendClaudeRequest(request, response) {
             additionalHeaders['anthropic-beta'] = betaHeaders.join(',');
         }
 
+        
+
         const generateResponse = await fetch(apiUrl + '/messages', {
             method: 'POST',
             signal: controller.signal,
@@ -317,20 +297,21 @@ async function sendClaudeRequest(request, response) {
         } else {
             if (!generateResponse.ok) {
                 const generateResponseText = await generateResponse.text();
-                console.warn(color.red(`Claude API returned error: ${generateResponse.status} ${generateResponse.statusText}\n${generateResponseText}\n${divider}`));
+                
                 return response.status(500).send({ error: true });
             }
 
             /** @type {any} */
             const generateResponseJson = await generateResponse.json();
             const responseText = generateResponseJson?.content?.[0]?.text || '';
+            
 
             // Wrap it back to OAI format + save the original content
             const reply = { choices: [{ 'message': { 'content': responseText } }], content: generateResponseJson.content };
             return response.send(reply);
         }
     } catch (error) {
-        console.error(color.red(`Error communicating with Claude: ${error}\n${divider}`));
+        
         if (!response.headersSent) {
             return response.status(500).send({ error: true });
         }
@@ -347,11 +328,12 @@ async function sendScaleRequest(request, response) {
     const apiKey = readSecret(request.user.directories, SECRET_KEYS.SCALE);
 
     if (!apiKey) {
-        console.warn('Scale API key is missing.');
+        
         return response.status(400).send({ error: true });
     }
 
     const requestPrompt = convertTextCompletionPrompt(request.body.messages);
+    
 
     try {
         const controller = new AbortController();
@@ -370,17 +352,18 @@ async function sendScaleRequest(request, response) {
         });
 
         if (!generateResponse.ok) {
-            console.warn(`Scale API returned error: ${generateResponse.status} ${generateResponse.statusText} ${await generateResponse.text()}`);
+            
             return response.status(500).send({ error: true });
         }
 
         /** @type {any} */
         const generateResponseJson = await generateResponse.json();
+        
 
         const reply = { choices: [{ 'message': { 'content': generateResponseJson.output } }] };
         return response.send(reply);
     } catch (error) {
-        console.error(error);
+        
         if (!response.headersSent) {
             return response.status(500).send({ error: true });
         }
@@ -398,22 +381,32 @@ async function sendMakerSuiteRequest(request, response) {
     let apiUrl;
     let apiKey;
 
+    let authHeader;
+    let authType;
+
     if (useVertexAi) {
         apiUrl = new URL(request.body.reverse_proxy || API_VERTEX_AI);
-        apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.VERTEXAI);
 
-        if (!request.body.reverse_proxy && !apiKey) {
-            console.warn(`${apiName} API key is missing.`);
-            return response.status(400).send({ error: true });
+        try {
+            const auth = await getVertexAIAuth(request);
+            authHeader = auth.authHeader;
+            authType = auth.authType;
+            
+        } catch (error) {
+            
+            return response.status(400).send({ error: true, message: error.message });
         }
     } else {
         apiUrl = new URL(request.body.reverse_proxy || API_MAKERSUITE);
         apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.MAKERSUITE);
 
         if (!request.body.reverse_proxy && !apiKey) {
-            console.warn(`${apiName} API key is missing.`);
+            
             return response.status(400).send({ error: true });
         }
+
+        authHeader = `Bearer ${apiKey}`;
+        authType = 'api_key';
     }
 
     const model = String(request.body.model);
@@ -441,6 +434,7 @@ async function sendMakerSuiteRequest(request, response) {
         const imageGenerationModels = [
             'gemini-2.0-flash-exp',
             'gemini-2.0-flash-exp-image-generation',
+            'gemini-2.0-flash-preview-image-generation',
         ];
 
         // These models do not support setting the threshold to OFF at all.
@@ -452,7 +446,6 @@ async function sendMakerSuiteRequest(request, response) {
         ];
 
         const isThinkingConfigModel = m => /^gemini-2.5-(flash|pro)/.test(m);
-        const isThinkingBudgetModel = m => /^gemini-2.5-flash/.test(m);
 
         const noSearchModels = [
             'gemini-2.0-flash-lite',
@@ -508,11 +501,15 @@ async function sendMakerSuiteRequest(request, response) {
         if (isThinkingConfigModel(model)) {
             const thinkingConfig = { includeThoughts: includeReasoning };
 
-            if (isThinkingBudgetModel(model)) {
-                const thinkingBudget = calculateGoogleBudgetTokens(generationConfig.maxOutputTokens, reasoningEffort);
-                if (Number.isInteger(thinkingBudget)) {
-                    thinkingConfig.thinkingBudget = thinkingBudget;
-                }
+            const thinkingBudget = calculateGoogleBudgetTokens(generationConfig.maxOutputTokens, reasoningEffort, model);
+            if (Number.isInteger(thinkingBudget)) {
+                thinkingConfig.thinkingBudget = thinkingBudget;
+            }
+
+            // Vertex doesn't allow mixing disabled thinking with includeThoughts
+            if (useVertexAi && thinkingBudget === 0 && thinkingConfig.includeThoughts) {
+                
+                thinkingConfig.includeThoughts = false;
             }
 
             generationConfig.thinkingConfig = thinkingConfig;
@@ -536,6 +533,7 @@ async function sendMakerSuiteRequest(request, response) {
     }
 
     const body = getGeminiBody();
+    
 
     try {
         const controller = new AbortController();
@@ -548,17 +546,60 @@ async function sendMakerSuiteRequest(request, response) {
         const responseType = (stream ? 'streamGenerateContent' : 'generateContent');
 
         let url;
+        let headers = {
+            'Content-Type': 'application/json',
+        };
+
         if (useVertexAi) {
-            url = `${apiUrl.toString().replace(/\/$/, '')}/v1/publishers/google/models/${model}:${responseType}?key=${apiKey}${stream ? '&alt=sse' : ''}`;
+            if (authType === 'express') {
+                // For Express mode (API key authentication), use the key parameter
+                const keyParam = authHeader.replace('Bearer ', '');
+                const region = request.body.vertexai_region || 'us-central1';
+                const projectId = request.body.vertexai_express_project_id;
+                const baseUrl = region === 'global'
+                    ? 'https://aiplatform.googleapis.com'
+                    : `https://${region}-aiplatform.googleapis.com`;
+                url = projectId
+                    ? `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/${model}:generateContent?key=${keyParam}${stream ? '&alt=sse' : ''}`
+                    : `${baseUrl}/v1/publishers/google/models/${model}:generateContent?key=${keyParam}${stream ? '&alt=sse' : ''}`;
+            } else if (authType === 'full') {
+                // For Full mode (service account authentication), use project-specific URL
+                // Get project ID from Service Account JSON
+                const serviceAccountJson = readSecret(request.user.directories, SECRET_KEYS.VERTEXAI_SERVICE_ACCOUNT);
+                if (!serviceAccountJson) {
+                    
+                    return response.status(400).send({ error: true });
+                }
+
+                let projectId;
+                try {
+                    const serviceAccount = JSON.parse(serviceAccountJson);
+                    projectId = getProjectIdFromServiceAccount(serviceAccount);
+                } catch (error) {
+                    
+                    return response.status(400).send({ error: true });
+                }
+                const region = request.body.vertexai_region || 'us-central1';
+                // Handle global region differently - no region prefix in hostname
+                if (region === 'global') {
+                    url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/${model}:${responseType}${stream ? '?alt=sse' : ''}`;
+                } else {
+                    url = `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/${model}:${responseType}${stream ? '?alt=sse' : ''}`;
+                }
+                headers['Authorization'] = authHeader;
+            } else {
+                // For proxy mode, use the original URL with Authorization header
+                url = `${apiUrl.toString().replace(/\/$/, '')}/v1/publishers/google/models/${model}:${responseType}${stream ? '?alt=sse' : ''}`;
+                headers['Authorization'] = authHeader;
+            }
         } else {
             url = `${apiUrl.toString().replace(/\/$/, '')}/${apiVersion}/models/${model}:${responseType}?key=${apiKey}${stream ? '&alt=sse' : ''}`;
         }
+
         const generateResponse = await fetch(url, {
             body: JSON.stringify(body),
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
             signal: controller.signal,
         });
 
@@ -567,14 +608,14 @@ async function sendMakerSuiteRequest(request, response) {
                 // Pipe remote SSE stream to Express response
                 forwardFetchResponse(generateResponse, response);
             } catch (error) {
-                console.error('Error forwarding streaming response:', error);
+                
                 if (!response.headersSent) {
                     return response.status(500).send({ error: true });
                 }
             }
         } else {
             if (!generateResponse.ok) {
-                console.warn(`${apiName} API returned error: ${generateResponse.status} ${generateResponse.statusText} ${await generateResponse.text()}`);
+                
                 return response.status(500).send({ error: true });
             }
 
@@ -584,7 +625,7 @@ async function sendMakerSuiteRequest(request, response) {
             const candidates = generateResponseJson?.candidates;
             if (!candidates || candidates.length === 0) {
                 let message = `${apiName} API returned no candidate`;
-                console.warn(message, generateResponseJson);
+                
                 if (generateResponseJson?.promptFeedback?.blockReason) {
                     message += `\nPrompt was blocked due to : ${generateResponseJson.promptFeedback.blockReason}`;
                 }
@@ -594,11 +635,12 @@ async function sendMakerSuiteRequest(request, response) {
             const responseContent = candidates[0].content ?? candidates[0].output;
             const functionCall = (candidates?.[0]?.content?.parts ?? []).some(part => part.functionCall);
             const inlineData = (candidates?.[0]?.content?.parts ?? []).some(part => part.inlineData);
+            
 
             const responseText = typeof responseContent === 'string' ? responseContent : responseContent?.parts?.filter(part => !part.thought)?.map(part => part.text)?.join('\n\n');
             if (!responseText && !functionCall && !inlineData) {
                 let message = `${apiName} Candidate text empty`;
-                console.warn(message, generateResponseJson);
+                
                 return response.send({ error: { message } });
             }
 
@@ -607,7 +649,7 @@ async function sendMakerSuiteRequest(request, response) {
             return response.send(reply);
         }
     } catch (error) {
-        console.error(`Error communicating with ${apiName} API:`, error);
+        
         if (!response.headersSent) {
             return response.status(500).send({ error: true });
         }
@@ -624,11 +666,12 @@ async function sendAI21Request(request, response) {
 
     const apiKey = readSecret(request.user.directories, SECRET_KEYS.AI21);
     if (!apiKey) {
-        console.warn('AI21 API key is missing.');
+        
         return response.status(400).send({ error: true });
     }
 
     const controller = new AbortController();
+    
     request.socket.removeAllListeners('close');
     request.socket.on('close', function () {
         controller.abort();
@@ -655,6 +698,8 @@ async function sendAI21Request(request, response) {
         signal: controller.signal,
     };
 
+    
+
     try {
         const generateResponse = await fetch(API_AI21 + '/chat/completions', options);
         if (request.body.stream) {
@@ -662,15 +707,16 @@ async function sendAI21Request(request, response) {
         } else {
             if (!generateResponse.ok) {
                 const errorText = await generateResponse.text();
-                console.warn(`AI21 API returned error: ${generateResponse.status} ${generateResponse.statusText} ${errorText}`);
+                
                 const errorJson = tryParse(errorText) ?? { error: true };
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            
             return response.send(generateResponseJson);
         }
     } catch (error) {
-        console.error('Error communicating with AI21 API: ', error);
+        
         if (!response.headersSent) {
             response.send({ error: true });
         } else {
@@ -689,7 +735,7 @@ async function sendMistralAIRequest(request, response) {
     const apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.MISTRALAI);
 
     if (!apiKey) {
-        console.warn('MistralAI API key is missing.');
+        
         return response.status(400).send({ error: true });
     }
 
@@ -731,21 +777,24 @@ async function sendMistralAIRequest(request, response) {
             timeout: 0,
         };
 
+        
+
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
         if (request.body.stream) {
             forwardFetchResponse(generateResponse, response);
         } else {
             if (!generateResponse.ok) {
                 const errorText = await generateResponse.text();
-                console.warn(`MistralAI API returned error: ${generateResponse.status} ${generateResponse.statusText} ${errorText}`);
+                
                 const errorJson = tryParse(errorText) ?? { error: true };
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            
             return response.send(generateResponseJson);
         }
     } catch (error) {
-        console.error('Error communicating with MistralAI API: ', error);
+        
         if (!response.headersSent) {
             response.send({ error: true });
         } else {
@@ -768,7 +817,7 @@ async function sendCohereRequest(request, response) {
     });
 
     if (!apiKey) {
-        console.warn('Cohere API key is missing.');
+        
         return response.status(400).send({ error: true });
     }
 
@@ -807,6 +856,8 @@ async function sendCohereRequest(request, response) {
             requestBody.safety_mode = 'OFF';
         }
 
+        
+
         const config = {
             method: 'POST',
             headers: {
@@ -827,15 +878,16 @@ async function sendCohereRequest(request, response) {
             const generateResponse = await fetch(apiUrl, config);
             if (!generateResponse.ok) {
                 const errorText = await generateResponse.text();
-                console.warn(`Cohere API returned error: ${generateResponse.status} ${generateResponse.statusText} ${errorText}`);
+                
                 const errorJson = tryParse(errorText) ?? { error: true };
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            
             return response.send(generateResponseJson);
         }
     } catch (error) {
-        console.error('Error communicating with Cohere API: ', error);
+        
         if (!response.headersSent) {
             response.send({ error: true });
         } else {
@@ -854,7 +906,7 @@ async function sendDeepSeekRequest(request, response) {
     const apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.DEEPSEEK);
 
     if (!apiKey && !request.body.reverse_proxy) {
-        console.warn('DeepSeek API key is missing.');
+        
         return response.status(400).send({ error: true });
     }
 
@@ -885,8 +937,10 @@ async function sendDeepSeekRequest(request, response) {
             });
         }
 
-        const postProcessType = String(request.body.model).endsWith('-reasoner') ? 'deepseek-reasoner' : 'deepseek';
-        const processedMessages = postProcessPrompt(request.body.messages, postProcessType, getPromptNames(request));
+        const postProcessType = String(request.body.model).endsWith('-reasoner')
+            ? PROMPT_PROCESSING_TYPE.STRICT_TOOLS
+            : PROMPT_PROCESSING_TYPE.SEMI_TOOLS;
+        const processedMessages = addAssistantPrefix(postProcessPrompt(request.body.messages, postProcessType, getPromptNames(request)), bodyParams.tools);
 
         const requestBody = {
             'messages': processedMessages,
@@ -912,6 +966,8 @@ async function sendDeepSeekRequest(request, response) {
             signal: controller.signal,
         };
 
+        
+
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
 
         if (request.body.stream) {
@@ -919,15 +975,16 @@ async function sendDeepSeekRequest(request, response) {
         } else {
             if (!generateResponse.ok) {
                 const errorText = await generateResponse.text();
-                console.warn(`DeepSeek API returned error: ${generateResponse.status} ${generateResponse.statusText} ${errorText}`);
+                
                 const errorJson = tryParse(errorText) ?? { error: true };
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            
             return response.send(generateResponseJson);
         }
     } catch (error) {
-        console.error('Error communicating with DeepSeek API: ', error);
+        
         if (!response.headersSent) {
             response.send({ error: true });
         } else {
@@ -946,7 +1003,7 @@ async function sendXaiRequest(request, response) {
     const apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.XAI);
 
     if (!apiKey && !request.body.reverse_proxy) {
-        console.warn('xAI API key is missing.');
+        
         return response.status(400).send({ error: true });
     }
 
@@ -977,6 +1034,17 @@ async function sendXaiRequest(request, response) {
             bodyParams['reasoning_effort'] = request.body.reasoning_effort === 'high' ? 'high' : 'low';
         }
 
+        if (request.body.enable_web_search) {
+            bodyParams['search_parameters'] = {
+                mode: 'on',
+                sources: [
+                    { type: 'web', safe_search: false },
+                    { type: 'news', safe_search: false },
+                    { type: 'x' },
+                ],
+            };
+        }
+
         const processedMessages = request.body.messages = convertXAIMessages(request.body.messages, getPromptNames(request));
 
         const requestBody = {
@@ -1004,6 +1072,8 @@ async function sendXaiRequest(request, response) {
             signal: controller.signal,
         };
 
+        
+
         const generateResponse = await fetch(apiUrl + '/chat/completions', config);
 
         if (request.body.stream) {
@@ -1011,15 +1081,109 @@ async function sendXaiRequest(request, response) {
         } else {
             if (!generateResponse.ok) {
                 const errorText = await generateResponse.text();
-                console.warn(`xAI API returned error: ${generateResponse.status} ${generateResponse.statusText} ${errorText}`);
+                
                 const errorJson = tryParse(errorText) ?? { error: true };
                 return response.status(500).send(errorJson);
             }
             const generateResponseJson = await generateResponse.json();
+            
             return response.send(generateResponseJson);
         }
     } catch (error) {
-        console.error('Error communicating with xAI API: ', error);
+        
+        if (!response.headersSent) {
+            response.send({ error: true });
+        } else {
+            response.end();
+        }
+    }
+}
+
+/**
+ * Sends a request to AI/ML API.
+ * @param {express.Request} request Express request
+ * @param {express.Response} response Express response
+ */
+async function sendAimlapiRequest(request, response) {
+    const apiUrl = API_AIMLAPI;
+    const apiKey = readSecret(request.user.directories, SECRET_KEYS.AIMLAPI);
+
+    if (!apiKey) {
+        
+        return response.status(400).send({ error: true });
+    }
+
+    const controller = new AbortController();
+    request.socket.removeAllListeners('close');
+    request.socket.on('close', function () {
+        controller.abort();
+    });
+
+    try {
+        let bodyParams = {};
+
+        if (request.body.logprobs > 0) {
+            bodyParams['top_logprobs'] = request.body.logprobs;
+            bodyParams['logprobs'] = true;
+        }
+
+        if (Array.isArray(request.body.tools) && request.body.tools.length > 0) {
+            bodyParams['tools'] = request.body.tools;
+            bodyParams['tool_choice'] = request.body.tool_choice;
+        }
+
+        if (Array.isArray(request.body.stop) && request.body.stop.length > 0) {
+            bodyParams['stop'] = request.body.stop;
+        }
+
+        if (request.body.reasoning_effort) {
+            bodyParams['reasoning_effort'] = request.body.reasoning_effort;
+        }
+
+        const requestBody = {
+            'messages': request.body.messages,
+            'model': request.body.model,
+            'temperature': request.body.temperature,
+            'max_tokens': request.body.max_tokens,
+            'stream': request.body.stream,
+            'presence_penalty': request.body.presence_penalty,
+            'frequency_penalty': request.body.frequency_penalty,
+            'top_p': request.body.top_p,
+            'seed': request.body.seed,
+            'n': request.body.n,
+            ...bodyParams,
+        };
+
+        const config = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + apiKey,
+                ...AIMLAPI_HEADERS,
+            },
+            body: JSON.stringify(requestBody),
+            signal: controller.signal,
+        };
+
+        
+
+        const generateResponse = await fetch(apiUrl + '/chat/completions', config);
+
+        if (request.body.stream) {
+            forwardFetchResponse(generateResponse, response);
+        } else {
+            if (!generateResponse.ok) {
+                const errorText = await generateResponse.text();
+                
+                const errorJson = tryParse(errorText) ?? { error: true };
+                return response.status(500).send(errorJson);
+            }
+            const generateResponseJson = await generateResponse.json();
+            
+            return response.send(generateResponseJson);
+        }
+    } catch (error) {
+        
         if (!response.headersSent) {
             response.send({ error: true });
         } else {
@@ -1030,70 +1194,110 @@ async function sendXaiRequest(request, response) {
 
 export const router = express.Router();
 
-router.post('/status', async function (request, response_getstatus_openai) {
-    if (!request.body) return response_getstatus_openai.sendStatus(400);
+router.post('/status', async function (request, statusResponse) {
+    if (!request.body) return statusResponse.sendStatus(400);
 
-    let api_url;
-    let api_key_openai;
+    let apiUrl;
+    let apiKey;
     let headers;
 
     if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.OPENAI) {
-        api_url = new URL(request.body.reverse_proxy || API_OPENAI).toString();
-        api_key_openai = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.OPENAI);
+        apiUrl = new URL(request.body.reverse_proxy || API_OPENAI).toString();
+        apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.OPENAI);
         headers = {};
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.OPENROUTER) {
-        api_url = 'https://openrouter.ai/api/v1';
-        api_key_openai = readSecret(request.user.directories, SECRET_KEYS.OPENROUTER);
+        apiUrl = 'https://openrouter.ai/api/v1';
+        apiKey = readSecret(request.user.directories, SECRET_KEYS.OPENROUTER);
         // OpenRouter needs to pass the Referer and X-Title: https://openrouter.ai/docs#requests
         headers = { ...OPENROUTER_HEADERS };
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.MISTRALAI) {
-        api_url = new URL(request.body.reverse_proxy || API_MISTRAL).toString();
-        api_key_openai = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.MISTRALAI);
+        apiUrl = new URL(request.body.reverse_proxy || API_MISTRAL).toString();
+        apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.MISTRALAI);
         headers = {};
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.CUSTOM) {
-        api_url = request.body.custom_url;
-        api_key_openai = readSecret(request.user.directories, SECRET_KEYS.CUSTOM);
+        apiUrl = request.body.custom_url;
+        apiKey = readSecret(request.user.directories, SECRET_KEYS.CUSTOM);
         headers = {};
         mergeObjectWithYaml(headers, request.body.custom_include_headers);
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.COHERE) {
-        api_url = API_COHERE_V1;
-        api_key_openai = readSecret(request.user.directories, SECRET_KEYS.COHERE);
+        apiUrl = API_COHERE_V1;
+        apiKey = readSecret(request.user.directories, SECRET_KEYS.COHERE);
         headers = {};
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.ZEROONEAI) {
-        api_url = API_01AI;
-        api_key_openai = readSecret(request.user.directories, SECRET_KEYS.ZEROONEAI);
+        apiUrl = API_01AI;
+        apiKey = readSecret(request.user.directories, SECRET_KEYS.ZEROONEAI);
         headers = {};
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.NANOGPT) {
-        api_url = API_NANOGPT;
-        api_key_openai = readSecret(request.user.directories, SECRET_KEYS.NANOGPT);
+        apiUrl = API_NANOGPT;
+        apiKey = readSecret(request.user.directories, SECRET_KEYS.NANOGPT);
         headers = {};
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.DEEPSEEK) {
-        api_url = new URL(request.body.reverse_proxy || API_DEEPSEEK.replace('/beta', ''));
-        api_key_openai = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.DEEPSEEK);
+        apiUrl = new URL(request.body.reverse_proxy || API_DEEPSEEK.replace('/beta', ''));
+        apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.DEEPSEEK);
         headers = {};
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.XAI) {
-        api_url = new URL(request.body.reverse_proxy || API_XAI);
-        api_key_openai = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.XAI);
+        apiUrl = new URL(request.body.reverse_proxy || API_XAI);
+        apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.XAI);
         headers = {};
+    } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.AIMLAPI) {
+        apiUrl = API_AIMLAPI;
+        apiKey = readSecret(request.user.directories, SECRET_KEYS.AIMLAPI);
+        headers = { ...AIMLAPI_HEADERS };
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.POLLINATIONS) {
-        api_url = 'https://text.pollinations.ai';
-        api_key_openai = 'NONE';
+        apiUrl = 'https://text.pollinations.ai';
+        apiKey = 'NONE';
         headers = {};
+    } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.MAKERSUITE) {
+        apiKey = request.body.reverse_proxy ? request.body.proxy_password : readSecret(request.user.directories, SECRET_KEYS.MAKERSUITE);
+        apiUrl = trimTrailingSlash(request.body.reverse_proxy || API_MAKERSUITE);
+        const apiVersion = getConfigValue('gemini.apiVersion', 'v1beta');
+        const modelsUrl = !apiKey && request.body.reverse_proxy
+            ? `${apiUrl}/${apiVersion}/models`
+            : `${apiUrl}/${apiVersion}/models?key=${apiKey}`;
+
+        if (!apiKey && !request.body.reverse_proxy) {
+            
+            return statusResponse.status(400).send({ error: true });
+        }
+
+        try {
+            const response = await fetch(modelsUrl);
+
+            if (response.ok) {
+                /** @type {any} */
+                const data = await response.json();
+                // Transform Google AI Studio models to OpenAI format
+                const models = data.models
+                    ?.filter(model => model.supportedGenerationMethods?.includes('generateContent'))
+                    ?.map(model => ({
+                        id: model.name.replace('models/', ''),
+                    })) || [];
+
+                
+                return statusResponse.send({ data: models });
+            } else {
+                
+                return statusResponse.send({ error: true, bypass: true, data: { data: [] } });
+            }
+        } catch (error) {
+            
+            return statusResponse.send({ error: true, bypass: true, data: { data: [] } });
+        }
     } else {
-        console.warn('This chat completion source is not supported yet.');
-        return response_getstatus_openai.status(400).send({ error: true });
+        
+        return statusResponse.status(400).send({ error: true });
     }
 
-    if (!api_key_openai && !request.body.reverse_proxy && request.body.chat_completion_source !== CHAT_COMPLETION_SOURCES.CUSTOM) {
-        console.warn('Chat Completion API key is missing.');
-        return response_getstatus_openai.status(400).send({ error: true });
+    if (!apiKey && !request.body.reverse_proxy && request.body.chat_completion_source !== CHAT_COMPLETION_SOURCES.CUSTOM) {
+        
+        return statusResponse.status(400).send({ error: true });
     }
 
     try {
-        const response = await fetch(api_url + '/models', {
+        const response = await fetch(apiUrl + '/models', {
             method: 'GET',
             headers: {
-                'Authorization': 'Bearer ' + api_key_openai,
+                'Authorization': 'Bearer ' + apiKey,
                 ...headers,
             },
         });
@@ -1106,7 +1310,7 @@ router.post('/status', async function (request, response_getstatus_openai) {
                 data = { data: data.map(model => ({ id: model.name, ...model })) };
             }
 
-            response_getstatus_openai.send(data);
+            statusResponse.send(data);
 
             if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.COHERE && Array.isArray(data?.models)) {
                 data.data = data.models.map(model => ({ id: model.name, ...model }));
@@ -1125,32 +1329,32 @@ router.post('/status', async function (request, response_getstatus_openai) {
                     };
                 });
 
-                console.info('Available OpenRouter models:', models);
+                
             } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.MISTRALAI) {
                 const models = data?.data;
-                console.info(models);
+                
             } else {
                 const models = data?.data;
 
                 if (Array.isArray(models)) {
                     const modelIds = models.filter(x => x && typeof x === 'object').map(x => x.id).sort();
-                    console.info('Available models:', modelIds);
+                    
                 } else {
-                    console.warn('Chat Completion endpoint did not return a list of models.');
+                    
                 }
             }
         }
         else {
-            console.error('Chat Completion status check failed. Either Access Token is incorrect or API endpoint is down.');
-            response_getstatus_openai.send({ error: true, can_bypass: true, data: { data: [] } });
+            
+            statusResponse.send({ error: true, data: { data: [] } });
         }
     } catch (e) {
-        console.error(e);
+        
 
-        if (!response_getstatus_openai.headersSent) {
-            response_getstatus_openai.send({ error: true });
+        if (!statusResponse.headersSent) {
+            statusResponse.send({ error: true });
         } else {
-            response_getstatus_openai.end();
+            statusResponse.end();
         }
     }
 });
@@ -1174,7 +1378,7 @@ router.post('/bias', async function (request, response) {
             const tokenizer = getSentencepiceTokenizer(model);
             const instance = await tokenizer?.get();
             if (!instance) {
-                console.error('Tokenizer not initialized:', model);
+                
                 return response.send({});
             }
             encodeFunction = (text) => new Uint32Array(instance.encodeIds(text));
@@ -1182,7 +1386,7 @@ router.post('/bias', async function (request, response) {
             const tokenizer = getWebTokenizer(model);
             const instance = await tokenizer?.get();
             if (!instance) {
-                console.warn('Tokenizer not initialized:', model);
+                
                 return response.send({});
             }
             encodeFunction = (text) => new Uint32Array(instance.encode(text));
@@ -1203,7 +1407,7 @@ router.post('/bias', async function (request, response) {
                     result[token] = entry.value;
                 }
             } catch {
-                console.warn('Tokenizer failed to encode:', entry.text);
+                
             }
         }
 
@@ -1234,7 +1438,7 @@ router.post('/bias', async function (request, response) {
             return encode(text);
         }
     } catch (error) {
-        console.error(error);
+        
         return response.send({});
     }
 });
@@ -1245,7 +1449,7 @@ router.post('/generate', function (request, response) {
 
     const postProcessingType = request.body.custom_prompt_post_processing;
     if (Array.isArray(request.body.messages) && postProcessingType) {
-        console.info('Applying custom prompt post-processing of type', postProcessingType);
+        
         request.body.messages = postProcessPrompt(
             request.body.messages,
             postProcessingType,
@@ -1261,6 +1465,7 @@ router.post('/generate', function (request, response) {
         case CHAT_COMPLETION_SOURCES.MISTRALAI: return sendMistralAIRequest(request, response);
         case CHAT_COMPLETION_SOURCES.COHERE: return sendCohereRequest(request, response);
         case CHAT_COMPLETION_SOURCES.DEEPSEEK: return sendDeepSeekRequest(request, response);
+        case CHAT_COMPLETION_SOURCES.AIMLAPI: return sendAimlapiRequest(request, response);
         case CHAT_COMPLETION_SOURCES.XAI: return sendXaiRequest(request, response);
     }
 
@@ -1326,10 +1531,11 @@ router.post('/generate', function (request, response) {
             bodyParams['reasoning'] = { effort: request.body.reasoning_effort };
         }
 
-        let cachingAtDepth = getConfigValue('claude.cachingAtDepth', -1, 'number');
+        const cachingAtDepth = getConfigValue('claude.cachingAtDepth', -1, 'number');
         const isClaude3or4 = /anthropic\/claude-(3|opus-4|sonnet-4)/.test(request.body.model);
+        const cacheTTL = getConfigValue('claude.extendedTTL', false, 'boolean') ? '1h' : '5m';
         if (Number.isInteger(cachingAtDepth) && cachingAtDepth >= 0 && isClaude3or4) {
-            cachingAtDepthForOpenRouterClaude(request.body.messages, cachingAtDepth);
+            cachingAtDepthForOpenRouterClaude(request.body.messages, cachingAtDepth, cacheTTL);
         }
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.CUSTOM) {
         apiUrl = request.body.custom_url;
@@ -1353,7 +1559,7 @@ router.post('/generate', function (request, response) {
         apiKey = readSecret(request.user.directories, SECRET_KEYS.PERPLEXITY);
         headers = {};
         bodyParams = {};
-        request.body.messages = postProcessPrompt(request.body.messages, 'strict', getPromptNames(request));
+        request.body.messages = postProcessPrompt(request.body.messages, PROMPT_PROCESSING_TYPE.STRICT, getPromptNames(request));
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.GROQ) {
         apiUrl = API_GROQ;
         apiKey = readSecret(request.user.directories, SECRET_KEYS.GROQ);
@@ -1372,13 +1578,17 @@ router.post('/generate', function (request, response) {
     } else if (request.body.chat_completion_source === CHAT_COMPLETION_SOURCES.POLLINATIONS) {
         apiUrl = API_POLLINATIONS;
         apiKey = 'NONE';
-        headers = {};
+        headers = {
+            'Authorization': '',
+        };
         bodyParams = {
             reasoning_effort: request.body.reasoning_effort,
             private: true,
+            referrer: 'sillytavern',
+            seed: request.body.seed ?? Math.floor(Math.random() * 99999999),
         };
     } else {
-        console.warn('This chat completion source is not supported yet.');
+        
         return response.status(400).send({ error: true });
     }
 
@@ -1390,7 +1600,7 @@ router.post('/generate', function (request, response) {
     }
 
     if (!apiKey && !request.body.reverse_proxy && request.body.chat_completion_source !== CHAT_COMPLETION_SOURCES.CUSTOM) {
-        console.warn('OpenAI API key is missing.');
+        
         return response.status(400).send({ error: true });
     }
 
@@ -1450,6 +1660,8 @@ router.post('/generate', function (request, response) {
         signal: controller.signal,
     };
 
+    
+
     makeRequest(config, response, request);
 
     /**
@@ -1468,7 +1680,7 @@ router.post('/generate', function (request, response) {
             const fetchResponse = await fetch(endpointUrl, config);
 
             if (request.body.stream) {
-                console.info('Streaming request in progress');
+                
                 forwardFetchResponse(fetchResponse, response);
                 return;
             }
@@ -1482,8 +1694,10 @@ router.post('/generate', function (request, response) {
                     }
                 }
                 response.send(json);
+                
+                
             } else if (fetchResponse.status === 429 && retries > 0) {
-                console.warn(`Out of quota, retrying in ${Math.round(timeout / 1000)}s`);
+                
                 setTimeout(() => {
                     timeout *= 2;
                     makeRequest(config, response, request, retries - 1, timeout);
@@ -1492,7 +1706,7 @@ router.post('/generate', function (request, response) {
                 await handleErrorResponse(fetchResponse);
             }
         } catch (error) {
-            console.error('Generation failed', error);
+            
             const message = error.code === 'ECONNREFUSED'
                 ? `Connection refused: ${error.message}`
                 : error.message || 'Unknown error occurred';
@@ -1531,8 +1745,7 @@ router.post('/generate', function (request, response) {
 
         // Fallback to original behavior for other errors
         const message = errorData?.error?.message || errorResponse.statusText || 'Unknown error occurred';
-        const quota_error = errorResponse.status === 429;
-        console.error('Chat completion request error: ', message, responseText);
+        const quota_error = errorResponse.status === 429;        
 
         if (!response.headersSent) {
             response.send({

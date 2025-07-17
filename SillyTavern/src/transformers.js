@@ -79,7 +79,7 @@ function getModelForTask(task) {
         const model = getConfigValue(tasks[task].configField, null);
         return model || defaultModel;
     } catch (error) {
-        console.warn('Failed to read config.yaml, using default classification model.');
+        
         return defaultModel;
     }
 }
@@ -99,7 +99,7 @@ async function migrateCacheToDataDir() {
             return;
         }
 
-        console.log('Migrating model cache files to data directory. Please wait...');
+        
 
         for (const file of files) {
             try {
@@ -108,7 +108,7 @@ async function migrateCacheToDataDir() {
                 fs.cpSync(oldPath, newPath, { recursive: true, force: true });
                 fs.rmSync(oldPath, { recursive: true, force: true });
             } catch (error) {
-                console.warn('Failed to migrate cache file. The model will be re-downloaded.', error);
+                
             }
         }
     }
@@ -127,14 +127,14 @@ export async function getPipeline(task, forceModel = '') {
         if (forceModel === '' || tasks[task].currentModel === forceModel) {
             return tasks[task].pipeline;
         }
-        console.log('Disposing transformers.js pipeline for for task', task, 'with model', tasks[task].currentModel);
+        
         await tasks[task].pipeline.dispose();
     }
 
     const cacheDir = path.join(globalThis.DATA_ROOT, '_cache');
     const model = forceModel || getModelForTask(task);
     const localOnly = !getConfigValue('extensions.models.autoDownload', true, 'boolean');
-    console.log('Initializing transformers.js pipeline for task', task, 'with model', model);
+    
     const instance = await pipeline(task, model, { cache_dir: cacheDir, quantized: tasks[task].quantized ?? true, local_files_only: localOnly });
     tasks[task].pipeline = instance;
     tasks[task].currentModel = model;
