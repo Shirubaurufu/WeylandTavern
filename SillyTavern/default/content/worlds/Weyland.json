@@ -7175,7 +7175,7 @@
             "probability": 100,
             "useProbability": true,
             "depth": 4,
-            "group": "",
+            "group": "Magic",
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
