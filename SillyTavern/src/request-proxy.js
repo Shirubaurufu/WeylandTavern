@@ -22,12 +22,12 @@ export default function initRequestProxy({ enabled, url, bypass }) {
         }
 
         if (!url) {
-            console.error(color.red(LOG_HEADER), 'No proxy URL provided');
+            
             return;
         }
 
         if (!isValidUrl(url)) {
-            console.error(color.red(LOG_HEADER), 'Invalid proxy URL provided');
+            
             return;
         }
 
@@ -44,9 +44,9 @@ export default function initRequestProxy({ enabled, url, bypass }) {
         https.globalAgent = proxyAgent;
 
         console.info();
-        console.info(color.green(LOG_HEADER), 'Proxy URL is used:', color.blue(url));
+        
         console.info();
     } catch (error) {
-        console.error(color.red(LOG_HEADER), 'Failed to initialize request proxy:', error);
+        
     }
 }

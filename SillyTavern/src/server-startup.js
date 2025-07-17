@@ -46,6 +46,7 @@ import { router as textCompletionsRouter } from './endpoints/backends/text-compl
 import { router as scaleAltRouter } from './endpoints/backends/scale-alt.js';
 import { router as speechRouter } from './endpoints/speech.js';
 import { router as azureRouter } from './endpoints/azure.js';
+import { router as dataMaidRouter } from './endpoints/data-maid.js';
 
 /**
  * @typedef {object} ServerStartupResult
@@ -68,7 +69,7 @@ export function redirectDeprecatedEndpoints(app) {
      */
     function redirect(src, destination) {
         app.use(src, (req, res) => {
-            console.warn(`API endpoint ${src} is deprecated; use ${destination} instead`);
+            
             // HTTP 301 causes the request to become a GET. 308 preserves the request method.
             res.redirect(308, destination);
         });
@@ -173,6 +174,7 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/backends/scale-alt', scaleAltRouter);
     app.use('/api/speech', speechRouter);
     app.use('/api/azure', azureRouter);
+    app.use('/api/data-maid', dataMaidRouter);
 }
 
 /**
@@ -194,7 +196,7 @@ export class ServerStartup {
      * @param {string} message
      */
     #fatal(message) {
-        console.error(color.red(message));
+        
         process.exit(1);
     }
 
@@ -289,8 +291,8 @@ export class ServerStartup {
             try {
                 await createFunc(this.cliArgs.getIPv6ListenUrl(), 6);
             } catch (error) {
-                console.error('Warning: failed to start server on IPv6');
-                console.error(error);
+                
+                
 
                 v6Failed = true;
             }
@@ -300,8 +302,8 @@ export class ServerStartup {
             try {
                 await createFunc(this.cliArgs.getIPv4ListenUrl(), 4);
             } catch (error) {
-                console.error('Warning: failed to start server on IPv4');
-                console.error(error);
+                
+                
 
                 v4Failed = true;
             }
@@ -347,9 +349,9 @@ export class ServerStartup {
             }
             if (hasIPv6) {
                 if (useIPv6) {
-                    console.log(color.green('IPv6 support detected'));
+                    
                 } else {
-                    console.log('IPv6 support detected (but disabled)');
+                    
                 }
             }
 
@@ -359,22 +361,22 @@ export class ServerStartup {
             }
             if (hasIPv4) {
                 if (useIPv4) {
-                    console.log(color.green('IPv4 support detected'));
+                    
                 } else {
-                    console.log('IPv4 support detected (but disabled)');
+                    
                 }
             }
 
             if (this.cliArgs.enableIPv6 === 'auto' && this.cliArgs.enableIPv4 === 'auto') {
                 if (!hasIPv6 && !hasIPv4) {
-                    console.error('Both IPv6 and IPv4 are not detected');
+                    
                     process.exit(1);
                 }
             }
         }
 
         if (!useIPv6 && !useIPv4) {
-            console.error('Both IPv6 and IPv4 are disabled or not detected');
+            
             process.exit(1);
         }
 

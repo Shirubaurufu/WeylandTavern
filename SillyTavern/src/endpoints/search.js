@@ -102,6 +102,8 @@ router.post('/serpapi', async (request, response) => {
         const { query } = request.body;
         const result = await fetch(`https://serpapi.com/search.json?q=${encodeURIComponent(query)}&api_key=${key}`);
 
+        
+
         if (!result.ok) {
             const text = await result.text();
             
@@ -109,6 +111,7 @@ router.post('/serpapi', async (request, response) => {
         }
 
         const data = await result.json();
+        
         return response.json(data);
     } catch (error) {
         
@@ -165,6 +168,8 @@ router.post('/searxng', async (request, response) => {
             
             return response.sendStatus(400);
         }
+
+        
 
         const mainPageUrl = new URL(baseUrl);
         const mainPageRequest = await fetch(mainPageUrl, { headers: visitHeaders });
@@ -241,6 +246,8 @@ router.post('/tavily', async (request, response) => {
             body: JSON.stringify(body),
         });
 
+        
+
         if (!result.ok) {
             const text = await result.text();
             
@@ -248,6 +255,7 @@ router.post('/tavily', async (request, response) => {
         }
 
         const data = await result.json();
+        
         return response.json(data);
     } catch (error) {
         
@@ -263,6 +271,8 @@ router.post('/koboldcpp', async (request, response) => {
             
             return response.sendStatus(400);
         }
+
+        
 
         const baseUrl = trimV1(url);
         const args = {
@@ -281,6 +291,7 @@ router.post('/koboldcpp', async (request, response) => {
         }
 
         const data = await result.json();
+        
         return response.json(data);
     } catch (error) {
         
@@ -313,13 +324,16 @@ router.post('/serper', async (request, response) => {
             body: JSON.stringify({ q: query }),
         });
 
+        
+
         if (!result.ok) {
             const text = await result.text();
-            console.warn('Serper request failed', result.statusText, text);
+            
             return response.status(500).send(text);
         }
 
         const data = await result.json();
+        
         return response.json(data);
     } catch (error) {
         
@@ -364,7 +378,7 @@ router.post('/visit', async (request, response) => {
             return response.sendStatus(400);
         }
 
-        console.info('Visiting web URL', url);
+        
 
         const result = await fetch(url, { headers: visitHeaders });
 

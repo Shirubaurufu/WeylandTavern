@@ -125,8 +125,10 @@ router.post('/get', async (request, response) => {
                     output[folder] = [];
                     const live2d_folder = path.normalize(path.join(folderPath, folder));
                     const files = getFiles(live2d_folder);
+                    //console.debug("FILE FOUND:",files)
                     for (let file of files) {
                         if (file.includes('model') && file.endsWith('.json')) {
+                            //console.debug("Asset live2d model found:",file)
                             output[folder].push(clientRelativePath(request.user.directories.root, file));
                         }
                     }
@@ -139,8 +141,10 @@ router.post('/get', async (request, response) => {
                     // Extract models
                     const vrm_model_folder = path.normalize(path.join(folderPath, 'vrm', 'model'));
                     let files = getFiles(vrm_model_folder);
+                    //console.debug("FILE FOUND:",files)
                     for (let file of files) {
                         if (!file.endsWith('.placeholder')) {
+                            //console.debug("Asset VRM model found:",file)
                             output['vrm']['model'].push(clientRelativePath(request.user.directories.root, file));
                         }
                     }
@@ -148,8 +152,10 @@ router.post('/get', async (request, response) => {
                     // Extract models
                     const vrm_animation_folder = path.normalize(path.join(folderPath, 'vrm', 'animation'));
                     files = getFiles(vrm_animation_folder);
+                    //console.debug("FILE FOUND:",files)
                     for (let file of files) {
                         if (!file.endsWith('.placeholder')) {
+                            //console.debug("Asset VRM animation found:",file)
                             output['vrm']['animation'].push(clientRelativePath(request.user.directories.root, file));
                         }
                     }
@@ -205,7 +211,7 @@ router.post('/download', async (request, response) => {
 
     const temp_path = path.join(request.user.directories.assets, 'temp', request.body.filename);
     const file_path = path.join(request.user.directories.assets, category, request.body.filename);
-    console.info('Request received to download', url, 'to', file_path);
+    
 
     try {
         // Download to temp
@@ -234,7 +240,7 @@ router.post('/download', async (request, response) => {
         }
 
         // Move into asset place
-        console.info('Download finished, moving file from', temp_path, 'to', file_path);
+        
         fs.copyFileSync(temp_path, file_path);
         fs.unlinkSync(temp_path);
         response.sendStatus(200);
@@ -273,7 +279,7 @@ router.post('/delete', async (request, response) => {
         return response.status(400).send(validation.message);
 
     const file_path = path.join(request.user.directories.assets, category, request.body.filename);
-    console.info('Request received to delete', category, file_path);
+    
 
     try {
         // Delete if previous download failed
@@ -281,7 +287,7 @@ router.post('/delete', async (request, response) => {
             fs.unlink(file_path, (err) => {
                 if (err) throw err;
             });
-            console.info('Asset deleted.');
+            
         }
         else {
             
@@ -338,6 +344,7 @@ router.post('/character', async (request, response) => {
                     const modelFolder = folderInfo.name;
                     const live2dModelPath = path.join(folderPath, modelFolder);
                     for (let file of fs.readdirSync(live2dModelPath)) {
+                        //console.debug("Character live2d model found:", file)
                         if (file.includes('model') && file.endsWith('.json'))
                             output.push(path.join('characters', name, category, modelFolder, file));
                     }

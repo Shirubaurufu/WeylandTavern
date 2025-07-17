@@ -154,7 +154,7 @@ router.post('/cancel-task', async (request, response) => {
         });
 
         const data = await fetchResult.json();
-        console.info(`Cancelled Horde task ${taskId}`);
+        
         return response.send(data);
     } catch (error) {
         
@@ -173,7 +173,7 @@ router.post('/task-status', async (request, response) => {
         });
 
         const data = await fetchResult.json();
-        console.info(`Horde task ${taskId} status:`, data);
+        
         return response.send(data);
     } catch (error) {
         
@@ -186,6 +186,7 @@ router.post('/generate-text', async (request, response) => {
     const url = 'https://aihorde.net/api/v2/generate/text/async';
     const agent = await getClientAgent();
 
+    
     try {
         const result = await fetch(url, {
             method: 'POST',
@@ -252,7 +253,7 @@ router.post('/caption-image', async (request, response) => {
         for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             await delay(CHECK_INTERVAL);
             const status = await ai_horde.getInterrogationStatus(result.id);
-            console.info(status);
+            
 
             if (status.state === HordeAsyncRequestStates.done) {
 
@@ -261,6 +262,7 @@ router.post('/caption-image', async (request, response) => {
                     return response.sendStatus(500);
                 }
 
+                
                 const caption = status?.forms[0]?.result?.caption || '';
 
                 if (!caption) {
@@ -312,7 +314,7 @@ router.post('/generate-image', async (request, response) => {
     try {
         const maxLength = PROMPT_THRESHOLD - String(request.body.negative_prompt).length - 5;
         if (String(request.body.prompt).length > maxLength) {
-            console.warn('Stable Horde prompt is too long, truncating...');
+            
             request.body.prompt = String(request.body.prompt).substring(0, maxLength);
         }
 
@@ -321,13 +323,14 @@ router.post('/generate-image', async (request, response) => {
             const sanitized = sanitizeHordeImagePrompt(request.body.prompt);
 
             if (request.body.prompt !== sanitized) {
-                console.info('Stable Horde prompt was sanitized.');
+                
             }
 
             request.body.prompt = sanitized;
         }
 
         const api_key_horde = readSecret(request.user.directories, SECRET_KEYS.HORDE) || ANONYMOUS_KEY;
+        
 
         const ai_horde = await getHordeClient();
         // noinspection JSCheckFunctionSignatures -- see @ts-ignore - use_gfpgan
@@ -356,16 +359,16 @@ router.post('/generate-image', async (request, response) => {
             { token: api_key_horde });
 
         if (!generation.id) {
-            console.warn('Image generation request is not satisfyable:', generation.message || 'unknown error');
+            
             return response.sendStatus(400);
         }
 
-        console.info('Horde image generation request:', generation);
+        
 
         const controller = new AbortController();
         request.socket.removeAllListeners('close');
         request.socket.on('close', function () {
-            console.warn('Horde image generation request aborted.');
+            
             controller.abort();
             if (generation.id) ai_horde.deleteImageGenerationRequest(generation.id);
         });
@@ -374,7 +377,7 @@ router.post('/generate-image', async (request, response) => {
             controller.signal.throwIfAborted();
             await delay(CHECK_INTERVAL);
             const check = await ai_horde.getImageGenerationCheck(generation.id);
-            console.info(check);
+            
 
             if (check.done) {
                 const result = await ai_horde.getImageGenerationStatus(generation.id);

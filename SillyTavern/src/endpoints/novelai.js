@@ -119,7 +119,7 @@ router.post('/status', async function (req, res) {
     const api_key_novel = readSecret(req.user.directories, SECRET_KEYS.NOVEL);
 
     if (!api_key_novel) {
-        console.warn('NovelAI Access Token is missing.');
+        
         return res.sendStatus(400);
     }
 
@@ -140,7 +140,7 @@ router.post('/status', async function (req, res) {
             return res.send({ error: true });
         }
         else {
-            console.warn('NovelAI returned an error:', response.statusText);
+            
             return res.send({ error: true });
         }
     } catch (error) {
@@ -155,7 +155,7 @@ router.post('/generate', async function (req, res) {
     const api_key_novel = readSecret(req.user.directories, SECRET_KEYS.NOVEL);
 
     if (!api_key_novel) {
-        console.warn('NovelAI Access Token is missing.');
+        
         return res.sendStatus(400);
     }
 
@@ -240,6 +240,8 @@ router.post('/generate', async function (req, res) {
         }
     }
 
+    
+
     const args = {
         body: JSON.stringify(data),
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api_key_novel },
@@ -258,7 +260,7 @@ router.post('/generate', async function (req, res) {
             if (!response.ok) {
                 const text = await response.text();
                 let message = text;
-                console.warn(`Novel API returned error: ${response.status} ${response.statusText} ${text}`);
+                
 
                 try {
                     const data = JSON.parse(text);
@@ -273,7 +275,7 @@ router.post('/generate', async function (req, res) {
 
             /** @type {any} */
             const data = await response.json();
-            console.info('NovelAI Output', data?.output);
+            
             return res.send(data);
         }
     } catch (error) {
@@ -289,11 +291,12 @@ router.post('/generate-image', async (request, response) => {
     const key = readSecret(request.user.directories, SECRET_KEYS.NOVEL);
 
     if (!key) {
-        console.warn('NovelAI Access Token is missing.');
+        
         return response.sendStatus(400);
     }
 
     try {
+        
         const generateUrl = `${IMAGE_NOVELAI}/ai/generate-image`;
         const generateResult = await fetch(generateUrl, {
             method: 'POST',
@@ -354,7 +357,7 @@ router.post('/generate-image', async (request, response) => {
 
         if (!generateResult.ok) {
             const text = await generateResult.text();
-            console.warn('NovelAI returned an error.', generateResult.statusText, text);
+            
             return response.sendStatus(500);
         }
 
@@ -374,7 +377,7 @@ router.post('/generate-image', async (request, response) => {
         }
 
         try {
-            console.info('Upscaling image...');
+            
             const upscaleUrl = `${API_NOVELAI}/ai/upscale`;
             const upscaleResult = await fetch(upscaleUrl, {
                 method: 'POST',
@@ -406,7 +409,7 @@ router.post('/generate-image', async (request, response) => {
 
             return response.send(upscaledBase64);
         } catch (error) {
-            console.warn('NovelAI generated an image, but upscaling failed. Returning original image.', error);
+            
             return response.send(originalBase64);
         }
     } catch (error) {

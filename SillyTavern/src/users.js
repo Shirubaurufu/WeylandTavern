@@ -130,9 +130,9 @@ export async function ensurePublicDirectoriesExist() {
 function logSecurityAlert(message) {
     const { basicAuthMode, whitelistMode } = globalThis.COMMAND_LINE_ARGS;
     if (basicAuthMode || whitelistMode) return; // safe!
-    console.error(color.red(message));
+    
     if (getConfigValue('securityOverride', false, 'boolean')) {
-        console.warn(color.red('Security has been overridden. If it\'s not a trusted network, change the settings.'));
+        
         return;
     }
     process.exit(1);
@@ -159,10 +159,10 @@ export async function verifySecuritySettings() {
     const unprotectedAdminUsers = unprotectedUsers.filter(x => x.admin);
 
     if (unprotectedUsers.length > 0) {
-        console.warn(color.blue('A friendly reminder that the following users are not password protected:'));
+        
         unprotectedUsers.map(x => `${color.yellow(x.handle)} ${color.red(x.admin ? '(admin)' : '')}`).forEach(x => console.warn(x));
         console.log();
-        console.warn(`Consider setting a password in the admin panel or by using the ${color.blue('recover.js')} script.`);
+        
         console.log();
 
         if (unprotectedAdminUsers.length > 0) {
@@ -204,7 +204,7 @@ export function cleanUploads() {
             });
         }
     } catch (err) {
-        console.error(err);
+        
     }
 }
 
@@ -231,19 +231,19 @@ export async function migrateUserData() {
 
     const TIMEOUT = 10;
 
-    console.log();
-    console.log(color.magenta('Preparing to migrate user data...'));
-    console.log(`All public data will be moved to the ${globalThis.DATA_ROOT} directory.`);
-    console.log('This process may take a while depending on the amount of data to move.');
-    console.log(`Backups will be placed in the ${PUBLIC_DIRECTORIES.backups} directory.`);
-    console.log(`The process will start in ${TIMEOUT} seconds. Press Ctrl+C to cancel.`);
+    
+    
+    
+    
+    
+    
 
     for (let i = TIMEOUT; i > 0; i--) {
-        console.log(`${i}...`);
+        
         await delay(1000);
     }
 
-    console.log(color.magenta('Starting migration... Do not interrupt the process!'));
+    
 
     const userDirectories = getUserDirectories(DEFAULT_USER.handle);
 
@@ -380,11 +380,11 @@ export async function migrateUserData() {
     const errors = [];
 
     for (const migration of dataMigrationMap) {
-        console.log(`Migrating ${migration.old} to ${migration.new}...`);
+        
 
         try {
             if (!fs.existsSync(migration.old)) {
-                console.log(color.yellow(`Skipping migration of ${migration.old} as it does not exist.`));
+                
                 continue;
             }
 
@@ -410,17 +410,17 @@ export async function migrateUserData() {
                 fs.rmSync(migration.old, { recursive: true, force: true });
             }
         } catch (error) {
-            console.error(color.red(`Error migrating ${migration.old} to ${migration.new}:`), error.message);
+            
             errors.push(migration.old);
         }
     }
 
     if (errors.length > 0) {
-        console.log(color.red('Migration completed with errors. Move the following files manually:'));
-        errors.forEach(error => console.error(error));
+        
+        
     }
 
-    console.log(color.green('Migration completed!'));
+    
 }
 
 export async function migrateSystemPrompts() {
@@ -471,11 +471,11 @@ export async function migrateSystemPrompts() {
                 sysPromptData.name = `[Migrated] ${sysPromptData.name}`;
                 const syspromptPath = path.join(directory.sysprompt, `${sysPromptData.name}.json`);
                 writeFileAtomicSync(syspromptPath, JSON.stringify(sysPromptData, null, 4));
-                console.log(`Migrated system prompt ${sysPromptData.name} for ${directory.root.split(path.sep).pop()}`);
+                
             }
             writeFileAtomicSync(migrateMarker, '');
         } catch (error) {
-            console.error('Error migrating system prompts:', error);
+            
         }
     }
 }
@@ -504,7 +504,7 @@ export function toAvatarKey(handle) {
  * @returns {Promise<void>}
  */
 export async function initUserStorage(dataRoot) {
-    console.log('Using data root:', color.green(dataRoot));
+    
     await storage.init({
         dir: path.join(dataRoot, '_storage'),
         ttl: false, // Never expire
@@ -535,12 +535,12 @@ export function getCookieSecret(dataRoot) {
 
     const oldSecret = getConfigValue(STORAGE_KEYS.cookieSecret);
     if (oldSecret) {
-        console.log('Migrating cookie secret from config.yaml...');
+        
         writeFileAtomicSync(cookieSecretPath, oldSecret, { encoding: 'utf8' });
         return oldSecret;
     }
 
-    console.warn(color.yellow('Cookie secret is missing from data root. Generating a new one...'));
+    
     const secret = crypto.randomBytes(64).toString('base64');
     writeFileAtomicSync(cookieSecretPath, secret, { encoding: 'utf8' });
     return secret;
@@ -759,7 +759,7 @@ async function autheliaUserLogin(request) {
 
     const userHandles = await getAllUserHandles();
     for (const userHandle of userHandles) {
-        if (remoteUser === userHandle) {
+        if (remoteUser.toLowerCase() === userHandle) {
             const user = await storage.getItem(toKey(userHandle));
             if (user && user.enabled) {
                 request.session.handle = userHandle;
@@ -830,7 +830,7 @@ export async function setUserDataMiddleware(request, response, next) {
     }
 
     if (!request.session) {
-        console.error('Session not available');
+        
         return response.sendStatus(500);
     }
 
@@ -846,12 +846,12 @@ export async function setUserDataMiddleware(request, response, next) {
     const user = await storage.getItem(toKey(handle));
 
     if (!user) {
-        console.error('User not found:', handle);
+        
         return next();
     }
 
     if (!user.enabled) {
-        console.error('User is disabled:', handle);
+        
         return next();
     }
 
@@ -890,7 +890,7 @@ export function requireLoginMiddleware(request, response, next) {
  */
 export async function loginPageMiddleware(request, response) {
     if (!ENABLE_ACCOUNTS) {
-        console.log('User accounts are disabled. Redirecting to index page.');
+        
         return response.redirect('/');
     }
 
@@ -902,7 +902,7 @@ export async function loginPageMiddleware(request, response) {
             return response.redirect('/');
         }
     } catch (error) {
-        console.error('Error during auto-login:', error);
+        
     }
 
     return response.sendFile('login.html', { root: path.join(serverDirectory, 'public') });
@@ -973,7 +973,7 @@ export function requireAdminMiddleware(request, response, next) {
         return next();
     }
 
-    console.warn('Unauthorized access to admin endpoint:', request.originalUrl);
+    
     return response.sendStatus(403);
 }
 
@@ -986,7 +986,7 @@ export function requireAdminMiddleware(request, response, next) {
 export async function createBackupArchive(handle, response) {
     const directories = getUserDirectories(handle);
 
-    console.info('Backup requested for', handle);
+    
     const archive = archiver('zip');
 
     archive.on('error', function (err) {
@@ -995,7 +995,7 @@ export async function createBackupArchive(handle, response) {
 
     // On stream closed we can end the request
     archive.on('end', function () {
-        console.info('Archive wrote %d bytes', archive.pointer());
+        
         response.end(); // End the Express response
     });
 

@@ -101,7 +101,7 @@ router.post('/install', async (request, response) => {
             cloneOptions['--branch'] = branch;
         }
         await git.clone(url, extensionPath, cloneOptions);
-        console.info(`Extension has been cloned to ${extensionPath} from ${url} at ${branch || '(default)'} branch`);
+        
 
         const { version, author, display_name } = await getManifest(extensionPath);
 
@@ -148,9 +148,9 @@ router.post('/update', async (request, response) => {
         const currentBranch = await git.branch();
         if (!isUpToDate) {
             await git.pull('origin', currentBranch.current);
-            console.info(`Extension has been updated at ${extensionPath}`);
+            
         } else {
-            console.info(`Extension is up to date at ${extensionPath}`);
+            
         }
         await git.fetch('origin');
         const fullCommitHash = await git.revparse(['HEAD']);
@@ -188,7 +188,7 @@ router.post('/branches', async (request, response) => {
         // Unshallow the repository if it is shallow
         const isShallow = await git.revparse(['--is-shallow-repository']) === 'true';
         if (isShallow) {
-            console.info(`Unshallowing the repository at ${extensionPath}`);
+            
             await git.fetch('origin', ['--unshallow']);
         }
 
@@ -235,12 +235,12 @@ router.post('/switch', async (request, response) => {
         if (String(branch).startsWith('origin/')) {
             const localBranch = branch.replace('origin/', '');
             if (branches.all.includes(localBranch)) {
-                console.info(`Branch ${localBranch} already exists locally, checking it out`);
+                
                 await git.checkout(localBranch);
                 return response.sendStatus(204);
             }
 
-            console.info(`Branch ${localBranch} does not exist locally, creating it from ${branch}`);
+            
             await git.checkoutBranch(localBranch, branch);
             return response.sendStatus(204);
         }
@@ -253,13 +253,13 @@ router.post('/switch', async (request, response) => {
         // Check if the branch is already checked out
         const currentBranch = await git.branch();
         if (currentBranch.current === branch) {
-            console.info(`Branch ${branch} is already checked out`);
+            
             return response.sendStatus(204);
         }
 
         // Checkout the branch
         await git.checkout(branch);
-        console.info(`Checked out branch ${branch} at ${extensionPath}`);
+        
 
         return response.sendStatus(204);
     } catch (error) {
@@ -303,7 +303,7 @@ router.post('/move', async (request, response) => {
 
         fs.cpSync(sourcePath, destinationPath, { recursive: true, force: true });
         fs.rmSync(sourcePath, { recursive: true, force: true });
-        console.info(`Extension has been moved from ${sourcePath} to ${destinationPath}`);
+        
 
         return response.sendStatus(204);
     } catch (error) {
@@ -350,6 +350,7 @@ router.post('/version', async (request, response) => {
         // get only the working branch
         const currentBranchName = currentBranch.current;
         await git.fetch('origin');
+        
         const { isUpToDate, remoteUrl } = await checkIfRepoIsUpToDate(extensionPath);
 
         return response.send({ currentBranchName, currentCommitHash, isUpToDate, remoteUrl });
@@ -389,7 +390,7 @@ router.post('/delete', async (request, response) => {
         }
 
         await fs.promises.rm(extensionPath, { recursive: true });
-        console.info(`Extension has been deleted at ${extensionPath}`);
+        
 
         return response.send(`Extension has been deleted at ${extensionPath}`);
 
@@ -435,6 +436,7 @@ router.get('/discover', function (request, response) {
 
     // Combine all extensions
     const allExtensions = [...builtInExtensions, ...userExtensions, ...globalExtensions];
+    
 
     return response.send(allExtensions);
 });

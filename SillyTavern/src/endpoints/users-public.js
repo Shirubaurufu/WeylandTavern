@@ -59,7 +59,7 @@ router.post('/list', async (_request, response) => {
 router.post('/login', async (request, response) => {
     try {
         if (!request.body.handle) {
-            console.warn('Login failed: Missing required fields');
+            
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -75,12 +75,12 @@ router.post('/login', async (request, response) => {
         }
 
         if (!user.enabled) {
-            console.warn('Login failed: User', user.handle, 'is disabled');
+            
             return response.status(403).json({ error: 'User is disabled' });
         }
 
         if (user.password && user.password !== getPasswordHash(request.body.password, user.salt)) {
-            console.warn('Login failed: Incorrect password for', user.handle);
+            
             return response.status(403).json({ error: 'Incorrect credentials' });
         }
 
@@ -91,7 +91,7 @@ router.post('/login', async (request, response) => {
 
         await loginLimiter.delete(ip);
         request.session.handle = user.handle;
-        console.info('Login successful:', user.handle, 'from', ip, 'at', new Date().toLocaleString());
+        
         return response.json({ handle: user.handle });
     } catch (error) {
         if (error instanceof RateLimiterRes) {
@@ -107,7 +107,7 @@ router.post('/login', async (request, response) => {
 router.post('/recover-step1', async (request, response) => {
     try {
         if (!request.body.handle) {
-            console.warn('Recover step 1 failed: Missing required fields');
+            
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -129,7 +129,7 @@ router.post('/recover-step1', async (request, response) => {
 
         const mfaCode = String(crypto.randomInt(1000, 9999));
         console.log();
-        console.log(color.blue(`${user.name}, your password recovery code is: `) + color.magenta(mfaCode));
+        
         console.log();
         MFA_CACHE.set(user.handle, mfaCode);
         return response.sendStatus(204);
@@ -147,7 +147,7 @@ router.post('/recover-step1', async (request, response) => {
 router.post('/recover-step2', async (request, response) => {
     try {
         if (!request.body.handle || !request.body.code) {
-            console.warn('Recover step 2 failed: Missing required fields');
+            
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -161,7 +161,7 @@ router.post('/recover-step2', async (request, response) => {
         }
 
         if (!user.enabled) {
-            console.warn('Recover step 2 failed: User', user.handle, 'is disabled');
+            
             return response.status(403).json({ error: 'User is disabled' });
         }
 
@@ -169,7 +169,7 @@ router.post('/recover-step2', async (request, response) => {
 
         if (request.body.code !== mfaCode) {
             await recoverLimiter.consume(ip);
-            console.warn('Recover step 2 failed: Incorrect code');
+            
             return response.status(403).json({ error: 'Incorrect code' });
         }
 

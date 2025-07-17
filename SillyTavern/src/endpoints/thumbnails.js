@@ -15,7 +15,7 @@ const quality = Math.min(100, Math.max(1, parseInt(getConfigValue('thumbnails.qu
 const pngFormat = String(getConfigValue('thumbnails.format', 'jpg')).toLowerCase().trim() === 'png';
 
 /** @type {Record<string, number[]>} */
-const dimensions = {
+export const dimensions = {
     'bg': getConfigValue('thumbnails.dimensions.bg', [160, 90]),
     'avatar': getConfigValue('thumbnails.dimensions.avatar', [96, 144]),
 };
@@ -104,7 +104,7 @@ async function generateThumbnail(directories, type, file) {
         const cachedStat = fs.statSync(pathToCachedFile);
 
         if (originalStat.mtimeMs > cachedStat.ctimeMs) {
-            //console.warn('Original file changed. Regenerating thumbnail...');
+            //
             shouldRegenerate = true;
         }
     }
@@ -131,7 +131,7 @@ async function generateThumbnail(directories, type, file) {
                 : await image.getBuffer(JimpMime.jpeg, { quality: quality, jpegColorSpace: 'ycbcr' });
         }
         catch (inner) {
-            console.warn(`Thumbnailer can not process the image: ${pathToOriginalFile}. Using original size`, inner);
+            
             buffer = fs.readFileSync(pathToOriginalFile);
         }
 
@@ -158,7 +158,7 @@ export async function ensureThumbnailCache(directoriesList) {
             continue;
         }
 
-        console.info('Generating thumbnails cache. Please wait...');
+        
 
         const bgFiles = fs.readdirSync(directories.backgrounds);
         const tasks = [];
@@ -168,7 +168,7 @@ export async function ensureThumbnailCache(directoriesList) {
         }
 
         await Promise.all(tasks);
-        console.info(`Done! Generated: ${bgFiles.length} preview images`);
+        
     }
 }
 
