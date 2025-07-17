@@ -264,20 +264,7 @@ setupPrivateEndpoints(app);
  */
 async function preSetupTasks() {
     const version = await getVersion();
-
-    // Print formatted header
-
     
-    if (version.gitBranch && version.commitDate) {
-        const date = new Date(version.commitDate);
-        const localDate = date.toLocaleString('en-US', { timeZoneName: 'short' });
-        if (!version.isLatest && ['staging', 'release'].includes(version.gitBranch)) {
-            
-            
-        }
-    }
-    
-
     const directories = await getUserDirectoriesList();
     await checkForNewContent(directories);
     await ensureThumbnailCache(directories);
@@ -378,16 +365,6 @@ async function postSetupTasks(result) {
 
     const goToLog = `Go to: ${color.blue(browserLaunchUrl)} to open SillyTavern`;
     const plainGoToLog = removeColorFormatting(goToLog);
-
-    
-    if (cliArgs.listen) {
-        console.log();
-        
-        
-    }
-    
-    
-    
 
     setupLogLevel();
     serverEvents.emit(EVENT_NAMES.SERVER_STARTED, { url: browserLaunchUrl });
