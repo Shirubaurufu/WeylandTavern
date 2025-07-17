@@ -68,8 +68,9 @@ public/error/
 /data/default-user/movingUI
 /data/default-user/NovelAI Settings
 /data/default-user/OpenAI Settings
-!/data/default-user/QuickReplies/
-!/data/default-user/QuickReplies/**
+/data/default-user/QuickReplies/Default.json
+/data/default-user/QuickReplies/Chat.json
+!/data/default-user/QuickReplies/Weyland.json
 !/data/default-user/REGEX/
 !/data/default-user/REGEX/**
 /data/default-user/sysprompt
