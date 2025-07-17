@@ -1678,9 +1678,6 @@ router.post('/generate', function (request, response) {
 
             controller.signal.throwIfAborted();
             const fetchResponse = await fetch(endpointUrl, config);
-        try {
-            controller.signal.throwIfAborted();
-            const fetchResponse = await fetch(endpointUrl, config);
 
             if (request.body.stream) {
                 
