@@ -193,7 +193,7 @@
             "showLabel": false,
             "label": "CharacterViewer",
             "title": "CharacterViewer",
-            "message": "/theme |\n/setglobalvar key=Theme {{pipe}} |\n/theme Character |\n/wait 3000 |\n/theme {{getglobalvar::Theme}} |\n/theme |\n/if left={{pipe}} right=Character rule=eq {:/theme Weyland |\n/theme |\n/if left={{pipe}} right=Character rule=eq {:/theme Dark Lite |\n:} :} |",
+            "message": "/dom action=click quiet=true multi=false [id=\"ui-preset-update-button\"] |\n/theme |\n/setglobalvar key=Theme {{pipe}} |\n/theme Character |\n/wait 3000 |\n/theme {{getglobalvar::Theme}} |\n/theme |\n/if left={{pipe}} right=Character rule=eq {:/theme Weyland |\n/theme |\n/if left={{pipe}} right=Character rule=eq {:/theme Dark Lite |\n:} :} |",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": true,
