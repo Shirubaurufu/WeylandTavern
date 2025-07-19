@@ -996,7 +996,7 @@
             "showLabel": false,
             "label": "Clear",
             "title": "Clear",
-            "message": "/trimtokens direction=end limit=550 {{lastCharMessage}} |\n/trimtokens direction=start limit=500 {{pipe}} |\n/if left={{personality}} right={{pipe}} rule=in {:/del 1 :} |",
+            "message": "/trimtokens direction=end limit=550 {{lastCharMessage}} |\n/trimtokens direction=start limit=500 {{pipe}} |\n/setvar key=ClearCheck {{pipe}} |\n/if left={{personality}} right={{getvar::ClearCheck}} rule=in {:/del 1 :} |\n/if left={{getvar::postrav}} right={{getvar::ClearCheck}} rule=in {:/del 1 :} |\n/if left={{getvar::ravteg}} right={{getvar::ClearCheck}} rule=in {:/del 1 :} |\n",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": true,
