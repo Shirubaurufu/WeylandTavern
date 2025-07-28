@@ -125,14 +125,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "orientation",
-                "new year",
-                "guide",
-                "brochure",
-                "map",
-                "campus"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",

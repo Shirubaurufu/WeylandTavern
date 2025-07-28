@@ -1956,7 +1956,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "characterFilter": {
-                "isExclude": false,
+                "isExclude": true,
                 "names": [
                     "Kinsbane Manor"
                 ],
@@ -8792,7 +8792,7 @@
             "addMemo": true,
             "order": 125,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -9290,7 +9290,7 @@
             "addMemo": true,
             "order": 100,
             "position": 1,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
