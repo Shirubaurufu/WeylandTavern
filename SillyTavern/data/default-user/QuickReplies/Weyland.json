@@ -193,7 +193,7 @@
             "showLabel": false,
             "label": "CharacterViewer",
             "title": "CharacterViewer",
-            "message": "/theme |\n/if left={{pipe}} right=Character rule=neq {:\n/dom action=click quiet=true multi=false [id=\"ui-preset-update-button\"] |\n/wait 100 :} |\n/theme |\n/setglobalvar key=Theme {{pipe}} |\n/theme Character |\n/wait 3000 |\n/theme {{getglobalvar::Theme}} |\n/theme |\n/if left={{pipe}} right=Character rule=eq {:/theme Weyland |\n/theme |\n/if left={{pipe}} right=Character rule=eq {:/theme Dark Lite |\n:} :} |",
+            "message": "/fireandforget {:\n/theme |\n/if left={{pipe}} right=Character rule=neq {:\n/dom action=click quiet=true multi=false [id=\"ui-preset-update-button\"] |\n/wait 100 :} |\n/theme |\n/setglobalvar key=Theme {{pipe}} |\n/theme Character |\n/wait 3000 |\n/theme {{getglobalvar::Theme}} |\n/theme |\n/if left={{pipe}} right=Character rule=eq {:/theme Weyland |\n/theme |\n/if left={{pipe}} right=Character rule=eq {:/theme Dark Lite |\n:} :} |\n:} |",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": true,
