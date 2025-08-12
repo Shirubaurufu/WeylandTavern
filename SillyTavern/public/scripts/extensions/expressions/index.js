@@ -2111,7 +2111,7 @@ function migrateSettings() {
         saveSettingsDebounced();
     }
 
-    if (extension_settings.expressions.allowMultiple === undefined) {
+    if (extension_settings.expressions.allowMultiple !== true) {
         extension_settings.expressions.allowMultiple = true;
         saveSettingsDebounced();
     }
