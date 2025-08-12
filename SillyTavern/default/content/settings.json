@@ -518,7 +518,7 @@
             "custom": [],
             "fallback_expression": "neutral",
             "talkinghead": true,
-            "allowMultiple": false
+            "allowMultiple": true
         },
         "connectionManager": {
             "selectedProfile": "d61834c1-ff9b-4bf8-a161-daeadab2716a",
@@ -2248,3 +2248,4 @@
         "password": ""
     }
 }
+
