@@ -47,7 +47,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 50,
+            "displayIndex": 51,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -106,7 +106,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 52,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -125,7 +125,12 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "shower",
+                "roommate",
+                "towel",
+                "271"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -195,7 +200,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 82,
+            "displayIndex": 83,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -579,7 +584,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 81,
+            "displayIndex": 82,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -628,7 +633,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 83,
+            "displayIndex": 84,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -677,7 +682,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 89,
+            "displayIndex": 91,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -919,7 +924,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 35,
+            "displayIndex": 36,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -978,7 +983,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 36,
+            "displayIndex": 37,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1039,7 +1044,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 37,
+            "displayIndex": 38,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1107,7 +1112,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 38,
+            "displayIndex": 39,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1177,7 +1182,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 39,
+            "displayIndex": 40,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1226,7 +1231,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 87,
+            "displayIndex": 89,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1285,7 +1290,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 40,
+            "displayIndex": 41,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1344,7 +1349,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 41,
+            "displayIndex": 42,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1395,7 +1400,7 @@
             "sticky": 10,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 42,
+            "displayIndex": 43,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1444,7 +1449,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 88,
+            "displayIndex": 90,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1508,7 +1513,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 43,
+            "displayIndex": 44,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1557,7 +1562,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 44,
+            "displayIndex": 45,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1619,7 +1624,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 45,
+            "displayIndex": 46,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1668,7 +1673,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 46,
+            "displayIndex": 47,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1724,7 +1729,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 47,
+            "displayIndex": 48,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1773,7 +1778,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 91,
+            "displayIndex": 93,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1840,7 +1845,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 53,
+            "displayIndex": 54,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1889,7 +1894,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 92,
+            "displayIndex": 94,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1946,7 +1951,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 56,
+            "displayIndex": 57,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2003,7 +2008,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 57,
+            "displayIndex": 58,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2052,7 +2057,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 96,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2101,7 +2106,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 85,
+            "displayIndex": 87,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2160,7 +2165,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 59,
+            "displayIndex": 60,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2216,7 +2221,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2321,7 +2326,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 97,
+            "displayIndex": 99,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2380,7 +2385,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 61,
+            "displayIndex": 62,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -2435,7 +2440,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 64,
+            "displayIndex": 65,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2493,7 +2498,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 63,
+            "displayIndex": 64,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2544,7 +2549,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 102,
+            "displayIndex": 104,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2593,7 +2598,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 99,
+            "displayIndex": 101,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2642,7 +2647,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 101,
+            "displayIndex": 103,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2700,7 +2705,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2758,7 +2763,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2807,7 +2812,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2862,7 +2867,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 66,
+            "displayIndex": 67,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2915,7 +2920,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 67,
+            "displayIndex": 68,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2969,7 +2974,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 68,
+            "displayIndex": 69,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3023,7 +3028,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69,
+            "displayIndex": 70,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3078,7 +3083,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3138,7 +3143,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3195,7 +3200,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 28,
+            "displayIndex": 29,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3251,7 +3256,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 29,
+            "displayIndex": 30,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3309,7 +3314,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 30,
+            "displayIndex": 31,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3370,7 +3375,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 31,
+            "displayIndex": 32,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3419,7 +3424,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 86,
+            "displayIndex": 88,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3588,7 +3593,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 79,
+            "displayIndex": 80,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3654,7 +3659,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 34,
+            "displayIndex": 35,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3788,7 +3793,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 32,
+            "displayIndex": 33,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3850,7 +3855,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 33,
+            "displayIndex": 34,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3966,7 +3971,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 77,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4015,7 +4020,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 103,
+            "displayIndex": 105,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4064,7 +4069,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 84,
+            "displayIndex": 85,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4184,7 +4189,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 52,
+            "displayIndex": 53,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4233,7 +4238,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 104,
+            "displayIndex": 106,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4294,7 +4299,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 77,
+            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4356,7 +4361,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 78,
+            "displayIndex": 79,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4422,7 +4427,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 54,
+            "displayIndex": 55,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4471,7 +4476,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 97,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4531,7 +4536,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4580,7 +4585,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 90,
+            "displayIndex": 92,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4641,7 +4646,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 48,
+            "displayIndex": 49,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4690,7 +4695,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 49,
+            "displayIndex": 50,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4746,7 +4751,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 65,
+            "displayIndex": 66,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4795,7 +4800,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 100,
+            "displayIndex": 102,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4844,7 +4849,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 98,
+            "displayIndex": 100,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4903,7 +4908,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 62,
+            "displayIndex": 63,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4973,7 +4978,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 58,
+            "displayIndex": 59,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5022,7 +5027,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 96,
+            "displayIndex": 98,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5071,7 +5076,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 93,
+            "displayIndex": 95,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5133,7 +5138,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 55,
+            "displayIndex": 56,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5235,7 +5240,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 80,
+            "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5243,6 +5248,113 @@
                 ],
                 "tags": [
                     "2dda2f70-8a32-4f36-89da-d77d26e87c11"
+                ]
+            }
+        },
+        "94": {
+            "uid": 94,
+            "key": [
+                "childhood",
+                "mother",
+                "father",
+                "chewing",
+                "chew",
+                "teddy bear",
+                "destructive",
+                "chewed"
+            ],
+            "keysecondary": [],
+            "comment": "Briar History",
+            "content": "[HISTORY]\nPart 1: The Den\nBriar grew up in a loud, loving, and perpetually cluttered home in a working-class Weyland suburb alongside three siblings. Her parents, both Spotted Hyena demihumans themselves, understood their daughter's nature because it mirrored their own, albeit in a more manageable form. Her father was a construction worker, a man whose calloused hands and resilient nature taught Briar from a young age that durability was a virtue. Her mother was a freelance seamstress, a master of mending the constant stream of torn clothes, shredded upholstery, and gnawed-on blankets that were a fact of life in their household. Their home was a testament to loving chaos—a place where laughter was loud and affection was unabashedly physical.\n\nPart 2: The First Bite\nBriar’s \"destructive affection\" wasn't a learned behavior; it was an instinct that emerged as soon as she could crawl. While other babies teethed on plastic rings, Briar gnawed contentedly on the wooden legs of the coffee table, leaving deep gouges. Her parents didn't punish her; they understood. Instead, they adapted. They \"Briar-proofed\" the house with metal reinforcements, replaced wooden furniture with durable plastics, and always had a supply of industrial-grade chew toys on hand. From her earliest memories, Briar understood a fundamental truth: her love required extra work. She wasn't shamed for it, but she saw the effort, the cost, and the quiet sighs of her mother mending yet another pillow she’d lovingly ripped to shreds. This was the seed of her guilt.\n\nPart 3: The Teddy Bear Incident\nThe real world was not as understanding as her family. The pivotal moment came in first grade during show-and-tell. A classmate brought in her favorite, fluffy teddy bear. Overwhelmed with a giddy urge to show her appreciation for how wonderfully soft and cute it was, Briar asked to hold it. The moment it was in her hands, instinct took over. She hugged it fiercely to her chest and, in a fit of pure, joyous affection, bit down on its head. The sound of tearing fabric and the sight of stuffing exploding from the bear's eye socket was met with the horrified wail of its owner. Briar didn't understand why the girl was crying. She had *loved* the bear. The teacher's gentle but firm explanation that \"we don't show we like things by breaking them\" was a devastating blow. It was the first time she realized her love was perceived as violence.\n\nPart 4: Finding a Channel\nAdolescence was a difficult period of learning to redirect her instincts. She became fiercely loyal to a small, tight-knit group of friend who understood her enough to know that a chewed-up backpack strap was a sign of endearment. To cope with her urges, she discovered geology. Rocks were perfect. They were durable, textured, and fascinating. She could carry them, fidget with them, and even chew on them without causing damage or hurting anyone's feelings. Her passion for geology wasn't just academic; it was her primary and most successful coping mechanism, a way to channel her obsessive, tactile nature into something productive and safe. This is also when she started her habit of \"gifting\"—giving her friends the coolest rocks or shiniest objects she found, a safe, non-destructive way to share her joy. \n\nPart 5: Weyland University\nBriar arrived at Weyland as a fully formed, beautifully chaotic person. She had her passion, her coping mechanisms, and a carefully curated social strategy. To the outside world, she was the eccentric, hyperactive geology girl. But to the few she let into her inner circle, she was a fiercely loyal friend whose love was a tangible, if sometimes destructive, force.  \n[END HISTORY]",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Briar",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 28,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Briar"
+                ],
+                "tags": [
+                    "63a37f85-9d63-4b65-b8fd-b4cf482b72fe"
+                ]
+            }
+        },
+        "95": {
+            "uid": 95,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Briar Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (red flannel shirt and long cargo pants)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 86,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Briar"
+                ],
+                "tags": [
+                    "63a37f85-9d63-4b65-b8fd-b4cf482b72fe"
                 ]
             }
         }
