@@ -591,6 +591,7 @@ jQuery(async () => {
     _genStartHandler = (messageId) => {
         const bufKey = messageId != null ? `m${messageId}` : 'live';
         debugLog(settings, `Generation started for ${bufKey}, resetting state.`);
+        // Ensure foundMatch is explicitly set to false at the start.
         perMessageStates.set(bufKey, { lastAcceptedName: null, lastAcceptedTs: 0, vetoed: false, foundMatch: false });
         perMessageBuffers.delete(bufKey);
     };
@@ -666,74 +667,72 @@ jQuery(async () => {
 
     _genEndHandler = (messageId) => {
         const profile = getActiveProfile(settings);
-        const allowedCharsRaw = profile.allowedCharacters || "";
+        const context = getContext();
 
+        // Whitelist check: If the current character is not on the allowed list, do nothing.
+        const allowedCharsRaw = profile?.allowedCharacters || "";
         if (allowedCharsRaw.trim().length > 0) {
             const allowedList = allowedCharsRaw.split(/\r?\n/).map(name => name.trim().toLowerCase());
-            const context = getContext();
-            const currentCharacterName = context.characters[context.characterId].name.toLowerCase();
-
-            if (!allowedList.includes(currentCharacterName)) {
-                // If the current character is not on the list, do absolutely nothing.
+            const currentCharacterName = context.characters[context.characterId]?.name.toLowerCase();
+            if (!currentCharacterName || !allowedList.includes(currentCharacterName)) {
                 return;
             }
         }
 
         console.log(`[Weyland Switcher] Gen End Event Fired. Message ID: ${messageId}`);
+        const bufKey = messageId != null ? `m${messageId}` : 'live';
+        const state = perMessageStates.get(bufKey);
 
-        let bufKey = messageId != null ? `m${messageId}` : 'live';
-        let state = perMessageStates.get(bufKey);
+        if (state?.foundMatch) {
+            // A match was found during streaming. Our job is done.
+            console.log(`[Weyland Switcher] Gen End: Match was already found during stream. Finalizing.`);
+        } else {
+            // No match found during stream (or streaming is off).
+            // Perform a final check on the complete message content.
+            console.log(`[Weyland Switcher] Gen End: No stream match. Performing final check on full message.`);
+            const chat = context.chat;
+            const lastMessage = chat[chat.length - 1];
 
-        // KRESSA'S FIX: If state isn't found with the messageId key, check the 'live' key as a fallback.
-        if (!state && bufKey !== 'live') {
-            console.log(`[Weyland Switcher] Gen End: Could not find state for key '${bufKey}'. Trying fallback key 'live'.`);
-            bufKey = 'live';
-            state = perMessageStates.get(bufKey);
-        }
+            if (lastMessage && lastMessage.is_user === false) {
+                const fullMessageText = normalizeStreamText(lastMessage.mes);
+                const quoteRanges = getQuoteRanges(fullMessageText);
+                const regexes = { speakerRegex, attributionRegex, actionRegex, vocativeRegex, nameRegex };
+                const bestMatch = findBestMatch(fullMessageText, regexes, profile, quoteRanges);
 
-        if (!state) {
-            console.log(`[Weyland Switcher] Gen End: Could not find state for either key. Cannot determine default fallback.`);
-            if (messageId != null) { perMessageBuffers.delete(`m${messageId}`); perMessageStates.delete(`m${messageId}`); }
-            return;
-        }
+                if (bestMatch) {
+                    // Match found in the final check! Issue the costume.
+                    console.log(`[Weyland Switcher] Final check found a match: ${bestMatch.name}`);
+                    issueCostumeForName(bestMatch.name, { matchKind: bestMatch.matchKind, bufKey });
+                } else {
+                    // No match in stream, AND no match in the final check. Fallback to default.
+                    console.log(`[Weyland Switcher] Final check found no match. Falling back to default.`);
+                    if (profile && profile.defaultCostume) {
+                        const defaultCostume = profile.defaultCostume.trim();
+                        let command = `/costume ${defaultCostume}`;
+                        const currentCharacterName = context.characters[context.characterId].name;
 
-        console.log(`[Weyland Switcher] Gen End: Found state under key '${bufKey}'. Did a match occur? -> ${state.foundMatch}`);
+                        if (currentCharacterName.toLowerCase() === 'weybot') {
+                            command = `/costume Weybot/Female`;
+                        }
 
-        if (!state.foundMatch && profile && profile.defaultCostume) {
-            const defaultCostume = profile.defaultCostume.trim();
-            if (defaultCostume) {
-                console.log(`[Weyland Switcher] No character match. Falling back to default: '${defaultCostume}'`);
-                let command = `/costume ${defaultCostume}`; // Start with the standard command
-                const context = getContext();
-                const currentCharacterName = context.characters[context.characterId].name;
-
-                if (currentCharacterName.toLowerCase() === 'weybot') {
-                    command = `/costume Weybot/{{getglobalvar::WeybotCostume}}`; // Overwrite with the special command
-                    console.log(`[Weyland Switcher] Current character is Weybot. Using special dynamic command: ${command}`);
-                }
-                try {
-                    if (lastIssuedCostume && normalizeCostumeName(lastIssuedCostume) === normalizeCostumeName(defaultCostume) && currentCharacterName.toLowerCase() !== 'weybot') {
-                        console.log(`[Weyland Switcher] Already on default costume. Skipping.`);
-                    } else {
-                        executeSlashCommandsOnChatInput(command);
-                        lastIssuedCostume = defaultCostume;
-                        $("#cs-status").text(`Switched -> Default (${defaultCostume})`);
-                        setTimeout(() => $("#cs-status").text("Ready"), 1500);
+                        if (lastIssuedCostume && normalizeCostumeName(lastIssuedCostume) === normalizeCostumeName(defaultCostume) && currentCharacterName.toLowerCase() !== 'weybot') {
+                            console.log(`[Weyland Switcher] Already on default costume. Skipping.`);
+                        } else {
+                            try {
+                                executeSlashCommandsOnChatInput(command);
+                                lastIssuedCostume = defaultCostume;
+                            } catch(err) { console.error(`[Weyland Switcher] Failed to execute default costume command for "${defaultCostume}".`, err); }
+                        }
                     }
-                } catch(err) {
-                    console.error(`[Weyland Switcher] Failed to execute default costume command for "${defaultCostume}".`, err);
                 }
             }
         }
 
-        // Cleanup ALL potential keys now that generation is truly over.
-        perMessageBuffers.delete('live');
-        perMessageStates.delete('live');
-        if (messageId != null) {
-            perMessageBuffers.delete(`m${messageId}`);
-            perMessageStates.delete(`m${messageId}`);
-        }
+        // Cleanup for this message generation is now complete.
+        perMessageBuffers.delete(bufKey);
+        perMessageStates.delete(bufKey);
     };
+
     _msgRecvHandler = (messageId) => { if (messageId != null) { perMessageBuffers.delete(`m${messageId}`); perMessageStates.delete(`m${messageId}`); } };
     _chatChangedHandler = () => { perMessageBuffers.clear(); perMessageStates.clear(); lastIssuedCostume = null; lastTriggerTimes.clear(); failedTriggerTimes.clear(); };
 
