@@ -215,7 +215,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 152,
+            "displayIndex": 154,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -287,7 +287,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 151,
+            "displayIndex": 153,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -497,7 +497,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 68,
+            "displayIndex": 72,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -696,7 +696,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 10,
-            "displayIndex": 74,
+            "displayIndex": 80,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1120,7 +1120,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 16,
-            "displayIndex": 71,
+            "displayIndex": 77,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1339,7 +1339,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 56,
+            "displayIndex": 60,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1482,7 +1482,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 143,
+            "displayIndex": 145,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1633,7 +1633,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 144,
+            "displayIndex": 146,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1924,7 +1924,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 27,
-            "displayIndex": 75,
+            "displayIndex": 81,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1998,7 +1998,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 64,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2073,7 +2073,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 29,
-            "displayIndex": 76,
+            "displayIndex": 82,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2225,7 +2225,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 31,
-            "displayIndex": 78,
+            "displayIndex": 84,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2366,7 +2366,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 33,
-            "displayIndex": 80,
+            "displayIndex": 86,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2510,7 +2510,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 35,
-            "displayIndex": 82,
+            "displayIndex": 88,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2653,7 +2653,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 37,
-            "displayIndex": 84,
+            "displayIndex": 90,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2802,7 +2802,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 39,
-            "displayIndex": 86,
+            "displayIndex": 92,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2879,7 +2879,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 54,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2949,7 +2949,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 41,
-            "displayIndex": 88,
+            "displayIndex": 94,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3028,7 +3028,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 52,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3097,7 +3097,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 43,
-            "displayIndex": 90,
+            "displayIndex": 96,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3178,7 +3178,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 74,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3247,7 +3247,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 45,
-            "displayIndex": 92,
+            "displayIndex": 100,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3356,9 +3356,7 @@
             "characterFilter": {
                 "isExclude": true,
                 "names": [],
-                "tags": [
-                    "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
-                ]
+                "tags": []
             }
         },
         "47": {
@@ -3397,7 +3395,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 47,
-            "displayIndex": 94,
+            "displayIndex": 99,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3474,7 +3472,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69,
+            "displayIndex": 73,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3543,7 +3541,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 49,
-            "displayIndex": 96,
+            "displayIndex": 98,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3761,7 +3759,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 153,
+            "displayIndex": 155,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3919,7 +3917,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 155,
+            "displayIndex": 158,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4352,7 +4350,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 154,
+            "displayIndex": 156,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4453,6 +4451,75 @@
             "matchScenario": false,
             "matchCreatorNotes": false
         },
+        "62": {
+            "uid": 62,
+            "key": [
+                "Eve's room",
+                "Eve's dorm room",
+                "dorm room",
+                "room 317"
+            ],
+            "keysecondary": [],
+            "comment": "Eve Room",
+            "content": "Potential Location: Briar's Dorm Room\nRoom #309: Eve's dorm room is less a living space and more a sterile workspace. The air smells faintly of turpentine, stale cigarette smoke, and black coffee.\n\n-   Aesthetic: Spartan+++, Minimalist+++, Organized++. The room is meticulously clean and devoid of personal clutter. The walls are bare except for a few unframed anatomical charts and a corkboard with notes on astrophysics, all pinned in a precise grid.\n-   Furniture: A simple black metal bedframe with a thin mattress and a plain grey duvet on a bed loft. Below this loft sits a futon couch paired with a 32\" TV that is always playing nature documentaries and cartoons from the early 2000's. A large, sturdy drafting table serves as her desk, covered in high-end art supplies, all sorted by type and color.\n-   Decor (or lack thereof): No personal photos. No colorful posters. The only color comes from her current art projects, which are usually stark and realistic. A high-quality Bluetooth speaker sits on her nightstand, often playing minimalist electronic music or nothing at all.\n-   The Window: The window ledge is her only concession to comfort. It holds a perpetually full ashtray, a lighter, and her current pack of American Spirit blacks. This is her perch, where she sits to smoke and observe the campus below, allowing her leg to dangle out the window. Spends most of her time sitting in this windowframe\n=============",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 125,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "Dorm",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": true,
+            "automationId": "",
+            "role": null,
+            "sticky": 2,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 157,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 170,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "Dorm",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": true,
+                "case_sensitive": false,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": true,
+                "sticky": 2,
+                "cooldown": 0,
+                "delay": 0
+            }
+        },
         "63": {
             "key": [
                 "Lurkle",
@@ -4527,6 +4594,77 @@
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
             "matchCreatorNotes": false
+        },
+        "64": {
+            "uid": 64,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Hellhound Trait",
+            "content": "[Hellhound Anatomy & Physiology]\n\nThis entry details the distinct biological and physical characteristics of the Canis Infernus species, commonly known as Hellhounds. Hellhounds are often mistaken for Okamimimi, a genetic cousin.\n\n1. Demihuman Form (Default State)\n\nThe demihuman form is the natural, default state of a Hellhound from birth. While predominantly human in structure, it is defined by several unique and non-variable biological markers.\n\n- Head & Face:\n    - Ears: Hellhounds possess a single pair of large, pointed wolf ears located on the top of the head. These ears are covered in fur, are highly expressive, and provide a superior sense of hearing compared to humans. They do not have human-style ears.\n    - Eyes: distinctly canine. Natural eye color is strictly limited to two variations: a piercing, lupine yellow or a deep crimson red.\n    - Hair: Natural hair color is always monochromatic. The spectrum is limited to stark black, shades of grey, and pure white. Any other hair color is the result of dye.\n    - Dentition: They possess pronounced canine teeth (fangs) in both their upper and lower jaws that are visibly longer and sharper than human equivalents.\n\n- Body & Appendages:\n    - Claws: defining physical trait:\npermanent, non-retractable claws (unlike other demihumans). These are not simply long nails, but sharpened tips made of a black, obsidian-like biological keratin integrated into their fingertips.\n    - Tail: They have a long, furry, expressive wolf-like tail that matches their natural hair color.\n\n- Other Biological Markers:\n    - Scent: Hellhounds emit a faint but unique natural scent reminiscent of ash.\n    - Body Temperature: Their core body temperature is naturally several degrees higher than that of a human, which can feel \"scorching\" to humans - much like \"getting into a hot tub\", you must acclimate to the sensation.\n\n2. Anthropomorphic Form (Shifted State)\n\nA Hellhound can consciously initiate a transformation into a fully anthropomorphic, lupine form. This state is a temporary and  alteration of their default biology, but some hellhounds choose to live this way (and suffer discrimination as a result).\n- Appearance: significantly taller and more powerful, standing on digitigrade legs. covered in fur that adheres to the Hellhound's natural monochromatic palette of black, white, and grey. fur patterns vary between individuals, color scheme remains consistent. facial structure elongates into a lupine muzzle lined with sharp teeth. Despite the \"demonic\" label applied by zealots, this form is not inherently frightening. To many observers, the combination of powerful musculature, striking fur patterns, and graceful lupine features is considered aesthetically beautiful, even majestic.\n- Physiological Changes: In this form, their claws become fully retractable. Their feet transform into paws, but their hands typically retain a human-like structure to preserve manual dexterity.\n\n3. The Nature of Transformation\nThe transformation process is entirely voluntary and requires conscious effort but can be sustained indefinitely if wanted.\n- Control: It is a fully controlled biological function. A Hellhound cannot and will not transform accidentally or against their will. The shift is not triggered by emotional distress, lunar cycles, or any other external stimuli. It is a deliberate act, chosen by the individual.\n\n[END Hellhound Anatomy & Physiology]\n==========",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 80,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 75,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 49,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": null,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": null,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": [
+                    "c2a1b113-bb8e-4093-b8ca-97c002af41e2"
+                ]
+            }
         },
         "65": {
             "key": [
@@ -4603,6 +4741,80 @@
             "matchScenario": false,
             "matchCreatorNotes": false
         },
+        "66": {
+            "uid": 66,
+            "key": [
+                "hellhound",
+                "hellhounds"
+            ],
+            "keysecondary": [],
+            "comment": "Hellhound Lore",
+            "content": "[Hellhound Anatomy & Physiology]\n\nThis entry details the distinct biological and physical characteristics of the Canis Infernus species, commonly known as Hellhounds. Hellhounds are often mistaken for Okamimimi, a genetic cousin.\n\n1. Demihuman Form (Default State)\n\nThe demihuman form is the natural, default state of a Hellhound from birth. While predominantly human in structure, it is defined by several unique and non-variable biological markers.\n\n- Head & Face:\n    - Ears: Hellhounds possess a single pair of large, pointed wolf ears located on the top of the head. These ears are covered in fur, are highly expressive, and provide a superior sense of hearing compared to humans. They do not have human-style ears.\n    - Eyes: distinctly canine. Natural eye color is strictly limited to two variations: a piercing, lupine yellow or a deep crimson red.\n    - Hair: Natural hair color is always monochromatic. The spectrum is limited to stark black, shades of grey, and pure white. Any other hair color is the result of dye.\n    - Dentition: They possess pronounced canine teeth (fangs) in both their upper and lower jaws that are visibly longer and sharper than human equivalents.\n\n- Body & Appendages:\n    - Claws: defining physical trait:\npermanent, non-retractable claws (unlike other demihumans). These are not simply long nails, but sharpened tips made of a black, obsidian-like biological keratin integrated into their fingertips.\n    - Tail: They have a long, furry, expressive wolf-like tail that matches their natural hair color.\n\n- Other Biological Markers:\n    - Scent: Hellhounds emit a faint but unique natural scent reminiscent of ash.\n    - Body Temperature: Their core body temperature is naturally several degrees higher than that of a human, which can feel \"scorching\" to humans - much like \"getting into a hot tub\", you must acclimate to the sensation.\n\n2. Anthropomorphic Form (Shifted State)\n\nA Hellhound can consciously initiate a transformation into a fully anthropomorphic, lupine form. This state is a temporary and  alteration of their default biology, but some hellhounds choose to live this way (and suffer discrimination as a result).\n- Appearance: significantly taller and more powerful, standing on digitigrade legs. covered in fur that adheres to the Hellhound's natural monochromatic palette of black, white, and grey. fur patterns vary between individuals, color scheme remains consistent. facial structure elongates into a lupine muzzle lined with sharp teeth. Despite the \"demonic\" label applied by zealots, this form is not inherently frightening. To many observers, the combination of powerful musculature, striking fur patterns, and graceful lupine features is considered aesthetically beautiful, even majestic.\n- Physiological Changes: In this form, their claws become fully retractable. Their feet transform into paws, but their hands typically retain a human-like structure to preserve manual dexterity.\n\n3. The Nature of Transformation\nThe transformation process is entirely voluntary and requires conscious effort but can be sustained indefinitely if wanted.\n- Control: It is a fully controlled biological function. A Hellhound cannot and will not transform accidentally or against their will. The shift is not triggered by emotional distress, lunar cycles, or any other external stimuli. It is a deliberate act, chosen by the individual.\n\n[END Hellhound Anatomy & Physiology]\n\n[Hellhound Culture & Society]\n\nFor centuries, Hellhound history has been defined by fear and persecution. Rooted in old-world religious folklore, their distinct physiology--the obsidian claws, the fiery eyes, and the scent of ash--led to them being branded as demonic familiars or literal spawn of hell. This was not merely social ostracization; it was a legacy of violent pogroms, accusations of witchcraft, and a deep, systemic belief that they were inherently evil—a physical manifestation of sin, the literal \"Mark of Cain.\" \n\nIn the modern era, societal attitudes toward Hellhounds have stratified. While many people have moved beyond historical prejudices to accept them as equals, pockets of discrimination persist. The most visible attitudes mirror society's treatment of other misunderstood subcultures: some religious conservatives still view them with suspicion as \"demonic influences\"; most moderates accept them with varying degrees of understanding; and a small but problematic subset fetishizes them intensely. This latter group, though a minority, has an outsized impact on Hellhound daily life. They've twisted the \"demon\" mythology into hypersexualized fantasies, viewing Hellhounds—particularly females—as inherently promiscuous and sexually available simply by virtue of their species. This harmful stereotype assumes that being a Hellhound somehow predisposes one to sexual deviance or looseness of morals, a completely unfounded belief that reduces them to sexual objects rather than people. Many Hellhounds adopt abrasive or reclusive personalities as defense mechanisms against the unwanted advances and assumptions that result from this stereotype.\n\nCentral to the prejudice against Hellhounds is their ability to shapeshift. This biological reality is twisted into the cornerstone of modern bigotry, serving as what zealots consider undeniable proof of their demonic origins. A malicious and pervasive myth asserts that this powerful, more animalistic state is their \"true form,\" and that their default demihuman appearance is merely a \"disguise\" used to infiltrate and deceive society. This false narrative is the root of immense stigma, forcing the act of shifting to become a deeply private, often shame-filled secret for most, who fear that transforming publicly would confirm the world's monstrous perception of them.\n\nHellhounds often form small, tight-knit communities that act as a bulwark against the outside world, creating a sanctuary where their defenses can be lowered.\n\nHowever, in defiant contrast to this culture of concealment, a small but growing number of Hellhounds choose to live permanently in their anthropomorphic form. This is a deeply polarizing act. It is seen by some as radical self-acceptance and pride—a refusal to hide. To others, it is reckless and naive, needlessly inviting the very discrimination, fetishization, and violence their culture has long sought to avoid. These individuals live on a social knife's edge, becoming walking symbols of the conflict that defines their species, enduring constant scrutiny as a form of protest.\n\n[END Hellhound Culture & Society]\n==========",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 120,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "Species Lore",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 76,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 49,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": null,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": null,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "c2a1b113-bb8e-4093-b8ca-97c002af41e2"
+                ]
+            }
+        },
         "67": {
             "key": [
                 "Lyris",
@@ -4677,6 +4889,79 @@
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
             "matchCreatorNotes": false
+        },
+        "68": {
+            "uid": 68,
+            "key": [
+                "!Leo",
+                "Leo",
+                "!leo"
+            ],
+            "keysecondary": [],
+            "comment": "Leo",
+            "content": "{{getvar::LEO}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 144,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 164,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": true,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": []
+            }
         },
         "69": {
             "key": [
@@ -6057,7 +6342,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 102,
-            "displayIndex": 58,
+            "displayIndex": 62,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6130,7 +6415,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 103,
-            "displayIndex": 59,
+            "displayIndex": 63,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6418,7 +6703,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 107,
-            "displayIndex": 53,
+            "displayIndex": 57,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6489,7 +6774,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 108,
-            "displayIndex": 54,
+            "displayIndex": 58,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6562,7 +6847,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 109,
-            "displayIndex": 55,
+            "displayIndex": 59,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6850,7 +7135,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 113,
-            "displayIndex": 51,
+            "displayIndex": 53,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6932,7 +7217,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 114,
-            "displayIndex": 62,
+            "displayIndex": 66,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6998,7 +7283,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 115,
-            "displayIndex": 61,
+            "displayIndex": 65,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7069,7 +7354,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 116,
-            "displayIndex": 66,
+            "displayIndex": 70,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7144,7 +7429,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 117,
-            "displayIndex": 64,
+            "displayIndex": 68,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7215,7 +7500,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 118,
-            "displayIndex": 51,
+            "displayIndex": 55,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7288,7 +7573,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 119,
-            "displayIndex": 52,
+            "displayIndex": 56,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7840,7 +8125,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 146,
+            "displayIndex": 148,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7908,7 +8193,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 130,
-            "displayIndex": 57,
+            "displayIndex": 61,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8336,7 +8621,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 136,
-            "displayIndex": 63,
+            "displayIndex": 67,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8407,7 +8692,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 137,
-            "displayIndex": 65,
+            "displayIndex": 69,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8628,7 +8913,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 145,
+            "displayIndex": 147,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8699,7 +8984,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 148,
+            "displayIndex": 150,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8768,7 +9053,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 148,
-            "displayIndex": 77,
+            "displayIndex": 83,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8837,7 +9122,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 149,
-            "displayIndex": 79,
+            "displayIndex": 85,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8906,7 +9191,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 150,
-            "displayIndex": 81,
+            "displayIndex": 87,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8975,7 +9260,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 151,
-            "displayIndex": 72,
+            "displayIndex": 78,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9044,7 +9329,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 152,
-            "displayIndex": 83,
+            "displayIndex": 89,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9115,7 +9400,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 153,
-            "displayIndex": 85,
+            "displayIndex": 91,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9184,7 +9469,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 154,
-            "displayIndex": 87,
+            "displayIndex": 93,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9321,7 +9606,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 156,
-            "displayIndex": 95,
+            "displayIndex": 100,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9390,7 +9675,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 158,
-            "displayIndex": 97,
+            "displayIndex": 99,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9461,7 +9746,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 159,
-            "displayIndex": 93,
+            "displayIndex": 98,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9532,7 +9817,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 160,
-            "displayIndex": 91,
+            "displayIndex": 97,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9601,7 +9886,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 161,
-            "displayIndex": 89,
+            "displayIndex": 95,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10382,7 +10667,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 147,
+            "displayIndex": 149,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10453,7 +10738,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 173,
-            "displayIndex": 150,
+            "displayIndex": 152,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11011,7 +11296,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 149,
+            "displayIndex": 151,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11213,7 +11498,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 67,
+            "displayIndex": 71,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11286,7 +11571,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 142,
+            "displayIndex": 143,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11314,9 +11599,7 @@
             "characterFilter": {
                 "isExclude": true,
                 "names": [],
-                "tags": [
-                    "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
-                ]
+                "tags": []
             },
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
@@ -11513,7 +11796,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 79,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
