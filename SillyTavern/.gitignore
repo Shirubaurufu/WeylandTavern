@@ -61,6 +61,7 @@ public/error/
 /data/default-user/chats
 /data/default-user/context
 !/data/default-user/extensions
+!/data/default-user/extensions/SillyTavern-CostumeSwitch
 /data/default-user/group chats
 /data/default-user/groups
 /data/default-user/instruct
