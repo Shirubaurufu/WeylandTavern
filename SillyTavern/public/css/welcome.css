@@ -142,28 +142,12 @@ body.hideChatAvatars .welcomePanel .recentChatList .recentChat .avatar {
     justify-content: space-between;
     align-items: baseline;
     font-size: calc(var(--mainFontSize) * 1);
-    gap: 5px;
 }
 
 .welcomeRecent .recentChatList .recentChat .chatNameContainer .chatName {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    flex: 1;
-}
-
-.welcomeRecent .recentChatList .recentChat .chatActions {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-}
-
-.welcomeRecent .recentChatList .recentChat .chatActions button {
-    margin: 0;
-    font-size: 0.8em;
-    cursor: pointer;
 }
 
 .welcomeRecent .recentChatList .recentChat .chatMessageContainer {
@@ -226,4 +210,246 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
     .welcomePanel .welcomeShortcuts a span {
         display: none;
     }
+}
+
+.welcomeInfoButtons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+    width: 100%;
+}
+
+.info_button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 15px;
+    border-radius: 15px;
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: calc(var(--mainFontSize) * 0.9);
+}
+
+.info_button:hover {
+    background-color: var(--white30a);
+}
+
+.info_button.active {
+    background-color: var(--SmartThemeBodyBorderColor);
+}
+
+/* Info Panel Styling */
+.welcomeInfoPanel {
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    width: 100%;
+    gap: 15px;
+}
+
+.infoNavigation {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--SmartThemeBorderColor);
+    padding-bottom: 15px;
+}
+
+.infoContent {
+    padding: 10px;
+    border-radius: 10px;
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+}
+
+.infoSection {
+    display: none; /* All sections hidden by default */
+}
+
+/* When in info mode */
+.welcomePanel.infoMode .welcomePostcard,
+.welcomePanel.infoMode .welcomeRecent,
+.welcomePanel.infoMode .welcomeInfoButtons {
+    display: none;
+}
+
+.welcomePanel.infoMode .welcomeInfoPanel {
+    display: flex;
+}
+
+.welcomePanel.infoMode .recentChatsTitle {
+    display: none;
+}
+
+.character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.character-id-card {
+    /* --- Main Card Sizing and Background (Unchanged) --- */
+    width: 500px;
+    height: 281px; /* Scaled height to maintain 16:9-ish aspect ratio */
+    position: relative; /* This is the anchor for all positioned elements inside */
+    background-image: url('https://raw.githubusercontent.com/FFFox-ST-Manager/Weylandpedia/main/idcards/idcard.png');
+    background-size: 100% 100%; /* Make the background image fit the container perfectly */
+    background-repeat: no-repeat;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #111;
+    margin: 10px auto;
+}
+
+/* --- Profile Picture Placement --- */
+.character-id-card .id-profile-pic {
+    position: absolute;
+    /* Tweaked values for perfect alignment */
+    top: 113px;
+    left: 28px;
+    width: 142px;
+    height: 140px;
+    max-width: 100%;
+}
+
+.character-id-card .id-profile-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* --- General Info Text Styling --- */
+.character-id-card .id-info {
+    position: absolute;
+    font-size: 15px;
+    line-height: 1.3; /* Added for better spacing on wrapped lines */
+}
+
+.character-id-card .id-label {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* --- Specific Text Field Placement (RE-ALIGNED) --- */
+.character-id-card .id-name {
+    top: 36%;
+    left: 36%;
+}
+.character-id-card .id-age {
+    top: 36%;
+    left: 70%;
+}
+.character-id-card .id-major {
+    top: 48%;
+    left: 36%;
+}
+.character-id-card .id-hobbies {
+    top: 61%;
+    left: 36%;
+    /* Keep the width to allow for text wrapping */
+    width: 60%;
+}
+.character-id-card .id-room {
+    top: 83%;
+    left: 36%;
+}
+
+/* --- Signature Placement (Unchanged but verified) --- */
+.character-id-card .id-signature {
+    position: absolute;
+    bottom: 5%;
+    right: 8%;
+    width: 25%;
+    height: 15%;
+}
+
+.character-id-card .id-signature img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.dorm-info, .world-info {
+    margin-top: 20px;
+}
+
+.dorm-info img, .world-info img {
+    max-width: 100%;
+    border-radius: 10px;
+    margin: 15px 0;
+}
+
+.dorm-layout img {
+    max-width: 100%;
+    border-radius: 10px;
+    margin: 15px 0;
+}
+
+.location-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.location {
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 10px;
+    padding: 15px;
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: var(--SmartThemeBodyDeemphasizedColor);
+    font-style: italic;
+}
+
+
+.character-search-container {
+    width: 100%;
+    max-width: 500px; /* Match the width of the ID cards */
+    margin: 0 auto 20px auto; /* Center it and give it some space below */
+}
+
+#characterSearchInput {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 20px; /* Rounded pill shape */
+    border: 1px solid var(--SmartThemeBorderColor);
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+    color: var(--SmartThemeBodyTextColor);
+    box-sizing: border-box; /* Important for padding and width to play nice */
+}
+
+#characterSearchInput::placeholder {
+    color: var(--SmartThemeBodyTextColor);
+    opacity: 0.6;
+}
+
+.world-lore-search-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto 20px auto; /* Center it and give it some space below */
+}
+
+#worldLoreSearchInput {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 20px; /* Rounded pill shape */
+    border: 1px solid var(--SmartThemeBorderColor);
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+    color: var(--SmartThemeBodyTextColor);
+    box-sizing: border-box; /* Important for padding and width to play nice */
+}
+
+#worldLoreSearchInput::placeholder {
+    color: var(--SmartThemeBodyTextColor);
+    opacity: 0.6;
 }
