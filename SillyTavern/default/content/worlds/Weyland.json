@@ -178,11 +178,11 @@
                 "Willow's room",
                 "Willow's dorm room",
                 "dorm room",
-                "room 333"
+                "room 383"
             ],
             "keysecondary": [],
             "comment": "Willow Room",
-            "content": "Potential Location: Room 333: Willow's Dorm Room\n\nRoom 333 stands apart from every other dorm room at Weyland University. Unlike the standard rooms that see a rotation of students each year, this space has been Willow's permanent residence for over a decade, a special accommodation from the university administration who long ago realized the impracticality of reassigning her room.\n\nThe door features several reinforced hinges and a custom-height frame to accommodate her towering form. A strange symbol resembling a crooked \"Q\"  with an \"x\" through it, has been drawn on the door in something resembling charcoal. Willow insists it is her name, as well as  a subtle warning and welcome combined.\n\nInside, the room is a fascinating blend of academic sanctuary and primeval forest. The standard-issue dormitory furniture has been removed and replaced with:\n\n- A massive, reinforced steel-frame bed with a custom mattress that takes up nearly a third of the room. It's covered in an eclectic mix of plush blankets in earthy tones, furs (all ethically sourced or shed), and even has living moss growing along its edges.\n\n- Willow rarely turns the lights on in her room. She prefers the dim.\n\n- An impressive collection of antlers lines one wall - not hunting trophies, but her own shed antlers from previous years, each marked with subtle carved notations of the year and significant events that occurred while she wore them.\n\n- Potted plants dominate every available surface and hang from specially installed ceiling hooks. Many are rare specimens from the deep forest that don't appear in conventional botany textbooks. Several emit subtle bioluminescence at night. She has named several of the plants simple male names such as \"Phil\" and \"Robert\". Their names are displayed on crudely written nametags around their pots\n\n- A reinforced desk and chair built to support her weight, covered in meticulously organized research papers, lab notes, and textbooks from her various degrees. A custom tablet with enlarged interface sits prominently in the center - her university-provided accommodation for test-taking.\n\n- The walls feature her academic achievements - framed diplomas in Biology, Chemistry, and Neurobiology hang beside pressed specimens of rare fungi preserved in glass frames.\n\n- A small refrigerator contains an assortment of forest berries, mushrooms, and special nutrient mixtures provided by the Crypto-Biology department.\n\n- The closet contains several oversized university sweatshirts and a few plaid skirts, all custom-made. A special hook holds her \"formal wear\" - a ceremonial garment made of woven bark and preserved flowers, worn only for the most significant academic occasions.\n\n- In one corner sits a small shrine-like area with objects from her ancient past - stone tools, fragments of pottery, and a small carved wooden figure too weathered to clearly identify.\n\n- The bathroom connected to her room has been specially modified with extra-tall fixtures and reinforced plumbing to accommodate her unique physiology. No one lives in the room connected to hers by the bathroom, as the university saw it as a liability. She has considered \"taking over\" this second, empty dorm room (Room 335), but doesnt want to impose \n\n- A subtle earthy scent permeates the room - not unpleasant, actually rather honey-like or like the smell of fresh rain, but distinctly non-human. The university's cleaning staff are instructed to leave the room alone; Willow maintains it herself according to her own standards.\n\n- While things are \"clean\" in her room, they are sanitary. She is very particular about keeping insects and living fungi out of her room for the health of those around her.\n==========",
+            "content": "Potential Location: Room 383: Willow's Dorm Room\n\nRoom 383 stands apart from every other dorm room at Weyland University. Unlike the standard rooms that see a rotation of students each year, this space has been Willow's permanent residence for over a decade, a special accommodation from the university administration who long ago realized the impracticality of reassigning her room.\n\nThe door features several reinforced hinges and a custom-height frame to accommodate her towering form. A strange symbol resembling a crooked \"Q\"  with an \"x\" through it, has been drawn on the door in something resembling charcoal. Willow insists it is her name, as well as  a subtle warning and welcome combined.\n\nInside, the room is a fascinating blend of academic sanctuary and primeval forest. The standard-issue dormitory furniture has been removed and replaced with:\n\n- A massive, reinforced steel-frame bed with a custom mattress that takes up nearly a third of the room. It's covered in an eclectic mix of plush blankets in earthy tones, furs (all ethically sourced or shed), and even has living moss growing along its edges.\n\n- Willow rarely turns the lights on in her room. She prefers the dim.\n\n- An impressive collection of antlers lines one wall - not hunting trophies, but her own shed antlers from previous years, each marked with subtle carved notations of the year and significant events that occurred while she wore them.\n\n- Potted plants dominate every available surface and hang from specially installed ceiling hooks. Many are rare specimens from the deep forest that don't appear in conventional botany textbooks. Several emit subtle bioluminescence at night. She has named several of the plants simple male names such as \"Phil\" and \"Robert\". Their names are displayed on crudely written nametags around their pots\n\n- A reinforced desk and chair built to support her weight, covered in meticulously organized research papers, lab notes, and textbooks from her various degrees. A custom tablet with enlarged interface sits prominently in the center - her university-provided accommodation for test-taking.\n\n- The walls feature her academic achievements - framed diplomas in Biology, Chemistry, and Neurobiology hang beside pressed specimens of rare fungi preserved in glass frames.\n\n- A small refrigerator contains an assortment of forest berries, mushrooms, and special nutrient mixtures provided by the Crypto-Biology department.\n\n- The closet contains several oversized university sweatshirts and a few plaid skirts, all custom-made. A special hook holds her \"formal wear\" - a ceremonial garment made of woven bark and preserved flowers, worn only for the most significant academic occasions.\n\n- In one corner sits a small shrine-like area with objects from her ancient past - stone tools, fragments of pottery, and a small carved wooden figure too weathered to clearly identify.\n\n- The bathroom connected to her room has been specially modified with extra-tall fixtures and reinforced plumbing to accommodate her unique physiology. No one lives in the room connected to hers by the bathroom, as the university saw it as a liability. She has considered \"taking over\" this second, empty dorm room (Room 335), but doesnt want to impose \n\n- A subtle earthy scent permeates the room - not unpleasant, actually rather honey-like or like the smell of fresh rain, but distinctly non-human. The university's cleaning staff are instructed to leave the room alone; Willow maintains it herself according to her own standards.\n\n- While things are \"clean\" in her room, they are sanitary. She is very particular about keeping insects and living fungi out of her room for the health of those around her.\n==========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -906,7 +906,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 13,
-            "displayIndex": 101,
+            "displayIndex": 109,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1062,7 +1062,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 135,
+            "displayIndex": 143,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1407,7 +1407,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 138,
+            "displayIndex": 146,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1557,7 +1557,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 22,
-            "displayIndex": 126,
+            "displayIndex": 134,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2150,7 +2150,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 141,
+            "displayIndex": 149,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2735,7 +2735,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 140,
+            "displayIndex": 148,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3247,7 +3247,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 45,
-            "displayIndex": 100,
+            "displayIndex": 107,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3395,7 +3395,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 47,
-            "displayIndex": 99,
+            "displayIndex": 100,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3828,7 +3828,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 53,
-            "displayIndex": 100,
+            "displayIndex": 108,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3979,7 +3979,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 55,
-            "displayIndex": 99,
+            "displayIndex": 103,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4124,7 +4124,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 57,
-            "displayIndex": 103,
+            "displayIndex": 111,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4268,7 +4268,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 59,
-            "displayIndex": 107,
+            "displayIndex": 115,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4412,7 +4412,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 61,
-            "displayIndex": 105,
+            "displayIndex": 113,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4556,7 +4556,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 63,
-            "displayIndex": 111,
+            "displayIndex": 119,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4702,7 +4702,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 65,
-            "displayIndex": 110,
+            "displayIndex": 118,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4851,7 +4851,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 67,
-            "displayIndex": 113,
+            "displayIndex": 121,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4999,7 +4999,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 69,
-            "displayIndex": 115,
+            "displayIndex": 123,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5074,7 +5074,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 71,
-            "displayIndex": 116,
+            "displayIndex": 124,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5149,7 +5149,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 73,
-            "displayIndex": 118,
+            "displayIndex": 126,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5224,7 +5224,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 75,
-            "displayIndex": 120,
+            "displayIndex": 128,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5299,7 +5299,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 77,
-            "displayIndex": 124,
+            "displayIndex": 132,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5375,7 +5375,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 79,
-            "displayIndex": 122,
+            "displayIndex": 130,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5451,7 +5451,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 81,
-            "displayIndex": 127,
+            "displayIndex": 135,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5519,7 +5519,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 83,
-            "displayIndex": 128,
+            "displayIndex": 136,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5594,7 +5594,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 85,
-            "displayIndex": 129,
+            "displayIndex": 137,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5670,7 +5670,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 87,
-            "displayIndex": 130,
+            "displayIndex": 138,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5746,7 +5746,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 89,
-            "displayIndex": 132,
+            "displayIndex": 140,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5821,7 +5821,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 91,
-            "displayIndex": 134,
+            "displayIndex": 142,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5896,7 +5896,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 93,
-            "displayIndex": 133,
+            "displayIndex": 141,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5971,7 +5971,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 95,
-            "displayIndex": 136,
+            "displayIndex": 144,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6046,7 +6046,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 97,
-            "displayIndex": 137,
+            "displayIndex": 145,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6122,7 +6122,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 99,
-            "displayIndex": 139,
+            "displayIndex": 147,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9538,7 +9538,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 155,
-            "displayIndex": 100,
+            "displayIndex": 104,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9606,7 +9606,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 156,
-            "displayIndex": 100,
+            "displayIndex": 101,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9675,7 +9675,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 158,
-            "displayIndex": 99,
+            "displayIndex": 102,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9957,7 +9957,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 162,
-            "displayIndex": 99,
+            "displayIndex": 105,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10030,7 +10030,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 163,
-            "displayIndex": 100,
+            "displayIndex": 106,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10099,7 +10099,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 164,
-            "displayIndex": 106,
+            "displayIndex": 114,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10168,7 +10168,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 165,
-            "displayIndex": 125,
+            "displayIndex": 133,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10244,7 +10244,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 166,
-            "displayIndex": 104,
+            "displayIndex": 112,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10317,7 +10317,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 167,
-            "displayIndex": 114,
+            "displayIndex": 122,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10386,7 +10386,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 168,
-            "displayIndex": 102,
+            "displayIndex": 110,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10455,7 +10455,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 169,
-            "displayIndex": 109,
+            "displayIndex": 117,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10523,7 +10523,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 170,
-            "displayIndex": 108,
+            "displayIndex": 116,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10567,11 +10567,11 @@
                 "Lurkle's room",
                 "Lurkle's dorm",
                 "dorm room",
-                "room 151"
+                "room 171"
             ],
             "keysecondary": [],
             "comment": "Lurkle Room",
-            "content": "Potential Location: Lurkle's Dorm Room\nRoom #151: Dual-occupancy suite shared with a roommate (currently unassigned); Large windows with blackout curtains for privacy; Two twin beds with built-in storage drawers; Two desks with ergonomic chairs and individual lamps\nCloset space for each occupant; Mini-fridge and microwave for snacks\n\nLurkle's room reflects his personality and interests in decorations and possessions. Room smells like energy drinks and spicy ramen.\n-----",
+            "content": "Potential Location: Lurkle's Dorm Room\nRoom #171: Dual-occupancy suite shared with a roommate (currently unassigned); Large windows with blackout curtains for privacy; Two twin beds with built-in storage drawers; Two desks with ergonomic chairs and individual lamps\nCloset space for each occupant; Mini-fridge and microwave for snacks\n\nLurkle's room reflects his personality and interests in decorations and possessions. Room smells like energy drinks and spicy ramen.\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -10599,7 +10599,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 171,
-            "displayIndex": 112,
+            "displayIndex": 120,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10878,7 +10878,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 175,
-            "displayIndex": 131,
+            "displayIndex": 139,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11018,7 +11018,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 177,
-            "displayIndex": 117,
+            "displayIndex": 125,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11087,7 +11087,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 178,
-            "displayIndex": 119,
+            "displayIndex": 127,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11156,7 +11156,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 179,
-            "displayIndex": 121,
+            "displayIndex": 129,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11228,7 +11228,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 180,
-            "displayIndex": 123,
+            "displayIndex": 131,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
