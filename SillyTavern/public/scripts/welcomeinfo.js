@@ -123,6 +123,38 @@ if (document.readyState === 'loading') {
     initWelcomeInfoPanel();
 }
 
+function sortCharacterCardsByName() {
+    console.log("Attempting to sort character cards by name...");
+    const grid = document.querySelector('.character-grid');
+
+    if (!grid) {
+        console.error("Character grid container not found for sorting.");
+        return;
+    }
+
+    // 1. Grab all the card elements
+    const cards = grid.querySelectorAll('.character-id-card');
+
+    // 2. Convert the NodeList of cards into a real Array
+    const cardsArray = Array.from(cards);
+
+    // 3. Sort the array
+    cardsArray.sort((cardA, cardB) => {
+        // Find the name value inside each card
+        const nameA = cardA.querySelector('.id-name .id-value').textContent.trim();
+        const nameB = cardB.querySelector('.id-name .id-value').textContent.trim();
+
+        // Use localeCompare for proper alphabetical sorting
+        return nameA.localeCompare(nameB);
+    });
+
+    // 4. Re-append the cards to the grid in the new sorted order
+    // Appending an existing element moves it, so this reorders the grid
+    cardsArray.forEach(card => grid.appendChild(card));
+
+    console.log("Character cards sorted successfully.");
+}
+
 /**
  * Fetches markdown content from GitHub and renders it to HTML
  * @param {string} type The type of content to fetch (character, dorm, world)
@@ -157,6 +189,7 @@ async function fetchAndRenderMarkdown(type) {
             console.log(`Inserted ${type} HTML content into page`);
             if (type === 'character') {
                 setupCharacterFilter();
+                sortCharacterCardsByName();
             }
             else if (type === 'world') {
                 setupWorldLoreFilter();
@@ -249,3 +282,4 @@ function setupWorldLoreFilter() {
         });
     });
 }
+
