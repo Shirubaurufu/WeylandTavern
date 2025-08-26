@@ -456,3 +456,12 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
     color: var(--SmartThemeBodyTextColor);
     opacity: 0.6;
 }
+
+#dormInfo, #worldInfo {
+    color: var(--SmartThemeBodyTextColor);
+}
+
+#dormInfo *, #worldInfo * {
+    color: inherit;
+}
+
