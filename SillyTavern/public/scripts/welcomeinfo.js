@@ -1,5 +1,7 @@
 import { converter } from '../script.js';
 
+let timelineLoaded = false;
+
 // This function will be called when the DOM is fully loaded
 function initWelcomeInfoPanel() {
     console.log('Initializing Welcome Info Panel');
@@ -49,10 +51,14 @@ function initWelcomeInfoPanel() {
                 document.getElementById('dormInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="dorm"]').classList.add('active');
                 fetchAndRenderMarkdown('dorm');
-    } else if (infoType === 'world') {
+            } else if (infoType === 'world') {
                 document.getElementById('worldInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="world"]').classList.add('active');
                 fetchAndRenderMarkdown('world');
+            } else if (infoType === 'timeline') {
+                document.getElementById('timelineInfo').style.display = 'block';
+                welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="timeline"]').classList.add('active');
+                fetchAndRenderGoogleDoc();
             }
         }
 
@@ -114,6 +120,56 @@ function initWelcomeInfoPanel() {
 
     // Also try to set up right away in case the panel is already there
     setupInfoPanel();
+}
+
+async function fetchAndRenderGoogleDoc() {
+    if (timelineLoaded) {
+        console.log("Timeline already loaded, not re-fetching.");
+        return;
+    }
+
+    console.log("Attaching Shadow DOM and fetching timeline...");
+    const container = document.getElementById('timelineInfo');
+    if (!container) {
+        console.error("Timeline container not found!");
+        return;
+    }
+
+    const googleDocUrl = 'https://docs.google.com/document/d/e/2PACX-1vRHGk69-Q9vXH8rhM2ucoFKuh1KFpYd8_sbfnMWOiTmle4Sh-qyukgfYi5r2WqFPKLyyq_Lxsek3L7X/pub?embedded=true';
+
+    try {
+        const shadowRoot = container.attachShadow({ mode: 'open' });
+        const response = await fetch(googleDocUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const docHtml = await response.text();
+
+        // --- THE SLEDGEHAMMER ---
+        // Create a <style> element with our new, more aggressive override rules.
+        const overrideStyles = document.createElement('style');
+        overrideStyles.textContent = `
+            /* THE BIG FIX: Use the universal selector (*) to force EVERYTHING to have a transparent background. */
+            * {
+                background-color: transparent !important;
+            }
+
+            /* Keep this rule: It forces ALL text elements to inherit the main page's text color. */
+            p, li, h1, h2, h3, h4, h5, h6, span, a {
+                color: inherit !important;
+            }
+        `;
+
+        // Inject the fetched HTML and our new override styles into the Shadow DOM
+        shadowRoot.innerHTML = docHtml;
+        shadowRoot.appendChild(overrideStyles);
+
+        console.log("Timeline loaded into Shadow DOM with UNIVERSAL style overrides.");
+        timelineLoaded = true;
+
+    } catch (error) {
+        console.error("Error loading timeline into Shadow DOM:", error);
+        container.innerHTML = `<p>Failed to load the timeline. Please try again later.</p>`;
+    }
 }
 
 // Initialize when the DOM is fully loaded
