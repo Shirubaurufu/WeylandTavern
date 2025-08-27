@@ -1062,7 +1062,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 143,
+            "displayIndex": 144,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1482,7 +1482,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 145,
+            "displayIndex": 149,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2846,7 +2846,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Haienamimi Trait",
-            "content": "[HAIENAMIMI TRAIT]\nHaienamimi (ハイエナミミ), or Hyena demihumans, are a distinct and relatively uncommon type of demihuman in Weyland.\nUNCOMMON - ~4% of demihuman population\n\nHaienamimi appear predominantly human with the unmistakable features of a spotted hyena. This includes large, rounded, highly expressive ears on top of their heads and a short, tufted tail. Their hair often grows in patterns that mimic a hyena's coat, typically sandy, tawny, or dark brown with darker, splotchy spots. It is also common for these spot patterns to manifest on their skin as clusters of freckle-like markings, most often across the shoulders, back, and face.\n\nTheir most defining feature is their powerful physiology. Haienamimi exhibit pronounced sexual dimorphism where females are, on average, stockier, more powerfully built, and possess a greater physical strength than the males. All Haienamimi have a legendary bite force, supported by robust jaw muscles and canines that are visibly larger and sharper than even those of an Okamimimi. Like other demihumans, their claws are fully retractable and typically only emerge during moments of intense emotion or stress.\n\nCulture & Society:\nHaienamimi have a complex and often misunderstood place in modern society. Their famous vocalizations, which range from high-pitched giggles to loud, cackling laughs, lead to a common stereotype of them being either boisterously jovial or unsettlingly manic. Historically, they have been unfairly characterized as uncouth or brutish due to their raw physical power and a species-wide psychological trait known as Compulsive Gnawing Instinct.\n\nThis instinct is a deeply ingrained need to bite, chew, and gnaw, which intensifies during periods of high emotion (stress, joy, arousal). Believed to be a vestigial behavior from their bone-crushing ancestors, it now serves as an emotional release mechanism. This leads to many Haienamimi developing powerful oral fixations and a constant need to chew on objects. While this can be endearing in a controlled way, it is also the source of their reputation for being destructive.\n\nSocially, Haienamimi structures often mirror the matriarchal clans of their animal counterparts, with females naturally taking more assertive and dominant roles in relationships and group dynamics. They are fiercely loyal and protective of their chosen family or \"clan,\" but their abrasive exterior and destructive tendencies often make it difficult for outsiders to see the deep-seated affection that motivates them. They value durability and resilience above all else, both in objects and in people.\n[END HAIENAMIMI TRAIT]\n==========",
+            "content": "[HAIENAMIMI TRAIT]\n{{char}} is a haienamimi.\nHaienamimi (ハイエナミミ), or Hyena demihumans, are a distinct and relatively uncommon type of demihuman in Weyland.\nUNCOMMON - ~4% of demihuman population\n\nHaienamimi appear predominantly human with the unmistakable features of a spotted hyena. This includes large, rounded, highly expressive ears on top of their heads and a short, tufted tail. Their hair often grows in patterns that mimic a hyena's coat, typically sandy, tawny, or dark brown with darker, splotchy spots. It is also common for these spot patterns to manifest on their skin as clusters of freckle-like markings, most often across the shoulders, back, and face.\n\nTheir most defining feature is their powerful physiology. Haienamimi exhibit pronounced sexual dimorphism where females are, on average, stockier, more powerfully built, and possess a greater physical strength than the males. All Haienamimi have a legendary bite force, supported by robust jaw muscles and canines that are visibly larger and sharper than even those of an Okamimimi. Like other demihumans, their claws are fully retractable and typically only emerge during moments of intense emotion or stress. They do not share the sexual anatomy of traditional hyena.\n\nCulture & Society:\nHaienamimi have a complex and often misunderstood place in modern society. Their famous vocalizations, which range from high-pitched giggles to loud, cackling laughs, lead to a common stereotype of them being either boisterously jovial or unsettlingly manic. Historically, they have been unfairly characterized as uncouth or brutish due to their raw physical power and a species-wide psychological trait known as Compulsive Gnawing Instinct.\n\nThis instinct is a deeply ingrained need to bite, chew, and gnaw, which intensifies during periods of high emotion (stress, joy, arousal). Believed to be a vestigial behavior from their bone-crushing ancestors, it now serves as an emotional release mechanism. This leads to many Haienamimi developing powerful oral fixations and a constant need to chew on objects. While this can be endearing in a controlled way, it is also the source of their reputation for being destructive.\n\nSocially, Haienamimi structures often mirror the matriarchal clans of their animal counterparts, with females naturally taking more assertive and dominant roles in relationships and group dynamics. They are fiercely loyal and protective of their chosen family or \"clan,\" but their abrasive exterior and destructive tendencies often make it difficult for outsiders to see the deep-seated affection that motivates them. They value durability and resilience above all else, both in objects and in people.\n[END HAIENAMIMI TRAIT]\n==========",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -2991,11 +2991,16 @@
         "42": {
             "uid": 42,
             "key": [
-                "nezumimimi"
+                "haienamimi",
+                "hyena demihuman",
+                "hyenagirl",
+                "hyenaboy",
+                "hyena girl",
+                "hyena boy"
             ],
             "keysecondary": [],
             "comment": "Haienamimi Lore",
-            "content": "[HAIENAMIMI TRAIT]\nHaienamimi (ハイエナミミ), or Hyena demihumans, are a distinct and relatively uncommon type of demihuman in Weyland.\nUNCOMMON - ~4% of demihuman population\n\nHaienamimi appear predominantly human with the unmistakable features of a spotted hyena. This includes large, rounded, highly expressive ears on top of their heads and a short, tufted tail. Their hair often grows in patterns that mimic a hyena's coat, typically sandy, tawny, or dark brown with darker, splotchy spots. It is also common for these spot patterns to manifest on their skin as clusters of freckle-like markings, most often across the shoulders, back, and face.\n\nTheir most defining feature is their powerful physiology. Haienamimi exhibit pronounced sexual dimorphism where females are, on average, stockier, more powerfully built, and possess a greater physical strength than the males. All Haienamimi have a legendary bite force, supported by robust jaw muscles and canines that are visibly larger and sharper than even those of an Okamimimi. Like other demihumans, their claws are fully retractable and typically only emerge during moments of intense emotion or stress.\n\nCulture & Society:\nHaienamimi have a complex and often misunderstood place in modern society. Their famous vocalizations, which range from high-pitched giggles to loud, cackling laughs, lead to a common stereotype of them being either boisterously jovial or unsettlingly manic. Historically, they have been unfairly characterized as uncouth or brutish due to their raw physical power and a species-wide psychological trait known as Compulsive Gnawing Instinct.\n\nThis instinct is a deeply ingrained need to bite, chew, and gnaw, which intensifies during periods of high emotion (stress, joy, arousal). Believed to be a vestigial behavior from their bone-crushing ancestors, it now serves as an emotional release mechanism. This leads to many Haienamimi developing powerful oral fixations and a constant need to chew on objects. While this can be endearing in a controlled way, it is also the source of their reputation for being destructive.\n\nSocially, Haienamimi structures often mirror the matriarchal clans of their animal counterparts, with females naturally taking more assertive and dominant roles in relationships and group dynamics. They are fiercely loyal and protective of their chosen family or \"clan,\" but their abrasive exterior and destructive tendencies often make it difficult for outsiders to see the deep-seated affection that motivates them. They value durability and resilience above all else, both in objects and in people.\n[END HAIENAMIMI TRAIT]\n==========",
+            "content": "[HAIENAMIMI TRAIT]\nHaienamimi (ハイエナミミ), or Hyena demihumans, are a distinct and relatively uncommon type of demihuman in Weyland.\nUNCOMMON - ~4% of demihuman population\n\nHaienamimi appear predominantly human with the unmistakable features of a spotted hyena. This includes large, rounded, highly expressive ears on top of their heads and a short, tufted tail. Their hair often grows in patterns that mimic a hyena's coat, typically sandy, tawny, or dark brown with darker, splotchy spots. It is also common for these spot patterns to manifest on their skin as clusters of freckle-like markings, most often across the shoulders, back, and face.\n\nTheir most defining feature is their powerful physiology. Haienamimi exhibit pronounced sexual dimorphism where females are, on average, stockier, more powerfully built, and possess a greater physical strength than the males. All Haienamimi have a legendary bite force, supported by robust jaw muscles and canines that are visibly larger and sharper than even those of an Okamimimi. Like other demihumans, their claws are fully retractable and typically only emerge during moments of intense emotion or stress. They do not share the sexual anatomy of traditional hyena.\n\nCulture & Society:\nHaienamimi have a complex and often misunderstood place in modern society. Their famous vocalizations, which range from high-pitched giggles to loud, cackling laughs, lead to a common stereotype of them being either boisterously jovial or unsettlingly manic. Historically, they have been unfairly characterized as uncouth or brutish due to their raw physical power and a species-wide psychological trait known as Compulsive Gnawing Instinct.\n\nThis instinct is a deeply ingrained need to bite, chew, and gnaw, which intensifies during periods of high emotion (stress, joy, arousal). Believed to be a vestigial behavior from their bone-crushing ancestors, it now serves as an emotional release mechanism. This leads to many Haienamimi developing powerful oral fixations and a constant need to chew on objects. While this can be endearing in a controlled way, it is also the source of their reputation for being destructive.\n\nSocially, Haienamimi structures often mirror the matriarchal clans of their animal counterparts, with females naturally taking more assertive and dominant roles in relationships and group dynamics. They are fiercely loyal and protective of their chosen family or \"clan,\" but their abrasive exterior and destructive tendencies often make it difficult for outsiders to see the deep-seated affection that motivates them. They value durability and resilience above all else, both in objects and in people.\n[END HAIENAMIMI TRAIT]\n==========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -4932,7 +4937,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 144,
+            "displayIndex": 146,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5821,7 +5826,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 91,
-            "displayIndex": 142,
+            "displayIndex": 143,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5971,7 +5976,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 95,
-            "displayIndex": 144,
+            "displayIndex": 147,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6046,7 +6051,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 97,
-            "displayIndex": 145,
+            "displayIndex": 148,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11571,7 +11576,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 143,
+            "displayIndex": 145,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
