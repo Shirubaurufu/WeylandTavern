@@ -37,7 +37,6 @@ export default function accessLoggerMiddleware() {
 
         if (!knownIPs.has(clientIp)) {
             // Log new connection
-            
             knownIPs.add(clientIp);
 
             // Write to access log if enabled

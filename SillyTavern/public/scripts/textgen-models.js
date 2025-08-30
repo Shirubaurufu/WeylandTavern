@@ -7,7 +7,7 @@ import { renderTemplateAsync } from './templates.js';
 import { POPUP_TYPE, callGenericPopup } from './popup.js';
 import { t } from './i18n.js';
 import { accountStorage } from './util/AccountStorage.js';
-import { localizePagination, PAGINATION_TEMPLATE } from './utils.js';
+import { localizePagination, PAGINATION_TEMPLATE, textValueMatcher } from './utils.js';
 
 let mancerModels = [];
 let togetherModels = [];
@@ -24,6 +24,10 @@ export let openRouterModels = [];
  * @type {string[]}
  */
 const OPENROUTER_PROVIDERS = [
+    // An alphabetically separate set of very-dead providers is kept at the top of the list in the docs.
+    // These do not appear outside the docs: Anyscale, Cent-ML, HuggingFace ... SF Compute, Together 2, 01.AI
+    // As a visual check, AI21 is the topmost provider in the sidebar of https://openrouter.ai/models, thus we want to copy from this point and below.
+    // Providers endpoint: https://openrouter.ai/api/v1/providers
     'AI21',
     'AionLabs',
     'Alibaba',
@@ -34,7 +38,6 @@ const OPENROUTER_PROVIDERS = [
     'Avian',
     'Azure',
     'BaseTen',
-    'Cent-ML',
     'Cerebras',
     'Chutes',
     'Cloudflare',
@@ -64,6 +67,8 @@ const OPENROUTER_PROVIDERS = [
     'Meta',
     'Minimax',
     'Mistral',
+    'Moonshot AI',
+    'Morph',
     'NCompass',
     'Nebius',
     'NextBit',
@@ -81,7 +86,9 @@ const OPENROUTER_PROVIDERS = [
     'Together',
     'Ubicloud',
     'Venice',
+    'WandB',
     'xAI',
+    'Z.AI',
 ];
 
 export async function loadOllamaModels(data) {
@@ -144,7 +151,7 @@ export async function loadTogetherAIModels(data) {
     $('#model_togetherai_select').empty();
     for (const model of data) {
         // Hey buddy, I think you've got the wrong door.
-        if (model.display_type === 'image') {
+        if (model.type === 'image') {
             continue;
         }
 
@@ -267,7 +274,7 @@ export async function loadOpenRouterModels(data) {
     for (const model of data) {
         const option = document.createElement('option');
         option.value = model.id;
-        option.text = model.id;
+        option.text = model.name;
         option.selected = model.id === textgen_settings.openrouter_model;
         $('#openrouter_model').append(option);
     }
@@ -1005,6 +1012,7 @@ export function initTextGenModels() {
             searchInputCssClass: 'text_pole',
             width: '100%',
             templateResult: getOpenRouterModelTemplate,
+            matcher: textValueMatcher,
         });
         $('#vllm_model').select2({
             placeholder: t`Select a model`,

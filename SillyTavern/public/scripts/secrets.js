@@ -23,10 +23,14 @@ export const SECRET_KEYS = {
     OPENAI: 'api_key_openai',
     NOVEL: 'api_key_novel',
     CLAUDE: 'api_key_claude',
+    DEEPL: 'deepl',
+    LIBRE: 'libre',
+    LIBRE_URL: 'libre_url',
+    LINGVA_URL: 'lingva_url',
     OPENROUTER: 'api_key_openrouter',
-    SCALE: 'api_key_scale',
     AI21: 'api_key_ai21',
-    SCALE_COOKIE: 'scale_cookie',
+    ONERING_URL: 'oneringtranslator_url',
+    DEEPLX_URL: 'deeplx_url',
     MAKERSUITE: 'api_key_makersuite',
     VERTEXAI: 'api_key_vertexai',
     SERPAPI: 'api_key_serpapi',
@@ -44,7 +48,6 @@ export const SECRET_KEYS = {
     GROQ: 'api_key_groq',
     AZURE_TTS: 'api_key_azure_tts',
     FEATHERLESS: 'api_key_featherless',
-    ZEROONEAI: 'api_key_01ai',
     HUGGINGFACE: 'api_key_huggingface',
     STABILITY: 'api_key_stability',
     CUSTOM_OPENAI_TTS: 'api_key_custom_openai_tts',
@@ -57,7 +60,12 @@ export const SECRET_KEYS = {
     AIMLAPI: 'api_key_aimlapi',
     FALAI: 'api_key_falai',
     XAI: 'api_key_xai',
+    FIREWORKS: 'api_key_fireworks',
     VERTEXAI_SERVICE_ACCOUNT: 'vertexai_service_account_json',
+    MINIMAX: 'api_key_minimax',
+    MINIMAX_GROUP_ID: 'minimax_group_id',
+    MOONSHOT: 'api_key_moonshot',
+    COMETAPI: 'api_key_cometapi',
 };
 
 const FRIENDLY_NAMES = {
@@ -67,9 +75,7 @@ const FRIENDLY_NAMES = {
     [SECRET_KEYS.NOVEL]: 'NovelAI',
     [SECRET_KEYS.CLAUDE]: 'Claude',
     [SECRET_KEYS.OPENROUTER]: 'OpenRouter',
-    [SECRET_KEYS.SCALE]: 'Scale',
     [SECRET_KEYS.AI21]: 'AI21',
-    [SECRET_KEYS.SCALE_COOKIE]: 'Scale (Cookie)',
     [SECRET_KEYS.MAKERSUITE]: 'Google AI Studio',
     [SECRET_KEYS.VERTEXAI]: 'Google Vertex AI (Express Mode)',
     [SECRET_KEYS.VLLM]: 'vLLM',
@@ -88,7 +94,6 @@ const FRIENDLY_NAMES = {
     [SECRET_KEYS.PERPLEXITY]: 'Perplexity',
     [SECRET_KEYS.GROQ]: 'Groq',
     [SECRET_KEYS.FEATHERLESS]: 'Featherless',
-    [SECRET_KEYS.ZEROONEAI]: '01.AI',
     [SECRET_KEYS.HUGGINGFACE]: 'HuggingFace',
     [SECRET_KEYS.NANOGPT]: 'NanoGPT',
     [SECRET_KEYS.GENERIC]: 'Generic (OpenAI-compatible)',
@@ -104,6 +109,17 @@ const FRIENDLY_NAMES = {
     [SECRET_KEYS.FALAI]: 'FAL.AI',
     [SECRET_KEYS.AZURE_TTS]: 'Azure TTS',
     [SECRET_KEYS.AIMLAPI]: 'AI/ML API',
+    [SECRET_KEYS.FIREWORKS]: 'Fireworks AI',
+    [SECRET_KEYS.DEEPL]: 'DeepL',
+    [SECRET_KEYS.LIBRE]: 'LibreTranslate',
+    [SECRET_KEYS.LIBRE_URL]: 'LibreTranslate Endpoint (e.g. http://127.0.0.1:5000/translate)',
+    [SECRET_KEYS.LINGVA_URL]: 'Lingva Endpoint (e.g. https://lingva.ml/api/v1)',
+    [SECRET_KEYS.ONERING_URL]: 'OneRingTranslator Endpoint (e.g. http://127.0.0.1:4990/translate)',
+    [SECRET_KEYS.DEEPLX_URL]: 'DeepLX Endpoint (e.g. http://127.0.0.1:1188/translate)',
+    [SECRET_KEYS.MINIMAX]: 'MiniMax TTS',
+    [SECRET_KEYS.MINIMAX_GROUP_ID]: 'MiniMax Group ID',
+    [SECRET_KEYS.MOONSHOT]: 'Moonshot AI',
+    [SECRET_KEYS.COMETAPI]: 'CometAPI',
 };
 
 const INPUT_MAP = {
@@ -113,9 +129,7 @@ const INPUT_MAP = {
     [SECRET_KEYS.NOVEL]: '#api_key_novel',
     [SECRET_KEYS.CLAUDE]: '#api_key_claude',
     [SECRET_KEYS.OPENROUTER]: '.api_key_openrouter',
-    [SECRET_KEYS.SCALE]: '#api_key_scale',
     [SECRET_KEYS.AI21]: '#api_key_ai21',
-    [SECRET_KEYS.SCALE_COOKIE]: '#scale_cookie',
     [SECRET_KEYS.MAKERSUITE]: '#api_key_makersuite',
     [SECRET_KEYS.VERTEXAI]: '#api_key_vertexai',
     [SECRET_KEYS.VLLM]: '#api_key_vllm',
@@ -127,14 +141,12 @@ const INPUT_MAP = {
     [SECRET_KEYS.OOBA]: '#api_key_ooba',
     [SECRET_KEYS.INFERMATICAI]: '#api_key_infermaticai',
     [SECRET_KEYS.DREAMGEN]: '#api_key_dreamgen',
-    [SECRET_KEYS.NOMICAI]: '#api_key_nomicai',
     [SECRET_KEYS.KOBOLDCPP]: '#api_key_koboldcpp',
     [SECRET_KEYS.LLAMACPP]: '#api_key_llamacpp',
     [SECRET_KEYS.COHERE]: '#api_key_cohere',
     [SECRET_KEYS.PERPLEXITY]: '#api_key_perplexity',
     [SECRET_KEYS.GROQ]: '#api_key_groq',
     [SECRET_KEYS.FEATHERLESS]: '#api_key_featherless',
-    [SECRET_KEYS.ZEROONEAI]: '#api_key_01ai',
     [SECRET_KEYS.HUGGINGFACE]: '#api_key_huggingface',
     [SECRET_KEYS.NANOGPT]: '#api_key_nanogpt',
     [SECRET_KEYS.GENERIC]: '#api_key_generic',
@@ -142,6 +154,9 @@ const INPUT_MAP = {
     [SECRET_KEYS.AIMLAPI]: '#api_key_aimlapi',
     [SECRET_KEYS.XAI]: '#api_key_xai',
     [SECRET_KEYS.VERTEXAI_SERVICE_ACCOUNT]: '#vertexai_service_account_json',
+    [SECRET_KEYS.MOONSHOT]: '#api_key_moonshot',
+    [SECRET_KEYS.FIREWORKS]: '#api_key_fireworks',
+    [SECRET_KEYS.COMETAPI]: '#api_key_cometapi',
 };
 
 const getLabel = () => moment().format('L LT');
@@ -178,12 +193,6 @@ export function resolveSecretKey() {
                 case 'full':
                     return SECRET_KEYS.VERTEXAI_SERVICE_ACCOUNT;
             }
-        }
-
-        if (chatCompletionSource === chat_completion_sources.SCALE) {
-            return chatCompletionSettings.use_alt_scale
-                ? SECRET_KEYS.SCALE_COOKIE
-                : SECRET_KEYS.SCALE;
         }
 
         const [key] = Object.entries(chat_completion_sources).find(([, value]) => value === chatCompletionSource) ?? [null];
