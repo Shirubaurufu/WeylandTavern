@@ -2,103 +2,54 @@ import { converter } from '../script.js';
 
 let timelineLoaded = false;
 
-// This function will be called when the DOM is fully loaded
-function initWelcomeInfoPanel() {
-    console.log('Initializing Welcome Info Panel');
-
-    // This is the core setup function. It assumes the panel element exists.
-    function setupInfoPanel(welcomePanel) {
-        console.log('Welcome panel element found. Setting up listeners...');
-        if (!welcomePanel) return; // Safety check
-
-        // This flag prevents the setup from running more than once
-        if (welcomePanel.dataset.infoPanelSetup === 'true') {
-            console.log('Info panel already set up. Skipping.');
-            return;
-        }
-        welcomePanel.dataset.infoPanelSetup = 'true';
-
-        const infoButtons = welcomePanel.querySelectorAll('.welcomeInfoButtons .info_button');
-        const navButtons = welcomePanel.querySelectorAll('.infoNavigation .info_button');
-        const infoSections = welcomePanel.querySelectorAll('.infoSection');
-
-        // ... (The rest of your setup logic remains the same) ...
-        // ... I'm copying it here for completeness ...
-
-        function showInfoSection(infoType) {
-            console.log('Showing info section:', infoType);
-            welcomePanel.classList.add('infoMode');
-            infoSections.forEach(section => { section.style.display = 'none'; });
-            navButtons.forEach(btn => { btn.classList.remove('active'); });
-
-            if (infoType === 'character') {
-                document.getElementById('characterInfo').style.display = 'block';
-                welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="character"]').classList.add('active');
-                fetchAndRenderMarkdown('character');
-            } else if (infoType === 'dorm') {
-                document.getElementById('dormInfo').style.display = 'block';
-                welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="dorm"]').classList.add('active');
-                fetchAndRenderMarkdown('dorm');
-            } else if (infoType === 'world') {
-                document.getElementById('worldInfo').style.display = 'block';
-                welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="world"]').classList.add('active');
-                fetchAndRenderMarkdown('world');
-            } else if (infoType === 'timeline') {
-                document.getElementById('timelineInfo').style.display = 'block';
-                welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="timeline"]').classList.add('active');
-                // Let's keep the mobile fix here for now just in case
-                // fetchAndRenderGoogleDoc();
-            }
-        }
-
-        infoButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const infoType = this.getAttribute('data-info-type');
-                showInfoSection(infoType);
-            });
-        });
-
-        navButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const infoType = this.getAttribute('data-info-type');
-                if (infoType === 'back') {
-                    welcomePanel.classList.remove('infoMode');
-                } else {
-                    showInfoSection(infoType);
-                }
-            });
-        });
-
-        console.log('Info panel setup complete');
+export function initializeWeylandpedia() {
+    console.log('Weylandpedia Initializer Called');
+    const welcomePanel = document.querySelector('.welcomePanel');
+    if (!welcomePanel || welcomePanel.dataset.weylandpediaInitialized) {
+        // If the panel isn't there, or we already ran this, do nothing.
+        return;
     }
 
-    // --- The Main Logic ---
-    // 1. Try to find the panel immediately.
-    const existingPanel = document.querySelector('.welcomePanel');
+    // Mark the panel as initialized so we don't add listeners twice.
+    welcomePanel.dataset.weylandpediaInitialized = 'true';
 
-    if (existingPanel) {
-        // SCENARIO A (Desktop): The panel is already here. Set it up now.
-        console.log('Welcome panel found immediately on script load.');
-        setupInfoPanel(existingPanel);
-    } else {
-        // SCENARIO B (Mobile): The panel isn't here yet. Set up an observer to wait for it.
-        console.log('Welcome panel not found. Setting up MutationObserver.');
-        const observer = new MutationObserver((mutations, obs) => {
-            const panel = document.querySelector('.welcomePanel');
-            if (panel) {
-                console.log('Welcome panel appeared. Setting up now.');
-                setupInfoPanel(panel);
-                obs.disconnect(); // We're done, so stop observing to save resources.
+    // Add event listeners for info buttons
+    welcomePanel.querySelectorAll('.welcomeInfoButtons .info_button').forEach((button) => {
+        button.addEventListener('click', function() {
+            const infoType = this.getAttribute('data-info-type');
+            showInfoSection(infoType, welcomePanel);
+        });
+    });
+
+    welcomePanel.querySelectorAll('.infoNavigation .info_button').forEach((button) => {
+        button.addEventListener('click', function() {
+            const infoType = this.getAttribute('data-info-type');
+
+            if (infoType === 'back') {
+                welcomePanel.classList.remove('infoMode');
+            } else {
+                showInfoSection(infoType, welcomePanel);
             }
         });
+    });
+}
 
-        // Start observing the main chat container.
-        observer.observe(document.getElementById('chat'), {
-            childList: true,
-            subtree: true
-        });
+function showInfoSection(infoType, welcomePanel) {
+    welcomePanel.classList.add('infoMode');
+    welcomePanel.querySelectorAll('.infoSection').forEach(section => {
+        section.style.display = 'none';
+    });
+    welcomePanel.querySelectorAll('.infoNavigation .info_button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show the selected section
+    const sectionElement = document.getElementById(`${infoType}Info`);
+    if (sectionElement) {
+        sectionElement.style.display = 'block';
+        const navButton = welcomePanel.querySelector(`.info_button[data-info-type="${infoType}"]`);
+        if (navButton) navButton.classList.add('active');
+        fetchAndRenderMarkdown(infoType); // Assuming this handles not re-fetching
     }
 }
 
@@ -150,13 +101,6 @@ async function fetchAndRenderGoogleDoc() {
         console.error("Error loading timeline into Shadow DOM:", error);
         container.innerHTML = `<p>Failed to load the timeline. Please try again later.</p>`;
     }
-}
-
-// Initialize when the DOM is fully loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWelcomeInfoPanel);
-} else {
-    initWelcomeInfoPanel();
 }
 
 function sortCharacterCardsByName() {
