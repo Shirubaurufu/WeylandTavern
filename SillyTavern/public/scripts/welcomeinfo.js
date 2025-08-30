@@ -6,43 +6,31 @@ let timelineLoaded = false;
 function initWelcomeInfoPanel() {
     console.log('Initializing Welcome Info Panel');
 
-    // Function to set up the info panel functionality
-    function setupInfoPanel() {
-        console.log('Setting up info panel');
+    // This is the core setup function. It assumes the panel element exists.
+    function setupInfoPanel(welcomePanel) {
+        console.log('Welcome panel element found. Setting up listeners...');
+        if (!welcomePanel) return; // Safety check
 
-        // Get references to elements
-        const welcomePanel = document.querySelector('.welcomePanel');
-        if (!welcomePanel) {
-            console.log('Welcome panel not found, waiting...');
-            // If panel isn't loaded yet, try again shortly
-            setTimeout(setupInfoPanel, 500);
+        // This flag prevents the setup from running more than once
+        if (welcomePanel.dataset.infoPanelSetup === 'true') {
+            console.log('Info panel already set up. Skipping.');
             return;
         }
+        welcomePanel.dataset.infoPanelSetup = 'true';
 
         const infoButtons = welcomePanel.querySelectorAll('.welcomeInfoButtons .info_button');
         const navButtons = welcomePanel.querySelectorAll('.infoNavigation .info_button');
         const infoSections = welcomePanel.querySelectorAll('.infoSection');
 
-        console.log('Found buttons:', infoButtons.length, 'nav buttons:', navButtons.length);
+        // ... (The rest of your setup logic remains the same) ...
+        // ... I'm copying it here for completeness ...
 
-        // Function to show a specific info section
         function showInfoSection(infoType) {
             console.log('Showing info section:', infoType);
-
-            // Enter info mode
             welcomePanel.classList.add('infoMode');
+            infoSections.forEach(section => { section.style.display = 'none'; });
+            navButtons.forEach(btn => { btn.classList.remove('active'); });
 
-            // Hide all info sections
-            infoSections.forEach(section => {
-                section.style.display = 'none';
-            });
-
-            // Reset active state on nav buttons
-            navButtons.forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // Show the selected section and fetch content
             if (infoType === 'character') {
                 document.getElementById('characterInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="character"]').classList.add('active');
@@ -58,33 +46,26 @@ function initWelcomeInfoPanel() {
             } else if (infoType === 'timeline') {
                 document.getElementById('timelineInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="timeline"]').classList.add('active');
-                fetchAndRenderGoogleDoc();
+                // Let's keep the mobile fix here for now just in case
+                // fetchAndRenderGoogleDoc();
             }
         }
 
-        // Add click handlers to main info buttons
         infoButtons.forEach(button => {
-            console.log('Adding click handler to button:', button.getAttribute('data-info-type'));
             button.addEventListener('click', function(e) {
                 e.preventDefault();
                 const infoType = this.getAttribute('data-info-type');
-                console.log('Info button clicked:', infoType);
                 showInfoSection(infoType);
             });
         });
 
-        // Add click handlers to navigation buttons
         navButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
                 const infoType = this.getAttribute('data-info-type');
-                console.log('Nav button clicked:', infoType);
-
                 if (infoType === 'back') {
-                    // Go back to main welcome panel
                     welcomePanel.classList.remove('infoMode');
                 } else {
-                    // Show the selected info section
                     showInfoSection(infoType);
                 }
             });
@@ -93,42 +74,82 @@ function initWelcomeInfoPanel() {
         console.log('Info panel setup complete');
     }
 
-    // Set up observers to detect when the welcome panel is added to the page
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.addedNodes && mutation.addedNodes.length > 0) {
-                for (let i = 0; i < mutation.addedNodes.length; i++) {
-                    const node = mutation.addedNodes[i];
-                    if (node.classList && node.classList.contains('welcomePanel')) {
-                        console.log('Welcome panel added to the page');
-                        setupInfoPanel();
-                        return;
-                    }
-                }
+    // --- The Main Logic ---
+    // 1. Try to find the panel immediately.
+    const existingPanel = document.querySelector('.welcomePanel');
+
+    if (existingPanel) {
+        // SCENARIO A (Desktop): The panel is already here. Set it up now.
+        console.log('Welcome panel found immediately on script load.');
+        setupInfoPanel(existingPanel);
+    } else {
+        // SCENARIO B (Mobile): The panel isn't here yet. Set up an observer to wait for it.
+        console.log('Welcome panel not found. Setting up MutationObserver.');
+        const observer = new MutationObserver((mutations, obs) => {
+            const panel = document.querySelector('.welcomePanel');
+            if (panel) {
+                console.log('Welcome panel appeared. Setting up now.');
+                setupInfoPanel(panel);
+                obs.disconnect(); // We're done, so stop observing to save resources.
             }
         });
-    });
 
-    // Start observing the chat container for when the welcome panel is added
-    const chatContainer = document.getElementById('chat');
-    if (chatContainer) {
-        observer.observe(chatContainer, { childList: true, subtree: true });
-        console.log('Observer started on chat container');
-    } else {
-        console.log('Chat container not found, will try again when document is ready');
+        // Start observing the main chat container.
+        observer.observe(document.getElementById('chat'), {
+            childList: true,
+            subtree: true
+        });
     }
-
-    // Also try to set up right away in case the panel is already there
-    setupInfoPanel();
 }
 
 async function fetchAndRenderGoogleDoc() {
-    console.log("Timeline loading disabled for mobile compatibility");
-    const container = document.getElementById('timelineInfo');
-    if (container) {
-        container.innerHTML = `<p>Timeline is not available on mobile devices. Please use a desktop browser to view the timeline.</p>`;
+    if (timelineLoaded) {
+        console.log("Timeline already loaded, not re-fetching.");
+        return;
     }
-    return;
+
+    console.log("Attaching Shadow DOM and fetching timeline...");
+    const container = document.getElementById('timelineInfo');
+    if (!container) {
+        console.error("Timeline container not found!");
+        return;
+    }
+
+    const googleDocUrl = 'https://docs.google.com/document/d/e/2PACX-1vRHGk69-Q9vXH8rhM2ucoFKuh1KFpYd8_sbfnMWOiTmle4Sh-qyukgfYi5r2WqFPKLyyq_Lxsek3L7X/pub?embedded=true';
+
+    try {
+        const shadowRoot = container.attachShadow({ mode: 'open' });
+        const response = await fetch(googleDocUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const docHtml = await response.text();
+
+        // --- THE SLEDGEHAMMER ---
+        // Create a <style> element with our new, more aggressive override rules.
+        const overrideStyles = document.createElement('style');
+        overrideStyles.textContent = `
+            /* THE BIG FIX: Use the universal selector (*) to force EVERYTHING to have a transparent background. */
+            * {
+                background-color: transparent !important;
+            }
+
+            /* Keep this rule: It forces ALL text elements to inherit the main page's text color. */
+            p, li, h1, h2, h3, h4, h5, h6, span, a {
+                color: inherit !important;
+            }
+        `;
+
+        // Inject the fetched HTML and our new override styles into the Shadow DOM
+        shadowRoot.innerHTML = docHtml;
+        shadowRoot.appendChild(overrideStyles);
+
+        console.log("Timeline loaded into Shadow DOM with UNIVERSAL style overrides.");
+        timelineLoaded = true;
+
+    } catch (error) {
+        console.error("Error loading timeline into Shadow DOM:", error);
+        container.innerHTML = `<p>Failed to load the timeline. Please try again later.</p>`;
+    }
 }
 
 // Initialize when the DOM is fully loaded
