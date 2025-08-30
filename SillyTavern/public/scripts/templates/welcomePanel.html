@@ -1,7 +1,7 @@
 <div class="welcomePanel">
     <div class="welcomeHeaderTitle">
         <img src="img/logo.png" alt="SillyTavern Logo" class="welcomeHeaderLogo">
-        <span class="welcomeHeaderVersionDisplay">{{version}}</span>
+        <span class="welcomeHeaderVersionDisplay">WeylandTavern</span>
         <div class="mes_button showRecentChats" title="Show recent chats" data-i18n="[title]Show recent chats">
             <i class="fa-solid fa-circle-chevron-down fa-fw fa-lg"></i>
         </div>
@@ -22,15 +22,10 @@
                 <i class="fa fa-coffee"></i>
                 <span data-i18n="Ko-Fi">Ko-Fi</span>
             </a>
-            <a class="menu_button menu_button_icon" target="_blank" href="https://discord.gg/aY7DtPTk85">
+            <a class="menu_button menu_button_icon" target="_blank" href="https://discord.gg/weyland">
                 <i class="fa-brands fa-discord"></i>
                 <span data-i18n="Discord">Discord</span>
             </a>
-            <span class="welcomeShortcutsSeparator">&vert;</span>
-            <button class="openTemporaryChat menu_button menu_button_icon">
-                <i class="fa-solid fa-comment-dots"></i>
-                <span data-i18n="Temporary Chat">Temporary Chat</span>
-            </button>
         </div>
     </div>
     <div class="welcomeRecent">
@@ -55,14 +50,6 @@
                             <span>{{chat_name}}</span>
                         </div>
                         <small class="chatDate" title="{{date_long}}">{{date_short}}</small>
-                        <div class="chatActions">
-                            <button class="menu_button menu_button_icon renameChat" title="Rename chat" data-i18n="[title]Rename chat">
-                                <i class="fa-solid fa-pen-to-square fa-fw"></i>
-                            </button>
-                            <button class="menu_button menu_button_icon deleteChat" title="Delete chat" data-i18n="[title]Delete chat">
-                                <i class="fa-solid fa-trash fa-fw"></i>
-                            </button>
-                        </div>
                     </div>
                     <div class="chatMessageContainer">
                         <div class="chatMessage" title="{{mes}}">
@@ -85,6 +72,139 @@
                 <small class="fa-solid fa-chevron-down fa-fw fa-1x"></small>
             </button>
         {{/if}}
+        </div>
+    </div>
+
+    <div class="welcomeInfoButtons">
+        <button class="info_button" data-info-type="character">
+            <i class="fa-solid fa-user"></i>
+            <span>Character Info</span>
+        </button>
+        <button class="info_button" data-info-type="dorm">
+            <i class="fa-solid fa-building"></i>
+            <span>Dorm Layouts</span>
+        </button>
+        <button class="info_button" data-info-type="world">
+            <i class="fa-solid fa-earth-americas"></i>
+            <span>Weyland Lore</span>
+        </button>
+        <button class="info_button" data-info-type="timeline">
+            <i class="fa-solid fa-timeline"></i> Timeline
+        </button>
+    </div>
+
+    <!-- Add your postcard here -->
+    <div class="welcomePostcard">
+        <div class="postcard-inner">
+            <div class="postcard-front">
+                <img src="img/postcard-front.webp" alt="Postcard from Weyland Front" />
+            </div>
+            <div class="postcard-back">
+                <img src="img/postcard-back.webp" alt="Postcard from Weyland Back" />
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS for the postcard -->
+    <style>
+        .welcomePostcard {
+            text-align: center;
+            margin: 30px auto;
+            perspective: 1000px;
+            width: 80%;
+            max-width: 600px;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+            clear: both;
+            display: block;
+        }
+
+        .postcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .welcomePostcard.flipped .postcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .postcard-front, .postcard-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .postcard-front {
+            z-index: 2;
+        }
+
+        .postcard-back {
+            transform: rotateY(180deg);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .postcard-front img, .postcard-back img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+
+    <div class="welcomeInfoPanel">
+        <div class="infoNavigation">
+            <button class="info_button active" data-info-type="back">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Go Back</span>
+            </button>
+            <button class="info_button" data-info-type="character">
+                <i class="fa-solid fa-user"></i>
+                <span>Character Info</span>
+            </button>
+            <button class="info_button" data-info-type="dorm">
+                <i class="fa-solid fa-building"></i>
+                <span>Dorm Layouts</span>
+            </button>
+            <button class="info_button" data-info-type="world">
+                <i class="fa-solid fa-earth-americas"></i>
+                <span>Weyland Lore</span>
+            </button>
+            <button class="info_button" data-info-type="timeline">
+                <i class="fa-solid fa-timeline"></i>
+                <span>Timeline</span>
+            </button>
+        </div>
+
+        <div class="infoContent">
+            <div class="infoSection" id="characterInfo">
+                <h2>Character Information</h2>
+                <div class="loading">Loading character information...</div>
+            </div>
+
+            <div class="infoSection" id="dormInfo">
+                <h2>Dorm Layouts</h2>
+                <div class="loading">Loading dorm information...</div>
+            </div>
+
+            <div class="infoSection" id="worldInfo">
+                <h2>Weyland Lore</h2>
+                <div class="loading">Loading world information...</div>
+            </div>
+            <div class="infoSection" id="timelineInfo">
+                <h2>Weyland Timeline</h2>
+                <div class="infoSection" id="timelineInfo">
+                    <!-- This div will be populated by the script -->
+                </div>
+            </div>
         </div>
     </div>
 </div>

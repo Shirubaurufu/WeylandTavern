@@ -125,12 +125,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "shower",
-                "roommate",
-                "towel",
-                "271"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
