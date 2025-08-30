@@ -75,6 +75,23 @@
         </div>
     </div>
 
+    <div class="welcomeInfoButtons">
+        <button class="info_button" data-info-type="character">
+            <i class="fa-solid fa-user"></i>
+            <span>Character Info</span>
+        </button>
+        <button class="info_button" data-info-type="dorm">
+            <i class="fa-solid fa-building"></i>
+            <span>Dorm Layouts</span>
+        </button>
+        <button class="info_button" data-info-type="world">
+            <i class="fa-solid fa-earth-americas"></i>
+            <span>Weyland Lore</span>
+        </button>
+        <button class="info_button" data-info-type="timeline">
+            <i class="fa-solid fa-timeline"></i> Timeline
+        </button>
+    </div>
 
     <!-- Add your postcard here -->
     <div class="welcomePostcard">
@@ -142,5 +159,53 @@
             display: block;
         }
     </style>
+
+    <div class="welcomeInfoPanel">
+        <div class="infoNavigation">
+            <button class="info_button active" data-info-type="back">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Go Back</span>
+            </button>
+            <button class="info_button" data-info-type="character">
+                <i class="fa-solid fa-user"></i>
+                <span>Character Info</span>
+            </button>
+            <button class="info_button" data-info-type="dorm">
+                <i class="fa-solid fa-building"></i>
+                <span>Dorm Layouts</span>
+            </button>
+            <button class="info_button" data-info-type="world">
+                <i class="fa-solid fa-earth-americas"></i>
+                <span>Weyland Lore</span>
+            </button>
+            <button class="info_button" data-info-type="timeline">
+                <i class="fa-solid fa-timeline"></i>
+                <span>Timeline</span>
+            </button>
+        </div>
+
+        <div class="infoContent">
+            <div class="infoSection" id="characterInfo">
+                <h2>Character Information</h2>
+                <div class="loading">Loading character information...</div>
+            </div>
+
+            <div class="infoSection" id="dormInfo">
+                <h2>Dorm Layouts</h2>
+                <div class="loading">Loading dorm information...</div>
+            </div>
+
+            <div class="infoSection" id="worldInfo">
+                <h2>Weyland Lore</h2>
+                <div class="loading">Loading world information...</div>
+            </div>
+            <div class="infoSection" id="timelineInfo">
+                <h2>Weyland Timeline</h2>
+                <div class="infoSection" id="timelineInfo">
+                    <!-- This div will be populated by the script -->
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
