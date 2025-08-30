@@ -123,53 +123,12 @@ function initWelcomeInfoPanel() {
 }
 
 async function fetchAndRenderGoogleDoc() {
-    if (timelineLoaded) {
-        console.log("Timeline already loaded, not re-fetching.");
-        return;
-    }
-
-    console.log("Attaching Shadow DOM and fetching timeline...");
+    console.log("Timeline loading disabled for mobile compatibility");
     const container = document.getElementById('timelineInfo');
-    if (!container) {
-        console.error("Timeline container not found!");
-        return;
+    if (container) {
+        container.innerHTML = `<p>Timeline is not available on mobile devices. Please use a desktop browser to view the timeline.</p>`;
     }
-
-    const googleDocUrl = 'https://docs.google.com/document/d/e/2PACX-1vRHGk69-Q9vXH8rhM2ucoFKuh1KFpYd8_sbfnMWOiTmle4Sh-qyukgfYi5r2WqFPKLyyq_Lxsek3L7X/pub?embedded=true';
-
-    try {
-        const shadowRoot = container.attachShadow({ mode: 'open' });
-        const response = await fetch(googleDocUrl);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        const docHtml = await response.text();
-
-        // --- THE SLEDGEHAMMER ---
-        // Create a <style> element with our new, more aggressive override rules.
-        const overrideStyles = document.createElement('style');
-        overrideStyles.textContent = `
-            /* THE BIG FIX: Use the universal selector (*) to force EVERYTHING to have a transparent background. */
-            * {
-                background-color: transparent !important;
-            }
-
-            /* Keep this rule: It forces ALL text elements to inherit the main page's text color. */
-            p, li, h1, h2, h3, h4, h5, h6, span, a {
-                color: inherit !important;
-            }
-        `;
-
-        // Inject the fetched HTML and our new override styles into the Shadow DOM
-        shadowRoot.innerHTML = docHtml;
-        shadowRoot.appendChild(overrideStyles);
-
-        console.log("Timeline loaded into Shadow DOM with UNIVERSAL style overrides.");
-        timelineLoaded = true;
-
-    } catch (error) {
-        console.error("Error loading timeline into Shadow DOM:", error);
-        container.innerHTML = `<p>Failed to load the timeline. Please try again later.</p>`;
-    }
+    return;
 }
 
 // Initialize when the DOM is fully loaded
