@@ -362,7 +362,7 @@ let chat_create_date = '';
 let firstRun = false;
 let settingsReady = false;
 let currentVersion = '0.0.0';
-export let displayVersion = 'SillyTavern';
+export let displayVersion = 'WeylandTavern';
 
 let generation_started = new Date();
 /** @type {import('./scripts/char-data.js').v1CharData[]} */
