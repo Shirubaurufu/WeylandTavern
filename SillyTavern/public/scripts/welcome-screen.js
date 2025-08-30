@@ -27,6 +27,8 @@ import { renderTemplateAsync } from './templates.js';
 import { accountStorage } from './util/AccountStorage.js';
 import { sortMoments, timestampToMoment } from './utils.js';
 
+import './welcomeInfo.js';
+
 const assistantAvatarKey = 'assistant';
 const defaultAssistantAvatar = 'default_Assistant.png';
 
@@ -187,6 +189,55 @@ async function sendWelcomePanel(chats) {
                 this.classList.toggle('flipped');
             });
         });
+        // Add event listeners for info buttons
+        fragment.querySelectorAll('.welcomeInfoButtons .info_button').forEach((button) => {
+            button.addEventListener('click', function() {
+                const infoType = this.getAttribute('data-info-type');
+                showInfoSection(infoType, fragment);
+            });
+        });
+
+        fragment.querySelectorAll('.infoNavigation .info_button').forEach((button) => {
+            button.addEventListener('click', function() {
+                const infoType = this.getAttribute('data-info-type');
+
+                if (infoType === 'back') {
+                    // Go back to main welcome panel
+            fragment.querySelector('.welcomePanel').classList.remove('infoMode');
+                } else {
+                    // Show the selected info section
+                    showInfoSection(infoType, fragment);
+                }
+            });
+        });
+
+        // Function to show a specific info section
+        function showInfoSection(infoType, fragment) {
+            // Enter info mode
+            fragment.querySelector('.welcomePanel').classList.add('infoMode');
+
+            // Hide all info sections
+            fragment.querySelectorAll('.infoSection').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Reset active state on nav buttons
+            fragment.querySelectorAll('.infoNavigation .info_button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show the selected section
+            if (infoType === 'character') {
+                fragment.querySelector('#characterInfo').style.display = 'block';
+                fragment.querySelector('.info_button[data-info-type="character"]').classList.add('active');
+            } else if (infoType === 'dorm') {
+                fragment.querySelector('#dormInfo').style.display = 'block';
+                fragment.querySelector('.info_button[data-info-type="dorm"]').classList.add('active');
+            } else if (infoType === 'world') {
+                fragment.querySelector('#worldInfo').style.display = 'block';
+                fragment.querySelector('.info_button[data-info-type="world"]').classList.add('active');
+            }
+        }
         chatElement.append(fragment.firstChild);
     } catch (error) {
         console.error('Welcome screen error:', error);
