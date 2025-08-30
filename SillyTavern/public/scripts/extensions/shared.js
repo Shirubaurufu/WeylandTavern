@@ -38,10 +38,14 @@ export async function getMultimodalCaption(base64Img, prompt) {
     const isVllm = extension_settings.caption.multimodal_api === 'vllm';
     const base64Bytes = base64Img.length * 0.75;
     const compressionLimit = 2 * 1024 * 1024;
+    const safeMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const mimeType = base64Img?.split(';')?.[0]?.split(':')?.[1];
     const thumbnailNeeded = ['google', 'openrouter', 'mistral', 'groq', 'vertexai'].includes(extension_settings.caption.multimodal_api);
     if ((thumbnailNeeded && base64Bytes > compressionLimit) || isOoba || isKoboldCpp) {
-        const maxSide = 1024;
-        base64Img = await createThumbnail(base64Img, maxSide, maxSide, 'image/jpeg');
+        const maxSide = 2048;
+        base64Img = await createThumbnail(base64Img, maxSide, maxSide);
+    } else if (!safeMimeTypes.includes(mimeType)) {
+        base64Img = await createThumbnail(base64Img, null, null);
     }
 
     const proxyUrl = useReverseProxy ? oai_settings.reverse_proxy : '';
@@ -159,10 +163,6 @@ function throwIfInvalidModel(useReverseProxy) {
         throw new Error('Anthropic (Claude) API key is not set.');
     }
 
-    if (multimodalApi === 'zerooneai' && !secret_state[SECRET_KEYS.ZEROONEAI]) {
-        throw new Error('01.AI API key is not set.');
-    }
-
     if (multimodalApi === 'groq' && !secret_state[SECRET_KEYS.GROQ]) {
         throw new Error('Groq API key is not set.');
     }
@@ -237,6 +237,10 @@ function throwIfInvalidModel(useReverseProxy) {
 
     if (multimodalApi === 'aimlapi' && !secret_state[SECRET_KEYS.AIMLAPI]) {
         throw new Error('AI/ML API key is not set.');
+    }
+
+    if (multimodalApi === 'moonshot' && !secret_state[SECRET_KEYS.MOONSHOT]) {
+        throw new Error('Moonshot AI API key is not set.');
     }
 }
 
@@ -467,7 +471,7 @@ export class ConnectionManagerRequestService {
 
     /**
      * @param {import('./connection-manager/index.js').ConnectionProfile?} [profile]
-     * @return {import('../../script.js').ConnectAPIMap}
+     * @return {import('../slash-commands.js').ConnectAPIMap}
      * @throws {Error}
      */
     static validateProfile(profile) {

@@ -19,16 +19,6 @@ import bodyParser from 'body-parser';
 import './fetch-patch.js';
 import { serverDirectory } from './server-directory.js';
 
-
-
-// Work around a node v20.0.0, v20.1.0, and v20.2.0 bug. The issue was fixed in v20.3.0.
-// https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
-// Safe to remove once support for Node v20 is dropped.
-if (process.versions && process.versions.node && process.versions.node.match(/20\.[0-2]\.0/)) {
-    // @ts-ignore
-    if (net.setDefaultAutoSelectFamily) net.setDefaultAutoSelectFamily(false);
-}
-
 import { serverEvents, EVENT_NAMES } from './server-events.js';
 import { loadPlugins } from './plugin-loader.js';
 import {
@@ -54,7 +44,7 @@ import getWhitelistMiddleware from './middleware/whitelist.js';
 import accessLoggerMiddleware, { getAccessLogPath, migrateAccessLog } from './middleware/accessLogWriter.js';
 import multerMonkeyPatch from './middleware/multerMonkeyPatch.js';
 import initRequestProxy from './request-proxy.js';
-import getCacheBusterMiddleware from './middleware/cacheBuster.js';
+import cacheBuster from './middleware/cacheBuster.js';
 import corsProxyMiddleware from './middleware/corsProxy.js';
 import {
     getVersion,
@@ -78,9 +68,19 @@ import { redirectDeprecatedEndpoints, ServerStartup, setupPrivateEndpoints } fro
 import { diskCache } from './endpoints/characters.js';
 import { migrateFlatSecrets } from './endpoints/secrets.js';
 
+console.log("START");
+
 console.log = function() {};
 console.debug = function() {};
 console.error = function() {};
+
+// Work around a node v20.0.0, v20.1.0, and v20.2.0 bug. The issue was fixed in v20.3.0.
+// https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
+// Safe to remove once support for Node v20 is dropped.
+if (process.versions && process.versions.node && process.versions.node.match(/20\.[0-2]\.0/)) {
+    // @ts-ignore
+    if (net.setDefaultAutoSelectFamily) net.setDefaultAutoSelectFamily(false);
+}
 
 // Unrestrict console logs display limit
 util.inspect.defaultOptions.maxArrayLength = null;
@@ -95,18 +95,6 @@ if (!cliArgs.enableIPv6 && !cliArgs.enableIPv4) {
     process.exit(1);
 }
 
-try {
-    if (cliArgs.dnsPreferIPv6) {
-        dns.setDefaultResultOrder('ipv6first');
-        
-    } else {
-        dns.setDefaultResultOrder('ipv4first');
-        
-    }
-} catch (error) {
-    
-}
-
 const app = express();
 app.use(helmet({
     contentSecurityPolicy: false,
@@ -114,8 +102,8 @@ app.use(helmet({
 app.use(compression());
 app.use(responseTime());
 
-app.use(bodyParser.json({ limit: '200mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '200mb' }));
+app.use(bodyParser.json({ limit: '500mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '500mb' }));
 
 // CORS Settings //
 const CORS = cors({
@@ -203,7 +191,7 @@ if (!cliArgs.disableCsrf) {
 
 // Static files
 // Host index page
-app.get('/', getCacheBusterMiddleware(), (request, response) => {
+app.get('/', cacheBuster.middleware, (request, response) => {
     if (shouldRedirectToLogin(request)) {
         const query = request.url.split('?')[1];
         const redirectUrl = query ? `/login?${query}` : '/login';
@@ -247,7 +235,7 @@ app.post('/api/ping', (request, response) => {
 
 // File uploads
 const uploadsPath = path.join(cliArgs.dataRoot, UPLOADS_DIRECTORY);
-app.use(multer({ dest: uploadsPath, limits: { fieldSize: 10 * 1024 * 1024 } }).single('avatar'));
+app.use(multer({ dest: uploadsPath, limits: { fieldSize: 500 * 1024 * 1024 } }).single('avatar'));
 app.use(multerMonkeyPatch);
 
 app.get('/version', async function (_, response) {
@@ -264,7 +252,7 @@ setupPrivateEndpoints(app);
  */
 async function preSetupTasks() {
     const version = await getVersion();
-    
+
     const directories = await getUserDirectoriesList();
     await checkForNewContent(directories);
     await ensureThumbnailCache(directories);
@@ -333,6 +321,7 @@ async function postSetupTasks(result) {
                     'firefox': apps.firefox,
                     'chrome': apps.chrome,
                     'edge': apps.edge,
+                    'brave': apps.brave,
                 };
             }
 
@@ -380,8 +369,26 @@ function apply404Middleware() {
     });
 }
 
+/**
+ * Sets the DNS resolution order based on the command line arguments.
+ */
+function setDnsResolutionOrder() {
+    try {
+        if (cliArgs.dnsPreferIPv6) {
+            dns.setDefaultResultOrder('ipv6first');
+
+        } else {
+            dns.setDefaultResultOrder('ipv4first');
+
+        }
+    } catch (error) {
+
+    }
+}
+
 // User storage module needs to be initialized before starting the server
 initUserStorage(globalThis.DATA_ROOT)
+    .then(setDnsResolutionOrder)
     .then(ensurePublicDirectoriesExist)
     .then(migrateUserData)
     .then(migrateSystemPrompts)

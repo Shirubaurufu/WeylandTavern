@@ -118,6 +118,12 @@ const keyMigrationMap = [
         newKey: 'browserLaunch.avoidLocalhost',
         migrate: (value) => value,
     },
+    {
+        oldKey: 'extras.promptExpansionModel',
+        newKey: 'extras.promptExpansionModel',
+        migrate: () => void 0,
+        remove: true,
+    },
 ];
 
 /**
@@ -148,6 +154,13 @@ function getAllKeys(obj, prefix = '') {
 export function addMissingConfigValues(configPath) {
     try {
         const defaultConfig = yaml.parse(fs.readFileSync(path.join(serverDirectory, './default/config.yaml'), 'utf8'));
+
+        if (!fs.existsSync(configPath)) {
+
+            fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
+            return;
+        }
+
         let config = yaml.parse(fs.readFileSync(configPath, 'utf8'));
 
         // Migrate old keys to new keys

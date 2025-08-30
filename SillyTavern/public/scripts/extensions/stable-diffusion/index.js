@@ -51,7 +51,7 @@ import {
     SlashCommandArgument,
     SlashCommandNamedArgument,
 } from '../../slash-commands/SlashCommandArgument.js';
-import { debounce_timeout } from '../../constants.js';
+import { debounce_timeout, VIDEO_EXTENSIONS } from '../../constants.js';
 import { SlashCommandEnumValue } from '../../slash-commands/SlashCommandEnumValue.js';
 import { callGenericPopup, Popup, POPUP_TYPE } from '../../popup.js';
 import { commonEnumProviders } from '../../slash-commands/SlashCommandCommonEnumsProvider.js';
@@ -306,6 +306,7 @@ const defaultSettings = {
     novel_sm: false,
     novel_sm_dyn: false,
     novel_decrisper: false,
+    novel_variety_boost: false,
 
     // OpenAI settings
     openai_style: 'vivid',
@@ -339,6 +340,7 @@ const defaultSettings = {
 };
 
 const writePromptFieldsDebounced = debounce(writePromptFields, debounce_timeout.relaxed);
+const isVideo = (/** @type {string} */ format) => VIDEO_EXTENSIONS.includes(String(format || '').trim().toLowerCase());
 
 /**
  * Generate interceptor for interactive mode triggers.
@@ -481,6 +483,7 @@ async function loadSettings() {
     $('#sd_novel_sm_dyn').prop('checked', extension_settings.sd.novel_sm_dyn);
     $('#sd_novel_sm_dyn').prop('disabled', !extension_settings.sd.novel_sm);
     $('#sd_novel_decrisper').prop('checked', extension_settings.sd.novel_decrisper);
+    $('#sd_novel_variety_boost').prop('checked', extension_settings.sd.novel_variety_boost);
     $('#sd_pollinations_enhance').prop('checked', extension_settings.sd.pollinations_enhance);
     $('#sd_horde').prop('checked', extension_settings.sd.horde);
     $('#sd_horde_nsfw').prop('checked', extension_settings.sd.horde_nsfw);
@@ -1051,6 +1054,11 @@ function onNovelSmDynInput() {
 
 function onNovelDecrisperInput() {
     extension_settings.sd.novel_decrisper = !!$('#sd_novel_decrisper').prop('checked');
+    saveSettingsDebounced();
+}
+
+function onNovelVarietyBoostInput() {
+    extension_settings.sd.novel_variety_boost = !!$('#sd_novel_variety_boost').prop('checked');
     saveSettingsDebounced();
 }
 
@@ -2476,14 +2484,14 @@ async function generatePicture(initiator, args, trigger, message, callback) {
 
     if (generationType === generationMode.BACKGROUND) {
         const callbackOriginal = callback;
-        callback = async function (prompt, imagePath, generationType, _negativePromptPrefix, _initiator, prefixedPrompt) {
+        callback = async function (prompt, imagePath, generationType, _negativePromptPrefix, _initiator, prefixedPrompt, format) {
             const imgUrl = `url("${encodeURI(imagePath)}")`;
             await eventSource.emit(event_types.FORCE_SET_BACKGROUND, { url: imgUrl, path: imagePath });
 
             if (typeof callbackOriginal === 'function') {
-                await callbackOriginal(prompt, imagePath, generationType, negativePromptPrefix, initiator, prefixedPrompt);
+                await callbackOriginal(prompt, imagePath, generationType, negativePromptPrefix, initiator, prefixedPrompt, format);
             } else {
-                await sendMessage(prompt, imagePath, generationType, negativePromptPrefix, initiator, prefixedPrompt);
+                await sendMessage(prompt, imagePath, generationType, negativePromptPrefix, initiator, prefixedPrompt, format);
             }
         };
     }
@@ -2725,7 +2733,7 @@ function getUserAvatarUrl() {
  * @returns {Promise<string>} - A promise that resolves when the prompt generation completes.
  */
 async function generatePrompt(quietPrompt) {
-    const reply = await generateQuietPrompt(quietPrompt, false, false);
+    const reply = await generateQuietPrompt({ quietPrompt });
     const processedReply = processReply(reply);
 
     if (!processedReply) {
@@ -2838,8 +2846,8 @@ async function sendGenerationRequest(generationType, prompt, additionalNegativeP
     const filename = `${characterName}_${humanizedDateTime()}`;
     const base64Image = await saveBase64AsFile(result.data, characterName, filename, result.format);
     callback
-        ? await callback(prompt, base64Image, generationType, additionalNegativePrefix, initiator, prefixedPrompt)
-        : await sendMessage(prompt, base64Image, generationType, additionalNegativePrefix, initiator, prefixedPrompt);
+        ? await callback(prompt, base64Image, generationType, additionalNegativePrefix, initiator, prefixedPrompt, result.format)
+        : await sendMessage(prompt, base64Image, generationType, additionalNegativePrefix, initiator, prefixedPrompt, result.format);
     return base64Image;
 }
 
@@ -3233,6 +3241,7 @@ async function generateNovelImage(prompt, negativePrompt, signal) {
             negative_prompt: negativePrompt,
             upscale_ratio: extension_settings.sd.hr_scale,
             decrisper: extension_settings.sd.novel_decrisper,
+            variety_boost: extension_settings.sd.novel_variety_boost,
             sm: sm,
             sm_dyn: sm_dyn,
             seed: extension_settings.sd.seed >= 0 ? extension_settings.sd.seed : undefined,
@@ -3524,7 +3533,8 @@ async function generateComfyImage(prompt, negativePrompt, signal) {
         const text = await promptResult.text();
         throw new Error(text);
     }
-    return { format: 'png', data: await promptResult.text() };
+    const { format, data } = await promptResult.json();
+    return { format, data };
 }
 
 
@@ -3864,8 +3874,9 @@ async function onComfyDeleteWorkflowClick() {
  * @param {string} additionalNegativePrefix Additional negative prompt used for the image generation
  * @param {string} initiator The initiator of the image generation
  * @param {string} prefixedPrompt Prompt with an attached specific prefix
+ * @param {string} format Format of the image (e.g., 'png', 'jpg')
  */
-async function sendMessage(prompt, image, generationType, additionalNegativePrefix, initiator, prefixedPrompt) {
+async function sendMessage(prompt, image, generationType, additionalNegativePrefix, initiator, prefixedPrompt, format) {
     const context = getContext();
     const name = context.groupId ? systemUserName : context.name2;
     const template = extension_settings.sd.prompts[generationMode.MESSAGE] || '{{prompt}}';
@@ -3885,6 +3896,12 @@ async function sendMessage(prompt, image, generationType, additionalNegativePref
             image_swipes: [image],
         },
     };
+    if (isVideo(format)) {
+        message.extra.video = image;
+        delete message.extra.image;
+        delete message.extra.image_swipes;
+        delete message.extra.inline_image;
+    }
     context.chat.push(message);
     const messageId = context.chat.length - 1;
     await eventSource.emit(event_types.MESSAGE_RECEIVED, messageId, 'extension');
@@ -4068,7 +4085,7 @@ async function sdMessageButton(e) {
         }
     }
 
-    function saveGeneratedImage(prompt, image, generationType, negative) {
+    function saveGeneratedImage(prompt, image, generationType, negative, _initiator, _prefixedPrompt, format) {
         // Some message sources may not create the extra object
         if (typeof message.extra !== 'object' || message.extra === null) {
             message.extra = {};
@@ -4085,17 +4102,24 @@ async function sdMessageButton(e) {
             swipes.push(message.extra.image);
         }
 
-        swipes.push(image);
+        const isVideoFormat = isVideo(format);
 
-        // If already contains an image and it's not inline - leave it as is
-        message.extra.inline_image = !(message.extra.image && !message.extra.inline_image);
-        message.extra.image = image;
+        if (isVideoFormat) {
+            message.extra.video = image;
+        } else {
+            swipes.push(image);
+
+            // If already contains an image and it's not inline - leave it as is
+            message.extra.inline_image = !(message.extra.image && !message.extra.inline_image);
+            message.extra.image = image;
+        }
+
         message.extra.title = prompt;
         message.extra.generationType = generationType;
         message.extra.negative = negative;
         appendMediaToMessage(message, $mes);
 
-        context.saveChat();
+        return context.saveChat();
     }
 }
 
@@ -4638,6 +4662,7 @@ jQuery(async () => {
     $('#sd_novel_sm').on('input', onNovelSmInput);
     $('#sd_novel_sm_dyn').on('input', onNovelSmDynInput);
     $('#sd_novel_decrisper').on('input', onNovelDecrisperInput);
+    $('#sd_novel_variety_boost').on('input', onNovelVarietyBoostInput);
     $('#sd_pollinations_enhance').on('input', onPollinationsEnhanceInput);
     $('#sd_comfy_validate').on('click', validateComfyUrl);
     $('#sd_comfy_url').on('input', onComfyUrlInput);

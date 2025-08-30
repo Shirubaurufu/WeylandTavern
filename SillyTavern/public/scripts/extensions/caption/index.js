@@ -1,4 +1,4 @@
-import { ensureImageFormatSupported, getBase64Async, isTrueBoolean, saveBase64AsFile } from '../../utils.js';
+import { ensureImageFormatSupported, getBase64Async, getFileExtension, isTrueBoolean, saveBase64AsFile } from '../../utils.js';
 import { getContext, getApiUrl, doExtrasFetch, extension_settings, modules, renderExtensionTemplateAsync } from '../../extensions.js';
 import { appendMediaToMessage, eventSource, event_types, getRequestHeaders, saveChatConditional, saveSettingsDebounced, substituteParamsExtended } from '../../../script.js';
 import { getMessageTimeStamp } from '../../RossAscends-mods.js';
@@ -52,6 +52,10 @@ function migrateSettings() {
 
     if (!extension_settings.caption.template) {
         extension_settings.caption.template = TEMPLATE_DEFAULT;
+    }
+
+    if (!extension_settings.caption.show_in_chat) {
+        extension_settings.caption.show_in_chat = false;
     }
 }
 
@@ -167,6 +171,7 @@ async function sendCaptionedMessage(caption, image) {
         extra: {
             image: image,
             title: messageText,
+            inline_image: !!extension_settings.caption.show_in_chat,
         },
     };
     context.chat.push(message);
@@ -327,11 +332,11 @@ async function getCaptionForFile(file, prompt, quiet) {
         setSpinnerIcon();
         const context = getContext();
         const fileData = await getBase64Async(await ensureImageFormatSupported(file));
-        const base64Format = fileData.split(',')[0].split(';')[0].split('/')[1];
+        const extension = getFileExtension(file);
         const base64Data = fileData.split(',')[1];
         const { caption } = await doCaptionRequest(base64Data, fileData, prompt);
         if (!quiet) {
-            const imagePath = await saveBase64AsFile(base64Data, context.name2, '', base64Format);
+            const imagePath = await saveBase64AsFile(base64Data, context.name2, '', extension);
             await sendCaptionedMessage(caption, imagePath);
         }
         return caption;
@@ -430,10 +435,10 @@ jQuery(async function () {
 
                     const chatCompletionApis = {
                         'openrouter': SECRET_KEYS.OPENROUTER,
-                        'zerooneai': SECRET_KEYS.ZEROONEAI,
                         'groq': SECRET_KEYS.GROQ,
                         'cohere': SECRET_KEYS.COHERE,
                         'aimlapi': SECRET_KEYS.AIMLAPI,
+                        'moonshot': SECRET_KEYS.MOONSHOT,
                     };
 
                     if (chatCompletionApis[api] && secret_state[chatCompletionApis[api]]) {
@@ -483,8 +488,13 @@ jQuery(async function () {
         $('#img_file').on('change', (e) => onSelectImage(e.originalEvent, '', false));
     }
     async function switchMultimodalBlocks() {
-        await addOpenRouterModels();
+        await addRemoteEndpointModels();
         const isMultimodal = extension_settings.caption.source === 'multimodal';
+        if (!extension_settings.caption.multimodal_model) {
+            const dropdown = $('#caption_multimodal_model');
+            const options = dropdown.find(`option[data-type="${extension_settings.caption.multimodal_api}"]`);
+            extension_settings.caption.multimodal_model = String(options.first().val());
+        }
         $('#caption_multimodal_block').toggle(isMultimodal);
         $('#caption_prompt_block').toggle(isMultimodal);
         $('#caption_multimodal_api').val(extension_settings.caption.multimodal_api);
@@ -499,35 +509,42 @@ jQuery(async function () {
         const html = await renderExtensionTemplateAsync('caption', 'settings', { TEMPLATE_DEFAULT, PROMPT_DEFAULT });
         $('#caption_container').append(html);
     }
-    async function addOpenRouterModels() {
-        const dropdown = document.getElementById('caption_multimodal_model');
-        if (!(dropdown instanceof HTMLSelectElement)) {
-            return;
-        }
-        if (extension_settings.caption.source !== 'multimodal' || extension_settings.caption.multimodal_api !== 'openrouter') {
-            return;
-        }
-        const options = Array.from(dropdown.options);
-        const response = await fetch('/api/openrouter/models/multimodal', {
-            method: 'POST',
-            headers: getRequestHeaders(),
-        });
-        if (!response.ok) {
-            return;
-        }
-        const modelIds = await response.json();
-        if (Array.isArray(modelIds) && modelIds.length > 0) {
-            modelIds.forEach((modelId) => {
-                if (!modelId || typeof modelId !== 'string' || options.some(o => o.value === modelId)) {
-                    return;
-                }
-                const option = document.createElement('option');
-                option.value = modelId;
-                option.textContent = modelId;
-                option.dataset.type = 'openrouter';
-                dropdown.add(option);
+
+    async function addRemoteEndpointModels() {
+        async function processEndpoint(api, url) {
+            const dropdown = document.getElementById('caption_multimodal_model');
+            if (!(dropdown instanceof HTMLSelectElement)) {
+                return;
+            }
+            if (extension_settings.caption.source !== 'multimodal' || extension_settings.caption.multimodal_api !== api) {
+                return;
+            }
+            const options = Array.from(dropdown.options);
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: getRequestHeaders(),
             });
+            if (!response.ok) {
+                return;
+            }
+            const modelIds = await response.json();
+            if (Array.isArray(modelIds) && modelIds.length > 0) {
+                modelIds.sort().forEach((modelId) => {
+                    if (!modelId || typeof modelId !== 'string' || options.some(o => o.value === modelId)) {
+                        return;
+                    }
+                    const option = document.createElement('option');
+                    option.value = modelId;
+                    option.textContent = modelId;
+                    option.dataset.type = api;
+                    dropdown.add(option);
+                });
+            }
         }
+
+        await processEndpoint('openrouter', '/api/openrouter/models/multimodal');
+        await processEndpoint('aimlapi', '/api/backends/chat-completions/aimlapi/models/multimodal');
+        await processEndpoint('pollinations', '/api/backends/chat-completions/pollinations/models/multimodal');
     }
 
     await addSettings();
@@ -545,9 +562,9 @@ jQuery(async function () {
     $('#caption_prompt').val(extension_settings.caption.prompt);
     $('#caption_template').val(extension_settings.caption.template);
     $('#caption_refine_mode').on('input', onRefineModeInput);
-    $('#caption_source').on('change', () => {
+    $('#caption_source').on('change', async () => {
         extension_settings.caption.source = String($('#caption_source').val());
-        switchMultimodalBlocks();
+        await switchMultimodalBlocks();
         saveSettingsDebounced();
     });
     $('#caption_prompt').on('input', () => {
@@ -576,13 +593,12 @@ jQuery(async function () {
         $('#ollama_download_model').trigger('click');
         $('#dialogue_popup_input').val(presetModel);
     });
-    $('#caption_multimodal_api').on('change', () => {
+    $('#caption_multimodal_api').on('change', async () => {
         const api = String($('#caption_multimodal_api').val());
-        const model = String($(`#caption_multimodal_model option[data-type="${api}"]`).first().val());
         extension_settings.caption.multimodal_api = api;
-        extension_settings.caption.multimodal_model = model;
+        extension_settings.caption.multimodal_model = '';
+        await switchMultimodalBlocks();
         saveSettingsDebounced();
-        switchMultimodalBlocks();
     });
     $('#caption_multimodal_model').on('change', () => {
         extension_settings.caption.multimodal_model = String($('#caption_multimodal_model').val());
@@ -594,6 +610,10 @@ jQuery(async function () {
     });
     $('#caption_altEndpoint_enabled').prop('checked', !!(extension_settings.caption.alt_endpoint_enabled)).on('input', () => {
         extension_settings.caption.alt_endpoint_enabled = !!$('#caption_altEndpoint_enabled').prop('checked');
+        saveSettingsDebounced();
+    });
+    $('#caption_show_in_chat').prop('checked', !!(extension_settings.caption.show_in_chat)).on('input', () => {
+        extension_settings.caption.show_in_chat = !!$('#caption_show_in_chat').prop('checked');
         saveSettingsDebounced();
     });
 
