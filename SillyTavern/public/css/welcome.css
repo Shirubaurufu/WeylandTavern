@@ -465,3 +465,10 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
     color: inherit;
 }
 
+.welcomeInfoButtons,
+.infoNavigation {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
