@@ -142,28 +142,12 @@ body.hideChatAvatars .welcomePanel .recentChatList .recentChat .avatar {
     justify-content: space-between;
     align-items: baseline;
     font-size: calc(var(--mainFontSize) * 1);
-    gap: 5px;
 }
 
 .welcomeRecent .recentChatList .recentChat .chatNameContainer .chatName {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    flex: 1;
-}
-
-.welcomeRecent .recentChatList .recentChat .chatActions {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-}
-
-.welcomeRecent .recentChatList .recentChat .chatActions button {
-    margin: 0;
-    font-size: 0.8em;
-    cursor: pointer;
 }
 
 .welcomeRecent .recentChatList .recentChat .chatMessageContainer {
@@ -301,33 +285,35 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
 }
 
 .character-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 20px;
     margin-top: 20px;
 }
 
 .character-id-card {
-    /* --- Main Card Sizing and Background (Unchanged) --- */
-    width: 500px;
-    height: 281px; /* Scaled height to maintain 16:9-ish aspect ratio */
-    position: relative; /* This is the anchor for all positioned elements inside */
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    aspect-ratio: 16/9;
+    position: relative;
     background-image: url('https://raw.githubusercontent.com/FFFox-ST-Manager/Weylandpedia/main/idcards/idcard.png');
-    background-size: 100% 100%; /* Make the background image fit the container perfectly */
+    background-size: 100% 100%;
     background-repeat: no-repeat;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #111;
     margin: 10px auto;
+    font-size: 3vmin; /* Base font size on the smaller of viewport width/height */
 }
 
 /* --- Profile Picture Placement --- */
 .character-id-card .id-profile-pic {
     position: absolute;
-    /* Tweaked values for perfect alignment */
-    top: 113px;
-    left: 28px;
-    width: 142px;
-    height: 140px;
+    top: 40%; /* Using percentages instead of fixed pixels */
+    left: 5.5%;
+    width: 29%; /* Width as percentage of card width */
+    height: 50%; /* Height as percentage of card height */
     max-width: 100%;
 }
 
@@ -341,8 +327,17 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
 /* --- General Info Text Styling --- */
 .character-id-card .id-info {
     position: absolute;
-    font-size: 15px;
-    line-height: 1.3; /* Added for better spacing on wrapped lines */
+    font-size: 1em; /* 1em = parent element's font-size */
+    line-height: 1.3;
+    --shadowWidth: 0 !important;
+    text-shadow: none !important;
+}
+
+/* Cap the font size for larger screens */
+@media screen and (min-width: 500px) {
+    .character-id-card {
+        font-size: 15px;
+    }
 }
 
 .character-id-card .id-label {
@@ -354,28 +349,32 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
 .character-id-card .id-name {
     top: 36%;
     left: 36%;
+    width: 32%; /* Limit width to prevent overlap */
 }
 .character-id-card .id-age {
     top: 36%;
     left: 70%;
+    width: 25%;
 }
 .character-id-card .id-major {
     top: 45%;
     left: 36%;
+    width: 60%; /* Allow more space for major info */
 }
 .character-id-card .id-hobbies {
     top: 54%;
     left: 36%;
-    /* Keep the width to allow for text wrapping */
     width: 60%;
 }
 .character-id-card .id-sizes {
     top: 77%;
     left: 36%;
+    width: 60%;
 }
 .character-id-card .id-room {
     top: 86%;
     left: 36%;
+    width: 60%;
 }
 
 .character-id-card .id-signature {
