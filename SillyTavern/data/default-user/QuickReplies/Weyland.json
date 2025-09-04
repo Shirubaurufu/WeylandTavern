@@ -85,7 +85,7 @@
             "showLabel": false,
             "label": "Camera Angle",
             "title": "!Camera",
-            "message": "/flushvar Camera |\n/input What do you want to see? |\n/setvar key=Camera {{pipe}} |\n/if left={{getvar::Camera}} right=\"\" rule=neq {:/send name=\"Camera Adjusting...\" <think>!Camera Focus: {{getvar::Camera}}</think> |\n/fireandforget {:\n\t/delay 5000 |\n\t/del 1 |\n:} |\n/trigger await=true :} |",
+            "message": "/flushvar Camera |\n/input What do you want to see? |\n/setvar key=Camera {{pipe}} |\n/if left={{getvar::Camera}} right=\"\" rule=neq {:/send name=\"Camera Adjusting...\" <think>!Camera Focus: {{getvar::Camera}}</think> |\n/setvar key=CameraID {{lastMessageId}} |\n/fireandforget {:\n\t/delay 2000 |\n\t/message-get {{lastMessageId}} |\n\t/= pipe.name |\n\t/if left={{pipe}} right=\"Camera Adjusting...\" rule=eq else={:/message-move from={{getvar::CameraID}} to={{lastMessageId}} |\n\t/message-get {{lastMessageId}} |\n\t/= pipe.name |\n\t/if left={{pipe}} right=\"Camera Adjusting...\" rule=eq {:/del 1 :} :} {:\n\t/del 1 :} |\n:} |\n/trigger await=true :} |",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
