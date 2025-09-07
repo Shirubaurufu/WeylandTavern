@@ -8,5 +8,5 @@
     "author": "Keij#6799 and Deffcolony",
     "version": "0.1.0",
     "homePage": "https://github.com/SillyTavern/Extension-Audio",
-    "auto_update": true
+    "auto_update": false
 }
