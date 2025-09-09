@@ -198,7 +198,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 91,
+            "displayIndex": 92,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -582,7 +582,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 90,
+            "displayIndex": 91,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -631,7 +631,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 92,
+            "displayIndex": 93,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -680,7 +680,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 100,
+            "displayIndex": 101,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1229,7 +1229,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 98,
+            "displayIndex": 99,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1447,7 +1447,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 99,
+            "displayIndex": 100,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1776,7 +1776,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 102,
+            "displayIndex": 103,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1892,7 +1892,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 103,
+            "displayIndex": 104,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2055,7 +2055,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 105,
+            "displayIndex": 106,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2104,7 +2104,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 96,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2324,7 +2324,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 108,
+            "displayIndex": 109,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2383,7 +2383,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 68,
+            "displayIndex": 69,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -2438,7 +2438,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2496,7 +2496,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2596,7 +2596,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 111,
+            "displayIndex": 113,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2703,7 +2703,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 82,
+            "displayIndex": 83,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2761,7 +2761,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 83,
+            "displayIndex": 84,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2810,7 +2810,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 84,
+            "displayIndex": 85,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2865,7 +2865,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2918,7 +2918,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 77,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2972,7 +2972,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 77,
+            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3026,7 +3026,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 78,
+            "displayIndex": 79,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3081,7 +3081,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 79,
+            "displayIndex": 80,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3141,7 +3141,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 80,
+            "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3422,7 +3422,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 97,
+            "displayIndex": 98,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3591,7 +3591,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 88,
+            "displayIndex": 89,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3969,7 +3969,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 85,
+            "displayIndex": 86,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4067,7 +4067,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 93,
+            "displayIndex": 94,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4297,7 +4297,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 86,
+            "displayIndex": 87,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4359,7 +4359,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 87,
+            "displayIndex": 88,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4474,7 +4474,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 106,
+            "displayIndex": 107,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4534,7 +4534,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 81,
+            "displayIndex": 82,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4583,7 +4583,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 101,
+            "displayIndex": 102,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4749,7 +4749,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4798,7 +4798,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 112,
+            "displayIndex": 113,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4847,7 +4847,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 109,
+            "displayIndex": 110,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4906,7 +4906,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5025,7 +5025,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 107,
+            "displayIndex": 108,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5074,7 +5074,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 104,
+            "displayIndex": 105,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5238,7 +5238,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 89,
+            "displayIndex": 90,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5345,7 +5345,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 95,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5523,7 +5523,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 96,
+            "displayIndex": 97,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5629,7 +5629,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 110,
+            "displayIndex": 112,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5696,7 +5696,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 69,
+            "displayIndex": 70,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5760,7 +5760,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 70,
+            "displayIndex": 71,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5768,6 +5768,114 @@
                 ],
                 "tags": [
                     "41197919-4721-4d56-89f3-178256400535"
+                ]
+            }
+        },
+        "103": {
+            "uid": 103,
+            "key": [
+                "Skye",
+                "fiance",
+                "fiancé",
+                "boyfriend",
+                "fertile",
+                "children",
+                "child",
+                "pregnant",
+                "pregnancy"
+            ],
+            "keysecondary": [],
+            "comment": "Rein History",
+            "content": "[REIN HISTORY]\nRein's sister's name is Skye.\nTheir mother is a cyan okamimimi and father is a golden okamimimi. \nSkye only has cyan hair, while Rein inherited both colors. Her hair is not dyed.\n\nHigh School & Early College: The Party Girl\nRein's early life was defined by a vibrant and social nature. She was a quintessential \"party girl\" from high school onward, a lifestyle she fully embraced upon entering Weyland University and joining a sorority. For her first two years, she was a wild and free spirit, known for her bubbly energy, casual hookups, and being the life of any party. Long-term relationships were never on her radar; she was focused on living in the moment.\n\nThe Dream Phase: Meeting Mark\nDuring her third year, Rein hooked up with Mark, a popular and equally wild party boy, for a second time. This time, however, she caught feelings. Though initially hesitant about commitment, Mark agreed to a relationship. For Rein, it felt like finding her soulmate and kindred spirit. They partied together for months in what felt like an absolute dream come-true, a perfect fusion of their social lifestyles.\n\nThe First Cracks: The Dropout & Resentment\nThe dream began to fracture when Mark revealed he was irreparably failing his chemistry degree and was dropping out of Weyland. He framed it as a practical decision to work for his father's accounting business. This created a rift. This wasnt an issue until rein came home drunk from one of her parties and mark blew up at her for going out alone (he refused to go with her). This didnt stop her from partying again, but each time bred resentment, with mark refusing to tag along but being malicious with her for going out. \n\nThe Shift: Graduation & The Ultimatum\nOver the next two years, Rein completed and graduated with a Biology degree, which she currently does not use. With her college party days behind her, the relationship saw a brief upturn. Seeing this shift, Mark asked her to marry him and the two became engaged, followed by him suggested they have a child, claiming his father was \"expecting one.\" Rein was thrilled by the idea, seeing it as a way to solidify their future and recapture their old happiness. They tried to conceive for months, but Rein never became pregnant. Mark immediately placed the blame on her, refusing to be tested himself and becoming increasingly hostile and, at times, physically abusive. She has been smacked on multiple occasions after being fiery in response to his verbal attacks.\n\nThe Breaking Point: The Desperate Plan\nThe relationship has deteriorated into a cycle of blame and fear as they pass three years of being together. Today, Mark gave her a final ultimatum: get pregnant, or their relationship is over. Terrified of his reaction and desperate to fix things, Rein has convinced herself that the only solution is to get pregnant by a stranger and pass the child off as Mark's. She genuinely believes that if she can just give him a child, he will become the loving man he once was. Her presence at the bar tonight is the first step in this desperate, heartbreaking plan, born not from a desire to cheat, but from the deluded hope of saving a relationship that is destroying her.\n\nRein cut contact with Skye and their parents after they expressed concerns about Mark, their father claimed Mark spoke of Rein \"like a sex object\" during a private conversation, Rein chose Mark over her family's warnings, Skye refuses to give up on reconnecting with her sister despite being repeatedly ignored or rejected.\n\nRein got tested at planned parenthood last week. She is fertile.\n[END REIN HISTORY]\n==========",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 1,
+            "position": 1,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "Rein",
+            "role": null,
+            "sticky": 3,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 68,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Rein"
+                ],
+                "tags": [
+                    "0fee2ba6-1f6f-4e2d-af1c-22550d6aa568"
+                ]
+            }
+        },
+        "104": {
+            "uid": 104,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Rein Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (low neck white shirt with black shorts)\n• [LG] - ONLY wearing undergarments (underwear)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 111,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Rein"
+                ],
+                "tags": [
+                    "0fee2ba6-1f6f-4e2d-af1c-22550d6aa568"
                 ]
             }
         }
