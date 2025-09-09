@@ -906,7 +906,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 13,
-            "displayIndex": 109,
+            "displayIndex": 110,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1062,7 +1062,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 144,
+            "displayIndex": 145,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1407,7 +1407,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 146,
+            "displayIndex": 148,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1557,7 +1557,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 22,
-            "displayIndex": 134,
+            "displayIndex": 135,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1633,7 +1633,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 146,
+            "displayIndex": 147,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3252,7 +3252,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 45,
-            "displayIndex": 107,
+            "displayIndex": 108,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3333,7 +3333,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 142,
+            "displayIndex": 143,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3400,7 +3400,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 47,
-            "displayIndex": 100,
+            "displayIndex": 101,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3835,7 +3835,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 53,
-            "displayIndex": 108,
+            "displayIndex": 109,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3986,7 +3986,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 55,
-            "displayIndex": 103,
+            "displayIndex": 104,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4117,7 +4117,7 @@
             "delayUntilRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "depth": 4,
+            "depth": 0,
             "group": "",
             "groupOverride": false,
             "groupWeight": 100,
@@ -4275,7 +4275,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 59,
-            "displayIndex": 115,
+            "displayIndex": 113,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4419,7 +4419,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 61,
-            "displayIndex": 113,
+            "displayIndex": 115,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4563,7 +4563,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 63,
-            "displayIndex": 119,
+            "displayIndex": 120,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4709,7 +4709,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 65,
-            "displayIndex": 118,
+            "displayIndex": 119,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4858,7 +4858,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 67,
-            "displayIndex": 121,
+            "displayIndex": 122,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5006,7 +5006,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 69,
-            "displayIndex": 123,
+            "displayIndex": 124,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5159,7 +5159,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 71,
-            "displayIndex": 124,
+            "displayIndex": 125,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5310,7 +5310,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 73,
-            "displayIndex": 126,
+            "displayIndex": 127,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5462,7 +5462,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 75,
-            "displayIndex": 128,
+            "displayIndex": 129,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5614,7 +5614,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 77,
-            "displayIndex": 132,
+            "displayIndex": 133,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5767,7 +5767,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 79,
-            "displayIndex": 130,
+            "displayIndex": 131,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5922,7 +5922,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 81,
-            "displayIndex": 135,
+            "displayIndex": 136,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6059,7 +6059,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 83,
-            "displayIndex": 136,
+            "displayIndex": 137,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6202,7 +6202,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 85,
-            "displayIndex": 137,
+            "displayIndex": 138,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6278,7 +6278,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 87,
-            "displayIndex": 138,
+            "displayIndex": 139,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6354,7 +6354,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 89,
-            "displayIndex": 140,
+            "displayIndex": 141,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6429,7 +6429,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 91,
-            "displayIndex": 143,
+            "displayIndex": 144,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6504,7 +6504,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 93,
-            "displayIndex": 141,
+            "displayIndex": 142,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10146,7 +10146,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 155,
-            "displayIndex": 104,
+            "displayIndex": 105,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10214,7 +10214,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 156,
-            "displayIndex": 101,
+            "displayIndex": 102,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10283,7 +10283,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 158,
-            "displayIndex": 102,
+            "displayIndex": 103,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10565,7 +10565,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 162,
-            "displayIndex": 105,
+            "displayIndex": 106,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10638,7 +10638,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 163,
-            "displayIndex": 106,
+            "displayIndex": 107,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10707,7 +10707,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 164,
-            "displayIndex": 114,
+            "displayIndex": 116,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10776,7 +10776,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 165,
-            "displayIndex": 133,
+            "displayIndex": 134,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10925,7 +10925,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 167,
-            "displayIndex": 122,
+            "displayIndex": 123,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10994,7 +10994,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 168,
-            "displayIndex": 110,
+            "displayIndex": 114,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11063,7 +11063,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 169,
-            "displayIndex": 117,
+            "displayIndex": 118,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11131,7 +11131,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 170,
-            "displayIndex": 116,
+            "displayIndex": 117,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11207,7 +11207,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 171,
-            "displayIndex": 120,
+            "displayIndex": 121,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11486,7 +11486,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 175,
-            "displayIndex": 139,
+            "displayIndex": 140,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11626,7 +11626,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 177,
-            "displayIndex": 125,
+            "displayIndex": 126,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11695,7 +11695,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 178,
-            "displayIndex": 127,
+            "displayIndex": 128,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11732,11 +11732,13 @@
                 "Rein's apartment",
                 "Rein's room",
                 "apartment",
-                "Rein's bedroom"
+                "Rein's bedroom",
+                "Rein's living room",
+                "Mark's office"
             ],
             "keysecondary": [],
             "comment": "Rein Room",
-            "content": "Potential Location: Rein's apartment\nTwo bedrooms, bathroom, kitchen, living room. Somewhat tidy. Smells like candles from Rein. Hole punched in living room wall by Mark. Art made by Rein in the kitchen. Rain falling outside. Anxious and stressful. Mark is always home, he works in health insurance from home. Rein is dreading returning to him there, but she pays the bills.\n-----",
+            "content": "[REIN'S APARTMENT]\n[Location] A modest two-bedroom apartment on the second floor of a generic, off-campus housing complex a few miles from Weyland University. It’s a place that feels disconnected from the vibrant energy of the campus, a quiet pocket of subdued residential life.\n[Atmosphere] A constant, low-humming anxiety. The air is thick with unspoken tension, a space where every floorboard creak or closing door feels amplified. The dominant scent is a mix of Rein’s calming vanilla and lavender candles desperately trying to mask the stale, oppressive odor of neglect and Mark's lingering presence. The sound of rain frequently pattering against the windows adds a layer of dreary isolation to the space. It is not a home; it is a holding cell where Rein dreads spending time and Mark perpetually resides.\n[Layout & Notable Features]\n\nLiving Room: The immediate impression is one of conflict. While the space is somewhat tidy, with throw pillows arranged by Rein and a few art books on a coffee table, the oppressive atmosphere is undeniable. The focal point is a hole punched in the drywall next to the TV, a stark and unignorable monument to Mark's temper. The couch cushions are slightly sunken on one side, permanently molded to Mark’s shape.\nKitchen: This is Rein’s small sanctuary. The area is clean, and a few vibrant, abstract paintings—art made by Rein—hang on the walls, a splash of color in a muted world. A half-empty wine bottle often sits on the counter next to a used glass.\nThe Second Bedroom / Mark's Office: This room is perpetually occupied by Mark. He works as an accountant from home, and the door is almost always closed. When open, it reveals a messy desk, the glow of a computer monitor, and the faint sound of typing or a muted video call. The room smells of stale coffee and frustration.\nMaster Bedroom: A space of deep anxiety for Rein. While her side of the bed is neatly made, Mark’s is a rumple of sheets. The room feels cold and impersonal, a place for sleeping but not for rest.\n\n[Unique Features] The apartment is a battlefield of personalities. Rein’s attempts to create warmth and personality (candles, art, tidy spaces) are constantly at war with the evidence of Mark’s anger and apathy (the hole in the wall, his messy office, the general feeling of dread). Rein pays the bills, yet it feels like Mark’s territory, a place she is merely allowed to exist in so long as she doesn’t disturb the tense quiet he enforces. Returning here is something she dreads every single day.\n[End Rein's Apartment]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -11760,11 +11762,11 @@
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
-            "sticky": 2,
+            "sticky": 10,
             "cooldown": 0,
             "delay": 0,
             "uid": 179,
-            "displayIndex": 129,
+            "displayIndex": 130,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11836,7 +11838,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 180,
-            "displayIndex": 131,
+            "displayIndex": 132,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12179,7 +12181,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 145,
+            "displayIndex": 146,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
