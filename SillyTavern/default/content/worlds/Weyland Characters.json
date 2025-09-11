@@ -126,10 +126,9 @@
         "2": {
             "uid": 2,
             "key": [
-                "whistle",
-                "laid",
-                "partner",
-                "wolf meat"
+                "Barrel",
+                "gnaw",
+                "chew"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -4042,7 +4041,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Blake & Serra Outfit Codes",
-            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFITS (Yukata/Kimono festival outfit)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [O3] - {{char}}'s MAIN OUTFITS (Yukata/Kimono festival outfit)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [RC] - Casual clothing\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
