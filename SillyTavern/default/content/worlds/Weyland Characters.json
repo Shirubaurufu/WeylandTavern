@@ -126,9 +126,18 @@
         "2": {
             "uid": 2,
             "key": [
-                "Barrel",
-                "gnaw",
-                "chew"
+                "Moonlight",
+                "Festival",
+                "lantern",
+                "lanterns",
+                "stalls",
+                "booth",
+                "stall",
+                "booth",
+                "drunk",
+                "hiccup",
+                "drink",
+                "drinking"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -605,7 +614,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Blake Outfit Codes",
-            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black crop top, black shorts, and jacket)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Yukata/Kimono festival outfit\n• [O2] - A dress and jacket\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Only include the code that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black crop top, black shorts, and jacket)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O2] - A dress and jacket\n• [O3] - Yukata/Kimono festival outfit\n• [XX] - No other code matches\n[END CLOTHING CODES]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
