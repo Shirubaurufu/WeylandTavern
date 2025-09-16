@@ -62,7 +62,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "1": {
             "uid": 1,
@@ -121,24 +123,13 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "2": {
             "uid": 2,
-            "key": [
-                "Moonlight",
-                "Festival",
-                "lantern",
-                "lanterns",
-                "stalls",
-                "booth",
-                "stall",
-                "booth",
-                "drunk",
-                "hiccup",
-                "drink",
-                "drinking"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -174,7 +165,14 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "3": {
             "uid": 3,
@@ -223,7 +221,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "4": {
             "uid": 4,
@@ -289,7 +289,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "5": {
             "uid": 5,
@@ -329,7 +331,14 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "6": {
             "uid": 6,
@@ -386,7 +395,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "7": {
             "uid": 7,
@@ -444,7 +455,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "8": {
             "uid": 8,
@@ -509,7 +522,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "9": {
             "uid": 9,
@@ -558,7 +573,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "10": {
             "uid": 10,
@@ -607,7 +624,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "11": {
             "uid": 11,
@@ -656,7 +675,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "12": {
             "uid": 12,
@@ -705,7 +726,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "13": {
             "uid": 13,
@@ -756,7 +779,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "14": {
             "uid": 14,
@@ -817,7 +842,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "15": {
             "uid": 15,
@@ -883,7 +910,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "16": {
             "uid": 16,
@@ -947,7 +976,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "17": {
             "uid": 17,
@@ -1006,7 +1037,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "18": {
             "uid": 18,
@@ -1067,7 +1100,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "19": {
             "uid": 19,
@@ -1135,7 +1170,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "20": {
             "uid": 20,
@@ -1205,7 +1242,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "21": {
             "uid": 21,
@@ -1254,7 +1293,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "22": {
             "uid": 22,
@@ -1313,7 +1354,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "23": {
             "uid": 23,
@@ -1372,7 +1415,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "24": {
             "uid": 24,
@@ -1423,7 +1468,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "25": {
             "uid": 25,
@@ -1472,7 +1519,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "26": {
             "uid": 26,
@@ -1536,7 +1585,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "27": {
             "uid": 27,
@@ -1585,7 +1636,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "28": {
             "uid": 28,
@@ -1647,7 +1700,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "29": {
             "uid": 29,
@@ -1696,7 +1751,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "30": {
             "uid": 30,
@@ -1752,7 +1809,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "31": {
             "uid": 31,
@@ -1801,7 +1860,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "32": {
             "uid": 32,
@@ -1868,7 +1929,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "33": {
             "uid": 33,
@@ -1917,7 +1980,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "34": {
             "uid": 34,
@@ -1974,7 +2039,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "35": {
             "uid": 35,
@@ -2031,7 +2098,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "36": {
             "uid": 36,
@@ -2080,7 +2149,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "37": {
             "uid": 37,
@@ -2129,7 +2200,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "38": {
             "uid": 38,
@@ -2188,7 +2261,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "39": {
             "uid": 39,
@@ -2244,7 +2319,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "40": {
             "uid": 40,
@@ -2300,7 +2377,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "41": {
             "uid": 41,
@@ -2349,7 +2428,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "42": {
             "uid": 42,
@@ -2408,7 +2489,9 @@
                 "tags": [
                     "9e57a781-9333-4588-9bf6-dba79ae0711c"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "43": {
             "uid": 43,
@@ -2465,7 +2548,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "44": {
             "uid": 44,
@@ -2523,7 +2608,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "45": {
             "uid": 45,
@@ -2572,7 +2659,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "46": {
             "uid": 46,
@@ -2621,7 +2710,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "47": {
             "uid": 47,
@@ -2670,7 +2761,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "48": {
             "uid": 48,
@@ -2728,7 +2821,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "49": {
             "uid": 49,
@@ -2786,7 +2881,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "50": {
             "uid": 50,
@@ -2835,7 +2932,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "51": {
             "uid": 51,
@@ -2890,7 +2989,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "52": {
             "uid": 52,
@@ -2943,7 +3044,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "53": {
             "uid": 53,
@@ -2997,7 +3100,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "54": {
             "uid": 54,
@@ -3051,7 +3156,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "55": {
             "uid": 55,
@@ -3106,7 +3213,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "56": {
             "uid": 56,
@@ -3166,7 +3275,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "57": {
             "uid": 57,
@@ -3223,7 +3334,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "58": {
             "uid": 58,
@@ -3279,7 +3392,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "59": {
             "uid": 59,
@@ -3337,7 +3452,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "60": {
             "uid": 60,
@@ -3398,7 +3515,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "61": {
             "uid": 61,
@@ -3447,7 +3566,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "62": {
             "uid": 62,
@@ -3507,7 +3628,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "63": {
             "uid": 63,
@@ -3567,7 +3690,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "64": {
             "uid": 64,
@@ -3616,7 +3741,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "65": {
             "uid": 65,
@@ -3682,7 +3809,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "66": {
             "uid": 66,
@@ -3746,7 +3875,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "67": {
             "uid": 67,
@@ -3816,7 +3947,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "68": {
             "uid": 68,
@@ -3878,7 +4011,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "69": {
             "uid": 69,
@@ -3929,7 +4064,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "70": {
             "uid": 70,
@@ -3994,7 +4131,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "71": {
             "uid": 71,
@@ -4043,7 +4182,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "72": {
             "uid": 72,
@@ -4092,7 +4233,9 @@
             "matchCharacterPersonality": false,
             "matchCharacterDepthPrompt": false,
             "matchScenario": false,
-            "matchCreatorNotes": false
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": []
         },
         "73": {
             "uid": 73,
@@ -4152,7 +4295,9 @@
                 "tags": [
                     "1405eee5-d74c-40d3-8b1f-84e4d81c7a45"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "74": {
             "uid": 74,
@@ -4206,7 +4351,9 @@
                 "tags": [
                     "53353c52-fe2d-4a31-8bd4-2bac9c84db6a"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "75": {
             "uid": 75,
@@ -4255,7 +4402,9 @@
                 "tags": [
                     "7300d6f5-87fa-455f-9fc5-597599ab6c51"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "76": {
             "uid": 76,
@@ -4316,7 +4465,9 @@
                 "tags": [
                     "7300d6f5-87fa-455f-9fc5-597599ab6c51"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "77": {
             "uid": 77,
@@ -4378,7 +4529,9 @@
                 "tags": [
                     "7300d6f5-87fa-455f-9fc5-597599ab6c51"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "78": {
             "uid": 78,
@@ -4444,7 +4597,9 @@
                 "tags": [
                     "459cfd6a-c8fc-485b-b962-0ecd04e6cbac"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "79": {
             "uid": 79,
@@ -4493,7 +4648,9 @@
                 "tags": [
                     "459cfd6a-c8fc-485b-b962-0ecd04e6cbac"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "80": {
             "uid": 80,
@@ -4553,7 +4710,9 @@
                 "tags": [
                     "34ab59bc-a5a8-4123-8982-1718074b6372"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "81": {
             "uid": 81,
@@ -4602,7 +4761,9 @@
                 "tags": [
                     "1012abb0-c5b8-456a-b71c-60766c1cb508"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "82": {
             "uid": 82,
@@ -4663,7 +4824,9 @@
                 "tags": [
                     "1012abb0-c5b8-456a-b71c-60766c1cb508"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "83": {
             "uid": 83,
@@ -4712,7 +4875,9 @@
                 "tags": [
                     "1012abb0-c5b8-456a-b71c-60766c1cb508"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "84": {
             "uid": 84,
@@ -4768,7 +4933,9 @@
                 "tags": [
                     "11185024-9113-415c-883f-b7ce250a060d"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "85": {
             "uid": 85,
@@ -4817,7 +4984,9 @@
                 "tags": [
                     "de325bb2-a544-4ed7-a989-878a2a034bd0"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "86": {
             "uid": 86,
@@ -4866,7 +5035,9 @@
                 "tags": [
                     "9e57a781-9333-4588-9bf6-dba79ae0711c"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "87": {
             "uid": 87,
@@ -4927,7 +5098,9 @@
                     "a30efa11-f157-4f65-b0ad-ce93ed63d703",
                     "72c095af-8314-4026-8888-f1c2fce68e32"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "88": {
             "uid": 88,
@@ -4995,7 +5168,9 @@
                 "tags": [
                     "9a401b37-8c9f-4fb3-8203-45451d40770a"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "89": {
             "uid": 89,
@@ -5044,7 +5219,9 @@
                 "tags": [
                     "9a401b37-8c9f-4fb3-8203-45451d40770a"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "90": {
             "uid": 90,
@@ -5093,7 +5270,9 @@
                 "tags": [
                     "ddd4132b-a2ed-4e28-8adc-be010c731ede"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "91": {
             "uid": 91,
@@ -5155,7 +5334,9 @@
                 "tags": [
                     "ddd4132b-a2ed-4e28-8adc-be010c731ede"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "92": {
             "uid": 92,
@@ -5208,7 +5389,9 @@
                 "tags": [
                     "2dda2f70-8a32-4f36-89da-d77d26e87c11"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "93": {
             "uid": 93,
@@ -5257,7 +5440,9 @@
                 "tags": [
                     "2dda2f70-8a32-4f36-89da-d77d26e87c11"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "94": {
             "uid": 94,
@@ -5315,7 +5500,9 @@
                 "tags": [
                     "63a37f85-9d63-4b65-b8fd-b4cf482b72fe"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "95": {
             "uid": 95,
@@ -5364,7 +5551,9 @@
                 "tags": [
                     "63a37f85-9d63-4b65-b8fd-b4cf482b72fe"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "96": {
             "uid": 96,
@@ -5430,7 +5619,9 @@
                 "tags": [
                     "6bf5493c-360a-4965-b21e-9327965806fe"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "97": {
             "uid": 97,
@@ -5493,7 +5684,9 @@
                 "tags": [
                     "6bf5493c-360a-4965-b21e-9327965806fe"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "98": {
             "uid": 98,
@@ -5542,7 +5735,9 @@
                 "tags": [
                     "6bf5493c-360a-4965-b21e-9327965806fe"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "99": {
             "uid": 99,
@@ -5599,7 +5794,9 @@
                 "tags": [
                     "6bf5493c-360a-4965-b21e-9327965806fe"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "100": {
             "uid": 100,
@@ -5648,7 +5845,9 @@
                 "tags": [
                     "41197919-4721-4d56-89f3-178256400535"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "101": {
             "uid": 101,
@@ -5715,7 +5914,9 @@
                 "tags": [
                     "41197919-4721-4d56-89f3-178256400535"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "102": {
             "uid": 102,
@@ -5779,7 +5980,9 @@
                 "tags": [
                     "41197919-4721-4d56-89f3-178256400535"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "103": {
             "uid": 103,
@@ -5792,7 +5995,13 @@
                 "children",
                 "child",
                 "pregnant",
-                "pregnancy"
+                "pregnancy",
+                "parents",
+                "parent",
+                "mom",
+                "dad",
+                "father",
+                "mother"
             ],
             "keysecondary": [],
             "comment": "Rein History",
@@ -5838,7 +6047,9 @@
                 "tags": [
                     "0fee2ba6-1f6f-4e2d-af1c-22550d6aa568"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "104": {
             "uid": 104,
@@ -5887,7 +6098,9 @@
                 "tags": [
                     "0fee2ba6-1f6f-4e2d-af1c-22550d6aa568"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         },
         "105": {
             "uid": 105,
@@ -5943,7 +6156,9 @@
                 "tags": [
                     "7b1c6f55-6688-4225-9344-ff8910b6b828"
                 ]
-            }
+            },
+            "ignoreBudget": false,
+            "triggers": []
         }
     }
 }
