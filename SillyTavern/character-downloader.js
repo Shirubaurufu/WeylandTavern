@@ -86,6 +86,12 @@ try {
 } catch {}
 for (const file of answers.selectedFiles) {
     const zipPath = path.join(__dirname, file.name);
+    if (fs.existsSync(zipPath)) { //Check if file already exists
+        await fs.unlink(zipPath, (err) => { //Remove it if so
+            if (err) throw err.name;
+        });
+    }
+
     const noZipName = file.name.replace(".zip","");
     const split = noZipName.split(" ");
     const cleanName = split[0];
