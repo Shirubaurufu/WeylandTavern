@@ -544,3 +544,16 @@ label[for="bind_preset_to_connection"]:has(input:checked) {
 #openai_settings [data-cc-toggle="false"]>.icon-unsupported {
     color: var(--golden);
 }
+
+/* Makes reroll button better */
+
+.swipe_right.fa-solid.fa-chevron-right.interactable {
+  opacity: 1 !important;
+  font-weight: bold !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+  font-size: 1.5em !important;
+}
+
+.swipe_right.fa-solid.fa-chevron-right.interactable:before {
+  content: "→";
+}
