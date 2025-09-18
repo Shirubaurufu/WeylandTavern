@@ -557,3 +557,15 @@ label[for="bind_preset_to_connection"]:has(input:checked) {
 .swipe_right.fa-solid.fa-chevron-right.interactable:before {
   content: "→";
 }
+
+.swipe_left.fa-solid.fa-chevron-left.interactable {
+  opacity: 1 !important;
+  font-weight: bold !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+  font-size: 1.5em !important;
+  margin-left: 2px !important;
+}
+
+.swipe_left.fa-solid.fa-chevron-left.interactable:before {
+  content: "←";
+}
