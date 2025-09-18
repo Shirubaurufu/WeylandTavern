@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.6.4";
+const extensionVersion = "1.6.6";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -92,6 +92,7 @@ let settings = undefined;
  * @property {RegExp} normalizeSwungDash
  * @property {RegExp} normalizePosessives
  * @property {RegExp} normalizeContractions
+ * @property {RegExp} normalizeHeight
  * 
  * @property {RegExp} missingEndAsterisk
  * @property {string} missingEndAsteriskReplace
@@ -124,7 +125,7 @@ const weylandRegex = {
     mergedActions: /(?<=[\s—]|^)\*(?![\s—\*])([^"_`\n]+?)(?<!\*|[\s—])\*\*(?!\*|[\s—.,!?])([^"_`\n]+)\*(?=[\s—]|$)/g,
     mergedActionsReplace: "*$1* *$2*",
 
-    singleQuoteBetweenAction: /\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*/g,
+    singleQuoteBetweenAction: /(?<!\*)\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*(?!\*)/g,
     singleQuoteBetweenActionReplace: "—'$1'—",
 
     actionEmphasisOne: /(?<=[\s—]|^)\*(?![\s—\*])([^"_`]*)\*(?<![\s—])(?=[\s—]|$)/g,
@@ -166,6 +167,7 @@ const weylandRegex = {
     normalizeSwungDash: /\u2053/g,
     normalizePosessives: /(?<=[^\s—])'(?=s)(?=\b)|(?<=s)'(?=[\s—.,!?])/ig,
     normalizeContractions: /(?<=[^\s—])'(?=t|ll|ve|re)(?=\b)/ig,
+    normalizeHeight: /(?<=\s)(\d{1,3})'(\d{1,2})"(?=\s)/g,
 
     missingEndAsterisk: /(?<=["_\]][\s—]|^)\*+([^"_\[\]]+)(?<!\*)(?=[\s—]["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
@@ -208,6 +210,7 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.normalizeSwungDash, `~`);
     message = replaceText(message, weylandRegex.normalizePosessives, `\u2019`);
     message = replaceText(message, weylandRegex.normalizeContractions, `\u2019`);
+    message = replaceText(message, weylandRegex.normalizeHeight, `$1\u2019$2\u201D`);
 
     //Clean up too many symbols
     message = replaceText(message, weylandRegex.tooManyAsterisks, weylandRegex.tooManyAsterisksReplace);
