@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.6.6";
+const extensionVersion = "1.6.7";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -167,7 +167,7 @@ const weylandRegex = {
     normalizeSwungDash: /\u2053/g,
     normalizePosessives: /(?<=[^\s—])'(?=s)(?=\b)|(?<=s)'(?=[\s—.,!?])/ig,
     normalizeContractions: /(?<=[^\s—])'(?=t|ll|ve|re)(?=\b)/ig,
-    normalizeHeight: /(?<=\s)(\d{1,3})'(\d{1,2})"(?=\s)/g,
+    normalizeHeight: /(\d{1,3})'(\d{1,2})"/g,
 
     missingEndAsterisk: /(?<=["_\]][\s—]|^)\*+([^"_\[\]]+)(?<!\*)(?=[\s—]["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
