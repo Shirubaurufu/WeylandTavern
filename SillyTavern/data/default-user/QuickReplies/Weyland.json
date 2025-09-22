@@ -275,7 +275,7 @@
             "showLabel": false,
             "label": "LTMDisabler",
             "title": "LTMDisabler",
-            "message": "/setvar key=LTMChange 0 |\n/getchatbook |\n/setvar key=ChatLoreName |\n/times {{getvar::EntryNumber}} {:\n/incvar LTMChange |\n/findentry file={{getvar::ChatLoreName}} field=automationId {{getvar::LTMChange}} |\n/if left={{pipe}} right=\"\" rule=neq {:/setentryfield file={{getvar::ChatLoreName}} field=disable uid={{pipe}} {{getvar::LTMDisabler}} :} :} |",
+            "message": "/setvar key=LTMChange 0 |\n/getchatbook |\n/setvar key=ChatLoreName |\n/times {{getvar::EntryNumber}} {:\n/incvar LTMChange |\n/findentry quiet=true file={{getvar::ChatLoreName}} field=automationId {{getvar::LTMChange}} |\n/if left={{pipe}} right=\"\" rule=neq {:/setentryfield file={{getvar::ChatLoreName}} field=disable uid={{pipe}} {{getvar::LTMDisabler}} :} :} |",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": true,
