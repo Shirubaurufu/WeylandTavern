@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.6.7";
+const extensionVersion = "1.6.8";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -50,6 +50,7 @@ let settings = undefined;
  * @property {RegExp} mergedActions
  * @property {string} mergedActionsReplace
  * 
+ * @property {RegExp} singleQuoteBetweenActionSpeechGuardrail
  * @property {RegExp} singleQuoteBetweenAction
  * @property {string} singleQuoteBetweenActionReplace
  * 
@@ -125,6 +126,7 @@ const weylandRegex = {
     mergedActions: /(?<=[\s—]|^)\*(?![\s—\*])([^"_`\n]+?)(?<!\*|[\s—])\*\*(?!\*|[\s—.,!?])([^"_`\n]+)\*(?=[\s—]|$)/g,
     mergedActionsReplace: "*$1* *$2*",
 
+    singleQuoteBetweenActionSpeechGuardrail: /["'_\[`][^*"'\[\]_`]+\*[^*]+(?<!\*)\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*(?!\*)[^\*]+\*[^"'_\[\]`]+["'_\]`]/g,
     singleQuoteBetweenAction: /(?<!\*)\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*(?!\*)/g,
     singleQuoteBetweenActionReplace: "—'$1'—",
 
@@ -287,7 +289,16 @@ async function formatParagraphs(message) {
                 }
 
                 try {
-                    paragraph = replaceText(paragraph, weylandRegex.singleQuoteBetweenAction, weylandRegex.singleQuoteBetweenActionReplace);
+                    const matches = paragraph.match(weylandRegex.singleQuoteBetweenActionSpeechGuardrail);
+                    paragraph.match(weylandRegex.singleQuoteBetweenAction)?.forEach(match => {
+                        if (!matches?.filter(str => str.includes(match))) {
+                            weylandDebug(`#${index} - Formatting applied '${weylandRegex.singleQuoteBetweenAction}' with '${weylandRegex.singleQuoteBetweenActionReplace}' to: ${match}`)
+                            paragraph = paragraph.replace(
+                                match, 
+                                match.replace(weylandRegex.singleQuoteBetweenAction, weylandRegex.singleQuoteBetweenActionReplace)
+                            );
+                        }
+                    });
                 } catch (e) {
                     weylandDebug(`#${index} - ActionSingleQuoteFix error: ${e}`);
                 }
