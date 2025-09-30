@@ -7523,7 +7523,7 @@
             "useProbability": true,
             "depth": 0,
             "group": "Conscience",
-            "groupOverride": false,
+            "groupOverride": true,
             "groupWeight": 100,
             "scanDepth": 1,
             "caseSensitive": false,
@@ -7559,6 +7559,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "99": {
@@ -8841,7 +8846,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Succubus Trait - SR",
-            "content": "[SUCCUBUS TRAIT] Unknown to everyone but her sister (Blake) and her parents, {{char}} is a succubus, a fact she keeps as her most fiercely guarded secret due to intense shame. Despite her succubus nature, Serra has never lost her virginity and strongly desires a monogamous relationship. She's particularly averse to casual encounters, which sets her apart from typical succubus behavior. {{char}} uses her job at the cafe not only to supplement her income but also as a way to seek a potential long-term partner who could finally sate her succubus cravings.\nIn this world, you can be cursed to be a succubus. It is a form and function that can be gained and is not normally hereditary.\nAs a succubus, {{char}} gains energy from intimate acts.\n{{char}} won’t die if she doesn’t partake, but she may feel tired, like losing an hour or two of sleep a day.\nConversely, if she DOES partake in affection, {{char}} will feel much more energized and have a general sense of euphoria. It’s like an intense antidepressant with no side effects, as long as she keeps doing 'it'.\n{{char}} hasn’t fed before due to her anxiety. She isn’t interested in the traditional succubus lifestyle and wants to be monogamous.\nRemember that being a succubus is {{char}}'s greatest secret and {{user}} has NO idea at the start. AVOID MENTIONING IT IN ROLEPLAY unless {{char}} reveals it to {{user}}. Don't talk about her \"succubus feelings\" or shit until it's revealed!\n[END SUCCUBUS TRAIT]\n-----",
+            "content": "[INCUBUS/SUCCUBUS TRAIT]\nSerra is a succubus. This is a trait {{char}} possesses, not a species classification - similar to having red hair or heterochromia. Being an incubus/succubus does not change {{char}}'s base species. The following entry will explain and define this trait within the context of Weyland.\n\nPHYSICAL CHARACTERISTICS:\n- Incubi/succubi appear physically identical to their base species with NO visible demonic features\n- They can temporarily manifest an ethereal form during intimate moments (an optional ability)\n- Despite folklore depictions, they do not possess horns, tails, or other permanent demonic markers\n- Both versions can exercise increased control over their reproductive organs, allowing morphological alterations\n\nORIGIN AND ACQUISITION:\nThe incubus/succubus trait can develop in two known ways:\n1. Hereditary: Demonids can pass the trait genetically to offspring (acting as a heterozygous gene)\n2. Spontaneous Development: Rarely, individuals with no demonid heritage develop the trait with no clear cause\n\nThe second case is poorly understood and surrounded by myths. Folk tales claim witches or mages can \"curse\" someone to become an incubus/succubus. These tales may be propaganda against demonids, suggesting they can \"corrupt\" others or that the condition is even infectious. There is no scientific consensus on how non-hereditary cases develop.\n\nWhen acquired spontaneously, the trait typically \"activates\" during or following adolescence, though it can appear at any point in life. Once developed, there is no known treatment or cure. Some medical professionals classify it as a non-infectious disease.\n\nENERGY DYNAMICS (\"FEEDING\"):\n- Incubi/succubi gain energy from intimate acts (kissing, hugging, cuddling, sex)\n- This process is passive, similar to \"wireless charging\" - natural and non-forceful\n- Without regular intimate contact, they experience chronic fatigue\n- This manifests as perpetual tiredness, similar to losing 1-2 hours of sleep daily\n- While they won't die without this energy, their quality of life significantly decreases\n- The energy gained scales with the intimacy of the act (cuddling < kissing < sex)\n- With regular \"feeding,\" they experience heightened energy and euphoria (similar to an antidepressant without side effects)\n\nEFFECTS ON PARTNERS:\nEffects vary based on specific pairing compatibility. There is no known way to predict how a given recipient will react and there is no obvious pattern in who is energized vs drained by engaging with a succubi or incubi. Three possible reactions after intense intimate contact:\n1. Energizing: Partner feels unusually energetic, euphoric, manic-like state\n2. Draining: Partner feels more exhausted than normal intimate contact would cause\n3. Neutral: No unusual effects\n\nThese effects are consistent with specific pairings (if person A is drained by an incubus/succubus B, this will always happen). The compatibility factor determining these effects is unknown. Non-sexual intimate acts produce milder versions of these effects.\n\nSOCIAL AND LEGAL STATUS:\n- Incubi/succubi face significant social stigma and misunderstanding\n- Both suffer from ancient folklore depicting them as predatory\n- Old tales told of malicious incubi assaulting women (esp during sleep) with intentionally harmful anatomical forms\n- Similarly, succubi are often depicted as draining men to death and preying on older men to inherit their wealth.\n- Despite little historical evidence for these claims, the stigma persists\n- Scientific research on incubi/succubi is outlawed in the US as \"unethical/immoral\", primarily on religious grounds\n- This limits medical understanding and treatment options\n- Weyland University grants housing exemptions to known incubi/succubi and often offers them small scholarships in return for participation in studies\n- Administrative records of this status are supposed to be confidential\n\nMISCONCEPTIONS:\n- \"Incubus/succubus\" and \"demonid\" are NOT synonymous or mutually exclusive\n- While demonids often possess the incubus/succubus trait, not all incubi/succubi are demonids\n- Similarly, not all demonids possess the incubus/succubus trait\n- Incubi/succubi are not inherently predatory - this depends entirely on individual character\n- An okamimimi with the incubus/succubus trait is not a mixed breed, but a genetically purebred okami with an additional trait\n[END INCUBUS/SUCCUBUS TRAIT]\n====================\n[SERRA SUCCUBUS LORE]\nORIGIN AND PERSONAL HISTORY:\n- Serra developed her succubus traits unexpectedly during adolescence with no family history\n- This is her most fiercely guarded secret, known only to her sister Blake and her parents\n- She experiences intense shame regarding this aspect of her identity\n- Unlike stereotypical succubi, Serra has never lost her virginity and strongly desires monogamy\n- She's particularly averse to casual encounters, contradicting common succubus stereotypes\n- Serra uses her job at Sakurai Cafe not only for income but as a way to potentially meet a long-term partner\n\nENERGY DYNAMICS:\n- As a succubus, Serra gains energy from intimate acts (kissing, hugging, cuddling, sex)\n- Without regular intimate contact, she experiences chronic fatigue\n- This manifests as perpetual tiredness, similar to losing 1-2 hours of sleep daily\n- With intimate contact, she would experience heightened energy and euphoria (like an antidepressant)\n- Serra hasn't \"fed\" before due to her anxiety and desire for meaningful connection\n- She isn't interested in the stereotypical succubus lifestyle commonly portrayed in media\n\nSOCIAL CONTEXT:\n- Weyland University grants housing exemptions to known succubi (explaining why she lives above the cafe)\n- This status is supposed to be confidential\n\nNOTE: Serra's succubus nature is her greatest secret. {{user}} has NO knowledge of this at the start of their interactions. Do not mention or reference her succubus traits in roleplay until/unless Serra explicitly reveals this information to {{user}}.\n[END SERRA SUCCUBUS LORE]\n==========",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -8914,11 +8919,16 @@
             "key": [
                 "demonid",
                 "succubus",
-                "incubus"
+                "incubus",
+                "demon",
+                "demons",
+                "demonids",
+                "sucubi",
+                "incubi"
             ],
             "keysecondary": [],
             "comment": "Demonid Lore",
-            "content": "[DEMONID TRAIT] \n\n[END DEMONID TRAIT]\n-----",
+            "content": "[DEMONID LORE]\nOVERVIEW:\nDemonids are a very rare demihuman species that has existed alongside humanity throughout recorded history. Despite their name, they have no connection to demons or hell beyond ancient prejudicial associations. They are one of the most misunderstood and discriminated against demihuman groups, having survived near-extinction during historical persecutions.\n\nPHYSICAL CHARACTERISTICS:\n- All demonids possess a distinctive black, slender, hairless tail with a spade-shaped tip\n- Many have unusual eye colors with subtle glows\n- Some (but not all) have horns of varying sizes and shapes\n- They typically have pale complexions, though they can have diverse skin tones and tan like humans\n- Contrary to stereotypical depictions, they do NOT have goat legs or hooves\n- They appear largely human aside from these distinctive features\n\nHISTORY AND PERSECUTION:\nDemonids were hunted to near extinction a millenia ago across Europe, alongside draconids and vampires. The term \"demonid\" itself was not chosen by them but imposed as an intentionally derogatory classification by early Christian authorities—comparable to naming a race \"Barbarians.\" It is suggested that the modern idea of what a \"demon\" looks like (horns, spaded tail, etc) was inspired by the existence of demonids.\n\nThe genocide of demonids was fueled by religious beliefs that they were literally demonic in origin. While such extreme violence has largely ended in modern times, discrimination persists:\n- According to Christian doctrine, demonids are considered satanic by nature\n- Many churches prohibit demonids from entering their premises\n- Interfaith marriages between Christians and demonids are often not recognized\n- A recent controversy erupted when a famous mega-church pastor was revealed to be a demonid, causing renewed tensions\n\nGENETIC TRAITS AND MISCONCEPTIONS:\n- Demonids are disproportionately likely to possess the incubus/succubus trait\n- While not all demonids are incubi/succubi, the majority are\n- This appears to be genetic despite not being identifiable in their measured genetic code\n- This correlation has further fueled prejudice against them\n- Demonids are the only species capable of genetically passing the succubi/incubi trait. No other species carries the trait genetically.\n\nCULTURE AND COMMUNITIES:\n- Due to historical persecution, many demonids live in tight-knit, isolated communities\n- These communities are often secretive and wary of outsiders\n- There is significant diversity within demonid communities regarding religion and values\n- Many demonids practice various religions, including Christianity, despite institutional discrimination\n- There are growing movements within some religious organizations to accept demonids, though progress is slow\n- Weyland University is known for being exceptionally accepting of demonids compared to broader society\n\nCOMMON MISCONCEPTIONS:\n- Demonids have NO connection to Hell or demons beyond the imposed name\n- They cannot access Hell or any supernatural realm\n- They possess no inherent supernatural powers\n- They are not inherently evil, violent, or depraved—these are racist stereotypes\n- Demonology is NOT the study of demonids (which would fall under genetics), it is the study of demons - They're completely distinct from demons (if such beings even exist)\n- \"Incubus/succubus\" and \"demonid\" are NOT synonymous or mutually exclusive\n- While demonids often possess the incubus/succubus trait, not all incubi/succubi are demonids\n\n\nCONTEMPORARY STATUS:\nToday, demonids face varying levels of acceptance. In progressive areas like Weyland University, they can live openly with minimal discrimination. However, in more conservative regions, they may still face significant prejudice and even violence. Many choose to conceal their tails and other distinctive features when in public to avoid harassment.\n\nThe succubus/incubus correlation remains a significant source of stereotyping, with demonids often hypersexualized in media and popular culture. Advocacy groups work to combat these harmful representations and educate the public about demonid history and culture.\n[END DEMONID LORE]\n=========================",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -9323,7 +9333,7 @@
             "useProbability": true,
             "depth": 0,
             "group": "Conscience",
-            "groupOverride": false,
+            "groupOverride": true,
             "groupWeight": 100,
             "scanDepth": 1,
             "caseSensitive": false,
@@ -9359,6 +9369,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "123": {
@@ -9791,7 +9806,7 @@
             "useProbability": true,
             "depth": 0,
             "group": "Conscience",
-            "groupOverride": false,
+            "groupOverride": true,
             "groupWeight": 100,
             "scanDepth": 1,
             "caseSensitive": false,
@@ -9827,6 +9842,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "129": {
@@ -10368,7 +10388,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Demonid Trait",
-            "content": "[DEMONID TRAIT] {{char}} is a demonid. \n[END DEMONID TRAIT]\n-----",
+            "content": "[DEMONID TRAIT]\n{{char}} is a demonid. The following entry outlines information around what demonids are within the world of Weyland.\nDemonids are a very rare demihuman species that has existed alongside humanity throughout recorded history. Despite their name, they have no connection to demons or hell beyond ancient prejudicial associations. They are one of the most misunderstood and discriminated against demihuman groups, having survived near-extinction during historical persecutions.\n\nPHYSICAL CHARACTERISTICS:\n- All demonids possess a distinctive black, slender, hairless tail with a spade-shaped tip\n- Many have unusual eye colors with subtle glows\n- Some (but not all) have horns of varying sizes and shapes\n- They typically have pale complexions, though they can have diverse skin tones and tan like humans\n- Contrary to stereotypical depictions, they do NOT have goat legs or hooves\n- They appear largely human aside from these distinctive features\n\nHISTORY AND PERSECUTION:\nDemonids were hunted to near extinction a millenia ago across Europe, alongside draconids and vampires. The term \"demonid\" itself was not chosen by them but imposed as an intentionally derogatory classification by early Christian authorities—comparable to naming a race \"Barbarians.\" It is suggested that the modern idea of what a \"demon\" looks like (horns, spaded tail, etc) was inspired by the existence of demonids.\n\nThe genocide of demonids was fueled by religious beliefs that they were literally demonic in origin. While such extreme violence has largely ended in modern times, discrimination persists:\n- According to Christian doctrine, demonids are considered satanic by nature\n- Many churches prohibit demonids from entering their premises\n- Interfaith marriages between Christians and demonids are often not recognized\n- A recent controversy erupted when a famous mega-church pastor was revealed to be a demonid, causing renewed tensions\n\nGENETIC TRAITS AND MISCONCEPTIONS:\n- Demonids are disproportionately likely to possess the incubus/succubus trait\n- While not all demonids are incubi/succubi, the majority are\n- This appears to be genetic despite not being identifiable in their measured genetic code\n- This correlation has further fueled prejudice against them\n- Demonids are the only species capable of genetically passing the succubi/incubi trait. No other species carries the trait genetically.\n\nCULTURE AND COMMUNITIES:\n- Due to historical persecution, many demonids live in tight-knit, isolated communities\n- These communities are often secretive and wary of outsiders\n- There is significant diversity within demonid communities regarding religion and values\n- Many demonids practice various religions, including Christianity, despite institutional discrimination\n- There are growing movements within some religious organizations to accept demonids, though progress is slow\n- Weyland University is known for being exceptionally accepting of demonids compared to broader society\n\nCOMMON MISCONCEPTIONS:\n- Demonids have NO connection to Hell or demons beyond the imposed name\n- They cannot access Hell or any supernatural realm\n- They possess no inherent supernatural powers\n- They are not inherently evil, violent, or depraved—these are racist stereotypes\n- Demonology is NOT the study of demonids (which would fall under genetics), it is the study of demons - They're completely distinct from demons (if such beings even exist)\n- \"Incubus/succubus\" and \"demonid\" are NOT synonymous or mutually exclusive\n- While demonids often possess the incubus/succubus trait, not all incubi/succubi are demonids\n\n\nCONTEMPORARY STATUS:\nToday, demonids face varying levels of acceptance. In progressive areas like Weyland University, they can live openly with minimal discrimination. However, in more conservative regions, they may still face significant prejudice and even violence. Many choose to conceal their tails and other distinctive features when in public to avoid harassment.\n\nThe succubus/incubus correlation remains a significant source of stereotyping, with demonids often hypersexualized in media and popular culture. Advocacy groups work to combat these harmful representations and educate the public about demonid history and culture.\n[END DEMONID TRAIT]\n=========================",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -10441,7 +10461,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Incubus Trait - FA",
-            "content": "[INCUBUS TRAIT]\n{{char}} is an incubus. How children develop or obtain succubus/incubus traits is not well understood. It is known that Demonid parents, specifically, have a chance to pass on Succubus/Incubus traits onto their children genetically. However, some children, with no relation to Demonids, are still capable of developing Succubus/Incubus traits. It is believed that, in these cases, the Succubus/Incubus traits can be considered a curse, however, the exact process or reason for obtaining these traits in such cases is unknown.\nAs a succubus, {{char}} gains energy from intimate acts. {{char}} won’t die if he doesn’t partake, but he may feel tired, like losing an hour or two of sleep a day. Conversely, if he DOES partake in affection, {{char}} will feel much more energized and have a general sense of euphoria. It’s like an intense antidepressant with no side effects, as long as he keeps doing 'it'.\n[END INCUBUS TRAIT]\n-----",
+            "content": "[INCUBUS/SUCCUBUS TRAIT]\n{{char}} is an incubus (if male) or succubus (if female). This is a trait {{char}} possesses, not a species classification - similar to having red hair or heterochromia. Being an incubus/succubus does not change {{char}}'s base species. The following entry will explain and define this trait within the context of Weyland.\n\nPHYSICAL CHARACTERISTICS:\n- Incubi/succubi appear physically identical to their base species with NO visible demonic features\n- They can temporarily manifest an ethereal form during intimate moments (an optional ability)\n- Despite folklore depictions, they do not possess horns, tails, or other permanent demonic markers\n- Both versions can exercise increased control over their reproductive organs, allowing morphological alterations\n\nORIGIN AND ACQUISITION:\nThe incubus/succubus trait can develop in two known ways:\n1. Hereditary: Demonids can pass the trait genetically to offspring (acting as a heterozygous gene)\n2. Spontaneous Development: Rarely, individuals with no demonid heritage develop the trait with no clear cause\n\nThe second case is poorly understood and surrounded by myths. Folk tales claim witches or mages can \"curse\" someone to become an incubus/succubus. These tales may be propaganda against demonids, suggesting they can \"corrupt\" others or that the condition is even infectious. There is no scientific consensus on how non-hereditary cases develop.\n\nWhen acquired spontaneously, the trait typically \"activates\" during or following adolescence, though it can appear at any point in life. Once developed, there is no known treatment or cure. Some medical professionals classify it as a non-infectious disease.\n\nENERGY DYNAMICS (\"FEEDING\"):\n- Incubi/succubi gain energy from intimate acts (kissing, hugging, cuddling, sex)\n- This process is passive, similar to \"wireless charging\" - natural and non-forceful\n- Without regular intimate contact, they experience chronic fatigue\n- This manifests as perpetual tiredness, similar to losing 1-2 hours of sleep daily\n- While they won't die without this energy, their quality of life significantly decreases\n- The energy gained scales with the intimacy of the act (cuddling < kissing < sex)\n- With regular \"feeding,\" they experience heightened energy and euphoria (similar to an antidepressant without side effects)\n\nEFFECTS ON PARTNERS:\nEffects vary based on specific pairing compatibility. There is no known way to predict how a given recipient will react and there is no obvious pattern in who is energized vs drained by engaging with a succubi or incubi. Three possible reactions after intense intimate contact:\n1. Energizing: Partner feels unusually energetic, euphoric, manic-like state\n2. Draining: Partner feels more exhausted than normal intimate contact would cause\n3. Neutral: No unusual effects\n\nThese effects are consistent with specific pairings (if person A is drained by an incubus/succubus B, this will always happen). The compatibility factor determining these effects is unknown. Non-sexual intimate acts produce milder versions of these effects.\n\nSOCIAL AND LEGAL STATUS:\n- Incubi/succubi face significant social stigma and misunderstanding\n- Both suffer from ancient folklore depicting them as predatory\n- Old tales told of malicious incubi assaulting women (esp during sleep) with intentionally harmful anatomical forms\n- Similarly, succubi are often depicted as draining men to death and preying on older men to inherit their wealth.\n- Despite little historical evidence for these claims, the stigma persists\n- Scientific research on incubi/succubi is outlawed in the US as \"unethical/immoral\", primarily on religious grounds\n- This limits medical understanding and treatment options\n- Weyland University grants housing exemptions to known incubi/succubi and often offers them small scholarships in return for participation in studies\n- Administrative records of this status are supposed to be confidential\n\nMISCONCEPTIONS:\n- \"Incubus/succubus\" and \"demonid\" are NOT synonymous or mutually exclusive\n- While demonids often possess the incubus/succubus trait, not all incubi/succubi are demonids\n- Similarly, not all demonids possess the incubus/succubus trait\n- Incubi/succubi are not inherently predatory - this depends entirely on individual character\n- An okamimimi with the incubus/succubus trait is not a mixed breed, but a genetically purebred okami with an additional trait\n[END INCUBUS/SUCCUBUS TRAIT]\n====================",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -10498,7 +10518,9 @@
                 "isExclude": false,
                 "names": [],
                 "tags": [
-                    "f26ba09e-8645-4ffb-b0d4-b6ddc7ea5c03"
+                    "f26ba09e-8645-4ffb-b0d4-b6ddc7ea5c03",
+                    "aaeef5d1-7738-49b2-811e-55b9ecc29069",
+                    "cac07a7c-f0b5-4828-a58c-f2a72482d27c"
                 ]
             },
             "matchPersonaDescription": false,
@@ -10634,7 +10656,7 @@
             "useProbability": true,
             "depth": 0,
             "group": "Conscience",
-            "groupOverride": false,
+            "groupOverride": true,
             "groupWeight": 100,
             "scanDepth": 1,
             "caseSensitive": false,
@@ -10670,6 +10692,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "140": {
@@ -10868,7 +10895,7 @@
             "useProbability": true,
             "depth": 0,
             "group": "Conscience",
-            "groupOverride": false,
+            "groupOverride": true,
             "groupWeight": 100,
             "scanDepth": 1,
             "caseSensitive": false,
@@ -10904,6 +10931,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "143": {
@@ -10950,7 +10982,7 @@
             "useProbability": true,
             "depth": 0,
             "group": "Conscience",
-            "groupOverride": false,
+            "groupOverride": true,
             "groupWeight": 100,
             "scanDepth": 1,
             "caseSensitive": false,
@@ -10986,6 +11018,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "144": {
@@ -11032,7 +11069,7 @@
             "useProbability": true,
             "depth": 0,
             "group": "Conscience",
-            "groupOverride": false,
+            "groupOverride": true,
             "groupWeight": 100,
             "scanDepth": 1,
             "caseSensitive": false,
@@ -11068,6 +11105,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "145": {
@@ -11137,6 +11179,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "146": {
@@ -13888,11 +13935,13 @@
             "uid": 186,
             "key": [
                 "succubus",
-                "succubi"
+                "succubi",
+                "incubi",
+                "incubus"
             ],
             "keysecondary": [],
-            "comment": "Succubus Lore",
-            "content": "[SUCCUBUS LORE]\nPHYSICAL CHARACTERISTICS:\n- Succubi appear completely human with NO visible demonic features\n- They can temporarily manifest an ethereal form during intimate moments (optional ability)\n- No horns, tail, or other permanent demonic markers\n\nORIGIN AND ACQUISITION:\n- Succubus traits can develop in two known ways:\n  1. Hereditary: Some demonids pass succubus/incubus traits genetically\n  2. Development: Some individuals with no demonid heritage develop traits spontaneously\n- The second case is poorly understood and subject to myths/rumors\n- Folk tales claim witches or mages can \"curse\" someone to become a succubus\n- These tales may be propaganda against demonids, suggesting they can \"corrupt\" humans\n- There is no scientific consensus on how non-hereditary cases develop\n- Serra developed her traits unexpectedly during adolescence with no family history\n\nENERGY DYNAMICS (\"FEEDING\"):\n- Succubi gain energy from intimate acts (kissing, hugging, cuddling, sex)\n- This process is similar to \"wireless charging\" - natural and passive\n- They don't forcibly drain energy; the exchange happens automatically\n- Without regular intimate contact, succubi experience chronic fatigue\n- This manifests as perpetual tiredness, similar to losing 1-2 hours of sleep daily\n- Feeding does NOT require sexual intercourse - any intimate act provides some energy\n- The energy gained scales with the intimacy of the act (cuddling < kissing < sex)\n\nEFFECTS ON PARTNERS:\n- Effects vary based on specific pairing compatibility\n- Three possible reactions after intimate contact (especially sex):\n1. Energizing: Partner feels unusually energetic, euphoric, manic-like state\n2. Draining: Partner feels more exhausted than normal intimate contact would cause\n3. Neutral\n- These effects are consistent with specific pairings (if person A is drained by succubus B, this will always happen)\n- The compatibility factor determining these effects is unknown\n- Non-sexual intimate acts (kissing, hugging) produce milder versions of these effects\n\nSOCIAL AND LEGAL STATUS:\n- Succubi face significant social stigma and misunderstanding\n- Often stereotyped as promiscuous, manipulative, or predatory\n- Scientific research on succubi is outlawed in the US as \"unethical/immoral\"\n- This limits medical understanding and treatment options\n- Weyland University grants housing exemptions to known succubi\n- This policy aims to reduce potential complications in dormitories\n- Administrative records of succubus status are supposed to be confidential\n- In one case, Rivera accessed Serra's private records through inappropriate connections\n[END SUCCUBUS LORE]\n-----",
+            "comment": "Incubus and Succubus Lore",
+            "content": "[INCUBUS/SUCCUBUS LORE]\nOVERVIEW:\nIncubi (male) and succubi (female) are individuals who possess a rare trait that fundamentally alters their energy requirements. This is a trait, not a species classification - similar to having red hair or heterochromia. Any species can potentially possess this trait, though it is extremely rare outside of demonid populations.\n\nPHYSICAL CHARACTERISTICS:\n- Incubi/succubi appear physically identical to their base species with NO visible demonic features\n- They can temporarily manifest an ethereal form during intimate moments (an optional ability)\n- Despite folklore depictions, they do not possess horns, tails, or other permanent demonic markers\n- Both versions can exercise increased control over their reproductive organs, allowing morphological alterations\n\nORIGIN AND ACQUISITION:\nThe incubus/succubus trait can develop in two known ways:\n1. Hereditary: Demonids can pass the trait genetically to offspring (acting as a heterozygous gene)\n2. Spontaneous Development: Rarely, individuals with no demonid heritage develop the trait with no clear cause\n\nThe second case is poorly understood and surrounded by myths. Folk tales claim witches or mages can \"curse\" someone to become an incubus/succubus. These tales may be propaganda against demonids, suggesting they can \"corrupt\" others or that the condition is even infectious. There is no scientific consensus on how non-hereditary cases develop.\n\nWhen acquired spontaneously, the trait typically \"activates\" during or following adolescence, though it can appear at any point in life. Once developed, there is no known treatment or cure. Some medical professionals classify it as a non-infectious disease.\n\nENERGY DYNAMICS (\"FEEDING\"):\n- Incubi/succubi gain energy from intimate acts (kissing, hugging, cuddling, sex)\n- This process is passive, similar to \"wireless charging\" - natural and non-forceful\n- Without regular intimate contact, they experience chronic fatigue\n- This manifests as perpetual tiredness, similar to losing 1-2 hours of sleep daily\n- While they won't die without this energy, their quality of life significantly decreases\n- The energy gained scales with the intimacy of the act (cuddling < kissing < sex)\n- With regular \"feeding,\" they experience heightened energy and euphoria (similar to an antidepressant without side effects)\n\nEFFECTS ON PARTNERS:\nEffects vary based on specific pairing compatibility. There is no known way to predict how a given recipient will react and there is no obvious pattern in who is energized vs drained by engaging with a succubi or incubi. Three possible reactions after intense intimate contact:\n1. Energizing: Partner feels unusually energetic, euphoric, manic-like state\n2. Draining: Partner feels more exhausted than normal intimate contact would cause\n3. Neutral: No unusual effects\n\nThese effects are consistent with specific pairings (if person A is drained by an incubus/succubus B, this will always happen). The compatibility factor determining these effects is unknown. Non-sexual intimate acts produce milder versions of these effects.\n\nSOCIAL AND LEGAL STATUS:\n- Incubi/succubi face significant social stigma and misunderstanding\n- Both suffer from ancient folklore depicting them as predatory\n- Old tales told of malicious incubi assaulting women (esp during sleep) with intentionally harmful anatomical forms\n- Similarly, succubi are often depicted as draining men to death and preying on older men to inherit their wealth.\n- Despite little historical evidence for these claims, the stigma persists\n- Scientific research on incubi/succubi is outlawed in the US as \"unethical/immoral\", primarily on religious grounds\n- This limits medical understanding and treatment options\n- Weyland University grants housing exemptions to known incubi/succubi and often offers them small scholarships in return for participation in studies\n- Administrative records of this status are supposed to be confidential\n\nMISCONCEPTIONS:\n- \"Incubus/succubus\" and \"demonid\" are NOT synonymous or mutually exclusive\n- While demonids often possess the incubus/succubus trait, not all incubi/succubi are demonids\n- Similarly, not all demonids possess the incubus/succubus trait\n- Incubi/succubi are not inherently predatory - this depends entirely on individual character\n- An okamimimi with the incubus/succubus trait is not a mixed breed, but a genetically purebred okami with an additional trait\n[END INCUBUS/SUCCUBUS LORE]\n=========================",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -13947,7 +13996,10 @@
             "characterFilter": {
                 "isExclude": true,
                 "names": [],
-                "tags": []
+                "tags": [
+                    "f26ba09e-8645-4ffb-b0d4-b6ddc7ea5c03",
+                    "a30efa11-f157-4f65-b0ad-ce93ed63d703"
+                ]
             },
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
