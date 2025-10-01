@@ -444,12 +444,8 @@ async function getClientVersion() {
         const response = await fetch('/version');
         const data = await response.json();
         CLIENT_VERSION = data.agent;
-        displayVersion = `SillyTavern ${data.pkgVersion}`;
+        displayVersion = `WeylandTavern - (${data.gitRevision})`;
         currentVersion = data.pkgVersion;
-
-        if (data.gitRevision && data.gitBranch) {
-            displayVersion += ` '${data.gitBranch}' (${data.gitRevision})`;
-        }
 
         $('#version_display').text(displayVersion);
         $('#version_display_welcome').text(displayVersion);
