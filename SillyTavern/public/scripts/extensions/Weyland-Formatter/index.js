@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.6.8";
+const extensionVersion = "1.6.9";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -37,6 +37,8 @@ let settings = undefined;
  * @property {RegExp} greedyDetectActionQuotes
  * 
  * @property {RegExp} asterisk
+ * 
+ * @property {RegExp} headerFix
  * 
  * @property {RegExp} goodStart
  * @property {RegExp} goodEnd
@@ -113,6 +115,8 @@ const weylandRegex = {
     greedyDetectActionQuotes: /(?<=\*[\s—]|__[\s—]|^)"[^"]+"(?=[\s—]\*|[\s—]__|$)/,
 
     asterisk: /\*/g,
+
+    headerFix: /^# ?/g,
 
     goodStart: /^(?:[\[*'"`>]|__)/,
     goodEnd: /(?:[*'"`\]]|__)$/,
@@ -237,7 +241,8 @@ async function formatParagraphs(message) {
             const paragraphLoopStartTime = performance.now();
             paragraph = paragraph.trim();
             if (weylandRegex.detectHeader.test(paragraph)) {
-                //Format Header?
+                //Format Header
+                paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
                 paragraphs[index] = paragraph;
                 weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
                 return;
