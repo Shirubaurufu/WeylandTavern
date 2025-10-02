@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.6.9";
+const extensionVersion = "1.7.2";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -31,6 +31,7 @@ let settings = undefined;
  * @typedef {Object} WeylandFormatterRegex
  * @property {RegExp} paragraphSplit
  * @property {RegExp} detectHeader
+ * @property {RegExp} detectMuseHeader
  * @property {RegExp} detectActionParagraph
  * @property {RegExp} detectWeybotRelations
  * @property {RegExp} greedyDetectAction
@@ -109,6 +110,7 @@ let settings = undefined;
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
     detectHeader: /^[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)]$/im,
+    detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
     greedyDetectAction: /(?<=[\s—]|^)\*([^"_\[\]\n\r]+)\*(?=[\s—]|$)/g,
@@ -116,7 +118,7 @@ const weylandRegex = {
 
     asterisk: /\*/g,
 
-    headerFix: /^# ?/g,
+    headerFix: /^# ?/gm,
 
     goodStart: /^(?:[\[*'"`>]|__)/,
     goodEnd: /(?:[*'"`\]]|__)$/,
@@ -240,7 +242,7 @@ async function formatParagraphs(message) {
             weylandDebug(`#${index} - Formatting...`);
             const paragraphLoopStartTime = performance.now();
             paragraph = paragraph.trim();
-            if (weylandRegex.detectHeader.test(paragraph)) {
+            if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
                 //Format Header
                 paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
                 paragraphs[index] = paragraph;
@@ -391,7 +393,7 @@ async function formatMessage(messageId) {
 
     const originalMessage = chat[messageId].mes;
 
-    if (weylandRegex.detectHeader.test(originalMessage)) {
+    if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
         weylandDebug(`Formatting character: ${characterName}`);
         const paragraphs = await formatParagraphs(originalMessage);
@@ -511,6 +513,22 @@ function headerMarkdownExt(){
 /**
  * @returns {showdown.ShowdownExtension[]}
  */
+function headerMarkdownMuseExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /((?<=p>)\s?(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} ?[AP]M(?:\s.+|<br>\s)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))(?:[^"_\[\]]+?)?(?=<\/p))/i,
+            replace: `<strong style="color: darkred;">$1</strong>`
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in headerMarkdownExt extension:`, e);
+        return [];
+    }
+}
+
+/**
+ * @returns {showdown.ShowdownExtension[]}
+ */
 function thinkMarkdownExt(){
     try {
         return [{
@@ -544,6 +562,7 @@ function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
     converter.addExtension(headerMarkdownExt(), 'weylandHeader');
+    converter.addExtension(headerMarkdownMuseExt(), 'weylandHeaderMuse');
     converter.addExtension(singleQuoteExt(), 'singleQuote');
     //converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     converter.addExtension(fdiglMarkdownExt(), 'fdiglSystemMessage');
