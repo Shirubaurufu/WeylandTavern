@@ -1244,6 +1244,34 @@ function registerWorldInfoSlashCommands() {
         return String(entry.uid);
     }
 
+    async function deleteEntryCallback(args, silent) {
+        const file = args.file;
+        const uid = args.uid;
+
+        const data = await loadWorldInfo(file);
+        if (!data || !('entries' in data)) {
+            toastr.warning('Valid World Info file name is required');
+            return 'false';
+        }
+
+        const entry = data.entries[uid];
+        if (!entry) {
+            toastr.warning('Valid UID is required');
+            return 'false';
+        }
+        
+        const success = await deleteWorldInfoEntry(data, uid, {silent: silent === 'true'});
+        if (!success) {
+            toastr.warning('Failed to delete world entry');
+            return 'false';
+        }
+
+        await saveWorldInfo(file, data);
+        reloadEditor(file);
+
+        return 'true';
+    }
+
     async function setEntryFieldCallback(args, value) {
         const file = args.file;
         const uid = args.uid;
@@ -1701,6 +1729,46 @@ function registerWorldInfoSlashCommands() {
                 <ul>
                     <li>
                         <pre><code>/createentry file=chatLore key=Shadowfang The sword of the king</code></pre>
+                    </li>
+                </ul>
+            </div>
+        `,
+    }));
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'deleteentry',
+        callback: deleteEntryCallback,
+        aliases: ['deletelore', 'deleteewi'],
+        returns: 'success? (true|false) string',
+        namedArgumentList: [
+            SlashCommandNamedArgument.fromProps({
+                name: 'file',
+                description: 'book name',
+                typeList: [ARGUMENT_TYPE.STRING],
+                isRequired: true,
+                enumProvider: commonEnumProviders.worlds,
+            }),
+            SlashCommandNamedArgument.fromProps({
+                name: 'uid',
+                description: 'record UID',
+                typeList: [ARGUMENT_TYPE.STRING],
+                isRequired: true,
+                enumProvider: localEnumProviders.wiUids,
+            })
+        ],
+        unnamedArgumentList: [
+            new SlashCommandArgument(
+                'silent', [ARGUMENT_TYPE.BOOLEAN], false
+            )
+        ],
+        helpString: `
+            <div>
+                Delete an existing record in the specified book with the specified UID. Optional silent deletion.
+            </div>
+            <div>
+                <strong>Example:</strong>
+                <ul>
+                    <li>
+                        <pre><code>/deleteentry file=chatLore uid=123</code> true|false?</pre>
                     </li>
                 </ul>
             </div>
