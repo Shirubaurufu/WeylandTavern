@@ -67,11 +67,6 @@ a[href="https://docs.sillytavern.app/usage/update/"] {
     visibility: hidden !important;
 }
 
-div.textAlignCenter {
-    display: none !important;
-    visibility: hidden !important;
-}
-
 #advanced_div {
     display: none !important;
     visibility: hidden !important;
