@@ -11257,6 +11257,57 @@
                 "tags": []
             }
         },
+        "147": {
+            "uid": 147,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Weybot Outfit Codes",
+            "content": "[CLOTHING CODES]\nAt the end of the header, ALWAYS add ONE of the following codes. Each code is for the current clothing state of the NPCs currently in the scene. NEVER make up fake codes.\n• [RC] - NPCs are currently fully clothed\n• [LG] - NPCs are ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - NPCs are mostly or fully NAKED (no clothing remaining)\n[END CLOTHING CODES]\n-----",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 174,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "ignoreBudget": false,
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Weybot"
+                ],
+                "tags": [
+                    "9b96ba73-b158-4821-99af-1c349f5968e7"
+                ]
+            }
+        },
         "148": {
             "key": [
                 "Ava's room",

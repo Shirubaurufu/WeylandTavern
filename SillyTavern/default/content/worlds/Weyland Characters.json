@@ -129,7 +129,18 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "Nathan",
+                "boyfriend",
+                "text",
+                "pictures",
+                "dating",
+                "date",
+                "cheat",
+                "cheating",
+                "message",
+                "relationship"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
