@@ -7792,9 +7792,15 @@ export function showSwipeButtons() {
         return;
     }
 
+    // Added line for WeylandTavern for swipes on alt greetings even if off (plus one line change about 8 lines down)
+    const isFirstMessageWithAlternates = chat.length === 1 && 
+                                         chat[0].swipe_id !== undefined && 
+                                         Array.isArray(chat[0].swipes) && 
+                                         chat[0].swipes.length > 1;
+
     if (
         chat[chat.length - 1].is_system ||
-        !swipes ||
+        (!swipes && !isFirstMessageWithAlternates) || // Changed this line for alt greeting swipes even if off
         Number($('.mes:last').attr('mesid')) < 0 ||
         chat[chat.length - 1].is_user ||
         (selected_group && is_group_generating)
