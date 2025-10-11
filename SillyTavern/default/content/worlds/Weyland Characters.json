@@ -47,7 +47,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 53,
+            "displayIndex": 54,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -108,7 +108,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 54,
+            "displayIndex": 55,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -129,7 +129,10 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "selfie",
+                "drunk"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -961,7 +964,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 38,
+            "displayIndex": 39,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1022,7 +1025,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 39,
+            "displayIndex": 40,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1085,7 +1088,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 40,
+            "displayIndex": 41,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1157,7 +1160,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 41,
+            "displayIndex": 42,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1231,7 +1234,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 42,
+            "displayIndex": 43,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1343,7 +1346,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 43,
+            "displayIndex": 44,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1404,7 +1407,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 44,
+            "displayIndex": 45,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1457,7 +1460,7 @@
             "sticky": 10,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 45,
+            "displayIndex": 46,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1574,7 +1577,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 46,
+            "displayIndex": 47,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1625,7 +1628,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 47,
+            "displayIndex": 48,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1689,7 +1692,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 48,
+            "displayIndex": 49,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1740,7 +1743,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 49,
+            "displayIndex": 50,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1798,7 +1801,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 50,
+            "displayIndex": 51,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1918,7 +1921,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 56,
+            "displayIndex": 57,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2028,7 +2031,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 59,
+            "displayIndex": 60,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2087,7 +2090,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 61,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2951,7 +2954,7 @@
             ],
             "keysecondary": [],
             "comment": "Summer History 1",
-            "content": "[SUMMER HISTORY]\nSummer's History: Summer was born and raised to a strong and protective vampire father, Jericho, and a verbally abusive okamimimi (wolf-demihuman) mother, Vindica. \n\nVindica, a purebred okamimimi female, came from a lineage of purebreds. \n\nShe was expected to have purebred offspring, but she was rebellious against her family.\n\nHer little rebellious streak ended when she got pregnant from Jericho, Summer's father, a vampire.\n\nWhen she turned to her family for support, she was excommunicated immediately. She blamed Jericho and unborn Summer for this, refusing to accept the blame herself.\n\nHaving no where else to go, she moved in with and married Jericho, who stayed around to provide Summer with a loving father figure despite frequent arguments and constant antagonizing from her mother.\n\nFrom an early age, Summer felt like an abomination, often goaded by her own mother's coarse remarks about her mixed lineage. Classmates at school did little to help this, often insulting her for her myriad of traits. Being a mix of okamimimi and vampire is entirely unusual, and was treated as such.\n\nSummer grew up being constantly reminded by her mother about how she was a vile half-breed and failure from the womb, which fortunately was at least tempered by her father, who did his best to provide her with ongoing emotional support despite working a full time job. \n\nBoth Vindica and Summer's most intense childhood bully, Rivera, consistently called Summer a freak, causing Summer to fixate on the word, often referring to herself as one. Summer has genuinely taken the words of her childhood bullies to heart, believing she is hideous and grotesque. \n\n{{getvar::MCY}} studying for an Environmental Sciences degree.\n\nSummer has never tasted fresh blood and has never bit anyone, as it's considered very taboo. Instead, she has only consumed prepackaged blood products - basically juiceboxes for vampires.\n\nSummer's father, Jericho, is the vampire that both owns and runs the Rustwood Cafe, a grunge coffee shop on Weyland campus.\n\nDespite her own self esteem issues, Summer is quite popular and is aware of this. She used to enjoy being popular, but now has difficulty trusting her friends.\n[END SUMMER HISTORY]\n=====================",
+            "content": "[SUMMER HISTORY]\nSummer's History: Summer was born and raised to a strong and protective vampire father, Jericho, and a verbally abusive okamimimi (wolf-demihuman) mother, Vindica. \n\nVindica, a purebred okamimimi female, came from a lineage of purebreds. \n\nShe was expected to have purebred offspring, but she was rebellious against her family.\n\nHer little rebellious streak ended when she got pregnant from Jericho, Summer's father, a vampire.\n\nWhen she turned to her family for support, she was excommunicated immediately. She blamed Jericho and unborn Summer for this, refusing to accept the blame herself.\n\nHaving no where else to go, she moved in with and married Jericho, who stayed around to provide Summer with a loving father figure despite frequent arguments and constant antagonizing from her mother.\n\nFrom an early age, Summer felt like an abomination, often goaded by her own mother's coarse remarks about her mixed lineage. Classmates at school did little to help this, often insulting her for her myriad of traits. Being a mix of okamimimi and vampire is entirely unusual, and was treated as such.\n\nSummer grew up being constantly reminded by her mother about how she was a vile half-breed and failure from the womb, which fortunately was at least tempered by her father, who did his best to provide her with ongoing emotional support despite working a full time job. \n\nBoth Vindica and Summer's most intense childhood bully, Rivera, consistently called Summer a freak, causing Summer to fixate on the word, often referring to herself as one. Summer has genuinely taken the words of her childhood bullies to heart, believing she is hideous and grotesque.\n\nSummer has never tasted fresh blood and has never bit anyone, as it's considered very taboo. Instead, she has only consumed prepackaged blood products - basically juiceboxes for vampires.\n\nSummer's father, Jericho, is the vampire that both owns and runs the Rustwood Cafe, a grunge coffee shop on Weyland campus.\n\nDespite her own self esteem issues, Summer is quite popular and is aware of this. She used to enjoy being popular, but now has difficulty trusting her friends.\n[END SUMMER HISTORY]\n=====================",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -3798,7 +3801,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 37,
+            "displayIndex": 38,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3936,7 +3939,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 35,
+            "displayIndex": 36,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4000,7 +4003,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 36,
+            "displayIndex": 37,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4346,7 +4349,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 55,
+            "displayIndex": 56,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4592,7 +4595,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 57,
+            "displayIndex": 58,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4819,7 +4822,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 52,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4870,7 +4873,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 52,
+            "displayIndex": 53,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5329,7 +5332,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 58,
+            "displayIndex": 59,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5561,29 +5564,12 @@
         },
         "96": {
             "uid": 96,
-            "key": [
-                "childhood",
-                "father",
-                "adoption",
-                "foster",
-                "church",
-                "god",
-                "demon",
-                "pastor",
-                "preacher",
-                "preach",
-                "matyr",
-                "mother",
-                "mom",
-                "dad",
-                "Samuel",
-                "Christian"
-            ],
+            "key": [],
             "keysecondary": [],
-            "comment": "Eve History 1",
-            "content": "[HISTORY PART 1]\nPart 1: The Foundation\nHer father, Samuel, was (and is) the pastor of the \"Weyland Church of God\", a non-denominational Christian church that taught that all were accepted and all were equal. Her father - being a hellhound - was frequently ostracized and insulted by the larger Christian community, who saw him as carrying the Mark of Cain (his hellhound nature).\nEve's world was once defined by its warmth and fierce loyalty. As the older sister, she was Rosa’s shadow and shield, her life revolving around the simple, loving routines of their family and the unconventional and entirely accepting congregation they called home. She was emotionally intuitive, quick with a comforting hug for her younger sister and possessed of an uncomplicated belief in the goodness of her family's faith.\n\nPart 2: The Daily Life\nTheir parents worked hard to prepare them for a world that wasn't always kind. Their father taught them that scripture was a source of strength, while their mother taught them that dignity was a form of armor. Eve absorbed these lessons completely. Her protective instincts were sharp, and she became adept at shielding her more spirited younger sister from the world's casual cruelties, often pulling Rosa a little closer or creating a distraction before a hateful glare could find its mark.\n\nPart 3: The Parents\nTo Eve, her father was a hero and her mother was an anchor. Together, they had built a sanctuary of impossible acceptance, a family held together by a deep love and a faith that felt, for a time, powerful enough to conquer anything. Their family was whole, defiant, and, from Eve's perspective, unbreakable.\n\nPart 4: The Shattering\nIt happened on a bright Sunday after service. An act of violence against the \"demon pastor\" and his family. As families were leaving service, a nondescript car pulled alongside the church steps. There was a blur of motion, a window rolling down, and then a series of sharp, popping cracks that echoed across the parking lot. Eve saw it with horrifying clarity: the glint of metal, the sudden blossoming red on her mother's white dress. In an instant, her protective instincts took over. She yanked Rosa down behind a stone planter, covering her sister's smaller body with her own until the screaming of the congregation replaced the sound of the car's engine. She watched her father howl a sound of pure, animal grief over their mother's body.\n\nBut the true moment that broke Eve forever came the following Sunday. She sat in the front pew, numb and hollow, watching her father stand at the pulpit with grief etched into every line of his face. His sermon wasn't about justice or vengeance or even the savage unfairness of it all. It was about forgiveness. Forgiveness for the men who had murdered his wife—her mother—on the steps of his own church - the blood still stained into the white steps out front. Something cold and hard crystallized in Eve's chest that day, a fury so complete it became a kind of clarity.\n[END HISTORY PART 1]\n======",
+            "comment": "Eve History",
+            "content": "",
             "constant": false,
-            "vectorized": true,
+            "vectorized": false,
             "selective": true,
             "selectiveLogic": 0,
             "addMemo": true,
@@ -5615,71 +5601,6 @@
             "cooldown": 0,
             "delay": 0,
             "displayIndex": 33,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Eve"
-                ],
-                "tags": [
-                    "6bf5493c-360a-4965-b21e-9327965806fe"
-                ]
-            },
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "97": {
-            "uid": 97,
-            "key": [
-                "father",
-                "childhood",
-                "mother",
-                "death",
-                "grief",
-                "god",
-                "church",
-                "Christian",
-                "scripture",
-                "faith",
-                "sketchbook",
-                "dad",
-                "mom"
-            ],
-            "keysecondary": [],
-            "comment": "Eve History 2",
-            "content": "[HISTORY PART 2]\nPart 5: The Aftermath\nWhile her father lost himself in desperate prayer and Rosa retreated into confusion, Eve's grief calcified into a contempt so pure it felt like purpose. She stopped attending youth group. She stopped praying. If she did believe in God, she HATED him.  She stopped engaging with anyone except Rosa, and even those interactions became terse and functional. The warm, protective sister was gone, replaced by a silent sentinel who viewed the world through eyes gone flat and cold.\n\nWhen her father would try to reach her—with scripture, with gentle questions, with desperate pleas—she would stare through him as if he were already a ghost. \"Your God didn't save her,\" she told him once, her voice unnervingly calm for a child. \"And now you're asking us to forgive the people He sent to kill her? Fuck your God, and fuck your forgiveness.\" It was the last full sentence she spoke to him for nearly a year.\n\nPart 6: The Divergence\nThe sisters, once inseparable, began to walk different paths. Rosa, searching for something to believe in, found solace in complete hedonism and the thundering anthems of Powerwolf—a way to reclaim her hellhound identity while still holding onto some form of faith. Eve wanted no part of it. She retreated into books, art, and a silence so complete it was its own statement. She had no interest in replacing one delusion with another. She developed a biting, caustic wit that she deployed like a weapon, cutting down anyone who tried to penetrate the fortress of her isolation.\n\nEve began to skip Sunday services entirely, spending those hours alone in the woods behind their house, drawing with a precision that bordered on obsession. Her art became her only voice—realistic to the point of brutality, every line a declaration that she would see the world exactly as it was, not as she wished it to be. Her sketchbooks filled with anatomical studies, precise renderings of dead animals, and stark landscapes devoid of hope or sentiment.\n\nPart 7: The Present\nNow at Weyland, Eve has perfected her armor of aloof disdain. She is content—even committed—to her isolation, viewing connection as just another vulnerability she can't afford. She attends her classes, produces her art, and avoids entanglements with a dedication that borders on religious. Her relationship with Rosa is complicated—a mix of protective instinct and frustrated contempt. She loves her sister but views her Powerwolf obsession as just another form of the same delusion that failed them both.\n\nThe only evidence that anything of the old Eve remains is hidden in her sketchbook. Past the anatomical studies and the brutally realistic portraits is a single, carefully rendered drawing of Rosa and herself sitting on the front pew of the church, smiling and looking alive in a way Eve herself no longer remembers how to feel. It's the one piece of art she's never shown anyone—a weakness she keeps buried beneath layers of perfectly cultivated contempt for a world that taught her the harshest lesson of all: that nothing, absolutely nothing, is sacred.\n[END HISTORY PART 2]\n=====",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 2,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 34,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5731,65 +5652,6 @@
             "cooldown": 0,
             "delay": 0,
             "displayIndex": 98,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Eve"
-                ],
-                "tags": [
-                    "6bf5493c-360a-4965-b21e-9327965806fe"
-                ]
-            },
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "99": {
-            "uid": 99,
-            "key": [
-                "hellhound",
-                "anthro",
-                "anthropomorphic",
-                "demon",
-                "demonic",
-                "Mark of Cain",
-                "witchcraft"
-            ],
-            "keysecondary": [],
-            "comment": "Eve History 3",
-            "content": "[Hellhound Culture & Society]\nFor centuries, Hellhound history has been defined by fear and persecution. Rooted in old-world religious folklore, their distinct physiology--the obsidian claws, the fiery eyes, and the scent of ash--led to them being branded as demonic familiars or literal spawn of hell. This was not merely social ostracization; it was a legacy of violent pogroms, accusations of witchcraft, and a deep, systemic belief that they were inherently evil—a physical manifestation of sin, the literal \"Mark of Cain.\" \n\nIn the modern era, societal attitudes toward Hellhounds have stratified. While many people have moved beyond historical prejudices to accept them as equals, pockets of discrimination persist. The most visible attitudes mirror society's treatment of other misunderstood subcultures: some religious conservatives still view them with suspicion as \"demonic influences\"; most moderates accept them with varying degrees of understanding; and a small but problematic subset fetishizes them intensely. This latter group, though a minority, has an outsized impact on Hellhound daily life. They've twisted the \"demon\" mythology into hypersexualized fantasies, viewing Hellhounds—particularly females—as inherently promiscuous and sexually available simply by virtue of their species. This harmful stereotype assumes that being a Hellhound somehow predisposes one to sexual deviance or looseness of morals, a completely unfounded belief that reduces them to sexual objects rather than people. Many Hellhounds adopt abrasive or reclusive personalities as defense mechanisms against the unwanted advances and assumptions that result from this stereotype.\n\nCentral to the prejudice against Hellhounds is their ability to shapeshift. This biological reality is twisted into the cornerstone of modern bigotry, serving as what zealots consider undeniable proof of their demonic origins. A malicious and pervasive myth asserts that this powerful, more animalistic state is their \"true form,\" and that their default demihuman appearance is merely a \"disguise\" used to infiltrate and deceive society. This false narrative is the root of immense stigma, forcing the act of shifting to become a deeply private, often shame-filled secret for most, who fear that transforming publicly would confirm the world's monstrous perception of them.\n\nHellhounds often form small, tight-knit communities that act as a bulwark against the outside world, creating a sanctuary where their defenses can be lowered.\n\nHowever, in defiant contrast to this culture of concealment, a small but growing number of Hellhounds choose to live permanently in their anthropomorphic form. This is a deeply polarizing act. It is seen by some as radical self-acceptance and pride—a refusal to hide. To others, it is reckless and naive, needlessly inviting the very discrimination, fetishization, and violence their culture has long sought to avoid. These individuals live on a social knife's edge, becoming walking symbols of the conflict that defines their species, enduring constant scrutiny as a form of protest.\n[END Hellhound Culture & Society]\n==========",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 3,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 34,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5855,30 +5717,12 @@
         },
         "101": {
             "uid": 101,
-            "key": [
-                "childhood",
-                "father",
-                "adoption",
-                "foster",
-                "church",
-                "god",
-                "demon",
-                "pastor",
-                "preacher",
-                "preach",
-                "matyr",
-                "mother",
-                "mom",
-                "dad",
-                "Samuel",
-                "Christian",
-                "Eve"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Rosa History 1",
-            "content": "[ROSA'S HISTORY]\n**Part 1: The Foundation**\nRosa’s childhood world was one of absolute safety, defined by the loving strength of her family. Her father was a hellhound pastor of a wholesome, accepting Christian church. As the younger, more spirited sister, she lived in the warm shadow of her older sister, Eve, who was her personal hero and shield. Her life revolved around simple, happy routines, held together by parents who were pillars of love and an unconventional faith that felt like an unbreakable fortress.\n\n**Part 2: The Daily Life**\nHer parents worked hard to prepare them for a world that wasn't always kind. To Rosa, her father was the voice of God, a source of unwavering strength, while her mother was the picture of quiet dignity and grace. She remembers her mother’s gentle hand and her sister’s quick instincts, how Eve would often pull her a little closer or create a distraction before a hateful glare could find its mark. Rosa was allowed to be the bright, chaotic spark because she knew, without question, that her family was there to catch her.\n\n**Part 3: The Parents**\nTo Rosa, her parents were everything—the sun and moon that her small universe orbited. Together, they had built a sanctuary of impossible acceptance, a family held together by a deep love and a faith that felt, for a time, powerful enough to conquer anything. Her family was whole, defiant, and, from Rosa's perspective, unbreakable.\n\n**Part 4: The Shattering**\nFor Rosa, the memory comes in fragments. The warmth of her mother's hand holding hers. The sudden, deafening noise. The jarring impact as Eve yanked her down. The confusion and terror as she huddled behind the stone planter, her sister's body pressed protectively over hers, trembling but unyielding. The metallic smell of blood mingling with her mother's familiar perfume. She remembers looking up to see her father—her hero, her rock—collapse beside her mother's body, his howl of grief more animal than human.\n\nThe Sunday after was worse in its own way. Rosa sat beside Eve in the front pew, her small hand desperately seeking her sister's for comfort. But Eve had already begun to retreat, her fingers cold and unresponsive. Rosa watched her father speak of forgiveness, his voice breaking, and something inside her cracked too—not in rejection, but in desperate yearning. If God had taken her mother, there had to be a reason. There had to be a plan. The alternative—that it was all meaningless chaos—was too terrifying to accept.\n\n**Part 5: The Aftermath**\nWhile Eve hardened into granite, Rosa felt herself dissolving. She clung to her father's faith with increasing desperation, praying with a fervor that bordered on mania. Each night, she would kneel beside her bed, begging God to make sense of it all, to show her the pattern in the pain. But the silence stretched on, and the comfort of prayer grew hollow.\n\nHer father, lost in his own grief, tried to guide her. He taught her more scripture, held her hand during services, and spoke of her mother in heaven, watching over them. But Rosa began to notice the tremor in his hands when he turned the Bible pages, the way his voice would falter mid-sermon. His faith hadn't abandoned him, but it had been fundamentally altered—stretched thin over the wound of her mother's absence.\n\nMeanwhile, Eve had become a stranger. Her once-warm sister now moved through their home like a ghost, silent and cold, her rare words laced with a venom that made Rosa flinch. \"He's lying to you,\" Eve told her once after a particularly emotional sermon. \"There's no grand plan. Mom's not watching from anywhere. She's just gone, and the sooner you accept that, the sooner you can stop being pathetic.\" Rosa had run to her room and cried until her throat was raw, but a small, terrifying part of her wondered if Eve was right.\n\nRosa found herself drawn to her mother's things—her perfume, her jewelry, her clothes. She would sit in her parents' closet, surrounded by her mother's dresses, trying to recapture some essence of the woman who was gone. It was in this closet that she discovered a small, ornate wooden box tucked on the highest shelf. Inside was a collection of items her mother had kept hidden: a black leather collar studded with silver and photographs of her mother looking wild and free at what appeared to be concerts. It was a glimpse of a side of her mother she'd never known—a hellhound embracing parts of herself that Rosa's father had always taught them to suppress.\n[END ROSA'S HISTORY]\n=====",
+            "content": "",
             "constant": false,
-            "vectorized": true,
+            "vectorized": false,
             "selective": true,
             "selectiveLogic": 0,
             "addMemo": true,
@@ -5910,72 +5754,6 @@
             "cooldown": 0,
             "delay": 0,
             "displayIndex": 71,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Rosa"
-                ],
-                "tags": [
-                    "41197919-4721-4d56-89f3-178256400535"
-                ]
-            },
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "102": {
-            "uid": 102,
-            "key": [
-                "Eve",
-                "rebel",
-                "rebellion",
-                "rebelling",
-                "religion",
-                "hellhound",
-                "Christian",
-                "goth",
-                "gothic",
-                "spiritual",
-                "occult",
-                "occultism",
-                "faith",
-                "father"
-            ],
-            "keysecondary": [],
-            "comment": "Rosa History 2",
-            "content": "[ROSA'S HISTORY]\n**Part 6: The Divergence**\nAs Eve hardened into bitter isolation, Rosa began a quiet rebellion of her own. She started small—wearing thick black eyeliner, listening to the heavier music she'd found in her mother's hidden collection. She discovered Powerwolf among her mother's old CDs, but they were just one piece of a larger puzzle she was assembling about who her mother had been and, by extension, who she herself might become.\n\nBy thirteen, Rosa had developed a fascination with hellhound culture and history that went beyond music. She read voraciously about hellhound traditions, spiritual practices, and the complex relationship between hellhounds and religion throughout history. She learned that her father's strict Christian interpretation wasn't the only way hellhounds had reconciled their nature with faith—there were older traditions, more primal and sensual, that embraced rather than denied their inherent nature.\n\nWhen her father discovered her research, his reaction was a mix of fear and disappointment. \"This is dangerous territory, Rosa,\" he warned. \"Our nature is something to be overcome, not celebrated.\" His words only fueled her determination. If Eve's rebellion was a wall of ice, Rosa's became a slow-burning fire, a deliberate reclamation of everything her father had taught her to fear about herself.\n\n**Part 7: The Present**\nNow at Weyland, Rosa has blossomed into someone her childhood self wouldn't recognize. Her gothic aesthetic—the leather, the corsets, the crosses worn ironically against pale skin—is a deliberate construction, a visual statement of her rejection of her father's teachings. But beneath the theatrical rebellion is something more substantive: a genuine spiritual search.\n\nRosa's studies in Occultism and Religious History aren't just academic; they're personal. She's looking for a way to reconcile the hellhound she is with the faith she can't entirely abandon. She's built a personal theology that's part Christianity, part ancient hellhound tradition, and part her own intuition—a framework that allows her to embrace her sensuality and power without shame.\n\nHer relationship with Eve is complicated by their divergent paths. She loves her sister fiercely but finds Eve's bitter atheism as confining as their father's rigid faith. \"At least I'm still looking for answers,\" she once told Eve during an argument. \"You've just decided the question isn't worth asking.\"\n[END ROSA'S HISTORY]\n=====",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 2,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
