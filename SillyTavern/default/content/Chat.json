@@ -12,7 +12,7 @@
             "icon": "fa-chalkboard-teacher",
             "showLabel": false,
             "label": "Chat Mode",
-            "title": "",
+            "title": "Chat Mode",
             "message": "/if left={{getvar::DiscordChat}} right=turnon rule=eq else={:/setvar key=DiscordChat turnon |\n/:Chat.ChatChange :} {:/setvar key=DiscordChat turnoff |\n/:Chat.ChatChange :}",
             "contextList": [],
             "preventAutoExecute": true,
@@ -23,6 +23,7 @@
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
             "executeOnNewChat": false,
+            "executeBeforeGeneration": false,
             "automationId": ""
         },
         {
@@ -40,6 +41,7 @@
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
             "executeOnNewChat": false,
+            "executeBeforeGeneration": false,
             "automationId": ""
         }
     ],
