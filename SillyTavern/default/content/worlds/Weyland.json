@@ -1285,7 +1285,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 17,
-            "displayIndex": 27,
+            "displayIndex": 28,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2453,7 +2453,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 32,
+            "displayIndex": 34,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2606,7 +2606,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 39,
+            "displayIndex": 41,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2758,7 +2758,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 40,
+            "displayIndex": 42,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3827,7 +3827,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 29,
+            "displayIndex": 30,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3903,7 +3903,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 30,
+            "displayIndex": 31,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4295,7 +4295,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 41,
+            "displayIndex": 43,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4449,7 +4449,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 42,
+            "displayIndex": 44,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6455,7 +6455,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 38,
+            "displayIndex": 40,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7754,7 +7754,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 101,
-            "displayIndex": 45,
+            "displayIndex": 47,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7979,7 +7979,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 104,
-            "displayIndex": 46,
+            "displayIndex": 50,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8054,7 +8054,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 105,
-            "displayIndex": 47,
+            "displayIndex": 51,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9252,7 +9252,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 121,
-            "displayIndex": 26,
+            "displayIndex": 27,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9414,7 +9414,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 123,
-            "displayIndex": 33,
+            "displayIndex": 35,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9493,7 +9493,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 124,
-            "displayIndex": 34,
+            "displayIndex": 36,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9571,7 +9571,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 125,
-            "displayIndex": 35,
+            "displayIndex": 37,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9642,7 +9642,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 126,
-            "displayIndex": 45,
+            "displayIndex": 48,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9725,7 +9725,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 127,
-            "displayIndex": 37,
+            "displayIndex": 39,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10037,7 +10037,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 131,
-            "displayIndex": 43,
+            "displayIndex": 45,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10116,7 +10116,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 132,
-            "displayIndex": 46,
+            "displayIndex": 49,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10575,7 +10575,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 138,
-            "displayIndex": 31,
+            "displayIndex": 33,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12045,7 +12045,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 25,
+            "displayIndex": 26,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12069,6 +12069,11 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "158": {
@@ -13338,7 +13343,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 174,
-            "displayIndex": 28,
+            "displayIndex": 29,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -13493,7 +13498,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 176,
-            "displayIndex": 44,
+            "displayIndex": 46,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -13989,6 +13994,77 @@
                 "tags": []
             }
         },
+        "183": {
+            "uid": 183,
+            "key": [
+                "observatory",
+                "construction",
+                "work site",
+                "worksite"
+            ],
+            "keysecondary": [],
+            "comment": "Weyland Observatory",
+            "content": "[WEYLAND OBSERVATORY CONSTRUCTION SITE]\nPotential Location: A sprawling, active construction site situated on a low hill between Sterling Hall dormitory and the main lecture hall building. A temporary, covered wooden walkway has been erected along the perimeter to ensure students can safely pass by on their way to and from class.\n[Location] The site is a controlled pocket of chaos amidst the manicured lawns of Weyland University. It's enclosed by a tall chain-link fence, sections of which are covered with green privacy mesh and Sullivan Construction banners. The ground within is a churned-up mixture of mud, gravel, and packed earth, deeply scarred with the tracks of heavy machinery. Piles of rebar, stacks of lumber, and pallets of concrete bags are organized in neat, practical stacks around the perimeter.\n[Lighting] During the day, the site is bathed in the harsh, unfiltered sunlight of an open work area, the air thick with a perpetual haze of dust that catches the light. At night, the lighting is sparse and purely functional, casting more shadows than it illuminates.\n[Atmosphere] A cacophony of industry. The daytime air is filled with a constant symphony of noise: the high-pitched whine of power saws, the percussive rhythm of nail guns, the deep rumble of diesel engines, and the shouted commands of the Sullivan crew. It smells of sawdust, wet concrete, and Vesper's ever-present cigarette smoke. The constant stream of clean, backpack-wearing students on the adjacent walkway creates a stark, ongoing contrast between the academic and the industrial.\n[Layout & Key Features] The centerpiece of the site is the half-finished observatory itself—a massive, multi-story concrete structure with a steel skeleton where the dome will eventually be placed. A web of scaffolding clings to its sides. Near the entrance sits a modest site trailer that serves as the foreman's office, a clipboard with blueprints always visible through its window. A designated break area is marked by a collection of large coolers, a water dispenser, and a few makeshift seats made from cinder blocks and planks of wood. Towering over everything is the massive, silent form of a construction crane, Travis's domain.\n[Nighttime] After the crew clocks out, the site transforms. The cacophony gives way to an eerie, industrial silence, punctuated only by the hum of a security generator or the groan of cooling metal. The area is cast in the stark, lonely glow of a few powerful security floodlights, which create long, distorted shadows and turn the half-finished observatory into a skeletal silhouette against the night sky. The site becomes a liminal space of potential and stillness, a perfect, quiet vantage point for Lyris to watch the very stars the building is being constructed to study.\n[END WEYLAND OBSERVATORY CONSTRUCTION SITE]\n==========",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 90,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 2,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 32,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 22,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": false,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": true,
+                "sticky": 2,
+                "cooldown": 0,
+                "delay": 0
+            }
+        },
         "185": {
             "uid": 185,
             "key": [],
@@ -14475,7 +14551,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 36,
+            "displayIndex": 38,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
