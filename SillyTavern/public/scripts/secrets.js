@@ -835,12 +835,6 @@ function registerSecretSlashCommands() {
             }
 
             const secrets = secret_state[key];
-            if (!Array.isArray(secrets) || secrets.length === 0) {
-                if (!quiet) {
-                    toastr.error(t`No saved secrets found for the key: ${key}`);
-                }
-                return '';
-            }
 
             const valueStr = value?.toString()?.trim();
             if (!valueStr) {
