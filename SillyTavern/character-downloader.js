@@ -44,7 +44,7 @@ if (process.argv[3] && process.argv[3] === "-u") {
         if (!jsonData) process.exit(1);
         let neededUpdates = "";
         Object.entries(jsonData).forEach(([key, value], index) => {
-            const file = files.find(x => x.name?.includes(key));
+            const file = files.find(x => x.name?.includes(`${key} `));
             if (!(!file || file.name?.includes(value))) {
                 neededUpdates = neededUpdates + key + ", "
                 answers['selectedFiles'].push(file);
