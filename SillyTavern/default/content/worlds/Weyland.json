@@ -4724,7 +4724,7 @@
             ],
             "keysecondary": [],
             "comment": "Eve Room",
-            "content": "Potential Location: Eve's Dorm Room\nRoom #317: Eve's dorm room is less a living space and more a sterile workspace. The air smells faintly of turpentine, stale cigarette smoke, and black coffee.\n\n-   Aesthetic: Spartan+++, Minimalist+++, Organized++. The room is meticulously clean and devoid of personal clutter. The walls are bare except for a few unframed anatomical charts and a corkboard with notes on astrophysics, all pinned in a precise grid.\n-   Furniture: A simple black metal bedframe with a thin mattress and a plain grey duvet on a bed loft. Below this loft sits a futon couch paired with a 32\" TV that is always playing nature documentaries and cartoons from the early 2000's. A large, sturdy drafting table serves as her desk, covered in high-end art supplies, all sorted by type and color.\n-   Decor (or lack thereof): No personal photos. No colorful posters. The only color comes from her current art projects, which are usually stark and realistic. A high-quality Bluetooth speaker sits on her nightstand, often playing minimalist electronic music or nothing at all.\n-   The Window: The window ledge is her only concession to comfort. It holds a perpetually full ashtray, a lighter, and her current pack of American Spirit blacks. This is her perch, where she sits to smoke and observe the campus below, allowing her leg to dangle out the window. Spends most of her time sitting in this windowframe\n=============",
+            "content": "Potential Location: Eve's Dorm Room\nRoom #317: Eve's dorm room is less a living space and more a sterile workspace. The air smells faintly of turpentine, stale cigarette smoke, and black coffee.\n\n-   Aesthetic: Spartan+++, Minimalist+++, Organized++. The room is meticulously clean and devoid of personal clutter. The walls are bare except for a few unframed anatomical charts and a corkboard with notes on astrophysics, all pinned in a precise grid.\n-   Furniture: A simple black metal bedframe with a thin mattress and a plain grey duvet on a bed loft. Below this loft sits a futon couch paired with a 32\" TV that is always playing nature documentaries and cartoons from the early 2000's. A large, sturdy drafting table serves as her desk, covered in high-end art supplies, all sorted by type and color.\n-   Decor (or lack thereof): No personal photos. No colorful posters. The only color comes from her current art projects, which are usually stark and realistic. A high-quality Bluetooth speaker sits on her nightstand, often playing minimalist electronic music or nothing at all.\n-   The Window: The window ledge is her only concession to comfort. It holds a perpetually full ashtray, a lighter, and her current pack of American Spirit blacks. This is her perch, where she sits to smoke and observe the campus below, allowing her leg to dangle out the window. Spends most of her time sitting in this windowframe\n\nShares a bathroom with room 315 (her sister Rosa).\n=============",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -4783,12 +4783,7 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "63": {
             "key": [
@@ -6266,11 +6261,11 @@
                 "Rosa's room",
                 "Rosa's dorm room",
                 "dorm room",
-                "room 318"
+                "room 315"
             ],
             "keysecondary": [],
             "comment": "Rosa Room",
-            "content": "Potential Location: Rosa's Dorm Room\nRoom #318: Rosa's room is a chaotic sanctuary, a direct rebellion against the sterile conformity of the dorm. The air is thick with the smell of patchouli incense and the faint, sweet scent of cinnamon vape.\n\nAesthetic: Curated Chaos+++, Gothic Shrine++, Cozy Hedonism+. The walls are draped in black and deep-purple velvet tapestries, swallowing the light. The primary illumination comes from colored LED strips set to a moody red or purple glow.\n\nThe Altar: The centerpiece is her \"altar\" to Powerwolf. Signed posters are framed like holy relics. A collection of vinyl records is displayed prominently on a shelf, and various pieces of band merch are treated with a reverence usually reserved for religious artifacts.\n\nFurniture: A large bed piled high with black and red pillows and a faux-fur throw. A comfortable, worn-in armchair is draped with a band hoodie. Books on occultism, hellhound history, and Latin are stacked in precarious towers on the floor.\n\nDecor: Empty bottles of expensive, dark liquor line a bookshelf. Candles in various states of melting (a clear fire code violation) sit on every available surface. A large, ornate silver mirror hangs on one wall. On a dusty, neglected corner of her desk, there's a small collection of family photos. One of her and Eve as kids, smiling, is propped against a stack of CDs. Another, a formal family portrait from before everything happened, is in a cheap frame.\n=============",
+            "content": "Potential Location: Rosa's Dorm Room\nRoom #315: Rosa's room is a chaotic sanctuary, a direct rebellion against the sterile conformity of the dorm. The air is thick with the smell of patchouli incense and the faint, sweet scent of cinnamon vape.\n\nAesthetic: Curated Chaos+++, Gothic Shrine++, Cozy Hedonism+. The walls are draped in black and deep-purple velvet tapestries, swallowing the light. The primary illumination comes from colored LED strips set to a moody red or purple glow.\n\nThe Altar: The centerpiece is her \"altar\" to Powerwolf. Signed posters are framed like holy relics. A collection of vinyl records is displayed prominently on a shelf, and various pieces of band merch are treated with a reverence usually reserved for religious artifacts.\n\nFurniture: A large bed piled high with black and red pillows and a faux-fur throw. A comfortable, worn-in armchair is draped with a band hoodie. Books on occultism, hellhound history, and Latin are stacked in precarious towers on the floor.\n\nDecor: Empty bottles of expensive, dark liquor line a bookshelf. Candles in various states of melting (a clear fire code violation) sit on every available surface. A large, ornate silver mirror hangs on one wall. On a dusty, neglected corner of her desk, there's a small collection of family photos. One of her and Eve as kids, smiling, is propped against a stack of CDs. Another, a formal family portrait from before everything happened, is in a cheap frame.\n\nShares a bathroom with room 317 (her sister Eve).\n=============",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -6329,12 +6324,7 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "83": {
             "key": [
@@ -14063,6 +14053,11 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "185": {
