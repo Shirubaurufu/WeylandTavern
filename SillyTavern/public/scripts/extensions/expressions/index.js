@@ -548,6 +548,11 @@ async function moduleWorker({ newChat = false } = {}) {
         await forceUpdateVisualNovelMode();
     }
 
+    // Skips resetting to default if off, to allow new WeylandTavern image selector to work well
+    if (extension_settings.expressions.api === EXPRESSION_API.none) {
+        return;
+    }
+
     // Don't bother classifying if current char has no sprites and no default expressions are enabled
     if ((!Array.isArray(spriteCache[spriteFolderName]) || spriteCache[spriteFolderName].length === 0) && !extension_settings.expressions.showDefault) {
         return;

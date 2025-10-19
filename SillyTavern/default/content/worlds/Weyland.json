@@ -1809,7 +1809,7 @@
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -14374,7 +14374,9 @@
         "189": {
             "uid": 189,
             "key": [
-                "!Doggo"
+                "!Doggo",
+                "🦎",
+                "🐺"
             ],
             "keysecondary": [],
             "comment": "!Doggo",
@@ -14437,12 +14439,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "190": {
             "uid": 190,
