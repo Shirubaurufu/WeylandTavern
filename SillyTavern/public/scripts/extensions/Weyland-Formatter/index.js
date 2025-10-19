@@ -501,7 +501,7 @@ function headerMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /((?<=.>)(?:[^"*~_`]*\n)[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)](?=<.|\s))/,
+            regex: /((?<=.>)(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)](?=<.|\s))/,
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
