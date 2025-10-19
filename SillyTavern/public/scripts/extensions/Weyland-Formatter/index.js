@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.7.2";
+const extensionVersion = "1.7.3";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -109,7 +109,7 @@ let settings = undefined;
  */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)]$/im,
+    detectHeader: /^(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)]$/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -501,7 +501,7 @@ function headerMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /((?<=.>)[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)](?=<.|\s))/,
+            regex: /((?<=.>)(?:[^"*~_`]*\n)[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)](?=<.|\s))/,
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
