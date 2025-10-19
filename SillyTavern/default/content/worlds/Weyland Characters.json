@@ -130,14 +130,10 @@
         "2": {
             "uid": 2,
             "key": [
-                "work",
-                "working",
-                "crush",
-                "7-Eleven",
-                "job",
-                "die",
-                "cry",
-                "love"
+                "whistle",
+                "laid",
+                "partner",
+                "wolf meat"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -215,7 +211,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 93,
+            "displayIndex": 92,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -618,7 +614,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 92,
+            "displayIndex": 91,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -669,7 +665,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 93,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -720,7 +716,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 102,
+            "displayIndex": 101,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1291,7 +1287,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 100,
+            "displayIndex": 99,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1517,7 +1513,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 101,
+            "displayIndex": 100,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1858,7 +1854,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 104,
+            "displayIndex": 103,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1978,7 +1974,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 105,
+            "displayIndex": 104,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2147,7 +2143,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 107,
+            "displayIndex": 106,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2198,7 +2194,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 97,
+            "displayIndex": 96,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2544,7 +2540,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 74,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2604,7 +2600,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 73,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2708,7 +2704,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 113,
+            "displayIndex": 114,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2759,7 +2755,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 113,
+            "displayIndex": 115,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2819,7 +2815,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 84,
+            "displayIndex": 83,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2879,7 +2875,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 85,
+            "displayIndex": 84,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2930,7 +2926,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 86,
+            "displayIndex": 85,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2987,7 +2983,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 77,
+            "displayIndex": 76,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3042,7 +3038,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 78,
+            "displayIndex": 77,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3098,7 +3094,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 79,
+            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3154,7 +3150,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 80,
+            "displayIndex": 79,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3211,7 +3207,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 81,
+            "displayIndex": 80,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3273,7 +3269,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 82,
+            "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3564,7 +3560,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 99,
+            "displayIndex": 98,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3739,7 +3735,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 90,
+            "displayIndex": 89,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4129,7 +4125,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 87,
+            "displayIndex": 86,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4231,7 +4227,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 94,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4469,7 +4465,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 88,
+            "displayIndex": 87,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4533,7 +4529,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 89,
+            "displayIndex": 88,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4652,7 +4648,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 108,
+            "displayIndex": 107,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4714,7 +4710,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 83,
+            "displayIndex": 82,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4765,7 +4761,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 103,
+            "displayIndex": 102,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4937,7 +4933,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 75,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5100,7 +5096,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 72,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5274,7 +5270,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 106,
+            "displayIndex": 105,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5444,7 +5440,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 91,
+            "displayIndex": 90,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5555,7 +5551,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 96,
+            "displayIndex": 95,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5708,7 +5704,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 98,
+            "displayIndex": 97,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5720,6 +5716,57 @@
             },
             "ignoreBudget": false,
             "triggers": []
+        },
+        "99": {
+            "uid": 99,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Lyris & Vesper Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFITS (work clothes)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 108,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Lyris & Vesper"
+                ],
+                "tags": [
+                    "7b1c6f55-6688-4225-9344-ff8910b6b828"
+                ]
+            }
         },
         "100": {
             "uid": 100,
