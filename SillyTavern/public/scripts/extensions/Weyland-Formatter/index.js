@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.7.3";
+const extensionVersion = "1.7.4";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -125,7 +125,7 @@ const weylandRegex = {
 
     actionBetweenDialogue: /(?<=[\["_`][\s—]|[\["_`][.,?!][\s—])(?:\*|(?<!["'_`\]]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?=[\s—]["_`\]])/g,
     actionBetweenDialogueReplace: "*$1*",
-    actionAfterDialogue: /(?<=[\["_`][\s—]|[\["_`][.,?!][\s—])(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?:(?=\n)|$)/g,
+    actionAfterDialogue: /(?<=[\["_`][ —]|[\["_`][.,?!][ —])(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?:(?=\n)|$)/g,
     actionAfterDialogueReplace: "*$1*",
     actionBeforeDialogue: /^(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?!["_`\]]))(?=[\s—]["_\]])/g,
     actionBeforeDialogueReplace: "*$1*",
