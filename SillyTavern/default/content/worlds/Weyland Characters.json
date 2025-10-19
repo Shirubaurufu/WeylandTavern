@@ -130,13 +130,14 @@
         "2": {
             "uid": 2,
             "key": [
-                "party",
-                "Rivera",
-                "flirting",
-                "flirt",
-                "Dash",
-                "hottub",
-                "hot tub"
+                "work",
+                "working",
+                "crush",
+                "7-Eleven",
+                "job",
+                "die",
+                "cry",
+                "love"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -4987,7 +4988,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 113,
+            "displayIndex": 114,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5618,6 +5619,57 @@
             "ignoreBudget": false,
             "triggers": []
         },
+        "97": {
+            "uid": 97,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Cerberus Sisters Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects FINAL clothing state of the sister that is currently the main focus of the roleplay at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - MAIN OUTFIT of the focused sister\n• [LG] - Focused sister is only wearing UNDERGARMENTS\n• [NK] - Whenever focused sister is NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 116,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Cerberus Sisters"
+                ],
+                "tags": [
+                    "946ee660-f594-4627-88a8-9a056781c0fa"
+                ]
+            }
+        },
         "98": {
             "uid": 98,
             "key": [],
@@ -5707,7 +5759,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 113,
+            "displayIndex": 115,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
