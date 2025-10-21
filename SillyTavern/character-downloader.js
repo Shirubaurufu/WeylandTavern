@@ -78,72 +78,86 @@ const progressBar = new cliProgress.SingleBar({
     hideCursor: true
   }, cliProgress.Presets.shades_classic);
 
-let i = 1;
+let i = 0;
 let fails = [];
 let jsonData = {};
+let skipRest = false;
 try {
     jsonData = JSON.parse(fs.readFileSync(__charactersJSON, 'utf8'));
 } catch {}
 for (const file of answers.selectedFiles) {
+    i++;
     const zipPath = path.join(__dirname, file.name);
     if (fs.existsSync(zipPath)) { //Check if file already exists
-        await fs.unlink(zipPath, (err) => { //Remove it if so
-            if (err) throw err.name;
-        });
+        await fs.unlink(zipPath, (err) => {});
     }
 
     const noZipName = file.name.replace(".zip","");
     const split = noZipName.split(" ");
     const cleanName = split[0];
     const date = split[1];
+    if (skipRest) {
+        fails.push(cleanName);
+        continue;
+    }
     console.log(`Downloading: ${noZipName} (${i}/${answers.selectedFiles.length})`);
     const fileSize = parseFloat((file.size/1024/1024).toFixed(2));
     progressBar.start(fileSize, 0);
-
-    const dlStream = file.download()
-        .on('data', chunk => {
-            progressBar.update(progressBar.value + (chunk.length/1024/1024));
-        })
-        .on('end', () => {
-            progressBar.update(fileSize);
-            progressBar.stop();
-        })
-        .on('error', (err) => {
-            console.error(`Error downloading ${noZipName}: ${err.message}`);
-            progressBar.stop();
-            fails.push(cleanName);
-        });
-        
-    if (fails.includes(cleanName)) continue;
-
-    const writeStream = fs.createWriteStream(zipPath);
-
     await new Promise((resolve, reject) => {
+        const dlStream = file.download({initialChunkSize: 524288, chunkSizeIncrement: 262144, maxChunkSize: 2097152})
+            .on('data', chunk => {
+                progressBar.update(progressBar.value + (chunk.length/1024/1024));
+            })
+            .on('end', () => {
+                progressBar.update(fileSize);
+                progressBar.stop();
+            })
+            .on('error', (err) => {
+                if (err.message === `Cannot call write after a stream was destroyed`) {
+                    fs.unlink(zipPath, (err) => {});
+                    resolve(1);
+                    return;
+                }
+                progressBar.stop();
+                console.error(`Error downloading ${noZipName}: ${err.message}`);
+                fails.push(cleanName);
+                if (err?.status === 408) {
+                    skipRest = true;
+                };
+                dlStream.unpipe().destroy();
+                fs.unlink(zipPath, (err) => {});
+                resolve(1);
+            });
+
+        if (fails.includes(cleanName)) resolve(1);
+
+        const writeStream = fs.createWriteStream(zipPath);
+    
         dlStream.pipe(writeStream);
         writeStream.on('finish', () => {
             try {
                 new AdmZip(zipPath).extractEntryTo('SillyTavern/', __dirname, true, true);
                 jsonData[cleanName] = date;
+                if (folderUrl == "https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw")
+                    fs.writeFileSync(__charactersJSON, JSON.stringify(jsonData, null, 2), 'utf8');
+                fs.unlink(zipPath, (err) => {});
                 resolve(0);
             } catch (err) {
                 console.error(`Extraction error for ${noZipName}:`, err);
                 fails.push(cleanName);
+                fs.unlink(zipPath, (err) => {});
                 resolve(1);
             }
         });
         writeStream.on('error', (err) => {
             console.error(`Failed to extract ${noZipName}`, err);
             fails.push(cleanName);
+            fs.unlink(zipPath, (err) => {});
             reject(err);
         });
     });
-
-    fs.unlink(zipPath, (err) => {
-        if (err) throw err.name;
-    });
-    i++;
 }
 if (folderUrl == "https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw")
     fs.writeFileSync(__charactersJSON, JSON.stringify(jsonData, null, 2), 'utf8');
-console.log(`\nSuccessfully downloaded ${i-fails.length-1}/${i-1} characters!`);
+console.log(`\nSuccessfully downloaded ${i-fails.length}/${i} characters!`);
 if (fails.length != 0) console.log(`Failed to download: ${fails.join(", ")}`);
