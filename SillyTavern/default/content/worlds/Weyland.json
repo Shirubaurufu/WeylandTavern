@@ -14405,7 +14405,7 @@
             "groupWeight": 100,
             "scanDepth": null,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": null,
             "automationId": "",
             "role": 0,
