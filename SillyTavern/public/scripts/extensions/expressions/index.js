@@ -20,6 +20,7 @@ import { t } from '../../i18n.js';
 import { removeReasoningFromString } from '../../reasoning.js';
 export { MODULE_NAME };
 
+console.log('=== MODULE WORKER STARTED ===');
 /**
 * @typedef {object} Expression Expression definition with label and file path
 * @property {string} label The label of the expression
@@ -476,12 +477,22 @@ async function setImage(img, path) {
 }
 
 async function moduleWorker({ newChat = false } = {}) {
+    console.log('moduleWorker called, API setting:', extension_settings.expressions.api);
     const context = getContext();
 
-    // non-characters not supported
-    if (!context.groupId && context.characterId === undefined) {
-        removeExpression();
+    if (extension_settings.expressions.api === EXPRESSION_API.none) {
+        console.log('API is none, returning early');
         return;
+    } else {
+        console.log('API is not none');
+    }
+
+    // non-characters not supported
+    if (extension_settings.expressions.api !== EXPRESSION_API.none) {
+        if (!context.groupId && context.characterId === undefined) {
+            removeExpression();
+            return;
+        }
     }
 
     const vnMode = isVisualNovelMode();
@@ -548,7 +559,6 @@ async function moduleWorker({ newChat = false } = {}) {
         await forceUpdateVisualNovelMode();
     }
 
-    // Skips resetting to default if off, to allow new WeylandTavern image selector to work well
     if (extension_settings.expressions.api === EXPRESSION_API.none) {
         return;
     }
@@ -1959,8 +1969,10 @@ async function onClickExpressionOverrideButton() {
         $('#visual-novel-wrapper').empty();
         await validateImages(overridePath.length === 0 ? currentLastMessage.name : overridePath, true);
         const name = overridePath.length === 0 ? currentLastMessage.name : overridePath;
-        const expression = await getExpressionLabel(currentLastMessage.mes);
-        await sendExpressionCall(name, expression, { force: true });
+        if (extension_settings.expressions.api !== EXPRESSION_API.none) {
+            const expression = await getExpressionLabel(currentLastMessage.mes);
+            await sendExpressionCall(name, expression, { force: true });
+        }
         forceUpdateVisualNovelMode();
     } catch (error) {
         console.debug(`Setting expression override for ${avatarFileName} failed with error: ${error}`);
@@ -2131,7 +2143,7 @@ function migrateSettings() {
         saveSettingsDebounced();
     }
 
-    if (extension_settings.expressions.allowMultiple !== true) {
+    if (extension_settings.expressions.allowMultiple === undefined) {
         extension_settings.expressions.allowMultiple = true;
         saveSettingsDebounced();
     }
@@ -2235,28 +2247,39 @@ function migrateSettings() {
     await addSettings();
     const wrapper = new ModuleWorkerWrapper(moduleWorker);
     const updateFunction = wrapper.update.bind(wrapper);
-    setInterval(updateFunction, UPDATE_INTERVAL);
+    if (extension_settings.expressions.api !== EXPRESSION_API.none) {
+        setInterval(updateFunction, UPDATE_INTERVAL);
+        console.log('API is not none');
+    } else {
+        console.log('API is none, returning early');
+    }
     moduleWorker();
     dragElement($('#expression-holder'));
     eventSource.on(event_types.CHAT_CHANGED, () => {
         // character changed
-        removeExpression();
-        spriteCache = {};
-        lastExpression = {};
+        if (extension_settings.expressions.api !== EXPRESSION_API.none) {
+            removeExpression();
+            spriteCache = {};
+            lastExpression = {};
 
-        //clear expression
-        let imgElement = document.getElementById('expression-image');
-        if (imgElement && imgElement instanceof HTMLImageElement) {
-            imgElement.src = '';
+            //clear expression
+            let imgElement = document.getElementById('expression-image');
+            if (imgElement && imgElement instanceof HTMLImageElement) {
+                imgElement.src = '';
+            }
+
+            setExpressionOverrideHtml(true); // force-clear, as the character might not have an override defined
+
+            if (isVisualNovelMode()) {
+                $('#visual-novel-wrapper').empty();
+            }
+
+            updateFunction({ newChat: true });
+        } else {
+            // Still update the sprite cache and override settings, but don't clear the current expression
+            spriteCache = {};
+            setExpressionOverrideHtml(true);
         }
-
-        setExpressionOverrideHtml(true); // force-clear, as the character might not have an override defined
-
-        if (isVisualNovelMode()) {
-            $('#visual-novel-wrapper').empty();
-        }
-
-        updateFunction({ newChat: true });
     });
     eventSource.on(event_types.MOVABLE_PANELS_RESET, updateVisualNovelModeDebounced);
     eventSource.on(event_types.GROUP_UPDATED, updateVisualNovelModeDebounced);
