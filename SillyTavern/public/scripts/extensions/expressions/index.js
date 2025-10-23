@@ -478,6 +478,11 @@ async function setImage(img, path) {
 async function moduleWorker({ newChat = false } = {}) {
     const context = getContext();
 
+    // Skips resetting to default if off, to allow new WeylandTavern image selector to work well
+    if (extension_settings.expressions.api === EXPRESSION_API.none) {
+        return;
+    }
+
     // non-characters not supported
     if (!context.groupId && context.characterId === undefined) {
         removeExpression();
