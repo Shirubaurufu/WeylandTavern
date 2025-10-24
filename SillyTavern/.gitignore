@@ -94,5 +94,8 @@ public/error/
 .env
 /StartDev.bat
 *.log
-characters.json
 *.bak
+/utils/**
+*.wtch
+*.wtl
+!/chardl/locations/standard.wtl

@@ -14,7 +14,7 @@ then
         echo "Installing nvm..."
         export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null 2>&1
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash > /dev/null 2>&1
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash > /dev/null 2>&1
         source ~/.bashrc > /dev/null 2>&1
         nvm install --lts > /dev/null 2>&1
         nvm use --lts > /dev/null 2>&1;;
@@ -29,11 +29,6 @@ fi
 export NODE_ENV=production
 cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null
 clear
-echo "Welcome to Weyland Tavern's character downloader!"
-echo
-node character-downloader.js https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw
-echo
-echo "Enjoy your time in Weyland!"
-echo
+node chardl/character-downloader.js
 read -p "Press any key to continue..."
 exit
