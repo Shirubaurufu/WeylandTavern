@@ -27,7 +27,7 @@ where git >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo Git is not installed. Cannot check for updates.
     echo Please manually install git to get the latest updates.
-    set /p continue_nogit=Continue without update checking? (Y/N) [Default: Y]
+    set /p continue_nogit="Continue without update checking? (Y/N) [Default: Y] "
     if "!continue_nogit!"=="" set continue_nogit=Y
     if /i "!continue_nogit!"=="N" exit /b 0
 ) else (
