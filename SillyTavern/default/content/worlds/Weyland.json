@@ -26,7 +26,7 @@
             "group": "",
             "groupOverride": false,
             "groupWeight": 100,
-            "scanDepth": null,
+            "scanDepth": 1,
             "caseSensitive": false,
             "matchWholeWords": null,
             "useGroupScoring": false,
@@ -198,7 +198,7 @@
             "key": [
                 "Willow's room",
                 "Willow's dorm room",
-                "dorm room",
+                "(#283)",
                 "room 383"
             ],
             "keysecondary": [],
@@ -1061,7 +1061,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 101,
+            "displayIndex": 105,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1107,7 +1107,8 @@
             "key": [
                 "Rivera's dorm",
                 "Rivera's room",
-                "room 282"
+                "room 282",
+                "(#282)"
             ],
             "keysecondary": [],
             "comment": "Rivera Room",
@@ -1724,7 +1725,7 @@
             "key": [
                 "Rivet's room",
                 "Rivet's dorm room",
-                "dorm room",
+                "(#270)",
                 "room 270"
             ],
             "keysecondary": [],
@@ -3442,7 +3443,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 45,
-            "displayIndex": 108,
+            "displayIndex": 99,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3594,7 +3595,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 47,
-            "displayIndex": 102,
+            "displayIndex": 101,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3744,7 +3745,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 49,
-            "displayIndex": 99,
+            "displayIndex": 103,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4211,7 +4212,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 55,
-            "displayIndex": 105,
+            "displayIndex": 107,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4564,7 +4565,7 @@
             "key": [
                 "Briar's room",
                 "Briar's dorm room",
-                "dorm room",
+                "(#309)",
                 "room 309",
                 "pet rock",
                 "Rosetta"
@@ -4719,7 +4720,7 @@
             "key": [
                 "Eve's room",
                 "Eve's dorm room",
-                "dorm room",
+                "(#317)",
                 "room 317"
             ],
             "keysecondary": [],
@@ -6189,7 +6190,8 @@
             "key": [
                 "Summer's dorm",
                 "Summer's room",
-                "room 279"
+                "room 279",
+                "(#279)"
             ],
             "keysecondary": [],
             "comment": "Summer Room",
@@ -6265,7 +6267,7 @@
             "key": [
                 "Rosa's room",
                 "Rosa's dorm room",
-                "dorm room",
+                "(#315)",
                 "room 315"
             ],
             "keysecondary": [],
@@ -11314,7 +11316,7 @@
             "key": [
                 "Ava's room",
                 "Ava's dorm",
-                "dorm room",
+                "(#294)",
                 "room 294"
             ],
             "keysecondary": [],
@@ -11466,7 +11468,7 @@
             "key": [
                 "Belle's room",
                 "Belle's dorm",
-                "dorm room",
+                "(#281)",
                 "room 281"
             ],
             "keysecondary": [],
@@ -11618,7 +11620,7 @@
             "key": [
                 "Bianca's room",
                 "Bianca's dorm",
-                "dorm room",
+                "(#290)",
                 "room 290"
             ],
             "keysecondary": [],
@@ -11694,10 +11696,8 @@
             "key": [
                 "Blake's room",
                 "Blake's dorm",
-                "dorm room",
-                "room 271",
-                "{{user}}'s room",
-                "{{user}}'s dorm"
+                "(#271)",
+                "room 271"
             ],
             "keysecondary": [],
             "comment": "Blake & {{user}}'s Room",
@@ -11761,18 +11761,13 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "154": {
             "key": [
                 "Cairo's room",
                 "Cairo's dorm",
-                "dorm room",
+                "(#275)",
                 "room 275"
             ],
             "keysecondary": [],
@@ -11848,7 +11843,7 @@
             "key": [
                 "Karmen's room",
                 "karmen's dorm",
-                "dorm room",
+                "(#311)",
                 "room 311"
             ],
             "keysecondary": [],
@@ -11881,7 +11876,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 155,
-            "displayIndex": 106,
+            "displayIndex": 108,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11956,7 +11951,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 156,
-            "displayIndex": 103,
+            "displayIndex": 102,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12080,7 +12075,7 @@
             "key": [
                 "Indigo's room",
                 "Indigo's dorm",
-                "dorm room",
+                "(#284)",
                 "room 284"
             ],
             "keysecondary": [],
@@ -12156,7 +12151,7 @@
             "key": [
                 "Luna's room",
                 "Luna's dorm",
-                "dorm room",
+                "(#274)",
                 "room 274",
                 "Gem's room",
                 "Gem's dorm"
@@ -12234,7 +12229,7 @@
             "key": [
                 "Fasti's room",
                 "Fasti's dorm",
-                "dorm room",
+                "(#292)",
                 "room 292",
                 "Vera's room",
                 "Vera's dorm"
@@ -12312,7 +12307,7 @@
             "key": [
                 "Ellie's room",
                 "Ellie's dorm",
-                "dorm room",
+                "(#109)",
                 "room 109"
             ],
             "keysecondary": [],
@@ -12388,7 +12383,7 @@
             "key": [
                 "jenn's room",
                 "jenn's dorm",
-                "dorm room",
+                "(#268)",
                 "room 268",
                 "lucy's dorm",
                 "lucy's room"
@@ -12423,7 +12418,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 162,
-            "displayIndex": 107,
+            "displayIndex": 106,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12466,7 +12461,7 @@
             "key": [
                 "Kai's room",
                 "kai's dorm",
-                "dorm room",
+                "(#273)",
                 "room 273",
                 "kiera's room",
                 "kiera's dorm",
@@ -12546,7 +12541,7 @@
             "key": [
                 "Lentyl's room",
                 "Lentyl's dorm",
-                "dorm room",
+                "(#376)",
                 "room 376"
             ],
             "keysecondary": [],
@@ -12700,7 +12695,7 @@
             "key": [
                 "Koshizu's room",
                 "Koshizu's dorm",
-                "dorm room",
+                "(#280)",
                 "room 280"
             ],
             "keysecondary": [],
@@ -12856,7 +12851,7 @@
             "key": [
                 "Kris' room",
                 "Kris' dorm",
-                "dorm room",
+                "(#286)",
                 "room 286"
             ],
             "keysecondary": [],
@@ -12932,7 +12927,7 @@
             "key": [
                 "Lucy's room",
                 "Lucy's dorm",
-                "dorm room",
+                "(#268)",
                 "room 268"
             ],
             "keysecondary": [],
@@ -13085,7 +13080,7 @@
             "key": [
                 "Lurkle's room",
                 "Lurkle's dorm",
-                "dorm room",
+                "(#171)",
                 "room 171"
             ],
             "keysecondary": [],
@@ -13541,7 +13536,7 @@
             "key": [
                 "Mika's room",
                 "Mika's dorm",
-                "dorm room",
+                "(#269)",
                 "room 269"
             ],
             "keysecondary": [],
@@ -13617,7 +13612,7 @@
             "key": [
                 "Nix's room",
                 "Nix's dorm",
-                "dorm room",
+                "(#283)",
                 "room 283"
             ],
             "keysecondary": [],
@@ -13773,7 +13768,6 @@
                 "Serra's room",
                 "apartment",
                 "Serra's bedroom",
-                "2nd floor",
                 "Serra's living room",
                 "\"watch the rain\""
             ],
@@ -14762,7 +14756,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         }
     },
     "originalData": {
