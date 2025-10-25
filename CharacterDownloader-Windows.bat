@@ -7,11 +7,6 @@ if not "%OS%"=="Windows_NT" (
 )
 cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev >nul
 cls
-echo Welcome to Weyland Tavern's character downloader!
-echo:
-node character-downloader.js https://mega.nz/folder/J5ARwZRI#2hnLHnLjXXNk3GGve7fjlw
-echo:
-echo Enjoy your time in Weyland!
-echo:
+node chardl/character-downloader.js
 pause
 popd

@@ -1,0 +1,685 @@
+// Character-Downloader for WeylandTavern by Shirubaurufu
+
+import fs from 'fs';
+import https from 'https';
+import inquirer from 'inquirer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import AdmZip from 'adm-zip';
+import * as cliProgress from 'cli-progress';
+
+let pwd = null;
+let folderId = null;
+
+if (process.argv.includes("-id=")) {
+    // folder URL
+    const [_folderUrl, _pwd] = process.argv.find(x => x.startsWith("-id="))?.slice(4)?.split("@password=");
+    pwd = _pwd;
+    // folder ID from URL
+    folderId = _folderUrl?.match(/(?:https?:\/\/gofile\.io(?:\/d)?)\/([a-z\d]{6})/i)?.[1] || _folderUrl
+}
+
+// update mode?
+const isUpdateMode = process.argv.includes(`-u`);
+
+const __dir = path.dirname(fileURLToPath(import.meta.url));
+const __locDir = path.join(__dir,"locations");
+const __charDir = path.join(__dir,"characters");
+const __stDir = path.dirname(__dir);
+const __mainDir = path.dirname(__stDir);
+
+class Downloader {
+    constructor (accountToken, websiteToken) {
+        this.downloadLocations = {};
+        this.accountToken = accountToken;
+        this.websiteToken = websiteToken;
+        this.totalCount = 0;
+    }
+
+    static async new() {
+        try {
+            downloaderLog('Contacting Weyland University Student Servers...');
+            const accountToken = await createGuestAccount();
+            if (!accountToken)
+                return null;
+            const websiteToken = await getWebsiteToken();
+            if (!websiteToken)
+                return null;
+
+            downloaderLog('✓ Login successful. Weyland Token obtained.');
+            return new Downloader(accountToken, websiteToken);
+        } catch {
+            return null;
+        }
+    }
+
+    async addLocation(name, id, pwd = null) {
+        const downloadLocation = await DownloadLocation.new(id, pwd);
+        if (downloadLocation.id) {
+            this.downloadLocations[name] = downloadLocation;
+        }
+    }
+
+    async getLocationContents(name) {
+        try {
+            if (this.downloadLocations[name].folder) return this.downloadLocations[name].folder;
+            const folder = await this.downloadLocations[name].getContents(this.accountToken, this.websiteToken);
+            if (!folder) {
+                delete this.downloadLocations[name];
+                return null;
+            };
+            this.totalCount = this.totalCount + folder.count;
+            return folder;
+        } catch(err) {
+            if (typeof err?.message === "string" && (err?.message.includes("Access Denied") || err?.message.includes("notFound"))) {
+                if (fs.existsSync(path.join(__locDir,`${name}.wtl`)))
+                    fs.rmSync(path.join(__locDir,`${name}.wtl`));
+            };
+            return null;
+        }
+    }
+
+    async getAllLocationsContents() {
+        for (const location in this.downloadLocations) {
+            await this.getLocationContents(location);
+        }
+    }
+
+    getLocationNames() {
+        return Object.keys(this.downloadLocations);
+    }
+
+    getLocationFiles(name) {
+        return this.downloadLocations[name]?.folder?.files
+    }
+
+    getAllFiles() {
+        let files = [];
+        for (const location in this.downloadLocations) {
+            files = files.concat(this.getLocationFiles(location));
+        }
+        return files;
+    }
+}
+
+/**
+ * DownloadLocation class
+ */
+class DownloadLocation {
+    /**
+     * @param {string} id 
+     * @param {string | null} pwd 
+     */
+    constructor (id, pwd = null) {
+        this.id = typeof id === "string" && id.length === 6 ? id : null;
+        this.pwd = typeof pwd === "string" && pwd.length === 64 ? pwd : null;
+        this.folder = null;
+    }
+
+    /**
+     * @param {string} id 
+     * @param {string | null} pwd 
+     * @returns
+     */
+    static async new(id, pwd = null) {
+        if (typeof pwd === "string" && (pwd.length !== 64 || /[^a-z\d]/.test(pwd)))
+            pwd = await getSHA256Hash(pwd);
+        if (typeof id === "string" && id.length !== 6)
+            id = Buffer.from(id, 'base64').toString('binary');
+
+        return new DownloadLocation(id, pwd);
+    }
+} 
+
+/**
+ * GoFile constructor
+ * @param {{canAccess: boolean, link: string, size: number, type: string, mimetype: string, name: string}}
+ */
+function GoFile({
+    canAccess = false,
+    link,
+    size = 0,
+    type,
+    mimetype,
+    name
+}) {
+    if (!(this instanceof GoFile)) return new GoFile({canAccess: canAccess, link: link, size: size, type: type, mimetype: mimetype, name: name}); //Incase the constructor is called without "new"
+    this.canAccess = canAccess;
+    this.link = link;
+    this.size = size || 0;
+    this.type = type;
+    this.mimetype = mimetype;
+    this.name = name;
+    this.cleanName = name.slice(0,-4);
+    this.character = this.cleanName.match(/^.*(?= \d{2}-)/)?.[0];
+    this.date = this.cleanName.match(/\d{2}-\d{2}-\d{2}/)?.[0];
+}
+
+/**
+ * Gets folder contents from GoFile API
+ * Returns a folder containing all valid and accessible files
+ */
+DownloadLocation.prototype.getContents = async function(accountToken, websiteToken) {
+    if (!this.id || !accountToken || !websiteToken) return null;
+    const reqPath = `/contents/${this.id}?wt=${websiteToken}${this.pwd ? `&password=${this.pwd}` : ""}`;
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.gofile.io',
+            path: reqPath,
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accountToken}`,
+                'User-Agent': 'WeylandTavern-Downloader/1.0'
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const response = JSON.parse(data);
+                    if (response.status === 'ok' && response.data) {
+                        const contents = response.data;
+                        if (!contents.canAccess)
+                            reject(new Error(`Failed to get folder contents: Access Denied`));
+
+                        const files = Object.values(contents.children).map(char => {
+                            return new GoFile(char);
+                        }).filter(x => x);
+
+                        if (!files?.length)
+                            reject(new Error(`Failed to get folder contents: No valid characters`));
+                        
+                        this.folder = {
+                            name: contents.name,
+                            size: contents.totalSize,
+                            count: files.length,
+                            files: files
+                        };
+                        resolve(this.folder);
+                    } else {
+                        reject(new Error(`Failed to get folder contents: ${response.status}`));
+                    }
+                } catch (err) {
+                    reject(new Error(`Failed to parse folder contents: ${err.message}`));
+                }
+            });
+        });
+
+        req.on('error', reject);
+        req.end();
+    });
+}
+
+/**
+ * Downloads a file from GoFile with progress tracking
+ * Requires account token for authentication
+ */
+GoFile.prototype.download = async function(progressBar, accountToken) {
+    return new Promise((resolve, reject) => {
+        const outputPath = path.join(__dir, this.name)
+        if (fs.existsSync(outputPath))
+            fs.unlinkSync(outputPath);
+        const file = fs.createWriteStream(outputPath);
+        let downloadedSize = 0;
+
+        const options = new URL(this.link);
+        options.headers = {
+            'Authorization': `Bearer ${accountToken}`,
+            'Cookie': `accountToken=${accountToken}`,
+            'User-Agent': 'WeylandTavern-Downloader/1.0'
+        };
+        
+        const req = https.request(options, (res) => {
+            // Handle redirects
+            if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307 || res.statusCode === 308) {
+                file.close();
+                fs.unlinkSync(outputPath);
+                downloadFile(res.headers.location, outputPath, progressBar, this.size, accountToken)
+                    .then(resolve)
+                    .catch(reject);
+                return;
+            }
+
+            if (res.statusCode !== 200) {
+                file.close();
+                fs.unlinkSync(outputPath);
+                reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
+                return;
+            }
+
+            res.on('data', (chunk) => {
+                downloadedSize += chunk.length;
+                if (progressBar && this.size > 0) {
+                    progressBar.update(parseFloat((downloadedSize / 1024 / 1024).toFixed(2)));
+                }
+            });
+
+            res.pipe(file);
+
+            file.on('finish', () => {
+                file.close();
+                if (progressBar && this.size > 0) {
+                    progressBar.update(parseFloat((downloadedSize / 1024 / 1024).toFixed(2)));
+                }
+                resolve();
+            });
+        });
+
+        req.on('error', (err) => {
+            file.close();
+            fs.unlinkSync(outputPath);
+            reject(err);
+        });
+
+        file.on('error', (err) => {
+            file.close();
+            fs.unlinkSync(outputPath);
+            reject(err);
+        });
+
+        req.end();
+    });
+}
+
+/**
+ * Creates a guest account on GoFile and returns the token
+ * This token is required to access folder contents and download files
+ */
+async function createGuestAccount() {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.gofile.io',
+            path: '/accounts',
+            method: 'POST',
+            headers: {
+                'User-Agent': 'WeylandTavern-Downloader/1.0'
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const response = JSON.parse(data);
+                    if (response.status === 'ok' && response.data && response.data.token) {
+                        resolve(response.data.token);
+                    } else {
+                        reject(new Error(`Failed to create guest account: ${JSON.stringify(response)}`));
+                    }
+                } catch (err) {
+                    reject(new Error(`Failed to parse account creation response: ${err.message}`));
+                }
+            });
+        });
+
+        req.on('error', reject);
+        req.end();
+    });
+}
+
+/**
+ * Fetches the website token from GoFile's global.js
+ * This is required alongside the account token for API authentication
+ */
+async function getWebsiteToken() {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'gofile.io',
+            path: '/dist/js/global.js',
+            method: 'GET',
+            headers: {
+                'User-Agent': 'WeylandTavern-Downloader/1.0'
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    // Extract website token from the JavaScript
+                    // Format is typically: .wt = "TOKEN_HERE"
+                    const match = data.match(/\.wt\s*=\s*["']([^"']+)["']/);
+                    if (match && match[1]) {
+                        resolve(match[1]);
+                    } else {
+                        reject(new Error('Could not find website token in global.js'));
+                    }
+                } catch (err) {
+                    reject(new Error(`Failed to extract website token: ${err.message}`));
+                }
+            });
+        });
+
+        req.on('error', reject);
+        req.end();
+    });
+}
+
+async function getSHA256Hash(input) {
+    if (input === undefined || input === null) return null;
+
+    const textAsBuffer = new TextEncoder().encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", textAsBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hash = hashArray
+        .map((item) => item.toString(16).padStart(2, "0"))
+        .join("");
+    return hash;
+};
+
+function downloaderLog(text) {
+    if (!isUpdateMode) console.log(text);
+};
+
+// main
+(async () => {
+    try {
+        for (const file of fs.readdirSync(__mainDir).filter(x => x.endsWith(".wtl"))) {
+            fs.renameSync(path.join(__mainDir,file),path.join(__locDir,file));
+        } //Collect .wtl files from the root directory
+
+        if (!fs.existsSync(__charDir)) fs.mkdirSync(__charDir); //Create the characters directory if missing
+        if (fs.existsSync(path.join(__stDir,"characters.json"))) //Move legacy json, if it exists, to new location
+            fs.renameSync(path.join(__stDir,"characters.json"),path.join(__charDir,"standard.wtch")); 
+        
+        downloaderLog(
+`
+╔═══════════════════════════════════════════════════════════╗
+║     WELCOME TO WEYLAND TAVERN'S CHARACTER DOWNLOADER!     ║
+╠═══════════════════════════════════════════════════════════╣
+║  Hey there! This tool downloads official characters from  ║
+║  Weyland University! These characters will automatically  ║
+║  update every time you launch Weyland Tavern, so you'll   ║
+║  always have the latest versions!                         ║
+╚═══════════════════════════════════════════════════════════╝
+`
+        );
+
+        const downloader = await Downloader.new();
+
+        if (!downloader)
+            throw(`Unable to obtain Weyland Token.`);
+
+        for (const locFile of fs.readdirSync(__locDir).filter(x => x.endsWith(".wtl"))) {
+            const contents = fs.readFileSync(path.join(__locDir, locFile));
+            if (!contents) return null;
+
+            const split = contents.toString().split("@");
+            await downloader.addLocation(locFile.slice(0,-4), split[0], split[1]);
+        }
+
+        downloaderLog('Fetching student and administrative roster from university registry...');
+
+        await downloader.getAllLocationsContents();
+        
+        if (downloader.totalCount === 0) {
+            downloaderLog("No student records found in the university registry.");
+            process.exit(1);
+        }
+
+        downloaderLog(`✓ Found ${downloader.totalCount} student(s) and staff member(s)\n`);
+
+        let downloadAll = false;
+        let sortOrder = 'date';
+        
+        if (!isUpdateMode) {
+            const mainPrompt = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'action',
+                    message: '\x1b[38;5;183mWhat would you like to do?\x1b[0m',
+                    choices: [
+                        { name: 'Download all characters (recommended for new users)', value: 'all' },
+                        { name: 'Browse and select individual characters', value: 'browse' }
+                    ],
+                    default: 'browse',
+                    prefix: '\x1b[38;5;183m❯\x1b[0m',
+                    theme: {
+                        style: {
+                            answer: (text) => text,
+                            message: (text) => text,
+                            highlight: (text) => `\x1b[37m${text}\x1b[0m`
+                        }
+                    }
+                }
+            ]);
+            
+            downloadAll = (mainPrompt.action === 'all');
+            
+            // Only ask about sorting if not downloading all
+            if (!downloadAll) {
+                const sortPrompt = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'sortOrder',
+                        message: '\x1b[38;5;183mHow would you like to sort the university registry?\x1b[0m',
+                        choices: [
+                            { name: 'By upload date (newest first)', value: 'date' },
+                            { name: 'Alphabetically (A-Z)', value: 'alpha' }
+                        ],
+                        default: 'date',
+                        prefix: '\x1b[38;5;183m❯\x1b[0m',
+                        theme: {
+                            style: {
+                                answer: (text) => text,
+                                message: (text) => text,
+                                highlight: (text) => `\x1b[37m${text}\x1b[0m`
+                            }
+                        }
+                    }
+                ]);
+                sortOrder = sortPrompt.sortOrder;
+            }
+        }
+
+        if (!isUpdateMode) {
+            for (const location of downloader.getLocationNames()) {
+                if (sortOrder === "alpha") {
+                    downloader.downloadLocations[location]?.folder?.files.sort((a, b) => a.character.localeCompare(b.character));
+                } else if (sortOrder === "date") {
+                    downloader.downloadLocations[location]?.folder?.files.sort((a, b) => {
+                        if (a.date && b.date) {
+                            return b.date.localeCompare(a.date);
+                        }
+                        return 0;
+                    });
+                }
+            }
+
+            if (sortOrder === "alpha") {
+                downloaderLog('✓ Sorted alphabetically\n');
+            } else if (!isUpdateMode) {
+                downloaderLog('✓ Sorted by date (newest first)\n');
+            }
+        }
+
+        let answers = { selectedFiles: [] };
+        
+        let k = 0
+
+        if (downloadAll) {
+            // Download all mode: select everything automatically
+            answers.selectedFiles = downloader.getAllFiles().map(x => x.character);
+            console.log(`Downloading all ${downloader.totalCount} characters...\n`);
+        } else if (isUpdateMode) {
+            for (const location of downloader.getLocationNames()) {
+                const charFile = path.join(__charDir,`${location}.wtch`);
+                if (!fs.existsSync(charFile)) {
+                    k++; continue;
+                }
+
+                try {
+                    const jsonData = JSON.parse(fs.readFileSync(charFile, 'utf8'));
+                    if (!jsonData) continue;
+                    let neededUpdates = "";
+                    Object.entries(jsonData).forEach(([key, value]) => {
+                        const file = downloader.getLocationFiles(location).find(x => {
+                            return x.character === key;
+                        });
+                        
+                        if (file?.date) {
+                            if (file.date.slice(-2) <= value.slice(-2) && //Compare year
+                                file.date.slice(0, 2) <= value.slice(0, 2) && //Compare month
+                                file.date.slice(3, 5) <= value.slice(3, 5) //Compare day
+                            ) {
+                                return; //If all match or all values are higher, local character is up to date
+                            }
+                            neededUpdates += key + ", ";
+                            answers.selectedFiles.push(file.character);
+                        }
+                    });
+                } catch (err) {
+                    console.error(`Error reading ${location}.wtch file: `, err.message);
+                    continue;
+                }
+            }
+        } else {
+            // Interactive mode: show checkbox menu
+            let files = [];
+            for (const location of downloader.getLocationNames()) {
+                let locFiles = downloader.getLocationFiles(location);
+                for (let file of locFiles) {
+                    file.location = location;
+                }
+                files = files.concat(locFiles);
+            }
+            
+            if (sortOrder === "alpha") {
+                files.sort((a, b) => a.character.localeCompare(b.character));
+            } else if (sortOrder === "date") {
+                files.sort((a, b) => {
+                    if (a.date && b.date) {
+                        return b.date.localeCompare(a.date);
+                    }
+                    return 0;
+                });
+            }
+
+            const fileChoices = files.map(file => ({
+                name: `${file.character} ${file.location !== "standard" ? `(${file.location}) ` : ""}[${file.size ? (file.size / 1024 / 1024).toFixed(2) : 'unknown'} MB]`
+            }));
+
+            answers = await inquirer.prompt([
+                {
+                    type: 'checkbox',
+                    name: 'selectedFiles',
+                    message: 'Select characters to download:',
+                    choices: fileChoices,
+                    pageSize: 15,  // Show 15 items at once instead of default 7
+                    loop: false    // Don't loop back to top when reaching bottom
+                }
+            ]);
+        }
+
+        if (!answers.selectedFiles.length) {
+            if (isUpdateMode) {
+                if (k > 0 && k === downloader.getLocationNames().length) {
+                    console.log("No character files found. Run without -u flag first.")
+                    process.exit(1);
+                } else {
+                    console.log("All characters are up to date!")
+                    process.exit(0);
+                }
+            }
+            console.log("No characters selected.");
+            process.exit(0);
+        }
+
+        // Step 6: Download selected files
+        const progressBar = new cliProgress.SingleBar({
+            format: '\x1b[37m[\x1b[96m{bar}\x1b[37m]\x1b[0m {percentage}% | {value}/{total} MB',
+            barCompleteChar: '>',
+            barIncompleteChar: '-',
+            hideCursor: true
+        }, cliProgress.Presets.shades_classic);
+
+        let i = 0;
+        let fails = [];
+        if (!isUpdateMode)
+            answers.selectedFiles = answers.selectedFiles.map(x => x.match(/^[^\[\(]+/)[0]?.trim());
+        
+        for (const location of downloader.getLocationNames()) {
+            const charFile = path.join(__charDir,`${location}.wtch`);
+            let jsonData = fs.existsSync(charFile) ? JSON.parse(fs.readFileSync(charFile, `utf8`)) : {};
+            const files = downloader.getLocationFiles(location).filter(x => answers.selectedFiles.includes(x.character));
+            for (const file of files) {
+                i++
+                const cleanName = file.character;
+                const date = file.date;
+                const noZipName = `${cleanName} ${date}`;
+                const zipPath = path.join(__dir,file.name);
+
+                console.log(`Downloading: ${noZipName} (${i}/${answers.selectedFiles.length})`);
+
+                if (!file.canAccess) {
+                    console.error(`  ✗ Access Denied for ${noZipName}`);
+                    fails.push(cleanName);
+                    continue;
+                }
+
+                if (file.type !== "file" || file.mimetype !== "application/zip") {
+                    console.error(`  ✗ Incorrect file type for ${noZipName}`);
+                    fails.push(cleanName);
+                    continue;
+                }
+                
+                if (!file.link) {
+                    console.error(`  ✗ No download link available for ${noZipName}`);
+                    fails.push(cleanName);
+                    continue;
+                }
+
+                const fileSize = file.size || 0;
+                const fileSizeMB = parseFloat((fileSize / 1024 / 1024).toFixed(2));
+
+                progressBar.start(fileSizeMB, 0);
+
+                try {
+                    await file.download(progressBar, downloader.accountToken);
+                    progressBar.stop();
+
+                    // Extract the zip file
+                    try {
+                        const zip = new AdmZip(zipPath);
+                        zip.extractAllTo(__mainDir, true);
+                        
+                        jsonData[cleanName] = date;
+                        fs.writeFileSync(charFile, JSON.stringify(jsonData, null, 2), 'utf8');
+                    } catch (extractErr) {
+                        console.error(`  ✗ Extraction error for ${noZipName}:`, extractErr.message);
+                        fails.push(cleanName);
+                    }
+                } catch (downloadErr) {
+                    progressBar.stop();
+                    console.error(`  ✗ Download error for ${noZipName}:`, downloadErr.message);
+                    fails.push(cleanName);
+                }
+
+                if (fs.existsSync(zipPath))
+                    fs.unlinkSync(zipPath);
+            }
+        }
+
+        // Summary
+        downloaderLog(`\n════════════════════════════════════════════════════════`);
+        downloaderLog(`                   DOWNLOAD COMPLETE!`);
+        downloaderLog(`════════════════════════════════════════════════════════`);
+        console.log(`Successfully downloaded: ${i - fails.length}/${i} characters`);
+        
+        if (fails.length > 0) {
+            console.log(`Failed to download: ${fails.join(", ")}`);
+        }
+        
+        downloaderLog(`\nYour downloaded characters will now appear in the Weyland`);
+        downloaderLog(`Tavern interface the next time it launches. You're all set!\n`);
+
+    } catch (error) {
+        console.error(`\n✗ Fatal error: `, error.message);
+        console.error(`Please report this error to the Weyland Tavern development team.`);
+        process.exit(1);
+    }
+})();
