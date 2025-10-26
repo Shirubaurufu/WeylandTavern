@@ -193,7 +193,7 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
                             }).filter(x => x);
 
                             if (!files?.length)
-                                reject(new Error(`Failed to get folder contents: No valid characters`));
+                                resolve(null);
                             
                             this.folder = {
                                 name: contents.name,
