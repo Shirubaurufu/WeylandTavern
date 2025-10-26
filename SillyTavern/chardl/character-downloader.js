@@ -41,21 +41,22 @@ class Downloader {
             downloaderLog('Contacting Weyland University Student Servers...');
             const accountToken = await createGuestAccount();
             if (!accountToken)
-                return null;
+                throw new Error("Unable to obtain account token.");
             const websiteToken = await getWebsiteToken();
             if (!websiteToken)
-                return null;
+                throw new Error("Unable to obtain website token.");
 
             downloaderLog('✓ Login successful. Weyland Token obtained.');
             return new Downloader(accountToken, websiteToken);
-        } catch {
+        } catch (error) {
+            console.error("Token Error: ", error);
             return null;
         }
     }
 
     async addLocation(name, id, pwd = null) {
         const downloadLocation = await DownloadLocation.new(id, pwd);
-        if (downloadLocation.id) {
+        if (downloadLocation?.id) {
             this.downloadLocations[name] = downloadLocation;
         }
     }
@@ -74,6 +75,8 @@ class Downloader {
             if (typeof err?.message === "string" && (err?.message.includes("Access Denied") || err?.message.includes("notFound"))) {
                 if (fs.existsSync(path.join(__locDir,`${name}.wtl`)))
                     fs.rmSync(path.join(__locDir,`${name}.wtl`));
+            } else {
+                console.error("Location Contents Error: ", err);
             };
             return null;
         }
@@ -163,52 +166,56 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
     if (!this.id || !accountToken || !websiteToken) return null;
     const reqPath = `/contents/${this.id}?wt=${websiteToken}${this.pwd ? `&password=${this.pwd}` : ""}`;
     return new Promise((resolve, reject) => {
-        const options = {
-            hostname: 'api.gofile.io',
-            path: reqPath,
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${accountToken}`,
-                'User-Agent': 'WeylandTavern-Downloader/1.0'
-            }
-        };
-
-        const req = https.request(options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try {
-                    const response = JSON.parse(data);
-                    if (response.status === 'ok' && response.data) {
-                        const contents = response.data;
-                        if (!contents.canAccess)
-                            reject(new Error(`Failed to get folder contents: Access Denied`));
-
-                        const files = Object.values(contents.children).map(char => {
-                            return new GoFile(char);
-                        }).filter(x => x);
-
-                        if (!files?.length)
-                            reject(new Error(`Failed to get folder contents: No valid characters`));
-                        
-                        this.folder = {
-                            name: contents.name,
-                            size: contents.totalSize,
-                            count: files.length,
-                            files: files
-                        };
-                        resolve(this.folder);
-                    } else {
-                        reject(new Error(`Failed to get folder contents: ${response.status}`));
-                    }
-                } catch (err) {
-                    reject(new Error(`Failed to parse folder contents: ${err.message}`));
+        try {
+            const options = {
+                hostname: 'api.gofile.io',
+                path: reqPath,
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accountToken}`,
+                    'User-Agent': 'WeylandTavern-Downloader/1.0'
                 }
-            });
-        });
+            };
 
-        req.on('error', reject);
-        req.end();
+            const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    try {
+                        const response = JSON.parse(data);
+                        if (response.status === 'ok' && response.data) {
+                            const contents = response.data;
+                            if (!contents.canAccess)
+                                reject(new Error(`Failed to get folder contents: Access Denied`));
+
+                            const files = Object.values(contents.children).map(char => {
+                                return new GoFile(char);
+                            }).filter(x => x);
+
+                            if (!files?.length)
+                                reject(new Error(`Failed to get folder contents: No valid characters`));
+                            
+                            this.folder = {
+                                name: contents.name,
+                                size: contents.totalSize,
+                                count: files.length,
+                                files: files
+                            };
+                            resolve(this.folder);
+                        } else {
+                            reject(new Error(`Failed to get folder contents: ${response.status}`));
+                        }
+                    } catch (err) {
+                        reject(new Error(`Failed to parse folder contents: ${err.message}`));
+                    }
+                });
+            });
+
+            req.on('error', (error) => reject(error));
+            req.end();
+        } catch (error) {
+            reject(error);
+        }
     });
 }
 
@@ -218,68 +225,72 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
  */
 GoFile.prototype.download = async function(progressBar, accountToken) {
     return new Promise((resolve, reject) => {
-        const outputPath = path.join(__dir, this.name)
-        if (fs.existsSync(outputPath))
-            fs.unlinkSync(outputPath);
-        const file = fs.createWriteStream(outputPath);
-        let downloadedSize = 0;
-
-        const options = new URL(this.link);
-        options.headers = {
-            'Authorization': `Bearer ${accountToken}`,
-            'Cookie': `accountToken=${accountToken}`,
-            'User-Agent': 'WeylandTavern-Downloader/1.0'
-        };
-        
-        const req = https.request(options, (res) => {
-            // Handle redirects
-            if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307 || res.statusCode === 308) {
-                file.close();
+        try {
+            const outputPath = path.join(__dir, this.name)
+            if (fs.existsSync(outputPath))
                 fs.unlinkSync(outputPath);
-                downloadFile(res.headers.location, outputPath, progressBar, this.size, accountToken)
-                    .then(resolve)
-                    .catch(reject);
-                return;
-            }
+            const file = fs.createWriteStream(outputPath);
+            let downloadedSize = 0;
 
-            if (res.statusCode !== 200) {
-                file.close();
-                fs.unlinkSync(outputPath);
-                reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
-                return;
-            }
-
-            res.on('data', (chunk) => {
-                downloadedSize += chunk.length;
-                if (progressBar && this.size > 0) {
-                    progressBar.update(parseFloat((downloadedSize / 1024 / 1024).toFixed(2)));
+            const options = new URL(this.link);
+            options.headers = {
+                'Authorization': `Bearer ${accountToken}`,
+                'Cookie': `accountToken=${accountToken}`,
+                'User-Agent': 'WeylandTavern-Downloader/1.0'
+            };
+            
+            const req = https.request(options, (res) => {
+                // Handle redirects
+                if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307 || res.statusCode === 308) {
+                    file.close();
+                    fs.unlinkSync(outputPath);
+                    downloadFile(res.headers.location, outputPath, progressBar, this.size, accountToken)
+                        .then(resolve)
+                        .catch(reject);
+                    return;
                 }
+
+                if (res.statusCode !== 200) {
+                    file.close();
+                    fs.unlinkSync(outputPath);
+                    reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
+                    return;
+                }
+
+                res.on('data', (chunk) => {
+                    downloadedSize += chunk.length;
+                    if (progressBar && this.size > 0) {
+                        progressBar.update(parseFloat((downloadedSize / 1024 / 1024).toFixed(2)));
+                    }
+                });
+
+                res.pipe(file);
+
+                file.on('finish', () => {
+                    file.close();
+                    if (progressBar && this.size > 0) {
+                        progressBar.update(parseFloat((downloadedSize / 1024 / 1024).toFixed(2)));
+                    }
+                    resolve();
+                });
             });
 
-            res.pipe(file);
-
-            file.on('finish', () => {
+            req.on('error', (err) => {
                 file.close();
-                if (progressBar && this.size > 0) {
-                    progressBar.update(parseFloat((downloadedSize / 1024 / 1024).toFixed(2)));
-                }
-                resolve();
+                fs.unlinkSync(outputPath);
+                reject(err);
             });
-        });
 
-        req.on('error', (err) => {
-            file.close();
-            fs.unlinkSync(outputPath);
-            reject(err);
-        });
+            file.on('error', (err) => {
+                file.close();
+                fs.unlinkSync(outputPath);
+                reject(err);
+            });
 
-        file.on('error', (err) => {
-            file.close();
-            fs.unlinkSync(outputPath);
-            reject(err);
-        });
-
-        req.end();
+            req.end();
+        } catch (error) {
+            reject(error);
+        }
     });
 }
 
@@ -315,7 +326,7 @@ async function createGuestAccount() {
             });
         });
 
-        req.on('error', reject);
+        req.on('error', (error) => reject(error));
         req.end();
     });
 }
@@ -354,7 +365,7 @@ async function getWebsiteToken() {
             });
         });
 
-        req.on('error', reject);
+        req.on('error', (error) => reject(error));
         req.end();
     });
 }
@@ -402,7 +413,7 @@ function downloaderLog(text) {
         const downloader = await Downloader.new();
 
         if (!downloader)
-            throw(`Unable to obtain Weyland Token.`);
+            throw new Error(`Unable to obtain Weyland Token.`);
 
         for (const locFile of fs.readdirSync(__locDir).filter(x => x.endsWith(".wtl"))) {
             const contents = fs.readFileSync(path.join(__locDir, locFile));
@@ -678,7 +689,11 @@ function downloaderLog(text) {
         downloaderLog(`Tavern interface the next time it launches. You're all set!\n`);
 
     } catch (error) {
-        console.error(`\n✗ Fatal error: `, error.message);
+        if (!error.message) {
+            console.error(`\n✗ Fatal error: `, error);
+        } else {
+            console.error(`\n✗ Fatal error: `, error.message);
+        }
         console.error(`Please report this error to the Weyland Tavern development team.`);
         process.exit(1);
     }
