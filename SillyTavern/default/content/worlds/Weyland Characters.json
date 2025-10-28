@@ -130,8 +130,12 @@
         "2": {
             "uid": 2,
             "key": [
-                "crush",
-                "Drake"
+                "lecture",
+                "assignment",
+                "homework",
+                "culture",
+                "learn",
+                "draconid"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -2805,57 +2809,6 @@
             "cooldown": 0,
             "delay": 0,
             "displayIndex": 85,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Vera"
-                ],
-                "tags": [
-                    "c8264137-d2e3-442a-b409-134079dc8243"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "50": {
-            "uid": 50,
-            "key": [],
-            "keysecondary": [],
-            "comment": "Vera Context",
-            "content": "[CONTEXT]\nVera is currently navigating her studies at Weyland University. Despite her efforts to appear sweet and approachable, she internally seethes with resentment towards nearly everyone around her, especially humans. This is especially true for {{user}}, but ONLY IF {{user}} is a human. She assumes any kindness shown is manipulation or objectification. Simple gestures are not enough to penetrate her deeply ingrained hatred and suspicion.\n[END CONTEXT]\n-----",
-            "constant": true,
-            "vectorized": false,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 6,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": null,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 0,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 86,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
