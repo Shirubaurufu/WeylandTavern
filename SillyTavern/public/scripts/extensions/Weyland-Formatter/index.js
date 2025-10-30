@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.7.4";
+const extensionVersion = "1.7.5";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -436,7 +436,7 @@ async function formatMessage(messageId) {
     getSettings();
     await addExtensionSettings();
 
-    if (settings.markdown) updateReloadMarkdownProcessor(); //Adds markdown for asterisks within italics and hiccups
+    updateReloadMarkdownProcessor(); //Adds markdown
 
     const formatterEvents = [
         event_types.MESSAGE_RECEIVED,
@@ -445,6 +445,24 @@ async function formatMessage(messageId) {
 
     formatterEvents.forEach(e => eventSource.on(e, formatMessage));
 })();
+
+/**
+ * @returns {showdown.ShowdownExtension[]}
+ */
+function introImagesExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /\[\s*[IP](\d{3})\s*\]/g,
+            replace: function(match, p1) {
+                return `<div style="text-align: center;"><img src="${getGlobalVariable(p1)}" height="500"></div>`
+            }
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in introImagesExt extension:`, e);
+        return [];
+    }
+}
 
 /**
  * @returns {showdown.ShowdownExtension[]}
@@ -521,7 +539,7 @@ function headerMarkdownMuseExt(){
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
-        console.error(`[${MODULE_NAME}] Error in headerMarkdownExt extension:`, e);
+        console.error(`[${MODULE_NAME}] Error in headerMarkdownMuseExt extension:`, e);
         return [];
     }
 }
@@ -561,6 +579,7 @@ function fdiglMarkdownExt(){
 function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
+    converter.addExtension(introImagesExt(), 'introImages');
     converter.addExtension(headerMarkdownExt(), 'weylandHeader');
     converter.addExtension(headerMarkdownMuseExt(), 'weylandHeaderMuse');
     converter.addExtension(singleQuoteExt(), 'singleQuote');
