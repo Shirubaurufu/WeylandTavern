@@ -14550,7 +14550,7 @@
             ],
             "keysecondary": [],
             "comment": "!Phone",
-            "content": "{{getglobalvar::PhoneCommand}}",
+            "content": "{{getvar::PhoneCom}}",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -14585,12 +14585,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "192": {
             "uid": 192,
