@@ -10011,7 +10011,7 @@
             ],
             "keysecondary": [],
             "comment": "Kinsbane Manor",
-            "content": "[KINSBANE MANOR] Potential Location: The Kinsbane Manor\nOnce-grand Victorian mansion that now stands as a testament to neglect and time's relentless march. The manor has long since been abandoned, though rumors surround the place of it possibly being haunted. Most will not approach the mansion unless on a dare. Aiko lives here alone. [END KINSBANE MANOR]\n-----",
+            "content": "{{getvar::KinsbaneLoc}}",
             "constant": false,
             "vectorized": true,
             "selective": true,
