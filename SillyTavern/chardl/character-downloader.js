@@ -183,14 +183,14 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
                 res.on('end', () => {
                     try {
                         const response = JSON.parse(data);
-                        if (response.status === 'ok' && response.data) {
+                        if (response?.status === 'ok' && response?.data) {
                             const contents = response.data;
                             if (!contents.canAccess)
                                 reject(new Error(`Failed to get folder contents: Access Denied`));
 
-                            const files = Object.values(contents.children).map(char => {
+                            const files = Object.values(contents.children)?.map(char => {
                                 return new GoFile(char);
-                            }).filter(x => x);
+                            })?.filter(x => x);
 
                             if (!files?.length)
                                 resolve(null);
@@ -203,18 +203,24 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
                             };
                             resolve(this.folder);
                         } else {
-                            reject(new Error(`Failed to get folder contents: ${response.status}`));
+                            console.error(`Failed to get folder contents: ${response.status}`);
+                            resolve(null)
                         }
                     } catch (err) {
-                        reject(new Error(`Failed to parse folder contents: ${err.message}`));
+                        console.error(`Failed to parse folder contents: ${err.message}`);
+                        resolve(null)
                     }
                 });
             });
 
-            req.on('error', (error) => reject(error));
+            req.on('error', (error) => {
+                console.error(error)
+                resolve(null)
+            });
             req.end();
         } catch (error) {
-            reject(error);
+            console.error(error)
+            resolve(null)
         }
     });
 }
@@ -389,7 +395,7 @@ function downloaderLog(text) {
 // main
 (async () => {
     try {
-        for (const file of fs.readdirSync(__mainDir).filter(x => x.endsWith(".wtl"))) {
+        for (const file of fs.readdirSync(__mainDir)?.filter(x => x.endsWith(".wtl"))) {
             fs.renameSync(path.join(__mainDir,file),path.join(__locDir,file));
         } //Collect .wtl files from the root directory
 
@@ -399,14 +405,14 @@ function downloaderLog(text) {
         
         downloaderLog(
 `
-╔═══════════════════════════════════════════════════════════╗
-║     WELCOME TO WEYLAND TAVERN'S CHARACTER DOWNLOADER!     ║
-╠═══════════════════════════════════════════════════════════╣
-║  Hey there! This tool downloads official characters from  ║
-║  Weyland University! These characters will automatically  ║
-║  update every time you launch Weyland Tavern, so you'll   ║
-║  always have the latest versions!                         ║
-╚═══════════════════════════════════════════════════════════╝
+╔═════════════════════════════════════════════════════════╗
+║    WELCOME TO WEYLAND TAVERN'S CHARACTER DOWNLOADER!    ║
+╠═════════════════════════════════════════════════════════╣
+║ Hey there! This tool downloads official characters from ║
+║ Weyland University! These characters will automatically ║
+║ update every time you launch Weyland Tavern, so you'll  ║
+║ always have the latest versions!                        ║
+╚═════════════════════════════════════════════════════════╝
 `
         );
 
@@ -415,7 +421,7 @@ function downloaderLog(text) {
         if (!downloader)
             throw new Error(`Unable to obtain Weyland Token.`);
 
-        for (const locFile of fs.readdirSync(__locDir).filter(x => x.endsWith(".wtl"))) {
+        for (const locFile of fs.readdirSync(__locDir)?.filter(x => x.endsWith(".wtl"))) {
             const contents = fs.readFileSync(path.join(__locDir, locFile));
             if (!contents) return null;
 
@@ -423,12 +429,12 @@ function downloaderLog(text) {
             await downloader.addLocation(locFile.slice(0,-4), split[0], split[1]);
         }
 
-        downloaderLog('Fetching student and administrative roster from university registry...');
+        downloaderLog('Fetching weyland roster from university registry...');
 
         await downloader.getAllLocationsContents();
         
         if (downloader.totalCount === 0) {
-            downloaderLog("No student records found in the university registry.");
+            downloaderLog("No records found in the university registry.");
             process.exit(1);
         }
 
@@ -524,13 +530,16 @@ function downloaderLog(text) {
                 }
 
                 try {
-                    const jsonData = JSON.parse(fs.readFileSync(charFile, 'utf8'));
-                    if (!jsonData) continue;
+                    const contents = fs.readFileSync(charFile, 'utf8')
+                    if (!contents) continue;
+                    const jsonData = JSON.parse(contents);
+                    if (typeof jsonData !== "object" || !Object.keys(jsonData)) continue;
                     let neededUpdates = "";
                     Object.entries(jsonData).forEach(([key, value]) => {
-                        const file = downloader.getLocationFiles(location).find(x => {
+                        const file = downloader.getLocationFiles(location)?.find(x => {
                             return x.character === key;
                         });
+                        if (!file) return;
                         
                         if (file?.date) {
                             if (file.date.slice(-2) <= value.slice(-2) && //Compare year
@@ -616,7 +625,8 @@ function downloaderLog(text) {
         for (const location of downloader.getLocationNames()) {
             const charFile = path.join(__charDir,`${location}.wtch`);
             let jsonData = fs.existsSync(charFile) ? JSON.parse(fs.readFileSync(charFile, `utf8`)) : {};
-            const files = downloader.getLocationFiles(location).filter(x => answers.selectedFiles.includes(x.character));
+            const files = downloader.getLocationFiles(location)?.filter(x => answers.selectedFiles.includes(x.character));
+            if (!files) continue;
             for (const file of files) {
                 i++
                 const cleanName = file.character;
@@ -676,9 +686,9 @@ function downloaderLog(text) {
         }
 
         // Summary
-        downloaderLog(`\n════════════════════════════════════════════════════════`);
-        downloaderLog(`                   DOWNLOAD COMPLETE!`);
-        downloaderLog(`════════════════════════════════════════════════════════`);
+        downloaderLog(`\n══════════════════════════════════════════════════════`);
+        downloaderLog(`                  DOWNLOAD COMPLETE!`);
+        downloaderLog(`══════════════════════════════════════════════════════`);
         console.log(`Successfully downloaded: ${i - fails.length}/${i} characters`);
         
         if (fails.length > 0) {
@@ -694,7 +704,7 @@ function downloaderLog(text) {
         } else {
             console.error(`\n✗ Fatal error: `, error.message);
         }
-        console.error(`Please report this error to the Weyland Tavern development team.`);
+        console.error(`Please report this error to the Weyland Tavern dev team.`);
         process.exit(1);
     }
 })();
