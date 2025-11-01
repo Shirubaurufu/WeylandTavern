@@ -6354,8 +6354,7 @@ export async function saveChat({ chatName, withMetadata, mesId, force = false } 
 
         const popupResult = await Popup.show.input(
             t`ERROR: Chat integrity check failed while saving the file.`,
-            t`<p>After you click OK, the page will be reloaded to prevent data corruption.</p>
-              <p>To confirm an overwrite (and potentially <b>LOSE YOUR DATA</b>), enter <code>OVERWRITE</code> (in all caps) in the box below before clicking OK.</p>`,
+            t`<p>After you click OK, the page will be reloaded to prevent data corruption.</p>`,
             '',
             { okButton: 'OK', cancelButton: false },
         );
