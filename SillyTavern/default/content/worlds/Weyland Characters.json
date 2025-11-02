@@ -129,7 +129,13 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "Mika",
+                "Halloween",
+                "costume",
+                "costumes",
+                "party"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
