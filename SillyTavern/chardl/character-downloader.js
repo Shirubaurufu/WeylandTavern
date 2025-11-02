@@ -34,6 +34,7 @@ class Downloader {
         this.accountToken = accountToken;
         this.websiteToken = websiteToken;
         this.totalCount = 0;
+        this.files = [];
     }
 
     static async new() {
@@ -54,18 +55,23 @@ class Downloader {
         }
     }
 
-    async addLocation(name, id, pwd = null) {
+    async addLocation(name, id, pwd = null, reload = false) {
+        if (this.downloadLocations[name] && !reload) return;
         const downloadLocation = await DownloadLocation.new(id, pwd);
         if (downloadLocation?.id) {
+            if (reload && this.downloadLocations[name]) {
+                let fileCount = this.downloadLocations[name]?.folder?.files?.length
+                if (fileCount) this.totalCount = this.totalCount - fileCount
+            }
             this.downloadLocations[name] = downloadLocation;
         }
     }
 
-    async getLocationContents(name) {
+    async getLocationContents(name, reload = false) {
         try {
-            if (this.downloadLocations[name].folder) return this.downloadLocations[name].folder;
+            if (this.downloadLocations[name].folder && !reload) return this.downloadLocations[name].folder;
             const folder = await this.downloadLocations[name].getContents(this.accountToken, this.websiteToken);
-            if (!folder) {
+            if (!folder || !folder?.files) {
                 delete this.downloadLocations[name];
                 return null;
             };
@@ -82,9 +88,9 @@ class Downloader {
         }
     }
 
-    async getAllLocationsContents() {
+    async getAllLocationsContents(reload = false) {
         for (const location in this.downloadLocations) {
-            await this.getLocationContents(location);
+            await this.getLocationContents(location, reload);
         }
     }
 
@@ -93,15 +99,18 @@ class Downloader {
     }
 
     getLocationFiles(name) {
-        return this.downloadLocations[name]?.folder?.files
+        const files = this.downloadLocations[name]?.folder?.files;
+        return files ? files : [];
     }
 
-    getAllFiles() {
-        let files = [];
-        for (const location in this.downloadLocations) {
-            files = files.concat(this.getLocationFiles(location));
+    getAllFiles(reload=false) {
+        if (this.files.length === 0 || reload) {
+            if (reload) this.files = [];
+            for (const location in this.downloadLocations) {
+                this.files = this.files.concat(this.getLocationFiles(location));
+            }
         }
-        return files;
+        return this.files;
     }
 }
 
@@ -185,15 +194,24 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
                         const response = JSON.parse(data);
                         if (response?.status === 'ok' && response?.data) {
                             const contents = response.data;
-                            if (!contents.canAccess)
-                                reject(new Error(`Failed to get folder contents: Access Denied`));
+                            if (!contents.canAccess) {
+                                resolve(null)
+                                return;
+                            }
 
-                            const files = Object.values(contents.children)?.map(char => {
-                                return new GoFile(char);
-                            })?.filter(x => x);
+                            let files = {}
+                            if (contents?.children) {
+                                files = Object.values(contents.children)?.map(char => {
+                                    if (!char) return null;
+                                    return new GoFile(char);
+                                })?.filter(x => x);
+                            }
+                            
 
-                            if (!files?.length)
+                            if (!files?.length) {
                                 resolve(null);
+                                return;
+                            }
                             
                             this.folder = {
                                 name: contents.name,
@@ -207,7 +225,7 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
                             resolve(null)
                         }
                     } catch (err) {
-                        console.error(`Failed to parse folder contents: ${err.message}`);
+                        console.error(`Failed to parse folder contents: ${err}`);
                         resolve(null)
                     }
                 });
@@ -229,7 +247,7 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
  * Downloads a file from GoFile with progress tracking
  * Requires account token for authentication
  */
-GoFile.prototype.download = async function(progressBar, accountToken) {
+GoFile.prototype.download = async function(accountToken, progressBar = null) {
     return new Promise((resolve, reject) => {
         try {
             const outputPath = path.join(__dir, this.name)
@@ -250,7 +268,7 @@ GoFile.prototype.download = async function(progressBar, accountToken) {
                 if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307 || res.statusCode === 308) {
                     file.close();
                     fs.unlinkSync(outputPath);
-                    downloadFile(res.headers.location, outputPath, progressBar, this.size, accountToken)
+                    this.download(accountToken, progressBar)
                         .then(resolve)
                         .catch(reject);
                     return;
@@ -442,28 +460,113 @@ function downloaderLog(text) {
 
         let downloadAll = false;
         let sortOrder = 'date';
+        let mainPrompt = {};
         
         if (!isUpdateMode) {
-            const mainPrompt = await inquirer.prompt([
-                {
-                    type: 'list',
-                    name: 'action',
-                    message: '\x1b[38;5;183mWhat would you like to do?\x1b[0m',
-                    choices: [
-                        { name: 'Download all characters (recommended for new users)', value: 'all' },
-                        { name: 'Browse and select individual characters', value: 'browse' }
-                    ],
-                    default: 'browse',
-                    prefix: '\x1b[38;5;183m❯\x1b[0m',
-                    theme: {
-                        style: {
-                            answer: (text) => text,
-                            message: (text) => text,
-                            highlight: (text) => `\x1b[37m${text}\x1b[0m`
+            while (!mainPrompt?.action || mainPrompt?.action === "password") {
+                mainPrompt = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'action',
+                        message: '\x1b[38;5;183mWhat would you like to do?\x1b[0m',
+                        choices: [
+                            { name: 'Download all characters (recommended for new users)', value: 'all' },
+                            { name: 'Browse and select individual characters', value: 'browse' },
+                            { name: 'Enter exclusive access password (Alpha/Beta)', value: 'password' },
+                            { name: 'Exit', value: 'exit' }
+                        ],
+                        default: 'browse',
+                        prefix: '\x1b[38;5;183m❯\x1b[0m',
+                        theme: {
+                            style: {
+                                answer: (text) => text,
+                                message: (text) => text,
+                                highlight: (text) => `\x1b[37m${text}\x1b[0m`
+                            }
                         }
                     }
+                ]);
+
+                if (mainPrompt?.action === "exit") {
+                    downloaderLog("Exiting...");
+                    process.exit(0);
                 }
-            ]);
+
+                if (mainPrompt?.action === "password") {
+                    const { password } = await inquirer.prompt([
+                        { type: 'password', name: 'password', message: 'Enter your access password:', mask: '*' }
+                    ]);
+                    if (!password) continue; // Go back to start of while loop
+
+                    downloaderLog('Verifying password with Weyland servers...');
+                    const accessTiers = [
+                        { name: 'Alpha', id: 'SnQzWm9Q' },
+                        { name: 'Beta', id: 'bDd0UVFM' },
+                        { name: 'Debug', id: 'aENvY3VW' }
+                    ];
+                    let foundTierContents = null;
+                    let foundTierName = null;
+
+                    for (const tier of accessTiers) {
+                        try {
+                            const tempLocation = await DownloadLocation.new(tier.id, password);
+                            const contents = await tempLocation.getContents(downloader.accountToken, downloader.websiteToken);
+                            if (contents && contents?.files) {
+                                downloaderLog(`✓ Password accepted for ${tier.name} tier.`);
+                                foundTierContents = contents;
+                                foundTierName = tier.name;
+                                break;
+                            }
+                        } catch (error) {
+                            // Failed, try next tier
+                        }
+                    }
+
+                    if (!foundTierContents) {
+                        console.error("\n✗ Invalid password or access tier not found. Please try again.\n");
+                        continue; // Go back to start of while loop
+                    }
+
+                    // .WTL Download Logic
+                    const wtlFiles = foundTierContents.files?.filter(f => f.name?.endsWith('.wtl'));
+                    if (!wtlFiles.length) {
+                        console.error(`\n✗ Password was correct for ${foundTierName}, but no access files (.wtl) were found in the folder.\n`);
+                        continue;
+                    }
+
+                    downloaderLog(`Found ${wtlFiles.length} access file(s). Downloading...`);
+                    console.log(`Downloading: ${wtlFiles.map(x => x.name).join(", ")}`);
+
+                    let downloadedCount = 0;
+                    for (const fileToDownload of wtlFiles) {
+                        try {
+                            await fileToDownload.download(downloader.accountToken);
+                            fs.renameSync(path.join(__dir,fileToDownload.name), path.join(__locDir,fileToDownload.name));
+                            downloadedCount++;
+                        } catch (err) {
+                            console.error(`✗ Download error for ${fileToDownload.name}:`, err.message);
+                        }
+                    }
+
+                    if (downloadedCount > 0) {
+                        console.log(`✓ Successfully downloaded ${downloadedCount}/${wtlFiles.length} access file(s).\nRescanning extra registries...`);
+                    } else {
+                        console.error(`\n✗ Failed to download any access files. Please try again.\n`);
+                    }
+
+                    // Reload alpha/beta .wtl files
+                    for (const locFile of fs.readdirSync(__locDir)?.filter(x => x.endsWith(".wtl") && !x.startsWith("standard"))) {
+                        const contents = fs.readFileSync(path.join(__locDir, locFile));
+                        if (!contents) return null;
+
+                        const split = contents.toString().split("@");
+                        await downloader.addLocation(locFile.slice(0,-4), split[0], split[1], true);
+                        await downloader.getLocationContents(locFile.slice(0,-4), true);
+                    }
+
+                    downloaderLog(`✓ Found ${downloader.totalCount} student(s) and staff member(s)\n`);
+                }
+            }
             
             downloadAll = (mainPrompt.action === 'all');
             
@@ -614,6 +717,7 @@ function downloaderLog(text) {
             format: '\x1b[37m[\x1b[96m{bar}\x1b[37m]\x1b[0m {percentage}% | {value}/{total} MB',
             barCompleteChar: '>',
             barIncompleteChar: '-',
+            barsize: 30,
             hideCursor: true
         }, cliProgress.Presets.shades_classic);
 
@@ -660,7 +764,7 @@ function downloaderLog(text) {
                 progressBar.start(fileSizeMB, 0);
 
                 try {
-                    await file.download(progressBar, downloader.accountToken);
+                    await file.download(downloader.accountToken, progressBar);
                     progressBar.stop();
 
                     // Extract the zip file
