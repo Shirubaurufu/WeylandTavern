@@ -35,15 +35,15 @@ fi
 
 clear
 echo ""
-echo "============================================================="
-echo "             WELCOME TO WEYLAND TAVERN LAUNCHER"
-echo "============================================================="
+echo "==========================================================="
+echo "            WELCOME TO WEYLAND TAVERN LAUNCHER"
+echo "==========================================================="
 echo ""
 echo "This launcher will start the Weyland Tavern server."
-echo "IMPORTANT: Keep this window open while using Weyland Tavern!"
-echo "           Closing this window will shut down the server."
+echo "!!! Keep this window open while using Weyland Tavern!"
+echo "    Closing this window will shut down the server."
 echo ""
-echo "============================================================="
+echo "==========================================================="
 echo ""
 
 # First check if git is installed
@@ -138,7 +138,7 @@ else
 fi
 
 echo ""
-echo "-------------------------------------------------------------"
+echo "-----------------------------------------------------------"
 echo ""
 
 # Install npm dependencies
@@ -150,30 +150,31 @@ echo "Checking for character updates..."
 node chardl/character-downloader.js -u
 
 echo ""
-echo "-------------------------------------------------------------"
+echo "-----------------------------------------------------------"
 echo ""
 echo "Starting Weyland Tavern server..."
 echo "A browser window should open automatically when ready."
 echo ""
-echo "============================================================="
-echo "              WEYLAND TAVERN IS NOW ACTIVE"
-echo "              Server running on: localhost:8000"
-echo "============================================================="
+echo "==========================================================="
+echo "             WEYLAND TAVERN IS NOW ACTIVE"
+echo "             Server running on: localhost:8000"
+echo "==========================================================="
 echo ""
-echo "REMINDER: Keep this window open! The server is running here."
+echo "REMINDER: Keep this window open!"
 echo ""
 
 # Start the SillyTavern server in background
 node --max-old-space-size=3072 server.js --listen true --listen-host 0.0.0.0 --listen-port 8000 "$@" > /dev/null 2>&1 &
 SERVER_PID=$!
+echo $SERVER_PID > .wt.pid
 
 echo ""
-echo "Press any key to SHUT DOWN the server and close Weyland Tavern..."
+echo "Press any key to SHUT DOWN and close Weyland Tavern..."
 read -n 1 -s
 
 echo ""
 echo "Shutting down Weyland Tavern server..."
 kill $SERVER_PID 2>/dev/null
 wait $SERVER_PID 2>/dev/null
-echo "Server stopped. Goodbye!"
+rm .wt.pid > /dev/null 2>&1
 exit 0
