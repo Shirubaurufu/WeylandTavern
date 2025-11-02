@@ -10,15 +10,15 @@ title Weyland Tavern
 
 cls
 echo.
-echo =============================================================
-echo           WELCOME TO WEYLAND TAVERN LAUNCHER
-echo =============================================================
+echo ===========================================================
+echo          WELCOME TO WEYLAND TAVERN LAUNCHER
+echo ===========================================================
 echo.
 echo This launcher will start the Weyland Tavern server.
-echo IMPORTANT: Keep this window open while using Weyland Tavern!
-echo            Closing this window will shut down the server.
+echo !!! Keep this window open while using Weyland Tavern!
+echo     Closing this window will shut down the server.
 echo.
-echo =============================================================
+echo ===========================================================
 echo.
 
 
@@ -112,7 +112,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo.
-echo -------------------------------------------------------------
+echo -----------------------------------------------------------
 echo.
 
 :: Install npm dependencies
@@ -125,24 +125,24 @@ echo Checking for character updates...
 node chardl/character-downloader.js -u
 
 echo.
-echo -------------------------------------------------------------
+echo -----------------------------------------------------------
 echo.
 echo Starting Weyland Tavern server...
 echo A browser window will open automatically when ready.
 echo.
-echo =============================================================
-echo               WEYLAND TAVERN IS NOW ACTIVE
-echo               Server running on: localhost:8000
-echo =============================================================
+echo ===========================================================
+echo              WEYLAND TAVERN IS NOW ACTIVE
+echo              Server running on: localhost:8000
+echo ===========================================================
 echo.
-echo REMINDER: Keep this window open! The server is running here.
+echo REMINDER: Keep this window open!
 echo.
 
 :: Start the SillyTavern server
 start /b node server.js --listen true --listen-host 0.0.0.0 --listen-port 8000 %* >nul 2>&1
 
 echo.
-echo Press any key to SHUT DOWN the server and close Weyland Tavern...
+echo Press any key to SHUT DOWN and close Weyland Tavern...
 pause >nul
 
 echo.
