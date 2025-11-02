@@ -1208,9 +1208,38 @@ export async function getCharacters() {
             characters[i] = getData[i];
             characters[i]['name'] = DOMPurify.sanitize(characters[i]['name']);
 
-            // For dropped-in cards
+            // For dropped-in cards or updated cards without a chat property
             if (!characters[i]['chat']) {
-                characters[i]['chat'] = `${characters[i]['name']} - ${humanizedDateTime()}`;
+                // Check if there are existing chats for this character
+                try {
+                    const response = await fetch('/api/characters/chats', {
+                        method: 'POST',
+                        headers: getRequestHeaders(),
+                        body: JSON.stringify({ avatar_url: characters[i].avatar }),
+                    });
+            
+                    if (response.ok) {
+                        const chats = await response.json();
+                        const chatFiles = Object.values(chats);
+                
+                        // If existing chats found, use the most recent one
+                        if (chatFiles.length > 0) {
+                            chatFiles.sort((a, b) => sortMoments(timestampToMoment(a.last_mes), timestampToMoment(b.last_mes)));
+                            const mostRecentChat = chatFiles[chatFiles.length - 1];
+                            characters[i]['chat'] = mostRecentChat.file_name.replace('.jsonl', '');
+                            console.log(`Restored existing chat for ${characters[i]['name']}: ${characters[i]['chat']}`);
+                        } else {
+                            // No existing chats, create new chat name
+                            characters[i]['chat'] = `${characters[i]['name']} - ${humanizedDateTime()}`;
+                        }
+                    } else {
+                        // API call failed, fall back to new chat name
+                        characters[i]['chat'] = `${characters[i]['name']} - ${humanizedDateTime()}`;
+                    }
+                } catch (error) {
+                    console.error('Error checking for existing chats:', error);
+                    characters[i]['chat'] = `${characters[i]['name']} - ${humanizedDateTime()}`;
+                }
             }
 
             characters[i]['chat'] = String(characters[i]['chat']);
