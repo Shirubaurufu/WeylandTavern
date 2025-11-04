@@ -27,6 +27,7 @@ const __locDir = path.join(__dir,"locations");
 const __charDir = path.join(__dir,"characters");
 const __stDir = path.dirname(__dir);
 const __mainDir = path.dirname(__stDir);
+const __unzipDir = path.join(__stDir,"data/default-user/characters")
 
 class Downloader {
     constructor (accountToken, websiteToken) {
@@ -458,10 +459,32 @@ function downloaderLog(text) {
 
         downloaderLog(`✓ Found ${downloader.totalCount} student(s) and staff member(s)\n`);
 
+        //Filter characters to only exist in a lower priority .wtch file
+        const charChecks = {"standard": [`alpha`,`beta`], "beta": [`alpha`]};
+        for (const lower in charChecks) {
+            for (const higher of charChecks[lower]) {
+                try {
+                const higherPath = path.join(__charDir,`${higher}.wtch`);
+                if (!fs.existsSync(higherPath)) continue;
+                const lowerPath = path.join(__charDir,`${lower}.wtch`);
+                if (!fs.existsSync(lowerPath)) continue;
+                const higherChars = JSON.parse(fs.readFileSync(higherPath, 'utf-8')); //Alpha | Beta
+                const lowerChars = JSON.parse(fs.readFileSync(lowerPath, 'utf-8')); //Beta | Standard
+                const filteredChars = Object.keys(higherChars)
+                    .filter(x => !Object.keys(lowerChars).includes(x))
+                    .reduce((obj, key) => {return Object.assign(obj, {[key]: higherChars[key]})}, {});
+                fs.writeFileSync(higherPath,JSON.stringify(filteredChars, null, 2), 'utf-8');
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        };
+
         let downloadAll = false;
+        let downloadAllOverride = false;
         let sortOrder = 'date';
         let mainPrompt = {};
-        
+
         if (!isUpdateMode) {
             while (!mainPrompt?.action || mainPrompt?.action === "password") {
                 mainPrompt = await inquirer.prompt([
@@ -593,6 +616,28 @@ function downloaderLog(text) {
                     }
                 ]);
                 sortOrder = sortPrompt.sortOrder;
+            } else {
+                const override = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'override',
+                        message: '\x1b[38;5;183mHow would you like to sort the university registry?\x1b[0m',
+                        choices: [
+                            { name: 'Ignore existing characters', value: 'false' },
+                            { name: 'Download & Override existing characters', value: 'true' }
+                        ],
+                        default: 'false',
+                        prefix: '\x1b[38;5;183m❯\x1b[0m',
+                        theme: {
+                            style: {
+                                answer: (text) => text,
+                                message: (text) => text,
+                                highlight: (text) => `\x1b[37m${text}\x1b[0m`
+                            }
+                        }
+                    }
+                ]);
+                downloadAllOverride = override.override === "true";
             }
         }
 
@@ -623,8 +668,32 @@ function downloaderLog(text) {
 
         if (downloadAll) {
             // Download all mode: select everything automatically
-            answers.selectedFiles = downloader.getAllFiles().map(x => x.character);
-            console.log(`Downloading all ${downloader.totalCount} characters...\n`);
+            let allFiles = downloader.getAllFiles();
+            if (!downloadAllOverride) {
+                let existingCharacters = {};
+                for (const location of downloader.getLocationNames()) {
+                    try {
+                        let chars = JSON.parse(
+                            fs.readFileSync(
+                                path.join(__charDir, `${location}.wtch`), 
+                                'utf8'
+                            )
+                        )
+                        existingCharacters = {...existingCharacters, ...chars}
+                    } catch {
+                        console.error(`Failed to parse ${location}.wtch while ignoring existing characters.`)
+                    }
+                }
+                allFiles = allFiles.filter(x => {
+                    if (
+                        Object.keys(existingCharacters).includes(x.character) && 
+                        existingCharacters[x.character] === x.date
+                    ) return false;
+                    return true;
+                })
+            }
+            answers.selectedFiles = allFiles.map(x => x.character);
+            if (answers.selectedFiles.length) console.log(`Downloading all ${answers.selectedFiles.length} characters...\n`);
         } else if (isUpdateMode) {
             for (const location of downloader.getLocationNames()) {
                 const charFile = path.join(__charDir,`${location}.wtch`);
@@ -705,10 +774,13 @@ function downloaderLog(text) {
                     process.exit(1);
                 } else {
                     console.log("All characters are up to date!")
-                    process.exit(0);
                 }
             }
-            console.log("No characters selected.");
+            else if (downloadAll && !downloadAllOverride) {
+                console.log("All characters are already downloaded and up to date!")
+            } else {
+                console.log("No characters selected.");
+            }
             process.exit(0);
         }
 
@@ -784,8 +856,7 @@ function downloaderLog(text) {
                     fails.push(cleanName);
                 }
 
-                if (fs.existsSync(zipPath))
-                    fs.unlinkSync(zipPath);
+                if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
             }
         }
 
