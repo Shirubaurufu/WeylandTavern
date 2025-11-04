@@ -5,13 +5,12 @@ if not "%OS%"=="Windows_NT" (
     pause
     exit /b
 )
-setlocal enabledelayedexpansion
 title Weyland Tavern
 
 cls
 echo.
 echo ===========================================================
-echo          WELCOME TO WEYLAND TAVERN LAUNCHER
+echo             WELCOME TO WEYLAND TAVERN LAUNCHER
 echo ===========================================================
 echo.
 echo This launcher will start the Weyland Tavern server.
@@ -23,6 +22,7 @@ echo.
 
 
 REM Check if git is installed
+setlocal enabledelayedexpansion
 where git >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo Git is not installed. Cannot check for updates.
@@ -110,6 +110,7 @@ if %ERRORLEVEL% neq 0 (
         echo   Current Version: !CURRENT_VERSION!
     )
 )
+endlocal
 
 echo.
 echo -----------------------------------------------------------
