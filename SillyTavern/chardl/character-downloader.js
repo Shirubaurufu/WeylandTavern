@@ -462,18 +462,18 @@ function downloaderLog(text) {
         //Filter characters to only exist in a lower priority .wtch file
         const charChecks = {"standard": [`alpha`,`beta`], "beta": [`alpha`]};
         for (const lower in charChecks) {
+            const lowerPath = path.join(__charDir,`${lower}.wtch`);
+            if (!fs.existsSync(lowerPath)) continue;
+            const lowerChars = JSON.parse(fs.readFileSync(lowerPath, 'utf-8')); //Beta | Standard
             for (const higher of charChecks[lower]) {
                 try {
-                const higherPath = path.join(__charDir,`${higher}.wtch`);
-                if (!fs.existsSync(higherPath)) continue;
-                const lowerPath = path.join(__charDir,`${lower}.wtch`);
-                if (!fs.existsSync(lowerPath)) continue;
-                const higherChars = JSON.parse(fs.readFileSync(higherPath, 'utf-8')); //Alpha | Beta
-                const lowerChars = JSON.parse(fs.readFileSync(lowerPath, 'utf-8')); //Beta | Standard
-                const filteredChars = Object.keys(higherChars)
-                    .filter(x => !Object.keys(lowerChars).includes(x))
-                    .reduce((obj, key) => {return Object.assign(obj, {[key]: higherChars[key]})}, {});
-                fs.writeFileSync(higherPath,JSON.stringify(filteredChars, null, 2), 'utf-8');
+                    const higherPath = path.join(__charDir,`${higher}.wtch`);
+                    if (!fs.existsSync(higherPath)) continue;
+                    const higherChars = JSON.parse(fs.readFileSync(higherPath, 'utf-8')); //Alpha | Beta
+                    const filteredChars = Object.keys(higherChars)
+                        .filter(x => !Object.keys(lowerChars).includes(x))
+                        .reduce((obj, key) => {return Object.assign(obj, {[key]: higherChars[key]})}, {});
+                    fs.writeFileSync(higherPath,JSON.stringify(filteredChars, null, 2), 'utf-8');
                 } catch (error) {
                     console.error(error);
                 }
