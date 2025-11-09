@@ -246,7 +246,7 @@
         "movingUI": false,
         "movingUIState": {},
         "movingUIPreset": "Default",
-        "noShadows": false,
+        "noShadows": true,
         "theme": "Weyland",
         "gestures": true,
         "auto_swipe": false,
@@ -2248,4 +2248,5 @@
         "password": ""
     }
 }
+
 
