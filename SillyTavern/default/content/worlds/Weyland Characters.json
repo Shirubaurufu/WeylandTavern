@@ -130,8 +130,14 @@
         "2": {
             "uid": 2,
             "key": [
-                "bully",
-                "Rivera"
+                "charm",
+                "backpack",
+                "request",
+                "question",
+                "party",
+                "Rivera",
+                "ability",
+                "power"
             ],
             "keysecondary": [],
             "comment": "Scenario",
