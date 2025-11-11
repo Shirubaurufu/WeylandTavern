@@ -14892,9 +14892,7 @@
             },
             "characterFilter": {
                 "isExclude": true,
-                "names": [
-                    "Mirror Weyland"
-                ],
+                "names": [],
                 "tags": []
             }
         },
