@@ -15094,13 +15094,6 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Sunny"
-                ],
-                "tags": []
             }
         },
         "200": {
