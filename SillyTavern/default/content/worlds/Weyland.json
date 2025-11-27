@@ -15094,6 +15094,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "200": {
@@ -15399,13 +15404,15 @@
         "204": {
             "uid": 204,
             "key": [
-                "!Yamada",
-                "!yamada",
-                "Yamada",
-                "Sayori"
+                "!Akiyama",
+                "!akiyama",
+                "Akiyama",
+                "Sayori",
+                "!Sayori",
+                "!sayori"
             ],
             "keysecondary": [],
-            "comment": "Yamada",
+            "comment": "Professor Akiyama",
             "content": "{{getvar::YD}}",
             "constant": false,
             "vectorized": false,
@@ -15468,8 +15475,12 @@
             },
             "characterFilter": {
                 "isExclude": true,
-                "names": [],
-                "tags": []
+                "names": [
+                    "Professor Akiyama"
+                ],
+                "tags": [
+                    "70d03b07-c8d7-4eae-9419-ab8ab451eb00"
+                ]
             }
         },
         "205": {
