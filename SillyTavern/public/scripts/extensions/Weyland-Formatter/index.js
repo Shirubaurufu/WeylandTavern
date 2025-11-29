@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.7.5";
+const extensionVersion = "1.7.6";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -36,6 +36,7 @@ let settings = undefined;
  * @property {RegExp} detectWeybotRelations
  * @property {RegExp} greedyDetectAction
  * @property {RegExp} greedyDetectActionQuotes
+ * @property {RegExp} detectHTMLParagraph
  * 
  * @property {RegExp} asterisk
  * 
@@ -115,6 +116,7 @@ const weylandRegex = {
     detectWeybotRelations: /New [^{]+{[^}]+}/,
     greedyDetectAction: /(?<=[\s—]|^)\*([^"_\[\]\n\r]+)\*(?=[\s—]|$)/g,
     greedyDetectActionQuotes: /(?<=\*[\s—]|__[\s—]|^)"[^"]+"(?=[\s—]\*|[\s—]__|$)/,
+    detectHTMLParagraph: /^<[\s\S]*>$/,
 
     asterisk: /\*/g,
 
@@ -174,7 +176,7 @@ const weylandRegex = {
     normalizeAsterisks: /[\u2043\u2219\u25D8\u25E6\u2619\u2765\u2767]/g,
     normalizeSwungDash: /\u2053/g,
     normalizePosessives: /(?<=[^\s—])'(?=s)(?=\b)|(?<=s)'(?=[\s—.,!?])/ig,
-    normalizeContractions: /(?<=[^\s—])'(?=t|ll|ve|re)(?=\b)/ig,
+    normalizeContractions: /(?<=[^\s—])'(?=t\W|ll\W|ve\W|re\W)/ig,
     normalizeHeight: /(\d{1,3})'(\d{1,2})"/g,
 
     missingEndAsterisk: /(?<=["_\]][\s—]|^)\*+([^"_\[\]]+)(?<!\*)(?=[\s—]["_\[]|$)/g,
@@ -278,7 +280,7 @@ async function formatParagraphs(message) {
                     if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionAfterDialogue, weylandRegex.actionAfterDialogueReplace);
                     if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBeforeDialogue, weylandRegex.actionBeforeDialogueReplace);
 
-                    if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph)) {
+                    if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph) && !weylandRegex.detectHTMLParagraph.test(paragraph)) {
                         weylandDebug(`#${index} - Adding asterisks to blank paragraph`);
                         paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
                     }
