@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.7.6";
+const extensionVersion = "1.7.7";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -103,6 +103,8 @@ let settings = undefined;
  * @property {string} missingEndAsteriskReplace
  * @property {RegExp} missingStartAsterisk
  * @property {string} missingStartAsteriskReplace
+ * 
+ * @property {RegExp} phone
  */
 
 /**
@@ -182,7 +184,9 @@ const weylandRegex = {
     missingEndAsterisk: /(?<=["_\]][\s—]|^)\*+([^"_\[\]]+)(?<!\*)(?=[\s—]["_\[]|$)/g,
     missingEndAsteriskReplace: "*$1*",
     missingStartAsterisk: /(?<=["_\]][\s—]|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=[\s—]["_\[]|$)/g,
-    missingStartAsteriskReplace: "*$1*"
+    missingStartAsteriskReplace: "*$1*",
+
+    phone: /phone¦/i
 };
 
 
@@ -249,6 +253,10 @@ async function formatParagraphs(message) {
                 paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
                 paragraphs[index] = paragraph;
                 weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
+                return;
+            }
+
+            if (weylandRegex.phone.test(paragraph)) {
                 return;
             }
 
@@ -578,6 +586,87 @@ function fdiglMarkdownExt(){
     }
 }
 
+/**
+ * @returns {showdown.ShowdownExtension[]}
+ */
+function phoneMarkdownExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /<.*>(Phone¦[\s\S]*?\nTexting¦[\s\S]*?)<\/.*>/i,
+            replace: function(match, p1) {
+                try {
+                    const lines = p1.split(`<br />\n`);
+                    const [carrier, _battery] = lines[0].split(`¦`).slice(1);
+                    let battery = parseInt(_battery.replace(`%`,``),10);
+                    if (battery <= 0) {
+                        // @ts-ignore
+                        battery = `empty`;
+                    } else if(battery < 37) {
+                        // @ts-ignore
+                        battery = `quarter`;
+                    } else if (battery < 62) {
+                        // @ts-ignore
+                        battery = `half`;
+                    } else if (battery >= 100) {
+                        // @ts-ignore
+                        battery = `full`;
+                    } else {
+                        // @ts-ignore
+                        battery = `three-quarters`;
+                    }
+                    const contact = lines[1].split(`¦`)[1];
+                    const messages = lines.slice(2);
+                    const phoneUIHeader = `<div style="background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 16px; color: #f0f0f0; max-width: 600px; margin: auto;">
+<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 12px; font-weight: bold; color: #66d9ef; font-size: 0.85em; white-space: nowrap;">
+<span>${carrier}</span>
+<span>${_battery} <i class="fa-solid fa-battery-${battery}" style="color: #66d9ef;"></i></span>
+</div>
+<div style="font-weight: bold; color: #a6e22e; text-align: center; margin-bottom: 12px; font-size: 1em;">
+✧ ${contact} ✧
+</div>
+<div style="height: 400px; overflow-y: auto; padding-right: 10px;">\n\n`
+                    const phoneUIFooter = `\n\n</div>
+<div style="border-top: 1px solid #444; padding-top: 8px; margin-top: 12px; display: flex; gap: 8px; align-items: center;">
+<input type="text" readonly placeholder="Type a message..." style="flex: 1; min-width: 0; background-color: #2a2a2a; border: 1px solid #555; border-radius: 16px; padding: 8px 12px; color: #f0f0f0; outline: none;">
+<button style="background-color: #66d9ef; border: none; border-radius: 16px; padding: 8px 16px; color: #1a1a1a; font-weight: bold; white-space: nowrap; flex-shrink: 0;">Send</button>
+</div>
+</div>`
+                    messages.forEach((message, index) => {
+                        const [type, time, name, text] = message.split(`¦`)
+                        if (type.toLowerCase() === "incoming") {
+                            messages[index] = `<div style="display: flex; margin-bottom: 12px; justify-content: flex-start;">
+<div style="background-color: #333; border-radius: 12px; padding: 8px 12px; max-width: 70%;">
+<div style="font-weight: bold; color: #ff69b4; margin-bottom: 4px;">${name}</div>
+<div style="color: #f0f0f0;">${text}</div>
+<div style="font-size: 0.75em; color: #888; text-align: right; margin-top: 4px;">${time}</div>
+</div>
+</div>`
+                        } else {
+                            if (type.toLowerCase() !== "outgoing") {
+                                console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension: ${type} is not Incoming or Outgoing! Falling back to Outgoing.`);
+                            }
+                            messages[index] = `<div style="display: flex; margin-bottom: 12px; justify-content: flex-end;">
+<div style="background-color: #4a4a4a; border-radius: 12px; padding: 8px 12px; max-width: 70%;">
+<div style="font-weight: bold; color: #66d9ef; margin-bottom: 4px;">${name}</div>
+<div style="color: #f0f0f0;">${text}</div>
+<div style="font-size: 0.75em; color: #888; text-align: right; margin-top: 4px;">${time}</div>
+</div>
+</div>`
+                        }
+                    })
+                    return `${phoneUIHeader}${messages.join(`\n\n`)}${phoneUIFooter}`;
+                } catch (e) {
+                    console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
+                }
+            }
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
+        return [];
+    }
+}
+
 function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
@@ -586,6 +675,7 @@ function updateReloadMarkdownProcessor(){
     converter.addExtension(headerMarkdownMuseExt(), 'weylandHeaderMuse');
     converter.addExtension(singleQuoteExt(), 'singleQuote');
     //converter.addExtension(nonItalicsExt(), 'insideAsterisks');
+    converter.addExtension(phoneMarkdownExt(), 'phoneMarkdownExt');
     converter.addExtension(fdiglMarkdownExt(), 'fdiglSystemMessage');
     if (settings.markdown) {
         converter.addExtension(hiccupMarkdownExt(), 'hiccup');
