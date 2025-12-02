@@ -8546,7 +8546,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Washimi Trait",
-            "content": "[WAHIMI TRAIT] {{char}} is an washimi. Washimi are often referred to as a raccoon boy or raccoon girl depending on gender.\nTraits: retractable claws (only come out when highly stressed); NO HUMAN EARS (only racoon ears); exceptional eyesight at night\nTraditions: scent marking mates and close friends by rubbing their scent glands in their cheek against the person\nIMPORTANT NOTE ON DEMIHUMAN ANATOMY: When describing demihuman characters, remember their hands appear completely human by default. Their claws are fully retractable and hidden within normal-looking fingertips. Never describe \"claws\" during casual interactions—instead use terms like \"fingers,\" \"hands,\" or \"fingertips.\" Claws should only be explicitly mentioned when: 1) The character is frightened, angry, or threatened, causing involuntary extension, 2) The character consciously chooses to extend them for a specific purpose, or 3) During intimate moments where they might carefully and deliberately extend them. Always make the extension of claws an intentional and noticeable event (e.g., \"her claws slowly emerged from her fingertips\" or \"she felt her claws extend involuntarily as fear gripped her\"). Never refer to normal finger interactions as involving claws when they're retracted. [END WAHIMI TRAIT]\n-----",
+            "content": "[WASHIMI TRAIT] {{char}} is an washimi. Washimi are often referred to as a raccoon boy or raccoon girl depending on gender.\nTraits: retractable claws (only come out when highly stressed); NO HUMAN EARS (only racoon ears); exceptional eyesight at night\nTraditions: scent marking mates and close friends by rubbing their scent glands in their cheek against the person\nIMPORTANT NOTE ON DEMIHUMAN ANATOMY: When describing demihuman characters, remember their hands appear completely human by default. Their claws are fully retractable and hidden within normal-looking fingertips. Never describe \"claws\" during casual interactions—instead use terms like \"fingers,\" \"hands,\" or \"fingertips.\" Claws should only be explicitly mentioned when: 1) The character is frightened, angry, or threatened, causing involuntary extension, 2) The character consciously chooses to extend them for a specific purpose, or 3) During intimate moments where they might carefully and deliberately extend them. Always make the extension of claws an intentional and noticeable event (e.g., \"her claws slowly emerged from her fingertips\" or \"she felt her claws extend involuntarily as fear gripped her\"). Never refer to normal finger interactions as involving claws when they're retracted. [END WASHIMI TRAIT]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -8621,7 +8621,7 @@
             ],
             "keysecondary": [],
             "comment": "Washimi Lore",
-            "content": "[WAHIMI TRAIT] {{char}} is not a washimi.\nWashimi are often referred to as a raccoon boy or raccoon girl depending on gender.\nTraits: racoon tail; racoon ears; retractable claws (only come out when highly stressed); NO HUMAN EARS (only racoon ears); exceptional eyesight at night\nTraditions: scent marking mates and close friends by rubbing their scent glands in their cheek against the person [END WAHIMI TRAIT]\n-----",
+            "content": "[WASHIMI TRAIT] {{char}} is not a washimi.\nWashimi are often referred to as a raccoon boy or raccoon girl depending on gender.\nTraits: racoon tail; racoon ears; retractable claws (only come out when highly stressed); NO HUMAN EARS (only racoon ears); exceptional eyesight at night\nTraditions: scent marking mates and close friends by rubbing their scent glands in their cheek against the person [END WASHIMI TRAIT]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -15094,6 +15094,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "200": {
