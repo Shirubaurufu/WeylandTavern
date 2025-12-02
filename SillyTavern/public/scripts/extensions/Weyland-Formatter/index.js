@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.7.7";
+const extensionVersion = "1.7.9";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -104,7 +104,7 @@ let settings = undefined;
  * @property {RegExp} missingStartAsterisk
  * @property {string} missingStartAsteriskReplace
  * 
- * @property {RegExp} phone
+ * @property {RegExp} breakbar
  */
 
 /**
@@ -186,7 +186,7 @@ const weylandRegex = {
     missingStartAsterisk: /(?<=["_\]][\s—]|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=[\s—]["_\[]|$)/g,
     missingStartAsteriskReplace: "*$1*",
 
-    phone: /phone¦/i
+    breakbar: /¦/i
 };
 
 
@@ -256,7 +256,7 @@ async function formatParagraphs(message) {
                 return;
             }
 
-            if (weylandRegex.phone.test(paragraph)) {
+            if (weylandRegex.breakbar.test(paragraph)) {
                 return;
             }
 
@@ -593,9 +593,13 @@ function phoneMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /<.*>(Phone¦[\s\S]*?\nTexting¦[\s\S]*?)<\/.*>/i,
+            regex: /<p>(Phone¦[\s\S]*?\nTexting¦[\s\S]*?)<\/p>/ig,
             replace: function(match, p1) {
                 try {
+                    p1 = p1.replace(/<\/?q.*>/g, ``);
+                    p1 = p1.replace(/<\/?u>/g, `__`);
+                    p1 = p1.replace(/<\/?em>/g, `*`);
+                    p1 = p1.replace(/<\/?strong>/g, `**`);
                     const lines = p1.split(`<br />\n`);
                     const [carrier, _battery] = lines[0].split(`¦`).slice(1);
                     let battery = parseInt(_battery.replace(`%`,``),10);
@@ -667,6 +671,55 @@ function phoneMarkdownExt(){
     }
 }
 
+/**
+ * @returns {showdown.ShowdownExtension[]}
+ */
+function lonePhoneMarkdownExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /<p>((?:Incoming|Outgoing)¦[^\n]*?)<\/p>/ig,
+            replace: function(match, p1) {
+                try {
+                    weylandDebug(`Match: ${match}`);
+                    weylandDebug(`p1: ${p1}`);
+                    p1 = p1.replace(/<\/?q.*>/g, ``);
+                    p1 = p1.replace(/<\/?u>/g, `__`);
+                    p1 = p1.replace(/<\/?em>/g, `*`);
+                    p1 = p1.replace(/<\/?strong>/g, `**`);
+                    const [type, time, name, text] = p1.split(`¦`)
+                    if (type.toLowerCase() === "incoming") {
+                        return `<div style="display: flex; margin-bottom: 12px; justify-content: flex-start;">
+<div style="background-color: #333; border-radius: 12px; padding: 8px 12px; max-width: 70%;">
+<div style="font-weight: bold; color: #ff69b4; margin-bottom: 4px;">${name}</div>
+<div style="color: #f0f0f0;">${text}</div>
+<div style="font-size: 0.75em; color: #888; text-align: right; margin-top: 4px;">${time}</div>
+</div>
+</div>`
+                    } else {
+                        if (type.toLowerCase() !== "outgoing") {
+                            console.error(`[${MODULE_NAME}] Error in lonePhoneMarkdownExt extension: ${type} is not Incoming or Outgoing! Falling back to Outgoing.`);
+                        }
+                        return `<div style="display: flex; margin-bottom: 12px; justify-content: flex-end;">
+<div style="background-color: #4a4a4a; border-radius: 12px; padding: 8px 12px; max-width: 70%;">
+<div style="font-weight: bold; color: #66d9ef; margin-bottom: 4px;">${name}</div>
+<div style="color: #f0f0f0;">${text}</div>
+<div style="font-size: 0.75em; color: #888; text-align: right; margin-top: 4px;">${time}</div>
+</div>
+</div>`
+                    }
+                } catch (e) {
+                    console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
+                    return match;
+                }
+            }
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
+        return [];
+    }
+}
+
 function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
@@ -676,6 +729,7 @@ function updateReloadMarkdownProcessor(){
     converter.addExtension(singleQuoteExt(), 'singleQuote');
     //converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     converter.addExtension(phoneMarkdownExt(), 'phoneMarkdownExt');
+    converter.addExtension(lonePhoneMarkdownExt(), 'lonePhoneMarkdownExt');
     converter.addExtension(fdiglMarkdownExt(), 'fdiglSystemMessage');
     if (settings.markdown) {
         converter.addExtension(hiccupMarkdownExt(), 'hiccup');
