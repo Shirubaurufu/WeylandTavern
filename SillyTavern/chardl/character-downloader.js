@@ -207,7 +207,6 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
                                     return new GoFile(char);
                                 })?.filter(x => x);
                             }
-                            
 
                             if (!files?.length) {
                                 resolve(null);
@@ -222,7 +221,11 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
                             };
                             resolve(this.folder);
                         } else {
-                            console.error(`Failed to get folder contents: ${response.status}`);
+                            if (response.status === `error-notFound`) {
+                                console.error(`Unable to locate GoFile folder.\nMake sure you have the latest WTL files.`)
+                            } else {
+                                console.error(`Failed to get folder contents: ${response.status}`);
+                            }
                             resolve(null)
                         }
                     } catch (err) {
