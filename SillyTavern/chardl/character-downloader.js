@@ -424,6 +424,12 @@ function downloaderLog(text) {
         if (!fs.existsSync(__charDir)) fs.mkdirSync(__charDir); //Create the characters directory if missing
         if (fs.existsSync(path.join(__stDir,"characters.json"))) //Move legacy json, if it exists, to new location
             fs.renameSync(path.join(__stDir,"characters.json"),path.join(__charDir,"standard.wtch")); 
+
+        for (const locFile of fs.readdirSync(__locDir)?.filter(x => x.endsWith(".wtl"))) {
+            if (/\s\(\d*\)/.test(locFile)) {
+                fs.renameSync(path.join(__locDir,locFile),path.join(__locDir,locFile.replace(/\s\(\d*\)/,``))); 
+            }
+        }
         
         downloaderLog(
 `
