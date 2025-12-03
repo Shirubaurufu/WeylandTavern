@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.7.9";
+const extensionVersion = "1.8.0";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -596,7 +596,7 @@ function phoneMarkdownExt(){
             regex: /<p>(Phone¦[\s\S]*?\nTexting¦[\s\S]*?)<\/p>/ig,
             replace: function(match, p1) {
                 try {
-                    p1 = p1.replace(/<\/?q.*>/g, ``);
+                    p1 = p1.replace(/<\/?q.*?>/g, ``);
                     p1 = p1.replace(/<\/?u>/g, `__`);
                     p1 = p1.replace(/<\/?em>/g, `*`);
                     p1 = p1.replace(/<\/?strong>/g, `**`);
@@ -683,7 +683,7 @@ function lonePhoneMarkdownExt(){
                 try {
                     weylandDebug(`Match: ${match}`);
                     weylandDebug(`p1: ${p1}`);
-                    p1 = p1.replace(/<\/?q.*>/g, ``);
+                    p1 = p1.replace(/<\/?q.*?>/g, ``);
                     p1 = p1.replace(/<\/?u>/g, `__`);
                     p1 = p1.replace(/<\/?em>/g, `*`);
                     p1 = p1.replace(/<\/?strong>/g, `**`);
