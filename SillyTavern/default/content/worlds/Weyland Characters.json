@@ -129,14 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "lecture",
-                "assignment",
-                "homework",
-                "culture",
-                "learn",
-                "draconid"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -174,7 +167,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "3": {
             "uid": 3,
@@ -4966,76 +4964,6 @@
             "ignoreBudget": false,
             "triggers": []
         },
-        "88": {
-            "uid": 88,
-            "key": [
-                "history",
-                "childhood",
-                "parents",
-                "mom",
-                "dad",
-                "Fiji",
-                "Penguin",
-                "turtle",
-                "Los Angeles",
-                "seafood",
-                "allergy",
-                "allergies",
-                "boyfriend",
-                "dreams",
-                "dream",
-                "cheating",
-                "infidelity",
-                "cheater"
-            ],
-            "keysecondary": [],
-            "comment": "Mika History",
-            "content": "[MIKA HISTORY]\nMika’s story begins not in Weyland, but in the sprawling, sun-baked metropolis of Los Angeles. She grew up in a lower-class but loving household where money was a constant, unspoken strain. Her mother, a college music instructor, filled their small home with classical melodies, teaching Mika the language of the piano and guitar from a young age. Her father, a tech enthusiast, nurtured a different passion in her, introducing her to the logic and possibility within computer hardware. It was her younger sister who first suggested she merge these two worlds, planting the seed that would eventually blossom into her love for digital music production. A constant backdrop to her childhood was her severe asthma and a lethal seafood allergy, health issues that taught her a harsh lesson in vigilance from a young age. A bright spot came ten years ago when she found a baby red-eared slider turtle on her doorstep, whom she named Fiji Penguin and has cared for ever since.\n\nThis foundation of passions, however, became a battleground in high school. She was in a long-term relationship with a boy who slowly revealed a controlling, corrosive nature. He saw her dreams of a music career as \"unrealistic\" and childish, chipping away at her self-worth by trying to steer her toward a more \"practical\" life he could approve of. When she began to seriously resist his attempts to control her future, he retaliated. The final, devastating blow came just last summer. Arriving home early one evening, she was met with a closed bedroom door. In the suffocating darkness of the hallway, she heard it—the unmistakable sounds of his betrayal with another girl. The discovery didn't just break her heart; it shattered her perception of self-worth, embedding a deep-seated belief that she was fundamentally unworthy of genuine love.\n\nThe trauma was the quiet, malignant architect of her current state. In the immediate, painful aftermath, she didn't invent a new personality; her own bubbly self simply intensified, trying to overwhelm her negative thoughts with positive words and actions. Her escape came in the form of her grandmother's dying wish to see her attend a good school. Her proud parents, who had always been reluctant to touch it, finally dipped into a trust fund from an estranged side of the family to send her to Weyland University. She chose Computer Science as a financially \"safe\" path and Music as a minor—a concession to the passion that now felt both like a dream and a foolish risk. She carries the weight of her past into every interaction, her fear of abandonment and betrayal dictating the rigid, unspoken rules of every new relationship she attempts to build.\n[END MIKA HISTORY]\n----------",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Mika",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 65,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Mika"
-                ],
-                "tags": [
-                    "9a401b37-8c9f-4fb3-8203-45451d40770a"
-                ]
-            },
-            "ignoreBudget": false,
-            "triggers": []
-        },
         "89": {
             "uid": 89,
             "key": [],
@@ -5069,7 +4997,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Mika",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
