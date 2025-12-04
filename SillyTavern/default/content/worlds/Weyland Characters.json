@@ -163,7 +163,7 @@
             "useGroupScoring": false,
             "automationId": "Scenario",
             "role": null,
-            "sticky": 15,
+            "sticky": 20,
             "cooldown": 0,
             "delay": 0,
             "displayIndex": 12,
@@ -174,12 +174,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "3": {
             "uid": 3,
