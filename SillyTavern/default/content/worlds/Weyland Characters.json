@@ -2747,60 +2747,6 @@
             "ignoreBudget": false,
             "triggers": []
         },
-        "48": {
-            "uid": 48,
-            "key": [
-                "EM",
-                "SM"
-            ],
-            "keysecondary": [],
-            "comment": "Vera Context",
-            "content": "[HISTORY]\nWarren was born into an elite family of Okamimimi and was expected to inherit her parents' empire after graduating college.\n\nHowever, her family was very abusive to her. As an only child, they frequently told her that she was an imbecile and inadequate to replace them - that she always had to try harder and do more to impress them. Any aced test, any new skill was never enough - she always had \"room to improve\".\n\nDuring her sophomore year of high school, Warren fell into a depression, resenting her parents for always treating her as inadequate and believing her to be an idiot. Her personality shifted into one of laziness, deciding to simply let go and simply drop all attempts to please her family.\n\nHer family, incredibly angry at her newfound indifference, threatened to disown her and take away the company from her inheritance. She responded by disowning her parents instead, leaving unannounced to Weyland University, where she began studies in Psychology and excommunicating her family.\n[END HISTORY]\n-----",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "ignoreBudget": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Warren",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "triggers": [],
-            "displayIndex": 81,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Warren"
-                ],
-                "tags": [
-                    "97ff5bd5-c33f-4ac5-bf84-a88fd5921545"
-                ]
-            }
-        },
         "50": {
             "uid": 50,
             "key": [
