@@ -426,8 +426,20 @@ function downloaderLog(text) {
             fs.renameSync(path.join(__stDir,"characters.json"),path.join(__charDir,"standard.wtch")); 
 
         for (const locFile of fs.readdirSync(__locDir)?.filter(x => x.endsWith(".wtl"))) {
-            if (/\s\(\d*\)/.test(locFile)) {
-                fs.renameSync(path.join(__locDir,locFile),path.join(__locDir,locFile.replace(/\s\(\d*\)/,``))); 
+            try {
+                let match = null;
+                if (locFile.toLowerCase().includes(`copy of`)) {
+                    match = locFile.replace(/copy of /i, ``).match(/(\w+)(?=\b)[^\n]*\.wtl/i);
+                } else {
+                    match = locFile.match(/(\w+)(?=\b)[^\n]+\.wtl/i);
+                }
+                // @ts-ignore
+                if (match?.length > 1) {
+                    // @ts-ignore
+                    fs.renameSync(path.join(__locDir,locFile),path.join(__locDir,`${match[1]}.wtl`)); 
+                }
+            } catch (e) {
+                console.error(`Failed to fix name of ${locFile}. Error: ${e.message}`)
             }
         }
         
@@ -588,6 +600,25 @@ function downloaderLog(text) {
                         console.log(`✓ Successfully downloaded ${downloadedCount}/${wtlFiles.length} access file(s).\nRescanning extra registries...`);
                     } else {
                         console.error(`\n✗ Failed to download any access files. Please try again.\n`);
+                    }
+
+                    // Attempt to fix any naming mistakes in .wtl files
+                    for (const locFile of fs.readdirSync(__locDir)?.filter(x => x.endsWith(".wtl"))) {
+                        try {
+                            let match = null;
+                            if (locFile.toLowerCase().includes(`copy of`)) {
+                                match = locFile.replace(/copy of /i, ``).match(/(\w+)(?=\b)[^\n]*\.wtl/i);
+                            } else {
+                                match = locFile.match(/(\w+)(?=\b)[^\n]+\.wtl/i);
+                            }
+                            // @ts-ignore
+                            if (match?.length > 1) {
+                                // @ts-ignore
+                                fs.renameSync(path.join(__locDir,locFile),path.join(__locDir,`${match[1]}.wtl`)); 
+                            }
+                        } catch (e) {
+                            console.error(`Failed to fix name of ${locFile}. Error: ${e.message}`)
+                        }
                     }
 
                     // Reload alpha/beta .wtl files
