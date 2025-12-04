@@ -129,7 +129,14 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "lecture",
+                "assignment",
+                "homework",
+                "culture",
+                "learn",
+                "draconid"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -156,7 +163,7 @@
             "useGroupScoring": false,
             "automationId": "Scenario",
             "role": null,
-            "sticky": 15,
+            "sticky": 20,
             "cooldown": 0,
             "delay": 0,
             "displayIndex": 12,
@@ -167,12 +174,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "3": {
             "uid": 3,
@@ -206,7 +208,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 89,
+            "displayIndex": 88,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -609,7 +611,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 88,
+            "displayIndex": 87,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -660,7 +662,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 90,
+            "displayIndex": 89,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -711,7 +713,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 98,
+            "displayIndex": 97,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1266,7 +1268,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 96,
+            "displayIndex": 95,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1492,7 +1494,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 97,
+            "displayIndex": 96,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1833,7 +1835,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 100,
+            "displayIndex": 99,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1953,7 +1955,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 101,
+            "displayIndex": 100,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2122,7 +2124,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 103,
+            "displayIndex": 102,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2173,7 +2175,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 93,
+            "displayIndex": 92,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2401,7 +2403,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 107,
+            "displayIndex": 106,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2621,12 +2623,12 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Vera",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 114,
+            "displayIndex": 113,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2677,7 +2679,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 111,
+            "displayIndex": 110,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2728,7 +2730,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 113,
+            "displayIndex": 112,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2750,18 +2752,12 @@
         "48": {
             "uid": 48,
             "key": [
-                "childhood",
-                "mother",
-                "deredra",
-                "draconid",
-                "mistrust",
-                "distrust",
-                "humans",
-                "father"
+                "EM",
+                "SM"
             ],
             "keysecondary": [],
-            "comment": "Vera History 1",
-            "content": "[HISTORY]\nVera grew up with only her mother, Deredra; she doesn't know her draconid father. Deredra was intensely, almost obsessively, focused on draconic culture, forcing Vera to study it despite her own lack of genuine interest. This created a complex relationship where Vera simultaneously respects parts of her heritage while also harboring resentment towards it and her mother for the pressure.\n\nGrowing up, Veralyn was acutely aware of being different. Her mother fostered a deep distrust of humans, stemming from the genocide generations ago. They lived in relative isolation, and Veralyn was taught to be constantly wary of outsiders and their intentions. Deredra's bitterness towards humans permeated their home life.\n\nVera views her time at Weyland University as a temporary reprieve – a last taste of relative freedom before she's likely forced into a life path dictated by draconid expectations or her mother's plans. Her hatred for humanity is twofold: partly for the historical atrocities committed against her species, and partly for how those events shaped her own upbringing and her complicated relationship with her mother and culture.\n\nHowever, her first month at Weyland didn't go well. She was on the offensive from the start, getting into several fierce fights with students and being intensely bitter to all those around her. This resulted in disciplinary action, where Vera was told that she would be expelled if her behavior didn't improve. Vera responded to this by adopting a comically and sarcastically bubbly and sweet demeanor.. which, over time, actually blossomed into a genuinely bubbly and sweet outward personality, without a trace of sarcasm. However, her hate and bitterness are still ever present, silently judging everyone in her path.\n[END HISTORY]\n-----",
+            "comment": "Vera Context",
+            "content": "[HISTORY]\nWarren was born into an elite family of Okamimimi and was expected to inherit her parents' empire after graduating college.\n\nHowever, her family was very abusive to her. As an only child, they frequently told her that she was an imbecile and inadequate to replace them - that she always had to try harder and do more to impress them. Any aced test, any new skill was never enough - she always had \"room to improve\".\n\nDuring her sophomore year of high school, Warren fell into a depression, resenting her parents for always treating her as inadequate and believing her to be an idiot. Her personality shifted into one of laziness, deciding to simply let go and simply drop all attempts to please her family.\n\nHer family, incredibly angry at her newfound indifference, threatened to disown her and take away the company from her inheritance. She responded by disowning her parents instead, leaving unannounced to Weyland University, where she began studies in Psychology and excommunicating her family.\n[END HISTORY]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -2770,8 +2766,15 @@
             "order": 1,
             "position": 1,
             "disable": false,
+            "ignoreBudget": false,
             "excludeRecursion": false,
             "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
             "delayUntilRecursion": false,
             "probability": 100,
             "useProbability": true,
@@ -2783,89 +2786,22 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": false,
-            "automationId": "Vera",
+            "automationId": "Warren",
             "role": null,
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
+            "triggers": [],
             "displayIndex": 81,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
-                    "Vera"
+                    "Warren"
                 ],
                 "tags": [
-                    "c8264137-d2e3-442a-b409-134079dc8243"
+                    "97ff5bd5-c33f-4ac5-bf84-a88fd5921545"
                 ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "49": {
-            "uid": 49,
-            "key": [
-                "branding",
-                "draconid",
-                "tradition",
-                "matriarch",
-                "brand",
-                "branded",
-                "childhood",
-                "seven"
-            ],
-            "keysecondary": [],
-            "comment": "Vera History 2",
-            "content": "[VERA'S BRANDING]\nSeven-year-old Vera knelt in the clan's torch-lit chamber as Deredra stood before her. The matriarch's eyes gleamed with pride as she drew a deep breath, summoning the ancestral flame within. When it came, the fire breath seared the Oribasa clan's brand on the back of her daughter's neck. Though the pain was excruciating, Vera didn't make a sound - she'd seen how her mother praised children who endured silently. After embracing her daughter and praising her worthiness, Deredra left Vera alone. Only then, in the privacy of her room, did Vera finally allow herself to cry.\n[END VERA'S BRANDING]\n-----",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 2,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 82,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Vera"
-                ],
-                "tags": [
-                    "c8264137-d2e3-442a-b409-134079dc8243"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
+            }
         },
         "50": {
             "uid": 50,
@@ -3559,7 +3495,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 94,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3734,7 +3670,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 86,
+            "displayIndex": 85,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4124,7 +4060,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 83,
+            "displayIndex": 82,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4226,7 +4162,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 91,
+            "displayIndex": 90,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4464,7 +4400,7 @@
             "sticky": 3,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 84,
+            "displayIndex": 83,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4528,7 +4464,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 85,
+            "displayIndex": 84,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4579,7 +4515,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 104,
+            "displayIndex": 103,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4692,7 +4628,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 99,
+            "displayIndex": 98,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4915,7 +4851,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 112,
+            "displayIndex": 111,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4966,7 +4902,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 109,
+            "displayIndex": 108,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5138,7 +5074,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 106,
+            "displayIndex": 105,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5189,7 +5125,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 102,
+            "displayIndex": 101,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5359,7 +5295,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 87,
+            "displayIndex": 86,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5470,7 +5406,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 92,
+            "displayIndex": 91,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5623,7 +5559,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 93,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5676,7 +5612,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 105,
+            "displayIndex": 104,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5945,7 +5881,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 110,
+            "displayIndex": 109,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -6056,7 +5992,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 108,
+            "displayIndex": 107,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
