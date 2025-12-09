@@ -8,6 +8,19 @@ import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
 import * as cliProgress from 'cli-progress';
 
+class DownloaderError extends Error {
+    constructor(message, errorExtraParams) {
+        super(message);
+        this._errorExtraParams = errorExtraParams;
+    }
+    get extraParamsJSON() {
+        return JSON.stringify(this._errorExtraParams, null, 2);
+    }
+    get extraParams(){
+        return this._errorExtraParams;
+    }
+}
+
 let pwd = null;
 let folderId = null;
 
@@ -42,16 +55,34 @@ class Downloader {
         try {
             downloaderLog('Contacting Weyland University Student Servers...');
             const accountToken = await createGuestAccount();
-            if (!accountToken)
-                throw new Error("Unable to obtain account token.");
             const websiteToken = await getWebsiteToken();
-            if (!websiteToken)
-                throw new Error("Unable to obtain website token.");
+
+            if (typeof(accountToken) !== "string" || !accountToken || accountToken.length != 32 || !/^[a-z0-9]+$/i.test(accountToken)) {
+                if (accountToken instanceof DownloaderError) {
+                    throw new DownloaderError(`Failed to obtain valid account token.`, {error: accountToken.message, accountToken: accountToken.extraParams, websiteToken: websiteToken});
+                } else {
+                    throw new DownloaderError(`Failed to obtain valid account token.`, {accountToken: accountToken, websiteToken: websiteToken});
+                }
+            }
+            if (typeof(websiteToken) !== "string" || !websiteToken || websiteToken.length != 12 || !/^[a-z0-9]+$/i.test(websiteToken)) {
+                if (websiteToken instanceof DownloaderError) {
+                    throw new DownloaderError(`Failed to obtain valid website token.`, {error: websiteToken.message, accountToken: accountToken, websiteToken: websiteToken.extraParams});
+                } else {
+                    throw new DownloaderError(`Failed to obtain valid website token.`, {accountToken: accountToken, websiteToken: websiteToken});
+                }
+            }
 
             downloaderLog('✓ Login successful. Weyland Token obtained.');
             return new Downloader(accountToken, websiteToken);
         } catch (error) {
-            console.error("Token Error: ", error);
+            console.error("Token Error: ", error.message);
+            try {
+                fs.writeFileSync(path.join(__stDir,"WTDownloader.log"), `${error.message}\n\n${error.extraParamsJSON}`);
+                console.error("\nLog file created: SillyTavern/WTDownloader.log.\n!!Please DM that file, or the contents of that file to Shiru for debugging!!")
+            } catch (e) {
+                console.error("Failed to create error log file: ", e);
+                return null;
+            }
             return null;
         }
     }
@@ -346,10 +377,10 @@ async function createGuestAccount() {
                     if (response.status === 'ok' && response.data && response.data.token) {
                         resolve(response.data.token);
                     } else {
-                        reject(new Error(`Failed to create guest account: ${JSON.stringify(response)}`));
+                        resolve(new DownloaderError(`Failed to create guest account.`, {debug: response}));
                     }
-                } catch (err) {
-                    reject(new Error(`Failed to parse account creation response: ${err.message}`));
+                } catch (error) {
+                    resolve(new DownloaderError(`Failed to parse account creation response: ${error.message}`, {debug: data}));
                 }
             });
         });
@@ -385,10 +416,10 @@ async function getWebsiteToken() {
                     if (match && match[1]) {
                         resolve(match[1]);
                     } else {
-                        reject(new Error('Could not find website token in global.js'));
+                        resolve(new DownloaderError(`Could not find website token.`,{debug: data}));
                     }
                 } catch (err) {
-                    reject(new Error(`Failed to extract website token: ${err.message}`));
+                    resolve(new DownloaderError(`Failed to extract website token: ${err.message}`,{debug: data}));
                 }
             });
         });
