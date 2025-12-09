@@ -130,13 +130,10 @@
         "2": {
             "uid": 2,
             "key": [
-                "rain",
-                "Yerren",
-                "soaked",
-                "shivering",
-                "lost",
-                "raining",
-                "soaking"
+                "Barrel",
+                "Bar",
+                "date",
+                "Bastet"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -2409,7 +2406,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 106,
+            "displayIndex": 107,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2634,7 +2631,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 113,
+            "displayIndex": 114,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2685,7 +2682,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 110,
+            "displayIndex": 111,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2736,7 +2733,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 112,
+            "displayIndex": 113,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2806,6 +2803,57 @@
                 ]
             }
         },
+        "49": {
+            "uid": 49,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Rosa Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black t-shirt and short black skirt with fishnet leggings)\n• [LG] - ONLY wearing undergarments (underwear)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 116,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Rosa"
+                ],
+                "tags": [
+                    "41197919-4721-4d56-89f3-178256400535"
+                ]
+            }
+        },
         "50": {
             "uid": 50,
             "key": [
@@ -2850,7 +2898,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 119,
+            "displayIndex": 120,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4114,7 +4162,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 115,
+            "displayIndex": 116,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4854,7 +4902,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 111,
+            "displayIndex": 112,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4905,7 +4953,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 108,
+            "displayIndex": 109,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5560,8 +5608,8 @@
             "uid": 100,
             "key": [],
             "keysecondary": [],
-            "comment": "Rosa Outfit Codes",
-            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black t-shirt and short black skirt with fishnet leggings)\n• [LG] - ONLY wearing undergarments (underwear)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "comment": "Nefara Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (Egyptian clothing)\n• [LG] - ONLY wearing undergarments (underwear)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -5589,23 +5637,21 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Nefara",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 116,
+            "displayIndex": 119,
+            "ignoreBudget": false,
+            "triggers": [],
             "characterFilter": {
                 "isExclude": false,
-                "names": [
-                    "Rosa"
-                ],
+                "names": [],
                 "tags": [
-                    "41197919-4721-4d56-89f3-178256400535"
+                    "b8c6bf07-0f1d-4973-8ff3-cdf4e63def5a"
                 ]
-            },
-            "ignoreBudget": false,
-            "triggers": []
+            }
         },
         "101": {
             "uid": 101,
@@ -5698,7 +5744,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 114,
+            "displayIndex": 115,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5814,7 +5860,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 109,
+            "displayIndex": 110,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5925,7 +5971,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 107,
+            "displayIndex": 108,
             "characterFilter": {
                 "isExclude": false,
                 "names": [

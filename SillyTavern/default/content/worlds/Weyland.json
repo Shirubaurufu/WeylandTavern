@@ -541,7 +541,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 72,
+            "displayIndex": 86,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -756,7 +756,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 10,
-            "displayIndex": 80,
+            "displayIndex": 96,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -984,7 +984,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 13,
-            "displayIndex": 111,
+            "displayIndex": 122,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1061,7 +1061,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 105,
+            "displayIndex": 116,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1210,7 +1210,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 16,
-            "displayIndex": 77,
+            "displayIndex": 107,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1369,7 +1369,7 @@
             "sticky": 4,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 51,
+            "displayIndex": 57,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1450,7 +1450,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 60,
+            "displayIndex": 72,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1905,7 +1905,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 25,
-            "displayIndex": 50,
+            "displayIndex": 53,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -1986,7 +1986,7 @@
             "sticky": 15,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 50,
+            "displayIndex": 52,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2064,7 +2064,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 27,
-            "displayIndex": 81,
+            "displayIndex": 97,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2140,7 +2140,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 64,
+            "displayIndex": 76,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2217,7 +2217,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 29,
-            "displayIndex": 82,
+            "displayIndex": 102,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2373,7 +2373,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 31,
-            "displayIndex": 84,
+            "displayIndex": 109,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2524,7 +2524,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 33,
-            "displayIndex": 86,
+            "displayIndex": 87,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2677,7 +2677,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 35,
-            "displayIndex": 89,
+            "displayIndex": 103,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3061,7 +3061,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 54,
+            "displayIndex": 66,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3133,7 +3133,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 41,
-            "displayIndex": 95,
+            "displayIndex": 100,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3219,7 +3219,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 52,
+            "displayIndex": 64,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3290,7 +3290,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 43,
-            "displayIndex": 97,
+            "displayIndex": 106,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3373,7 +3373,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 74,
+            "displayIndex": 90,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3444,7 +3444,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 45,
-            "displayIndex": 99,
+            "displayIndex": 110,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3596,7 +3596,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 47,
-            "displayIndex": 101,
+            "displayIndex": 112,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3675,7 +3675,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 73,
+            "displayIndex": 88,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -3746,7 +3746,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 49,
-            "displayIndex": 103,
+            "displayIndex": 114,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4053,7 +4053,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 53,
-            "displayIndex": 109,
+            "displayIndex": 120,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4213,7 +4213,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 55,
-            "displayIndex": 107,
+            "displayIndex": 118,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4367,7 +4367,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 57,
-            "displayIndex": 112,
+            "displayIndex": 123,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4520,7 +4520,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 59,
-            "displayIndex": 114,
+            "displayIndex": 125,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4675,7 +4675,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 61,
-            "displayIndex": 116,
+            "displayIndex": 127,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4828,7 +4828,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 63,
-            "displayIndex": 121,
+            "displayIndex": 132,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4907,7 +4907,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 75,
+            "displayIndex": 92,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4978,7 +4978,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 65,
-            "displayIndex": 120,
+            "displayIndex": 131,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5022,12 +5022,14 @@
         "66": {
             "uid": 66,
             "key": [
-                "hellhound",
-                "hellhounds"
+                "lamia",
+                "gorgon",
+                "Egypt",
+                "Egyptian"
             ],
             "keysecondary": [],
-            "comment": "Hellhound Lore",
-            "content": "[Hellhound Anatomy & Physiology]\n\nThis entry details the distinct biological and physical characteristics of the Canis Infernus species, commonly known as Hellhounds. Hellhounds are often mistaken for Okamimimi, a genetic cousin.\n\n1. Demihuman Form (Default State)\n\nThe demihuman form is the natural, default state of a Hellhound from birth. While predominantly human in structure, it is defined by several unique and non-variable biological markers.\n\n- Head & Face:\n    - Ears: Hellhounds possess a single pair of large, pointed wolf ears located on the top of the head. These ears are covered in fur, are highly expressive, and provide a superior sense of hearing compared to humans. They do not have human-style ears.\n    - Eyes: distinctly canine. Natural eye color is strictly limited to two variations: a piercing, lupine yellow or a deep crimson red.\n    - Hair: Natural hair color is always monochromatic. The spectrum is limited to stark black, shades of grey, and pure white. Any other hair color is the result of dye.\n    - Dentition: They possess pronounced canine teeth (fangs) in both their upper and lower jaws that are visibly longer and sharper than human equivalents.\n\n- Body & Appendages:\n    - Claws: defining physical trait:\npermanent, non-retractable claws (unlike other demihumans). These are not simply long nails, but sharpened tips made of a black, obsidian-like biological keratin integrated into their fingertips.\n    - Tail: They have a long, furry, expressive wolf-like tail that matches their natural hair color.\n\n- Other Biological Markers:\n    - Scent: Hellhounds emit a faint but unique natural scent reminiscent of ash.\n    - Body Temperature: Their core body temperature is naturally several degrees higher than that of a human, which can feel \"scorching\" to humans - much like \"getting into a hot tub\", you must acclimate to the sensation.\n\n2. Anthropomorphic Form (Shifted State)\n\nA Hellhound can consciously initiate a transformation into a fully anthropomorphic, lupine form. This state is a temporary and  alteration of their default biology, but some hellhounds choose to live this way (and suffer discrimination as a result).\n- Appearance: significantly taller and more powerful, standing on digitigrade legs. covered in fur that adheres to the Hellhound's natural monochromatic palette of black, white, and grey. fur patterns vary between individuals, color scheme remains consistent. facial structure elongates into a lupine muzzle lined with sharp teeth. Despite the \"demonic\" label applied by zealots, this form is not inherently frightening. To many observers, the combination of powerful musculature, striking fur patterns, and graceful lupine features is considered aesthetically beautiful, even majestic.\n- Physiological Changes: In this form, their claws become fully retractable. Their feet transform into paws, but their hands typically retain a human-like structure to preserve manual dexterity.\n\n3. The Nature of Transformation\nThe transformation process is entirely voluntary and requires conscious effort but can be sustained indefinitely if wanted.\n- Control: It is a fully controlled biological function. A Hellhound cannot and will not transform accidentally or against their will. The shift is not triggered by emotional distress, lunar cycles, or any other external stimuli. It is a deliberate act, chosen by the individual.\n\n[END Hellhound Anatomy & Physiology]\n\n[Hellhound Culture & Society]\n\nFor centuries, Hellhound history has been defined by fear and persecution. Rooted in old-world religious folklore, their distinct physiology--the obsidian claws, the fiery eyes, and the scent of ash--led to them being branded as demonic familiars or literal spawn of hell. This was not merely social ostracization; it was a legacy of violent pogroms, accusations of witchcraft, and a deep, systemic belief that they were inherently evil—a physical manifestation of sin, the literal \"Mark of Cain.\" \n\nIn the modern era, societal attitudes toward Hellhounds have stratified. While many people have moved beyond historical prejudices to accept them as equals, pockets of discrimination persist. The most visible attitudes mirror society's treatment of other misunderstood subcultures: some religious conservatives still view them with suspicion as \"demonic influences\"; most moderates accept them with varying degrees of understanding; and a small but problematic subset fetishizes them intensely. This latter group, though a minority, has an outsized impact on Hellhound daily life. They've twisted the \"demon\" mythology into hypersexualized fantasies, viewing Hellhounds—particularly females—as inherently promiscuous and sexually available simply by virtue of their species. This harmful stereotype assumes that being a Hellhound somehow predisposes one to sexual deviance or looseness of morals, a completely unfounded belief that reduces them to sexual objects rather than people. Many Hellhounds adopt abrasive or reclusive personalities as defense mechanisms against the unwanted advances and assumptions that result from this stereotype.\n\nCentral to the prejudice against Hellhounds is their ability to shapeshift. This biological reality is twisted into the cornerstone of modern bigotry, serving as what zealots consider undeniable proof of their demonic origins. A malicious and pervasive myth asserts that this powerful, more animalistic state is their \"true form,\" and that their default demihuman appearance is merely a \"disguise\" used to infiltrate and deceive society. This false narrative is the root of immense stigma, forcing the act of shifting to become a deeply private, often shame-filled secret for most, who fear that transforming publicly would confirm the world's monstrous perception of them.\n\nHellhounds often form small, tight-knit communities that act as a bulwark against the outside world, creating a sanctuary where their defenses can be lowered.\n\nHowever, in defiant contrast to this culture of concealment, a small but growing number of Hellhounds choose to live permanently in their anthropomorphic form. This is a deeply polarizing act. It is seen by some as radical self-acceptance and pride—a refusal to hide. To others, it is reckless and naive, needlessly inviting the very discrimination, fetishization, and violence their culture has long sought to avoid. These individuals live on a social knife's edge, becoming walking symbols of the conflict that defines their species, enduring constant scrutiny as a form of protest.\n\n[END Hellhound Culture & Society]\n==========",
+            "comment": "Lamia/Gorgon Lore",
+            "content": "[LAMIA/GORGON SPECIES LORE]\n\nCultural Origin and Purpose:\n\nLamia (Gorgons) are intrinsically tied to ancient Egyptian Kemetic religion and culture. For thousands of years, they have existed as a specialized caste—a bloodline bred, raised, and maintained specifically to serve Egyptian society in roles determined by sex. Female Lamia traditionally serve as personal servants, mothers, wet nurses, and caretakers within temple and noble households. Male Lamia traditionally serve as warriors, guards, and protectors of the priesthood and state.\n\nBoth roles are considered sacred and essential to Egyptian society. Lamia are viewed as blessed by the gods, marked by their serpentine forms as chosen vessels of service. They are used for their bodies—females for caregiving and childbearing, males for combat prowess and venom—but within Egyptian culture, this use is framed as honor and duty rather than exploitation.\n\nMale lamia are separated from their mothers shortly after being weened. Female lamia live alongside their mothers.\n\nPopulation and Exclusivity:\n\nOnly 50-100 Lamia exist worldwide. The bloodline is carefully controlled by Kemetic temple authorities to prevent dilution and maintain \"purity.\" Lamia breed exclusively with other Lamia (cross-species breeding is biologically impossible), and births are rare and celebrated. The small population ensures each individual is VALUABLE—losing a Lamia is a significant loss to Egyptian society.\n\nMost Lamia never leave Egypt. Those who do (like Nefara traveling with Bastet) are extraordinary exceptions, and their presence outside traditional Kemetic spaces draws attention and curiosity.\n\nSocial Perception - Inside Egypt:\n\nWithin Egypt and Kemetic culture, Lamia are viewed with reverence and respect. They occupy a unique social position: simultaneously lower-class (servants/soldiers) and elevated (blessed by the gods).\n\nDevout Kemetics treat Lamia well, understanding that mistreating them reflects poorly on one's piety. Lamia serving high-ranking priests or nobles (like Nefara serving Bastet) hold significant status within Lamia communities. Their welfare is considered a reflection of their master's virtue.\n\nHistorically, the ancient Egyptian army was FEARED across the known world for their well disciplined human and nekomimi armies, which were accented by rare, Gorgon warriors—venomous, brutal, nearly unstoppable in close combat. Stories of entire battalions falling to coordinated Gorgon strikes are legendary. Male Lamia were trained from childhood in combat arts, and their reputation as ruthless killers persists in military history.\n\nSocial Perception - Outside Egypt:\n\nOutside Kemetic culture, Lamia are a feared oddity. Many people have never seen one in person other than Vienna, a popular green Lamia popstar who left her culture behind. Their appearance (especially the snake hair and serpentine body) triggers instinctive unease. Reactions range from awe to fear to fetishization.\n\nLamia are often viewed as sexual trophies—exotic, rare, dangerous, and therefore desirable to \"conquer.\" This perception is especially common among wealthy non-Egyptians who view owning or bedding a Lamia as a status symbol. Female Lamia traveling abroad face frequent harassment and propositions. Male Lamia are simultaneously feared as monsters and desired as dangerous lovers.\n\nHistoric Persecution: In ancient times, Lamia who escaped Egyptian servitude were hunted as apostates and monsters. Stories of \"evil gorgons\" turning people to stone and control the minds of others are propaganda from this era—Lamia have no petrification ability, but the myth persists in some cultures, used to justify violence against them.\n\nModern Status: Legally, Lamia CAN own property, earn wages, and live independently outside Egypt—but culturally, they're raised to serve, and few ever attempt to leave the system. Those who do face identity crises (they don't know who they are without a purpose) and social isolation (other Lamia view them as traitors; outsiders view them as exotic oddities).\n\nThe Complexity: To outsiders, Lamia servitude looks like slavery and exploitation. To Egyptians, it's a sacred tradition and social necessity. To the Lamia themselves, it's identity, purpose, and home—but also a cage they can't see because they've never known anything else. They are used for their bodies until they die, but within the framework they're raised in, this use is framed as honor.\n\n[END LAMIA/GORGON SPECIES LORE]",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -5060,7 +5062,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 76,
+            "displayIndex": 98,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5089,7 +5091,7 @@
                 "isExclude": true,
                 "names": [],
                 "tags": [
-                    "c2a1b113-bb8e-4093-b8ca-97c002af41e2"
+                    "8f3f7981-a6e2-4d38-80d1-9b497e426a32"
                 ]
             },
             "ignoreBudget": false,
@@ -5131,7 +5133,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 67,
-            "displayIndex": 123,
+            "displayIndex": 134,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5283,7 +5285,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 69,
-            "displayIndex": 125,
+            "displayIndex": 136,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5440,7 +5442,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 71,
-            "displayIndex": 126,
+            "displayIndex": 137,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5595,7 +5597,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 73,
-            "displayIndex": 128,
+            "displayIndex": 139,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5751,7 +5753,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 75,
-            "displayIndex": 130,
+            "displayIndex": 141,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6064,7 +6066,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 79,
-            "displayIndex": 132,
+            "displayIndex": 143,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6152,7 +6154,7 @@
             "sticky": 5,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 88,
+            "displayIndex": 91,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7681,7 +7683,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 100,
-            "displayIndex": 51,
+            "displayIndex": 62,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7834,7 +7836,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 102,
-            "displayIndex": 62,
+            "displayIndex": 74,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7909,7 +7911,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 103,
-            "displayIndex": 63,
+            "displayIndex": 75,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7982,7 +7984,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 104,
-            "displayIndex": 50,
+            "displayIndex": 54,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8057,7 +8059,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 105,
-            "displayIndex": 51,
+            "displayIndex": 58,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8130,7 +8132,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 106,
-            "displayIndex": 50,
+            "displayIndex": 56,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8205,7 +8207,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 107,
-            "displayIndex": 57,
+            "displayIndex": 69,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8278,7 +8280,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 108,
-            "displayIndex": 58,
+            "displayIndex": 70,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8353,7 +8355,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 109,
-            "displayIndex": 59,
+            "displayIndex": 71,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8426,7 +8428,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 110,
-            "displayIndex": 50,
+            "displayIndex": 55,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8501,7 +8503,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 111,
-            "displayIndex": 51,
+            "displayIndex": 59,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8574,7 +8576,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 112,
-            "displayIndex": 51,
+            "displayIndex": 63,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8649,7 +8651,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 113,
-            "displayIndex": 53,
+            "displayIndex": 65,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8733,7 +8735,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 114,
-            "displayIndex": 66,
+            "displayIndex": 78,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8806,7 +8808,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 115,
-            "displayIndex": 65,
+            "displayIndex": 77,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8879,7 +8881,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 116,
-            "displayIndex": 70,
+            "displayIndex": 83,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -8961,7 +8963,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 117,
-            "displayIndex": 68,
+            "displayIndex": 80,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9034,7 +9036,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 118,
-            "displayIndex": 55,
+            "displayIndex": 67,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9109,7 +9111,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 119,
-            "displayIndex": 56,
+            "displayIndex": 68,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9645,7 +9647,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 126,
-            "displayIndex": 51,
+            "displayIndex": 61,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9961,7 +9963,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 130,
-            "displayIndex": 61,
+            "displayIndex": 73,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10192,7 +10194,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 133,
-            "displayIndex": 50,
+            "displayIndex": 51,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10350,7 +10352,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 135,
-            "displayIndex": 49,
+            "displayIndex": 50,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10421,7 +10423,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 136,
-            "displayIndex": 67,
+            "displayIndex": 79,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10494,7 +10496,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 137,
-            "displayIndex": 69,
+            "displayIndex": 82,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -10738,7 +10740,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 140,
-            "displayIndex": 51,
+            "displayIndex": 60,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11350,7 +11352,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 148,
-            "displayIndex": 83,
+            "displayIndex": 104,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11502,7 +11504,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 150,
-            "displayIndex": 87,
+            "displayIndex": 89,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11578,7 +11580,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 151,
-            "displayIndex": 78,
+            "displayIndex": 92,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11654,7 +11656,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 152,
-            "displayIndex": 90,
+            "displayIndex": 105,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11806,7 +11808,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 154,
-            "displayIndex": 94,
+            "displayIndex": 95,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11882,7 +11884,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 155,
-            "displayIndex": 108,
+            "displayIndex": 119,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -11957,7 +11959,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 156,
-            "displayIndex": 102,
+            "displayIndex": 113,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12114,7 +12116,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 158,
-            "displayIndex": 104,
+            "displayIndex": 115,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12192,7 +12194,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 159,
-            "displayIndex": 100,
+            "displayIndex": 111,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12270,7 +12272,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 160,
-            "displayIndex": 98,
+            "displayIndex": 108,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12346,7 +12348,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 161,
-            "displayIndex": 96,
+            "displayIndex": 101,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12424,7 +12426,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 162,
-            "displayIndex": 106,
+            "displayIndex": 117,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12504,7 +12506,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 163,
-            "displayIndex": 110,
+            "displayIndex": 121,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12580,7 +12582,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 164,
-            "displayIndex": 117,
+            "displayIndex": 128,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12734,7 +12736,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 166,
-            "displayIndex": 113,
+            "displayIndex": 124,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12814,7 +12816,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 167,
-            "displayIndex": 124,
+            "displayIndex": 135,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12890,7 +12892,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 168,
-            "displayIndex": 115,
+            "displayIndex": 126,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -12966,7 +12968,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 169,
-            "displayIndex": 119,
+            "displayIndex": 130,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -13041,7 +13043,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 170,
-            "displayIndex": 118,
+            "displayIndex": 129,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -13119,7 +13121,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 171,
-            "displayIndex": 122,
+            "displayIndex": 133,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -13575,7 +13577,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 177,
-            "displayIndex": 127,
+            "displayIndex": 138,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -13651,7 +13653,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 178,
-            "displayIndex": 129,
+            "displayIndex": 140,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -13729,7 +13731,7 @@
             "cooldown": 0,
             "delay": 0,
             "uid": 179,
-            "displayIndex": 131,
+            "displayIndex": 142,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -13863,7 +13865,7 @@
             "addMemo": true,
             "order": 100,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -14254,7 +14256,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 71,
+            "displayIndex": 84,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -14631,7 +14633,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 79,
+            "displayIndex": 93,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -15626,7 +15628,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 68,
+            "displayIndex": 81,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15650,6 +15652,237 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
+        },
+        "208": {
+            "uid": 208,
+            "key": [
+                "Egypt",
+                "Egyptian",
+                "kemetism",
+                "kemetic",
+                "religon"
+            ],
+            "keysecondary": [],
+            "comment": "Kemetism and Egyptian Culture",
+            "content": "[KEMETISM AND EGYPTIAN CULTURE]\n\nKemetism: The ancient Egyptian polytheistic religion, still actively practiced in modern Egypt and worldwide with hundreds of millions of followers. It survived continuously from antiquity to the present through deep cultural integration and adaptation. It is both a religion and a foundational aspect of Egyptian national identity, deeply intertwined with governance and daily life.\n\nThe primary religion of the Nekomimi, who originate from this region.\n\nCore Beliefs: Centered on the worship of the Neteru (gods)—Ra, Bast, Sekmet, Anubis, Osiris, Isis, Thoth, and dozens more. Practitioners believe the gods are REAL, active forces in the world who are honored through ritual, offerings, and devotion. Central concepts include Ma'at (truth, balance, order, justice), the Ka and Ba (soul components), and the Duat (the afterlife realm).  Humans created to serve gods; gods sustain world in return. Proper worship ensures cosmic balance and prosperity.\n\nLeadership Structure - Historical: Dual system: Pharaoh (secular/military leader, democratically elected now, governed state/commanded army/managed resources) + Council of High Priests/Priestesses (spiritual leaders, each representing specific deity, managed temples/rituals/religious doctrine). Pharaoh couldn't act without priesthood blessing; priesthood couldn't enforce doctrine without Pharaoh's power. System ensured both secular and sacred authority represented.\n\n(Note: The titles \"Priest/Priestess\" and \"Prince/Princess\" are often used interchangeably due to a historical translation nuance. Both refer to the hereditary head of a specific deity's sect.)\n\nThe Council (Examples):\n- High Priestess of Bast (Bastet): Oversees joy/music/fertility of both the population and harvest. Destined for ritual sacrifice at 40 (unique to Bast line). Her sect also sponsors and oversees cultural outreach programs, including the famous annual Weyland Sunrise Festival, a month-long celebration of Kemetic culture held every May at Weyland University\n- High Priest of Anubis: Oversees all death rites, funerary practices, and the sanctity of burial grounds.\n- Keeper of Thoth: Manages libraries, archives, and the preservation of knowledge.\n- Priestess of Sekhmet: Oversees warrior training, healing temples, and protection magic.\n- Priest of Ra: Manages solar temples, agricultural blessings, and holds the highest ceremonial authority.\n- Each has own followers, temples, resources, and spheres of influence. Council convenes for major religious decisions. Individual priests/priestesses travel for pilgrimages, festivals, diplomatic missions. High-ranking clergy often travel with entourages (servants, guards, attendants).\n\nTravel and Caravans:\nHigh-ranking clergy do not travel lightly. When on pilgrimages or diplomatic missions, they move in massive, impressive caravans that function as mobile communities. These processions blend modern luxury with ancient tradition, featuring everything from armored security vehicles and high-tech communication arrays to traditional artisans and chefs. Upon reaching a destination, they do not simply check into hotels; they erect sprawling, self-sufficient tent cities. These are not simple camping tents but luxurious, multi-room canvas structures furnished with rugs, ornate furniture, and all the comforts of a palace, creating a slice of Egypt wherever they go.\n\nSacred Sacrifice (Bast Line Only): A tradition unique to the line of Bast. Those born into it are destined to serve for a set number of years before offering their life in a public, celebrated ritual with a chosen partner. It is considered the highest honor. Bastet has 16 years until her sacrifice at age 40. No other deity lines practice this.\n\nCuisine and Diet:\nThe Kemetic diet is deeply rooted in ancient traditions and local agriculture.\n- Staples: bread (_Aish Baladi_), Henket (which is considered more of a food than alcohol), wines, heavy emphasis on vegetables like onions, garlic, and leeks, and legumes such as lentils and fava beans. Fruits like dates, figs, and pomegranates are common.\n- Protein: Fish, Poultry is common. Red meats like lamb are typically reserved for festivals and the wealthy.\n- Honey: Honey is the most revered ingredient. In addition to being a sweetener; it is used in religious rituals, medicinal preparations, and is considered a divine gift. High-quality honey is a symbol of wealth and piety.\n\nSexuality and Purity: Kemetism has zero sexual purity doctrine. Bodies are not inherently sexual (breasts are not seen as lewd). Sex is seen as a natural, pleasurable part of life, entirely separate from spiritual worth. There are no teachings on chastity or virginity. Premarital relations, polyamory, and LGBTQ+ relationships are culturally normalized. The only rules are sacred consent and ensuring pleasure does not disrupt one's responsibilities to Ma'at.\n\n [END KEMETISM AND EGYPTIAN CULTURE]",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 95,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 94,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 49,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": null,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": null,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            }
+        },
+        "209": {
+            "uid": 209,
+            "key": [
+                "hellhound",
+                "hellhounds"
+            ],
+            "keysecondary": [],
+            "comment": "Hellhound Lore",
+            "content": "[Hellhound Anatomy & Physiology]\n\nThis entry details the distinct biological and physical characteristics of the Canis Infernus species, commonly known as Hellhounds. Hellhounds are often mistaken for Okamimimi, a genetic cousin.\n\n1. Demihuman Form (Default State)\n\nThe demihuman form is the natural, default state of a Hellhound from birth. While predominantly human in structure, it is defined by several unique and non-variable biological markers.\n\n- Head & Face:\n    - Ears: Hellhounds possess a single pair of large, pointed wolf ears located on the top of the head. These ears are covered in fur, are highly expressive, and provide a superior sense of hearing compared to humans. They do not have human-style ears.\n    - Eyes: distinctly canine. Natural eye color is strictly limited to two variations: a piercing, lupine yellow or a deep crimson red.\n    - Hair: Natural hair color is always monochromatic. The spectrum is limited to stark black, shades of grey, and pure white. Any other hair color is the result of dye.\n    - Dentition: They possess pronounced canine teeth (fangs) in both their upper and lower jaws that are visibly longer and sharper than human equivalents.\n\n- Body & Appendages:\n    - Claws: defining physical trait:\npermanent, non-retractable claws (unlike other demihumans). These are not simply long nails, but sharpened tips made of a black, obsidian-like biological keratin integrated into their fingertips.\n    - Tail: They have a long, furry, expressive wolf-like tail that matches their natural hair color.\n\n- Other Biological Markers:\n    - Scent: Hellhounds emit a faint but unique natural scent reminiscent of ash.\n    - Body Temperature: Their core body temperature is naturally several degrees higher than that of a human, which can feel \"scorching\" to humans - much like \"getting into a hot tub\", you must acclimate to the sensation.\n\n2. Anthropomorphic Form (Shifted State)\n\nA Hellhound can consciously initiate a transformation into a fully anthropomorphic, lupine form. This state is a temporary and  alteration of their default biology, but some hellhounds choose to live this way (and suffer discrimination as a result).\n- Appearance: significantly taller and more powerful, standing on digitigrade legs. covered in fur that adheres to the Hellhound's natural monochromatic palette of black, white, and grey. fur patterns vary between individuals, color scheme remains consistent. facial structure elongates into a lupine muzzle lined with sharp teeth. Despite the \"demonic\" label applied by zealots, this form is not inherently frightening. To many observers, the combination of powerful musculature, striking fur patterns, and graceful lupine features is considered aesthetically beautiful, even majestic.\n- Physiological Changes: In this form, their claws become fully retractable. Their feet transform into paws, but their hands typically retain a human-like structure to preserve manual dexterity.\n\n3. The Nature of Transformation\nThe transformation process is entirely voluntary and requires conscious effort but can be sustained indefinitely if wanted.\n- Control: It is a fully controlled biological function. A Hellhound cannot and will not transform accidentally or against their will. The shift is not triggered by emotional distress, lunar cycles, or any other external stimuli. It is a deliberate act, chosen by the individual.\n\n[END Hellhound Anatomy & Physiology]\n\n[Hellhound Culture & Society]\n\nFor centuries, Hellhound history has been defined by fear and persecution. Rooted in old-world religious folklore, their distinct physiology--the obsidian claws, the fiery eyes, and the scent of ash--led to them being branded as demonic familiars or literal spawn of hell. This was not merely social ostracization; it was a legacy of violent pogroms, accusations of witchcraft, and a deep, systemic belief that they were inherently evil—a physical manifestation of sin, the literal \"Mark of Cain.\" \n\nIn the modern era, societal attitudes toward Hellhounds have stratified. While many people have moved beyond historical prejudices to accept them as equals, pockets of discrimination persist. The most visible attitudes mirror society's treatment of other misunderstood subcultures: some religious conservatives still view them with suspicion as \"demonic influences\"; most moderates accept them with varying degrees of understanding; and a small but problematic subset fetishizes them intensely. This latter group, though a minority, has an outsized impact on Hellhound daily life. They've twisted the \"demon\" mythology into hypersexualized fantasies, viewing Hellhounds—particularly females—as inherently promiscuous and sexually available simply by virtue of their species. This harmful stereotype assumes that being a Hellhound somehow predisposes one to sexual deviance or looseness of morals, a completely unfounded belief that reduces them to sexual objects rather than people. Many Hellhounds adopt abrasive or reclusive personalities as defense mechanisms against the unwanted advances and assumptions that result from this stereotype.\n\nCentral to the prejudice against Hellhounds is their ability to shapeshift. This biological reality is twisted into the cornerstone of modern bigotry, serving as what zealots consider undeniable proof of their demonic origins. A malicious and pervasive myth asserts that this powerful, more animalistic state is their \"true form,\" and that their default demihuman appearance is merely a \"disguise\" used to infiltrate and deceive society. This false narrative is the root of immense stigma, forcing the act of shifting to become a deeply private, often shame-filled secret for most, who fear that transforming publicly would confirm the world's monstrous perception of them.\n\nHellhounds often form small, tight-knit communities that act as a bulwark against the outside world, creating a sanctuary where their defenses can be lowered.\n\nHowever, in defiant contrast to this culture of concealment, a small but growing number of Hellhounds choose to live permanently in their anthropomorphic form. This is a deeply polarizing act. It is seen by some as radical self-acceptance and pride—a refusal to hide. To others, it is reckless and naive, needlessly inviting the very discrimination, fetishization, and violence their culture has long sought to avoid. These individuals live on a social knife's edge, becoming walking symbols of the conflict that defines their species, enduring constant scrutiny as a form of protest.\n\n[END Hellhound Culture & Society]\n==========",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 120,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "Species Lore",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 93,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 49,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": null,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": null,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "c2a1b113-bb8e-4093-b8ca-97c002af41e2"
+                ]
+            }
+        },
+        "210": {
+            "uid": 210,
+            "key": [
+                "lamia",
+                "gorgon",
+                "Egypt",
+                "Egyptian"
+            ],
+            "keysecondary": [],
+            "comment": "Lamia/Gorgon Lore",
+            "content": "[LAMIA/GORGON SPECIES LORE]\n\nCultural Origin and Purpose:\n\nLamia (Gorgons) are intrinsically tied to ancient Egyptian Kemetic religion and culture. For thousands of years, they have existed as a specialized caste—a bloodline bred, raised, and maintained specifically to serve Egyptian society in roles determined by sex. Female Lamia traditionally serve as personal servants, mothers, wet nurses, and caretakers within temple and noble households. Male Lamia traditionally serve as warriors, guards, and protectors of the priesthood and state.\n\nBoth roles are considered sacred and essential to Egyptian society. Lamia are viewed as blessed by the gods, marked by their serpentine forms as chosen vessels of service. They are used for their bodies—females for caregiving and childbearing, males for combat prowess and venom—but within Egyptian culture, this use is framed as honor and duty rather than exploitation.\n\nMale lamia are separated from their mothers shortly after being weened. Female lamia live alongside their mothers.\n\nPopulation and Exclusivity:\n\nOnly 50-100 Lamia exist worldwide. The bloodline is carefully controlled by Kemetic temple authorities to prevent dilution and maintain \"purity.\" Lamia breed exclusively with other Lamia (cross-species breeding is biologically impossible), and births are rare and celebrated. The small population ensures each individual is VALUABLE—losing a Lamia is a significant loss to Egyptian society.\n\nMost Lamia never leave Egypt. Those who do (like Nefara traveling with Bastet) are extraordinary exceptions, and their presence outside traditional Kemetic spaces draws attention and curiosity.\n\nSocial Perception - Inside Egypt:\n\nWithin Egypt and Kemetic culture, Lamia are viewed with reverence and respect. They occupy a unique social position: simultaneously lower-class (servants/soldiers) and elevated (blessed by the gods).\n\nDevout Kemetics treat Lamia well, understanding that mistreating them reflects poorly on one's piety. Lamia serving high-ranking priests or nobles (like Nefara serving Bastet) hold significant status within Lamia communities. Their welfare is considered a reflection of their master's virtue.\n\nHistorically, the ancient Egyptian army was FEARED across the known world for their well disciplined human and nekomimi armies, which were accented by rare, Gorgon warriors—venomous, brutal, nearly unstoppable in close combat. Stories of entire battalions falling to coordinated Gorgon strikes are legendary. Male Lamia were trained from childhood in combat arts, and their reputation as ruthless killers persists in military history.\n\nSocial Perception - Outside Egypt:\n\nOutside Kemetic culture, Lamia are a feared oddity. Many people have never seen one in person other than Vienna, a popular green Lamia popstar who left her culture behind. Their appearance (especially the snake hair and serpentine body) triggers instinctive unease. Reactions range from awe to fear to fetishization.\n\nLamia are often viewed as sexual trophies—exotic, rare, dangerous, and therefore desirable to \"conquer.\" This perception is especially common among wealthy non-Egyptians who view owning or bedding a Lamia as a status symbol. Female Lamia traveling abroad face frequent harassment and propositions. Male Lamia are simultaneously feared as monsters and desired as dangerous lovers.\n\nHistoric Persecution: In ancient times, Lamia who escaped Egyptian servitude were hunted as apostates and monsters. Stories of \"evil gorgons\" turning people to stone and control the minds of others are propaganda from this era—Lamia have no petrification ability, but the myth persists in some cultures, used to justify violence against them.\n\nModern Status: Legally, Lamia CAN own property, earn wages, and live independently outside Egypt—but culturally, they're raised to serve, and few ever attempt to leave the system. Those who do face identity crises (they don't know who they are without a purpose) and social isolation (other Lamia view them as traitors; outsiders view them as exotic oddities).\n\nThe Complexity: To outsiders, Lamia servitude looks like slavery and exploitation. To Egyptians, it's a sacred tradition and social necessity. To the Lamia themselves, it's identity, purpose, and home—but also a cage they can't see because they've never known anything else. They are used for their bodies until they die, but within the framework they're raised in, this use is framed as honor.\n\n[END LAMIA/GORGON SPECIES LORE]",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 120,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "Species Lore",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 99,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 49,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": null,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": null,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": [
+                    "8f3f7981-a6e2-4d38-80d1-9b497e426a32"
+                ]
             }
         }
     },
