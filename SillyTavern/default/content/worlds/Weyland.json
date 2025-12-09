@@ -13238,10 +13238,19 @@
             "triggers": []
         },
         "173": {
-            "key": [],
+            "key": [
+                "caravan",
+                "kemetic",
+                "Egyptian",
+                "Bastet's room",
+                "Bastet's residence",
+                "Nefara's room",
+                "sunstone",
+                "pavilion"
+            ],
             "keysecondary": [],
-            "comment": "Bastet Room",
-            "content": "",
+            "comment": "Caravan",
+            "content": "[THE KEMETIC CARAVAN - WEYLAND ENCAMPMENT]\nPotential Location: The Kemetic Caravan\n\nReminder: SHOW, DONT TELL: Its awkward to have a character be like \"We have 12 nekomimi and 2 gorgon guards. They travel in these patterns and..\" - NO! Show the user, don't have characters awkwardly describe what the setup is like verbally\n\n10 minute walk from central Senaka Boulevard \n\n[Location] Deployed on the western edge of Weyland University's main campus grounds for the month of May, occupying a large open field typically used for intramural sports. The caravan is a fully functional tent city of 30-40 structures arranged in concentric rings, blending ancient Egyptian aesthetics with modern infrastructure. Includes 80-120 travelers, merchants, workers of the Sunrise fest, artisans, cooks, guards and guests.\n\n[Exterior Layout]\nThe caravan is organized in three distinct zones:\n\nOuter Ring (Public Access): 15-20 tents housing merchants, artisans, musicians, and cultural workers. Many have converted their accommodations into impromptu stalls, selling traditional Egyptian goods—honey, spices, handcrafted jewelry, linen garments, and religious talismans. The air here is thick with the scent of incense, grilled meats, and fresh bread. Colorful banners and fabric awnings create a bustling, festival-like atmosphere. Anyone can wander freely through this area.\n\nMiddle Ring (Restricted Access): Guarded checkpoints mark the transition to the inner encampment. Beyond the perimeter, 10-15 tents house support staff—cooks, attendants, facilitators for the Sunrise Festival, and off-duty guards. Security is light but present; nekomimi guards in golden-accented robes patrol the area, checking identification and turning away unauthorized visitors. A handful of male gorgon warriors are stationed at key points, their presence a quiet reminder of the caravan's elite protection. There is nothing here a typical college student would need access to.\n\nInner Sanctum (High Restricted): The heart of the encampment. Two massive pavilions dominate the space: the Sunstone Pavilion (Princess Bastet's residence) and the Moonstone Pavilion (the Prince of Anubis's residence). A few smaller support tents for inner-circle staff dot the area. Only those with explicit permission or royal summons are allowed entry.\n\n[Atmosphere]\nThe caravan hums with quiet, organized activity during the day—staff moving between tents, the distant clatter of cooking pots, the murmur of prayer and song. At night, the entire encampment glows with warm, flickering light from oil lamps and lanterns, creating an almost dreamlike quality against the modern campus backdrop. Despite having access to electricity via solar panels, traditional methods are preferred, giving the space an ancient, sacred ambiance.\n\n[The Sunstone Pavilion - Bastet's Residence]\n\n[Exterior]\nThe largest structure in the caravan by far. The pavilion is constructed from rich, golden-hued fabric stretched over a sturdy wooden frame, with intricate hieroglyphic patterns embroidered along the edges. Silk banners bearing the symbol of Bast flutter gently in the breeze. Two guards are always posted at the entrance, and the interior is considered deeply private—normal visitors are never simply allowed to walk in\n\n[Interior - Main Chamber]\nStepping through the entrance, you find yourself standing behind a low seating area furnished with plush cushions, ornate rugs, and small tables bearing oil lamps. The floor is covered in deep red and gold rugs, and the air is pleasantly cool thanks to discreet air conditioning vents hidden among the traditional decor.\n\nDirectly ahead, dominating the room, is Bastet's Lounging Throne—an enormous nest of silken cushions, plush blankets, and soft mattresses piled into a decadent sprawl. It's large enough to comfortably fit Bastet and all three of her servants, and serves as both her bed and the seat from which she receives guests. When holding informal court, she lounges here like a queen, surrounded by comfort and warmth.\n\nTo the left of the main chamber are two fabric-draped doorways leading to private rooms. To the right, two more. One of these side rooms houses Bastet's temporary streaming setup, where she continues her work as a famous game streamer even while traveling.\n\n[Servant Quarters]\nEach of Bastet's three servants (including Nefara) has their own private room accessible from the main chamber. These are not lavish, but they are beautiful and personal—plush single beds, warm lighting from lanterns and candles, small tables for personal belongings, decorative textiles, and spaces for perfumes and keepsakes. Bastet treats her servants as friends and wants them to feel like equals in every respect. The rooms are clean, well-ventilated, and deeply comfortable.\n\nDespite having her own space, servants are given the choice each night: sleep alone in their room, or join Bastet on the massive lounging throne. Very occasionally, Bastet asks for privacy, but most nights she sleeps cuddled up with her servants in a pile of warmth and affection.\n\n[Cultural Notes]\n- The caravan operates on a blend of ancient tradition and modern convenience—solar power runs the lights and air conditioning, but torches and oil lamps are preferred for ambiance.\n- Bastet's pavilion is treated as sacred ground. Entering without permission is a serious breach of protocol.\n- The servants often lounge with Bastet in the main chamber when not working, either on the throne itself or in the guest seating area.\n- Visitors who ARE granted entry are expected to sit in the designated seating area unless explicitly invited closer.\n[END THE KEMETIC CARAVAN - WEYLAND ENCAMPMENT]\n=====",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -13249,7 +13258,7 @@
             "addMemo": true,
             "order": 125,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -13301,12 +13310,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "174": {
             "key": [
@@ -15729,6 +15733,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "209": {
