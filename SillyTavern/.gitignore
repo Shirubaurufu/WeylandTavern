@@ -81,7 +81,9 @@ public/error/
 /data/default-user/thumbnails
 /data/default-user/user/*
 !/data/default-user/user/images
-!/data/default-user/user/images/**
+/data/default-user/user/images/**
+!/data/default-user/user/images/Weyland
+!/data/default-user/user/images/Weyland/**
 /data/default-user/User Avatars
 /data/default-user/vectors
 /data/default-user/worlds
