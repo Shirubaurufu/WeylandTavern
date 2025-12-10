@@ -398,7 +398,7 @@ async function getWebsiteToken() {
     return new Promise((resolve, reject) => {
         const options = {
             hostname: 'gofile.io',
-            path: '/dist/js/global.js',
+            path: '/dist/js/config.js',
             method: 'GET',
             headers: {
                 'User-Agent': 'WeylandTavern-Downloader/1.0'
