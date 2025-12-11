@@ -130,10 +130,20 @@
         "2": {
             "uid": 2,
             "key": [
-                "Barrel",
-                "Bar",
-                "date",
-                "Bastet"
+                "crush",
+                "7-Eleven",
+                "shift",
+                "job",
+                "work",
+                "working",
+                "cigarette",
+                "cigarettes",
+                "lighter",
+                "light",
+                "flame",
+                "fire",
+                "smoke",
+                "smoking"
             ],
             "keysecondary": [],
             "comment": "Scenario",
