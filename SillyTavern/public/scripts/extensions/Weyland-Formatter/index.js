@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.0";
+const extensionVersion = "1.8.1";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -561,7 +561,7 @@ function thinkMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: new RegExp(getGlobalVariable('LTMRegexFind')),
+            regex: /[\s\S]*\[MEMORY FORMATION SYSTEM\][\s\S]+\[END MEMORY FORMATION\. END MESSAGE HERE\. DO NOT RESUME ROLEPLAY\.\][\s\S]*/,
             replace: ``
         }];
     } catch (e) {
