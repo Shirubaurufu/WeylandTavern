@@ -2,6 +2,7 @@
 
 import fs from 'fs';
 import https from 'https';
+import querystring from 'querystring';
 import inquirer from 'inquirer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -205,16 +206,24 @@ function GoFile({
  */
 DownloadLocation.prototype.getContents = async function(accountToken, websiteToken) {
     if (!this.id || !accountToken || !websiteToken) return null;
-    const reqPath = `/contents/${this.id}?wt=${websiteToken}${this.pwd ? `&password=${this.pwd}` : ""}`;
     return new Promise((resolve, reject) => {
         try {
+            const params = {
+                contentFilter: '',
+                sortField: 'name',
+                sortDirection: '1'
+            };
+
+            if (this.pwd)
+                params.password = this.pwd;
+
             const options = {
                 hostname: 'api.gofile.io',
-                path: reqPath,
+                path: `/contents/${this.id}?${querystring.stringify(params)}`,
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accountToken}`,
-                    'User-Agent': 'WeylandTavern-Downloader/1.0'
+                    'X-Website-Token': `${websiteToken}`
                 }
             };
 
@@ -294,8 +303,7 @@ GoFile.prototype.download = async function(accountToken, progressBar = null) {
             const options = new URL(this.link);
             options.headers = {
                 'Authorization': `Bearer ${accountToken}`,
-                'Cookie': `accountToken=${accountToken}`,
-                'User-Agent': 'WeylandTavern-Downloader/1.0'
+                'Cookie': `accountToken=${accountToken}`
             };
             
             const req = https.request(options, (res) => {
@@ -363,9 +371,7 @@ async function createGuestAccount() {
             hostname: 'api.gofile.io',
             path: '/accounts',
             method: 'POST',
-            headers: {
-                'User-Agent': 'WeylandTavern-Downloader/1.0'
-            }
+            headers: {}
         };
 
         const req = https.request(options, (res) => {
@@ -400,9 +406,7 @@ async function getWebsiteToken() {
             hostname: 'gofile.io',
             path: '/dist/js/config.js',
             method: 'GET',
-            headers: {
-                'User-Agent': 'WeylandTavern-Downloader/1.0'
-            }
+            headers: {}
         };
 
         const req = https.request(options, (res) => {
