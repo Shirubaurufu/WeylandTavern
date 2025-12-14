@@ -1968,7 +1968,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 100,
+            "displayIndex": 101,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2137,7 +2137,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 102,
+            "displayIndex": 103,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4538,6 +4538,57 @@
             "ignoreBudget": false,
             "triggers": []
         },
+        "78": {
+            "uid": 78,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Lentyl Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black hoodie and shorts)\n• [LG] - ONLY wearing underwear\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Lentyl",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 100,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Lentyl"
+                ],
+                "tags": [
+                    "c3acc2e7-c244-4542-8341-83f5c02265b6"
+                ]
+            }
+        },
         "79": {
             "uid": 79,
             "key": [],
@@ -4576,7 +4627,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 103,
+            "displayIndex": 104,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5065,7 +5116,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 105,
+            "displayIndex": 106,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5116,7 +5167,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 101,
+            "displayIndex": 102,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5603,7 +5654,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 104,
+            "displayIndex": 105,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
