@@ -9079,7 +9079,9 @@
         },
         "119": {
             "key": [
-                "nezumimimi"
+                "nezumimimi",
+                "mouse",
+                "nezu"
             ],
             "keysecondary": [],
             "comment": "Nezumimimi Lore",
@@ -16119,6 +16121,11 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "214": {
@@ -16279,7 +16286,7 @@
                 "Derek"
             ],
             "keysecondary": [],
-            "comment": "Remy",
+            "comment": "Derek",
             "content": "{{getvar::DEd}}",
             "constant": false,
             "vectorized": false,
@@ -16425,14 +16432,14 @@
             "uid": 218,
             "key": [
                 "Adler's trailer",
-                "Adler Trailer",
+                "Alder Trailer",
                 "Lentyl's home",
                 "trailer #17",
-                "Alder family home",
+                "Adler family home",
                 "Adler home"
             ],
             "keysecondary": [],
-            "comment": "Alder's Trailer",
+            "comment": "Adler's Trailer",
             "content": "==========\n[ADLER FAMILY TRAILER]\n==========\nSoft Pike Trailer Park, Trailer #17\n\nThe Adler trailer (#17) sits deeper in Soft Pike Trailer Park, a faded beige single-wide that has been there for over twenty years. Rust-colored stains bleed down from the window frames, and the skirting is dented in several places. A faded and threadbare \"Don't Tread on Me\" flag hangs limply from a pole by the front steps, which are flanked by a single, sad planter box containing the withered remains of Marion's long-forgotten flowers.\n\nInterior\nThe front door, which requires a firm shoulder-shove to open, reveals a space that feels heavy and stagnant. The air is a thick, tired cocktail of stale cigarette smoke (Derek), the cloying sweetness of a Glade plug-in fighting a losing battle (Marion), and the lingering scent of microwaved dinners and Emily's unwashed laundry. It’s cluttered not with potential, but with decades of apathy.\n\nLiving Room\n- The room is dominated by a stained, brown faux-leather recliner - Derek's throne - permanently angled towards a television that is always on, usually tuned to Fox News or Newsmax.\n- Two overflowing ashtrays and a rotating collection of beer cans occupy the end table next to the recliner.\n- The couch is a floral-patterned relic with sunken cushions and a worn-out afghan draped over the back, usually covered in a layer of Emily’s discarded clothes or magazines.\n- A thin layer of dust coats every surface that isn't in Derek's immediate reach. The carpet is worn flat in the paths between the recliner, the kitchen, and the bedrooms.\n\nKitchenette\n- Marion's domain of quiet desperation. The space is technically clean but perpetually grim.\n- The yellowed linoleum is peeling at the corners, and the formica countertops have faint, permanent stains from years of use.\n- The cabinets are filled with mismatched, chipped plates and a collection of budget-brand canned goods. The air smells of old coffee and bleach.\n- Marion got herself a new instant pot, which she cooks various things in with various degrees of success\n- Refrigerator\n\nBathroom\n- A small, cramped space that is a constant source of low-level arguments about whose turn it is to clean it.\n- There's a persistent ring of mold in the shower grout, and the medicine cabinet is a museum of expired aspirin and half-used tubes of ointment.\n\nLentyl's Old Room (The \"Everything\" Room)\n- Once Lentyl's bedroom, this small room is now a physical manifestation of the family's inertia—a place where good intentions and forgotten projects go to die.\n- It's filled with Marion's old sewing machine covered in a thick blanket of dust, boxes of Derek's power tools he swears he'll use \"one of these days,\" and overflowing garbage bags of Emily's old clothes she means to donate but never will. Chest freezers are new, and have random frozen things for Marion to experiment cooking with.\n- The faint outlines of where Lentyl's posters used to hang are still visible on the wood-paneled walls, like ghosts of a life that managed to escape.\n\nEmily's Bedroom\n- A time capsule of arrested development, the room's air is a mix of cheap body spray, stale fast food, and unwashed laundry. The bed is the epicenter of the chaos, a mountain of clothes (clean and dirty are indistinguishable) surrounded by empty energy drink cans and snack bags. A cheap, wobbly dresser is covered in dusty high school knickknacks and overflowing ashtrays. The only personal touch is a faded photo collage above the bed, mostly showing a happy, much younger Emily and Lentyl.\n\nDerek & Marion's Bedroom\n- Less a bedroom and more a joyless armistice, the space is starkly divided. The bed is always neatly made but covered with a thin, worn-out comforter. Derek's side is marked by an ashtray and a pile of dirty work clothes on the floor. Marion's side is an island of attempted prettiness, with her nightstand holding a small lamp and a framed photo of the kids as toddlers. The silence in the room feels heavier than anywhere else in the trailer.\n\n\nNotable Features\n- The perpetual, low drone of the television is the home's primary soundtrack.\n- A feeling of being stuck in time; nothing new is ever brought in, and nothing old is ever thrown away.\n- A stark contrast between Marion's feeble attempts to maintain a \"normal\" home and the overwhelming reality of the clutter and apathy.\n- Repairs are either ignored or patched with duct tape; nothing is ever truly fixed.\n==========\n[END ADLER FAMILY TRAILER]\n==========",
             "constant": false,
             "vectorized": true,
@@ -16492,6 +16499,11 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         }
     },
