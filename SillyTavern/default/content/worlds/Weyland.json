@@ -15511,7 +15511,7 @@
             "addMemo": true,
             "order": 999999,
             "position": 4,
-            "disable": false,
+            "disable": true,
             "ignoreBudget": false,
             "excludeRecursion": false,
             "preventRecursion": true,
@@ -15532,18 +15532,13 @@
             "caseSensitive": true,
             "matchWholeWords": true,
             "useGroupScoring": false,
-            "automationId": "",
+            "automationId": "SMMode",
             "role": 0,
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 200,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "displayIndex": 200
         },
         "206": {
             "uid": 206,
@@ -15581,18 +15576,13 @@
             "caseSensitive": true,
             "matchWholeWords": true,
             "useGroupScoring": false,
-            "automationId": "",
+            "automationId": "EMMode",
             "role": 0,
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 201,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "displayIndex": 201
         },
         "207": {
             "uid": 207,
