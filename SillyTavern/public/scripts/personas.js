@@ -135,19 +135,38 @@ function reloadUserAvatar(force = false) {
  * @param {string[]} personas - The persona names to sort
  * @returns {string[]} The sorted persona names array, same reference as passed in
  */
+function getPersonaTimestamp(avatarId) {
+    const ts = Number(String(avatarId).split('-')[0]);
+    return Number.isFinite(ts) ? ts : 0;
+}
+
 function sortPersonas(personas) {
-    const option = $('#persona_sort_order').find(':selected');
-    if (option.attr('value') === 'search') {
+    const option = $('#persona_sort_order').find(':selected').attr('value');
+
+    if (option === 'search') {
         personas.sort((a, b) => {
             const aScore = personasFilter.getScore(FILTER_TYPES.PERSONA_SEARCH, a);
             const bScore = personasFilter.getScore(FILTER_TYPES.PERSONA_SEARCH, b);
-            return (aScore - bScore);
+            return aScore - bScore;
         });
+
+    } else if (option === 'newest' || option === 'oldest') {
+        personas.sort((a, b) => {
+            const aTime = Number(String(a).split('-')[0]) || 0;
+            const bTime = Number(String(b).split('-')[0]) || 0;
+            return option === 'newest'
+                ? bTime - aTime
+                : aTime - bTime;
+        });
+
     } else {
+        // Default A–Z / Z–A
         personas.sort((a, b) => {
             const aName = String(power_user.personas[a] || a);
             const bName = String(power_user.personas[b] || b);
-            return power_user.persona_sort_order === 'asc' ? aName.localeCompare(bName) : bName.localeCompare(aName);
+            return power_user.persona_sort_order === 'asc'
+                ? aName.localeCompare(bName)
+                : bName.localeCompare(aName);
         });
     }
 
