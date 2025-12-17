@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.1";
+const extensionVersion = "1.8.2";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -105,6 +105,7 @@ let settings = undefined;
  * @property {string} missingStartAsteriskReplace
  * 
  * @property {RegExp} breakbar
+ * @property {RegExp} spacer
  */
 
 /**
@@ -186,7 +187,8 @@ const weylandRegex = {
     missingStartAsterisk: /(?<=["_\]][\s—]|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=[\s—]["_\[]|$)/g,
     missingStartAsteriskReplace: "*$1*",
 
-    breakbar: /¦/i
+    breakbar: /¦/i,
+    spacer: /^---$/,
 };
 
 
@@ -256,7 +258,7 @@ async function formatParagraphs(message) {
                 return;
             }
 
-            if (weylandRegex.breakbar.test(paragraph)) {
+            if (weylandRegex.breakbar.test(paragraph) || weylandRegex.spacer.test(paragraph)) {
                 return;
             }
 
