@@ -129,7 +129,12 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "Moonstone",
+                "Pavilion",
+                "Sunrise",
+                "Bastet"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -5119,7 +5124,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Mika Outfit Codes",
-            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black t-shirt and black pants)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Just a towel (wearing *just* a towel)\n• [XX] - No other code matches",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black t-shirt and black pants)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Just a towel (wearing *just* a towel)\n• [O2] - Santa dress\n• [O3] - Naked Ribbon (wearing only red ribbon as clothing)\n• [XX] - No other code matches",
             "constant": false,
             "vectorized": false,
             "selective": true,
