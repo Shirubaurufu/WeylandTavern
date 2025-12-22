@@ -129,11 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "Sunrise",
-                "Festival",
-                "guide"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -2630,7 +2626,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 115,
+            "displayIndex": 116,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2732,7 +2728,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 114,
+            "displayIndex": 115,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -6090,7 +6086,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Bastet Outfit Codes",
-            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (Egyptian clothing)\n• [LG] - {{char}}'s MAIN LOUNGE/INDOORS OUTFIT (linen skirt and topeless)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (Egyptian clothing)\n• [LG] - {{char}}'s MAIN LOUNGE/INDOORS OUTFIT (linen skirt and topless)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -6133,6 +6129,57 @@
                 ],
                 "tags": [
                     "879fa2e2-c395-4951-b07e-7ee65a760a7a"
+                ]
+            }
+        },
+        "108": {
+            "uid": 108,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Shani Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (Kemetic-style clothing)\n• [LG] - {{char}}'s MAIN LOUNGE/INDOORS OUTFIT (linen skirt and topless)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Shani",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 114,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Shani"
+                ],
+                "tags": [
+                    "433475e7-49e8-4907-887e-a2b6dfc336a8"
                 ]
             }
         }
