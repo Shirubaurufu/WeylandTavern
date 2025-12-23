@@ -130,10 +130,13 @@
         "2": {
             "uid": 2,
             "key": [
-                "Moonstone",
-                "Pavilion",
-                "Sunrise",
-                "Bastet"
+                "bar",
+                "Black Barrel",
+                "bill",
+                "bills",
+                "drunk",
+                "drink",
+                "drinking"
             ],
             "keysecondary": [],
             "comment": "Scenario",
