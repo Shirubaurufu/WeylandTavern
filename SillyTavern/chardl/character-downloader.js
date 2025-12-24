@@ -43,6 +43,8 @@ const __stDir = path.dirname(__dir);
 const __mainDir = path.dirname(__stDir);
 const __unzipDir = path.join(__stDir,"data/default-user/characters")
 
+const expressions = ["admiration","amusement","anger","annoyance","approval","caring","confusion","curiosity","desire","disappointment","disapproval","disgust","embarrassment","excitement","fear","gratitude","grief","joy","love","nervousness","neutral","optimism","pride","realization","relief","remorse","sadness","surprise"];
+
 class Downloader {
     constructor (accountToken, websiteToken) {
         this.downloadLocations = {};
@@ -917,17 +919,41 @@ function downloaderLog(text) {
                 try {
                     await file.download(downloader.accountToken, progressBar);
                     progressBar.stop();
+                    let directories = []
+                    let cleanUp = true;
 
                     // Extract the zip file
                     try {
                         const zip = new AdmZip(zipPath);
+                        directories = zip.getEntries().flatMap(entry => {
+                            if (!entry.isDirectory) return [];
+                            const path = entry.entryName.split("/");
+                            if (path.length !== 7) return [];
+                            return [`${path.at(-3)}/${path.at(-2)}`];
+                        });
                         zip.extractAllTo(__mainDir, true);
                         
                         jsonData[cleanName] = date;
                         fs.writeFileSync(charFile, JSON.stringify(jsonData, null, 2), 'utf8');
                     } catch (extractErr) {
+                        cleanUp = false;
                         console.error(`  ✗ Extraction error for ${noZipName}:`, extractErr.message);
                         fails.push(cleanName);
+                    } finally {
+                        if (!cleanUp) return;
+                        directories.forEach((dir) => {
+                            const outfitDir = path.join(__charDir,dir);
+                            fs.readdir(outfitDir, (err, files) => {
+                                if (err) {
+                                    return;
+                                }
+                                expressions.forEach((expression) => {
+                                    if (files.includes(`${expression}.avif`) && files.includes(`${expression}.png`)) {
+                                        fs.rmSync(path.join(outfitDir,`${dir}/${expression}.png`));
+                                    }
+                                });
+                            });
+                        });
                     }
                 } catch (downloadErr) {
                     progressBar.stop();

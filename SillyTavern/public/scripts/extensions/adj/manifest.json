@@ -1,11 +1,11 @@
 {
-    "display_name": "Weyland-Profiler",
+    "display_name": "adj",
     "loading_order": 400,
     "requires": [],
     "optional": [],
     "js": "index.js",
     "css": "style.css",
-    "author": "shirubaurufu",
+    "author": "someguy",
     "version": "1.0.0",
     "homePage": "https://github.com/SillyTavern/SillyTavern"
 }
