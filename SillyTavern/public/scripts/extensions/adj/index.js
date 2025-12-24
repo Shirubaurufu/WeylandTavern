@@ -1,5 +1,5 @@
-const def = "1.0";
-const ltm = "0.4";
+const def = 1.0;
+const ltm = 0.4;
 
 (async function () {
     const originalFetch = window.fetch;
@@ -9,10 +9,10 @@ const ltm = "0.4";
         // @ts-ignore
         if (url.includes('/generate') && options?.method === 'POST') {
             // @ts-ignore
-            let body = JSON.parse(options?.body);
+            let body = JSON.parse(options.body);
             if (body) {
                 body.temperature = def;
-                const message = body.messages.at(-2);
+                const message = body.messages.at(-1);
                 if (message.role === "user" && message.content.startsWith("LTM Creation in Process...")) {
                     body.temperature = ltm;
                     body.custom_include_body = body.custom_include_body.replace(/(?:(?:\\n)?- ?)?temperature: \d\.\d/g,"");
