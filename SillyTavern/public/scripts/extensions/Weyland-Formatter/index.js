@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.2";
+const extensionVersion = "1.8.3";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -683,8 +683,6 @@ function lonePhoneMarkdownExt(){
             regex: /<p>((?:Incoming|Outgoing)¦[^\n]*?)<\/p>/ig,
             replace: function(match, p1) {
                 try {
-                    weylandDebug(`Match: ${match}`);
-                    weylandDebug(`p1: ${p1}`);
                     p1 = p1.replace(/<\/?q.*?>/g, ``);
                     p1 = p1.replace(/<\/?u>/g, `__`);
                     p1 = p1.replace(/<\/?em>/g, `*`);
@@ -722,6 +720,44 @@ function lonePhoneMarkdownExt(){
     }
 }
 
+/**
+ * @returns {showdown.ShowdownExtension[]}
+ */
+function heartRateMarkdownExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /<p>¦ ?(\d+) ?bpm ?¦<\/p>/ig,
+            replace: function(match, p1) {
+                try {
+                    weylandDebug(`Match: ${match}`);
+                    weylandDebug(`p1: ${p1}`);
+                    return `<div style="display: inline-flex; align-items: center; gap: 8px; background-color: #1a1a1a; padding: 8px 14px; border-radius: 6px; border: 1px solid #ff4444;">
+  <span style="color: #ff6b6b; font-size: 1.1em; font-weight: bold; text-shadow: 0 0 4px rgba(255,75,75,0.4);">${p1}bpm</span>
+  <span style="color: #ff4444; font-size: 1.3em; animation: heartbeat 1.2s ease-in-out infinite; display: inline-block;">❤</span>
+</div>
+
+<style>
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  10% { transform: scale(1.3); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.25); }
+  40% { transform: scale(1); }
+}
+</style>`
+                } catch (e) {
+                    console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
+                    return match;
+                }
+            }
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
+        return [];
+    }
+}
+
 function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
@@ -732,6 +768,7 @@ function updateReloadMarkdownProcessor(){
     //converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     converter.addExtension(phoneMarkdownExt(), 'phoneMarkdownExt');
     converter.addExtension(lonePhoneMarkdownExt(), 'lonePhoneMarkdownExt');
+    converter.addExtension(heartRateMarkdownExt(), 'heartRateMarkdown');
     converter.addExtension(fdiglMarkdownExt(), 'fdiglSystemMessage');
     if (settings.markdown) {
         converter.addExtension(hiccupMarkdownExt(), 'hiccup');
