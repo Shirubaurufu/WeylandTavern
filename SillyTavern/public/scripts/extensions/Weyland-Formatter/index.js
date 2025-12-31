@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.3";
+const extensionVersion = "1.8.4";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -732,20 +732,22 @@ function heartRateMarkdownExt(){
                 try {
                     weylandDebug(`Match: ${match}`);
                     weylandDebug(`p1: ${p1}`);
-                    return `<div style="display: inline-flex; align-items: center; gap: 8px; background-color: #1a1a1a; padding: 8px 14px; border-radius: 6px; border: 1px solid #ff4444;">
+                    return `<p><div style="display: inline-flex; align-items: center; gap: 8px; background-color: #1a1a1a; padding: 8px 14px; border-radius: 6px; border: 1px solid #ff4444;">
   <span style="color: #ff6b6b; font-size: 1.1em; font-weight: bold; text-shadow: 0 0 4px rgba(255,75,75,0.4);">${p1}bpm</span>
-  <span style="color: #ff4444; font-size: 1.3em; animation: heartbeat 1.2s ease-in-out infinite; display: inline-block;">❤</span>
+  <span style="color: #ff4444; font-size: 1.3em; animation: heartbeat ${(60/(parseInt(p1))).toFixed(2)}s ease-in-out infinite; display: inline-block;">❤</span>
 </div>
 
 <style>
 @keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  10% { transform: scale(1.3); }
-  20% { transform: scale(1); }
-  30% { transform: scale(1.25); }
-  40% { transform: scale(1); }
+  0% { transform: scale( 1 ); }
+  10% { transform: scale( 1 ); }
+  30% { transform: scale( 1.3 ); }
+  45% { transform: scale( 1 ); }
+  65% { transform: scale( 1.3 ); }
+  80% { transform: scale( 1 ); }
+  100% { transform: scale( 1 ); }
 }
-</style>`
+</style></p>`
                 } catch (e) {
                     console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
                     return match;
