@@ -198,8 +198,10 @@ function GoFile({
     this.mimetype = mimetype;
     this.name = name;
     this.cleanName = name.slice(0,-4);
-    this.character = this.cleanName.match(/^.*(?= \d{2}-)/)?.[0];
-    this.date = this.cleanName.match(/\d{2}-\d{2}-\d{2}/)?.[0];
+    this.character = this.cleanName.match(/^.*(?= \d{1,2}-)/)?.[0];
+    const [month, day, year] = this.cleanName.match(/\d{1,2}-\d{1,2}-\d{1,2}/)?.[0].split("-");
+    this.dateObj = {month: month.padStart(2,"0"), day: day.padStart(2,"0"), year: year};
+    this.date = `${this.dateObj.month}-${this.dateObj.day}-${this.dateObj.year}`
 }
 
 /**
@@ -212,7 +214,7 @@ DownloadLocation.prototype.getContents = async function(accountToken, websiteTok
         try {
             const params = {
                 contentFilter: '',
-                sortField: 'name',
+                sortField: 'createTime',
                 sortDirection: '1'
             };
 
@@ -729,7 +731,10 @@ function downloaderLog(text) {
                 } else if (sortOrder === "date") {
                     downloader.downloadLocations[location]?.folder?.files.sort((a, b) => {
                         if (a.date && b.date) {
-                            return b.date.localeCompare(a.date);
+                            if (a.date === b.date) {
+                                return a.character.localeCompare(b.character);
+                            }
+                            return `${b.dateObj.year}${b.dateObj.month}${b.dateObj.day}`.localeCompare(`${a.dateObj.year}${a.dateObj.month}${a.dateObj.day}`)
                         }
                         return 0;
                     });
@@ -795,12 +800,11 @@ function downloaderLog(text) {
                         if (!file) return;
                         
                         if (file?.date) {
-                            if (file.date.slice(-2) <= value.slice(-2) && //Compare year
-                                file.date.slice(0, 2) <= value.slice(0, 2) && //Compare month
-                                file.date.slice(3, 5) <= value.slice(3, 5) //Compare day
-                            ) {
-                                return; //If all match or all values are higher, local character is up to date
-                            }
+                            const valueSplit = value.split("-");
+                            if (file.dateObj.year <= valueSplit[2] && //Compare year
+                                file.dateObj.month <= valueSplit[0] && //Compare month
+                                file.dateObj.day <= valueSplit[1]) { //Compare day
+                                return; } //If all match or all values are higher, local character is up to date
                             neededUpdates += key + ", ";
                             answers.selectedFiles.push(file.character);
                         }
@@ -826,7 +830,10 @@ function downloaderLog(text) {
             } else if (sortOrder === "date") {
                 files.sort((a, b) => {
                     if (a.date && b.date) {
-                        return b.date.localeCompare(a.date);
+                        if (a.date === b.date) {
+                            return a.character.localeCompare(b.character);
+                        }
+                        return `${b.dateObj.year}${b.dateObj.month}${b.dateObj.day}`.localeCompare(`${a.dateObj.year}${a.dateObj.month}${a.dateObj.day}`)
                     }
                     return 0;
                 });
