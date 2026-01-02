@@ -14430,9 +14430,7 @@
         "189": {
             "uid": 189,
             "key": [
-                "!Doggo",
-                "🦎",
-                "🐺"
+                "!Doggo"
             ],
             "keysecondary": [],
             "comment": "!Doggo",
@@ -14495,12 +14493,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "190": {
             "uid": 190,
@@ -17119,6 +17112,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         }
     },
