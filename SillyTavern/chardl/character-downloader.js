@@ -199,9 +199,11 @@ function GoFile({
     this.name = name;
     this.cleanName = name.slice(0,-4);
     this.character = this.cleanName.match(/^.*(?= \d{1,2}-)/)?.[0];
-    const [month, day, year] = this.cleanName.match(/\d{1,2}-\d{1,2}-\d{1,2}/)?.[0].split("-");
-    this.dateObj = {month: month.padStart(2,"0"), day: day.padStart(2,"0"), year: year};
-    this.date = `${this.dateObj.month}-${this.dateObj.day}-${this.dateObj.year}`
+    if (this.character) {
+        const [month, day, year] = this.cleanName.match(/\d{1,2}-\d{1,2}-\d{1,2}/)?.[0].split("-");
+        this.dateObj = {month: month.padStart(2,"0"), day: day.padStart(2,"0"), year: year};
+        this.date = `${this.dateObj.month}-${this.dateObj.day}-${this.dateObj.year}`
+    }
 }
 
 /**
