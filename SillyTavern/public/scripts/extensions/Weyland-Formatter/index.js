@@ -13,18 +13,14 @@ const extensionVersion = "1.8.4";
  * @property {boolean} debug
  */
 
-/**
- * @type {WeylandFormatterSettings}
- */
+/** @type {WeylandFormatterSettings} */
 const defaultSettings = {
     enabled: true,
     markdown: true,
     debug: false,
 };
 
-/**
- * @type {WeylandFormatterSettings}
- */
+/** @type {WeylandFormatterSettings} */
 let settings = undefined;
 
 /**
@@ -108,9 +104,7 @@ let settings = undefined;
  * @property {RegExp} spacer
  */
 
-/**
- * @type {WeylandFormatterRegex}
- */
+/** @type {WeylandFormatterRegex} */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
     detectHeader: /^(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)]$/m,
@@ -404,6 +398,7 @@ async function formatMessage(messageId) {
     const characterName = chat[messageId].name;
 
     const originalMessage = chat[messageId].mes;
+    window.preFormatLastMessage = originalMessage;
 
     if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
@@ -458,16 +453,14 @@ async function formatMessage(messageId) {
     formatterEvents.forEach(e => eventSource.on(e, formatMessage));
 })();
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function introImagesExt(){
     try {
         return [{
             type: 'output',
             regex: /\[\s*[IP](\d{3})\s*\]/g,
             replace: function(match, p1) {
-                return `<div style="text-align: center;"><img src="${getGlobalVariable(p1)}" height="500"></div>`
+                return `<div style="text-align: center;"><img src="${getGlobalVariable(p1)}" style="max-height: 500px; height: auto; width: auto;"></div>`
             }
         }];
     } catch (e) {
@@ -476,9 +469,7 @@ function introImagesExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/**  @returns {showdown.ShowdownExtension[]} */
 function hiccupMarkdownExt(){
     try {
         return [{
@@ -492,9 +483,7 @@ function hiccupMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function nonItalicsExt(){
     try {
         return [{
@@ -508,9 +497,7 @@ function nonItalicsExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function singleQuoteExt(){
     try {
         return [{
@@ -524,9 +511,7 @@ function singleQuoteExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function headerMarkdownExt(){
     try {
         return [{
@@ -540,9 +525,7 @@ function headerMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function headerMarkdownMuseExt(){
     try {
         return [{
@@ -556,9 +539,7 @@ function headerMarkdownMuseExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function thinkMarkdownExt(){
     try {
         return [{
@@ -572,9 +553,7 @@ function thinkMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function fdiglMarkdownExt(){
     try {
         return [{
@@ -588,9 +567,7 @@ function fdiglMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function phoneMarkdownExt(){
     try {
         return [{
@@ -673,9 +650,7 @@ function phoneMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function lonePhoneMarkdownExt(){
     try {
         return [{
@@ -720,9 +695,7 @@ function lonePhoneMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function heartRateMarkdownExt(){
     try {
         return [{
