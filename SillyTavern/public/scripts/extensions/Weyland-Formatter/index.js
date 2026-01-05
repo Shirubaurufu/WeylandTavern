@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.4";
+const extensionVersion = "1.8.7";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -102,6 +102,8 @@ let settings = undefined;
  * 
  * @property {RegExp} breakbar
  * @property {RegExp} spacer
+ * 
+ * @property {RegExp} expressionClothingParagraph
  */
 
 /** @type {WeylandFormatterRegex} */
@@ -183,6 +185,8 @@ const weylandRegex = {
 
     breakbar: /¦/i,
     spacer: /^---$/,
+
+    expressionClothingParagraph: /^(\[\w+?\]) ?(\[\w+?\]) ?(\[\d+?\])?/i,
 };
 
 
@@ -236,6 +240,7 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.speech, weylandRegex.speechReplace);
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
+    let paragraphCount = paragraphs.length;
 
     weylandDebug(`Paragraph count: ${paragraphs.length}`);
 
@@ -247,13 +252,21 @@ async function formatParagraphs(message) {
             if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
                 //Format Header
                 paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
+                paragraphCount -= (index+1);
                 paragraphs[index] = paragraph;
                 weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
                 return;
             }
 
             if (weylandRegex.breakbar.test(paragraph) || weylandRegex.spacer.test(paragraph)) {
+                paragraphCount -= 1;
                 return;
+            }
+
+            const expCloPar = paragraph.match(weylandRegex.expressionClothingParagraph);
+            if (expCloPar) {
+                expCloPar[3] = `[${paragraphCount - (paragraphs.length-index)}]`
+                paragraph = `${expCloPar[1]} ${expCloPar[2]} ${expCloPar[3]}`
             }
 
             try {
@@ -540,6 +553,34 @@ function headerMarkdownMuseExt(){
 }
 
 /** @returns {showdown.ShowdownExtension[]} */
+function expCloParCodeExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /<p>\[\w+?\] ?\[\w+?\] ?\[?\d*\]?<\/p>/i,
+            replace: ``
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in expCloParCodeExt extension:`, e);
+        return [];
+    }
+}
+
+/** @returns {showdown.ShowdownExtension[]} */
+function weyBotRelationsExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /(?:<p>)?New \w+: {\w+}(?:<\/p>|<br>)?/ig,
+            replace: ``
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in expCloParCodeExt extension:`, e);
+        return [];
+    }
+}
+
+/** @returns {showdown.ShowdownExtension[]} */
 function thinkMarkdownExt(){
     try {
         return [{
@@ -739,6 +780,8 @@ function updateReloadMarkdownProcessor(){
     converter.addExtension(introImagesExt(), 'introImages');
     converter.addExtension(headerMarkdownExt(), 'weylandHeader');
     converter.addExtension(headerMarkdownMuseExt(), 'weylandHeaderMuse');
+    converter.addExtension(expCloParCodeExt(), 'expCloparCodeExt');
+    converter.addExtension(weyBotRelationsExt(), 'weyBotRelationsExt');
     converter.addExtension(singleQuoteExt(), 'singleQuote');
     //converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     converter.addExtension(phoneMarkdownExt(), 'phoneMarkdownExt');
