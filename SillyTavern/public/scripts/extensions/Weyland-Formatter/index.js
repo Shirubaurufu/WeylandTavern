@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.7";
+const extensionVersion = "1.8.9";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -102,6 +102,7 @@ let settings = undefined;
  * 
  * @property {RegExp} breakbar
  * @property {RegExp} spacer
+ * @property {RegExp} spacer2
  * 
  * @property {RegExp} expressionClothingParagraph
  */
@@ -185,6 +186,7 @@ const weylandRegex = {
 
     breakbar: /¦/i,
     spacer: /^---$/,
+    spacer2: /^=+$/,
 
     expressionClothingParagraph: /^(\[\w+?\]) ?(\[\w+?\]) ?(\[\d+?\])?/i,
 };
@@ -241,6 +243,7 @@ async function formatParagraphs(message) {
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
     let paragraphCount = paragraphs.length;
+    let foundHeader = false;
 
     weylandDebug(`Paragraph count: ${paragraphs.length}`);
 
@@ -252,13 +255,18 @@ async function formatParagraphs(message) {
             if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
                 //Format Header
                 paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
+                foundHeader = true;
                 paragraphCount -= (index+1);
                 paragraphs[index] = paragraph;
                 weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
                 return;
             }
 
-            if (weylandRegex.breakbar.test(paragraph) || weylandRegex.spacer.test(paragraph)) {
+            if (!foundHeader) {
+                return;
+            }
+
+            if (weylandRegex.breakbar.test(paragraph) || weylandRegex.spacer.test(paragraph) || weylandRegex.spacer2.test(paragraph)) {
                 paragraphCount -= 1;
                 return;
             }
