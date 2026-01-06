@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.9";
+const extensionVersion = "1.8.10";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -244,6 +244,7 @@ async function formatParagraphs(message) {
     let paragraphs = message.split(weylandRegex.paragraphSplit);
     let paragraphCount = paragraphs.length;
     let foundHeader = false;
+    let foundFooter = false;
 
     weylandDebug(`Paragraph count: ${paragraphs.length}`);
 
@@ -266,15 +267,32 @@ async function formatParagraphs(message) {
                 return;
             }
 
-            if (weylandRegex.breakbar.test(paragraph) || weylandRegex.spacer.test(paragraph) || weylandRegex.spacer2.test(paragraph)) {
+            if (weylandRegex.spacer.test(paragraph) || weylandRegex.spacer2.test(paragraph)) {
+                paragraphCount -= 1;
+                if (foundFooter)
+                    paragraphs[index] = "";
+                return;
+            }
+
+            if (weylandRegex.breakbar.test(paragraph)) {
                 paragraphCount -= 1;
                 return;
             }
 
-            const expCloPar = paragraph.match(weylandRegex.expressionClothingParagraph);
-            if (expCloPar) {
-                expCloPar[3] = `[${paragraphCount - (paragraphs.length-index)}]`
-                paragraph = `${expCloPar[1]} ${expCloPar[2]} ${expCloPar[3]}`
+            try {
+                const expCloPar = paragraph.match(weylandRegex.expressionClothingParagraph);
+                if (expCloPar) {
+                    foundFooter = true;
+                    expCloPar[3] = `[${paragraphCount - (paragraphs.length-index)}]`;
+                    paragraph = replaceText(paragraph, weylandRegex.expressionClothingParagraph, `${expCloPar[1]} ${expCloPar[2]} ${expCloPar[3]}`);
+                }
+            } catch (e) {
+                weylandDebug(`#${index} - expCloPar error: ${e}`);
+            }
+            
+            if (foundFooter) {
+                paragraphs[index] = replaceText(paragraph, weylandRegex.asterisk, "");
+                return;
             }
 
             try {
@@ -392,7 +410,7 @@ async function formatParagraphs(message) {
     });
 
     weylandDebug(`formatParagraphs took ${performance.now()-formatParagraphsStartTime} miliseconds`);
-    return paragraphs;
+    return paragraphs.filter(paragraph => paragraph.length !== 0);
 }
 
 function replaceText(text, regex, replace) {
@@ -579,7 +597,7 @@ function weyBotRelationsExt(){
     try {
         return [{
             type: 'output',
-            regex: /(?:<p>)?New \w+: {\w+}(?:<\/p>|<br>)?/ig,
+            regex: /(?:<p>)?(?:<strong>)?(?:<em>)?New \w+:(?:<\/em>)?(?:<\/strong>)? {\w+}(?:<\/p>|<br>)?/ig,
             replace: ``
         }];
     } catch (e) {
