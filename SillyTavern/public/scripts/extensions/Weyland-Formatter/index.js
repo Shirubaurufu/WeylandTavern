@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.10";
+const extensionVersion = "1.9.1";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -33,6 +33,8 @@ let settings = undefined;
  * @property {RegExp} greedyDetectAction
  * @property {RegExp} greedyDetectActionQuotes
  * @property {RegExp} detectHTMLParagraph
+ * @property {RegExp} tavernTails
+ * @property {RegExp} think
  * 
  * @property {RegExp} asterisk
  * 
@@ -117,6 +119,8 @@ const weylandRegex = {
     greedyDetectAction: /(?<=[\s—]|^)\*([^"_\[\]\n\r]+)\*(?=[\s—]|$)/g,
     greedyDetectActionQuotes: /(?<=\*[\s—]|__[\s—]|^)"[^"]+"(?=[\s—]\*|[\s—]__|$)/,
     detectHTMLParagraph: /^<[\s\S]*>$/,
+    tavernTails: /^<div style="text-align: center;"><font size="6"><strong>Tavern Tails<\/strong><\/font><\/div>/,
+    think: /<think>[\w\W]+?<\/think>/,
 
     asterisk: /\*/g,
 
@@ -264,6 +268,9 @@ async function formatParagraphs(message) {
             }
 
             if (!foundHeader) {
+                if (!weylandRegex.tavernTails.test(paragraph) && !settings.debug) {
+                    paragraphs[index] = "";
+                }
                 return;
             }
 
@@ -436,7 +443,8 @@ async function formatMessage(messageId) {
 
     const characterName = chat[messageId].name;
 
-    const originalMessage = chat[messageId].mes;
+    const originalMessage = settings?.debug ? chat[messageId].mes : chat[messageId].mes.replace(weylandRegex.think, "");
+    
     window.preFormatLastMessage = originalMessage;
 
     if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
@@ -490,6 +498,11 @@ async function formatMessage(messageId) {
     ];
 
     formatterEvents.forEach(e => eventSource.on(e, formatMessage));
+
+    eventSource.on(event_types.CHAT_CHANGED, () => {
+        if (settings.debug)
+            toastr.warning('WARNING: Weyland-Formatter Debug mode enabled. Experience may be negatively impacted. It is recommended to disable debug mode.');
+    });
 })();
 
 /** @returns {showdown.ShowdownExtension[]} */

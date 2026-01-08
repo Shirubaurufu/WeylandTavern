@@ -16,9 +16,14 @@ const ltm = 0.4;
                         return originalFetch.apply(this, [url, request]);
                     }
                 }
+                if (!/claude-sonnet-4.5-rp|glm-4.7-thinking|kimi-k2-thinking/.test(body.model)) {
+                    const mes = body.messages.at(-1);
+                    if (mes.role === "assistant" && mes.content.startsWith("<think>")) {
+                        body.messages = body.messages.slice(0, -1);
+                    }
+                }
                 body.temperature = def;
-                const message = body.messages.at(-1);
-                if (message.role === "user" && message.content.startsWith("LTM Creation in Process...")) {
+                if (body.messages.findLast(({role, content}) => role === "user" && content.startsWith("LTM Creation in Process..."))) {
                     body.temperature = ltm;
                     body.custom_include_body = body.custom_include_body.replace(/(?:(?:\\n)?- ?)?temperature: \d\.\d/g,"");
                 }
