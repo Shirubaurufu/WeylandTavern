@@ -1,6 +1,6 @@
-import { SlashCommandParser } from "../../../slash-commands/SlashCommandParser.js";
-import { SlashCommand } from "../../../slash-commands/SlashCommand.js";
-import { ARGUMENT_TYPE, SlashCommandArgument, SlashCommandNamedArgument } from "../../../slash-commands/SlashCommandArgument.js";
+import { SlashCommandParser } from "../../slash-commands/SlashCommandParser.js";
+import { SlashCommand } from "../../slash-commands/SlashCommand.js";
+import { ARGUMENT_TYPE, SlashCommandArgument, SlashCommandNamedArgument } from "../../slash-commands/SlashCommandArgument.js";
 
 const STYLE_ID = 'side-character-loader-style';
 const CONSOLE_PREFIX = '[SCL]';
