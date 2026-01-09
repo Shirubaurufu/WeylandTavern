@@ -4,7 +4,7 @@ import { getGlobalVariable } from '../../variables.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.9.1";
+const extensionVersion = "1.9.4";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -34,7 +34,9 @@ let settings = undefined;
  * @property {RegExp} greedyDetectActionQuotes
  * @property {RegExp} detectHTMLParagraph
  * @property {RegExp} tavernTails
- * @property {RegExp} think
+ * @property {RegExp} thinkFull
+ * @property {RegExp} thinkStart
+ * @property {RegExp} thinkEnd
  * 
  * @property {RegExp} asterisk
  * 
@@ -112,7 +114,7 @@ let settings = undefined;
 /** @type {WeylandFormatterRegex} */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)]$/m,
+    detectHeader: /^(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*(?:[ap]m) ~[^"*_`\n\r]*[~\]\)]$/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -120,7 +122,9 @@ const weylandRegex = {
     greedyDetectActionQuotes: /(?<=\*[\s—]|__[\s—]|^)"[^"]+"(?=[\s—]\*|[\s—]__|$)/,
     detectHTMLParagraph: /^<[\s\S]*>$/,
     tavernTails: /^<div style="text-align: center;"><font size="6"><strong>Tavern Tails<\/strong><\/font><\/div>/,
-    think: /<think>[\w\W]+?<\/think>/,
+    thinkFull: /<think>[\w\W]+?<\/think>/,
+    thinkStart: /^<think>/,
+    thinkEnd: /<\/think>$/,
 
     asterisk: /\*/g,
 
@@ -247,6 +251,7 @@ async function formatParagraphs(message) {
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
     let paragraphCount = paragraphs.length;
+    let thinking = false;
     let foundHeader = false;
     let foundFooter = false;
 
@@ -257,14 +262,21 @@ async function formatParagraphs(message) {
             weylandDebug(`#${index} - Formatting...`);
             const paragraphLoopStartTime = performance.now();
             paragraph = paragraph.trim();
+            if (!thinking && weylandRegex.thinkStart.test(paragraph)) thinking = true;
+            if (thinking && weylandRegex.thinkEnd.test(paragraph)) thinking = false;
             if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
-                //Format Header
-                paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
-                foundHeader = true;
-                paragraphCount -= (index+1);
-                paragraphs[index] = paragraph;
-                weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
-                return;
+                if (!thinking) {
+                    //Format Header
+                    paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
+                    if (!foundHeader) {
+                        paragraphCount -= index;
+                        foundHeader = true;
+                    }
+                    paragraphCount -= 1;
+                    paragraphs[index] = paragraph;
+                    weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
+                    return;
+                }
             }
 
             if (!foundHeader) {
@@ -443,7 +455,7 @@ async function formatMessage(messageId) {
 
     const characterName = chat[messageId].name;
 
-    const originalMessage = settings?.debug ? chat[messageId].mes : chat[messageId].mes.replace(weylandRegex.think, "");
+    const originalMessage = settings?.debug ? chat[messageId].mes : chat[messageId].mes.replace(weylandRegex.thinkFull, "");
     
     window.preFormatLastMessage = originalMessage;
 
@@ -568,7 +580,7 @@ function headerMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /((?<=.>)(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)](?=<.|\s))/,
+            regex: /((?<=.>)([^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*(?:[ap]m) ~[^"*_`\n\r]*[~\]\)](?=<.| ))/gi,
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
