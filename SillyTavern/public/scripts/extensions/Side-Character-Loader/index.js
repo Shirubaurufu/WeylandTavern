@@ -88,8 +88,8 @@ const updateSideCharacter = async (args) => {
     }
     
     // Only use expression image dimensions if height is at least 150px
-    const defaultWidth = (imgHeight >= 100) ? `${imgWidth}px` : '500px';
-    const defaultHeight = (imgHeight >= 100) ? `${imgHeight}px` : '1200px';
+    const defaultWidth = (imgHeight >= 125) ? `${imgWidth}px` : '500px';
+    const defaultHeight = (imgHeight >= 125) ? `${imgHeight}px` : '1200px';
     
     // Parse parameters with defaults
     const character = args.character || 'Blake';
