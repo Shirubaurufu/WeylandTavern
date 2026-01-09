@@ -77,8 +77,8 @@ const updateSideCharacter = async (args) => {
                     resolve();
                 } else {
                     img.addEventListener('load', resolve, { once: true });
-                    // Timeout after 2 seconds if image doesn't load
-                    setTimeout(resolve, 2000);
+                    // Timeout after 5 seconds if image doesn't load
+                    setTimeout(resolve, 5000);
                 }
             });
             
@@ -88,8 +88,8 @@ const updateSideCharacter = async (args) => {
     }
     
     // Only use expression image dimensions if height is at least 150px
-    const defaultWidth = (imgHeight >= 150) ? `${imgWidth}px` : '500px';
-    const defaultHeight = (imgHeight >= 150) ? `${imgHeight}px` : '1200px';
+    const defaultWidth = (imgHeight >= 100) ? `${imgWidth}px` : '500px';
+    const defaultHeight = (imgHeight >= 100) ? `${imgHeight}px` : '1200px';
     
     // Parse parameters with defaults
     const character = args.character || 'Blake';
