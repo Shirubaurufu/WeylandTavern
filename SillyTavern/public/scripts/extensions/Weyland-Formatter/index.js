@@ -5,7 +5,7 @@ import { getTokenCountAsync } from '../../tokenizers.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.9.6";
+const extensionVersion = "1.9.7";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -117,7 +117,7 @@ let settings = undefined;
 /** @type {WeylandFormatterRegex} */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*(?:[ap]m) ~[^"*_`\n\r]*[~\]\)]$/mi,
+    detectHeader: /^(?:[^"*~_`]*\n(?<!\n\n))?[^"*~_`\n\r]*~[^"*_`\n\r]*(?:[ap]m) ~[^"*_`\n\r]*[~\]\)]$/mi,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
