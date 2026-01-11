@@ -5,7 +5,7 @@ import { getTokenCountAsync } from '../../tokenizers.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.9.8";
+const extensionVersion = "1.9.9";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -125,9 +125,9 @@ const weylandRegex = {
     greedyDetectActionQuotes: /(?<=\*[\s—]|__[\s—]|^)"[^"]+"(?=[\s—]\*|[\s—]__|$)/,
     detectHTMLParagraph: /^<[\s\S]*>$/,
     tavernTails: /^<div style="text-align: center;"><font size="6"><strong>Tavern Tails<\/strong><\/font><\/div>/,
-    thinkFull: /<think>[\w\W]+?<\/think>/,
-    thinkStart: /^<think>/,
-    thinkEnd: /<\/think>$/,
+    thinkFull: /<.*think.*>[\w\W]+?<.*\/.*think.*>/,
+    thinkStart: /^<.*think.*>/,
+    thinkEnd: /<.*\/.*think.*>$/,
 
     asterisk: /\*/g,
 
@@ -446,9 +446,14 @@ function replaceText(text, regex, replace) {
 
 async function formatMessage(messageId) {
     if (settings === undefined) getSettings();
-    if (!settings.enabled) {
-        if (!settings.experimental) {
-            chat[messageId].mes = chat[messageId].mes.replace(weylandRegex.thinkFull, "").trim();
+    window.preFormatLastMessage = "";
+    if (!settings?.enabled) {
+        if (!settings?.experimental) {
+            const originalMessage = chat[messageId].mes;
+            if (settings?.debug){
+                window.preFormatLastMessage = originalMessage;
+            }
+            chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
         }
         if (chat[messageId].extra.token_count) {
             chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
@@ -466,7 +471,7 @@ async function formatMessage(messageId) {
 
     const characterName = chat[messageId].name;
 
-    const originalMessage = settings?.experimental ? chat[messageId].mes : chat[messageId].mes.replace(weylandRegex.thinkFull, "");
+    const originalMessage = chat[messageId].mes
 
     if (!settings?.experimental) {
         if (chat[messageId].extra.reasoning)
@@ -480,13 +485,14 @@ async function formatMessage(messageId) {
         } catch {}
     }
     
-    if (settings.debug)
+    if (settings.debug) {
         window.preFormatLastMessage = originalMessage;
+    }
 
     if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
         weylandDebug(`Formatting character: ${characterName}`);
-        const paragraphs = await formatParagraphs(originalMessage);
+        const paragraphs = await formatParagraphs(settings?.experimental ? originalMessage.replace(weylandRegex.thinkFull, "").trim() : originalMessage);
     
         chat[messageId].mes = paragraphs.join("\n\n");
     }
