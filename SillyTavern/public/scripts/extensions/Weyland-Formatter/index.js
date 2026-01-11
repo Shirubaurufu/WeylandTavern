@@ -1,16 +1,18 @@
 import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor } from '../../../script.js';
 import { power_user } from '../../power-user.js';
 import { getGlobalVariable } from '../../variables.js';
+import { getTokenCountAsync } from '../../tokenizers.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.9.4";
+const extensionVersion = "1.9.6";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
  * @property {boolean} enabled
  * @property {boolean} markdown
  * @property {boolean} debug
+ * @property {boolean} experimental
  */
 
 /** @type {WeylandFormatterSettings} */
@@ -18,6 +20,7 @@ const defaultSettings = {
     enabled: true,
     markdown: true,
     debug: false,
+    experimental: false,
 };
 
 /** @type {WeylandFormatterSettings} */
@@ -114,7 +117,7 @@ let settings = undefined;
 /** @type {WeylandFormatterRegex} */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*(?:[ap]m) ~[^"*_`\n\r]*[~\]\)]$/m,
+    detectHeader: /^(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*(?:[ap]m) ~[^"*_`\n\r]*[~\]\)]$/mi,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -280,7 +283,7 @@ async function formatParagraphs(message) {
             }
 
             if (!foundHeader) {
-                if (!weylandRegex.tavernTails.test(paragraph) && !settings.debug) {
+                if (!weylandRegex.tavernTails.test(paragraph) && !settings.experimental) {
                     paragraphs[index] = "";
                 }
                 return;
@@ -443,7 +446,15 @@ function replaceText(text, regex, replace) {
 
 async function formatMessage(messageId) {
     if (settings === undefined) getSettings();
-    if (!settings.enabled) return;
+    if (!settings.enabled) {
+        if (!settings.experimental) {
+            chat[messageId].mes = chat[messageId].mes.replace(weylandRegex.thinkFull, "").trim();
+        }
+        if (chat[messageId].extra.token_count) {
+            chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
+        }
+        return;
+    }
 
     const formatMessageStartTime = performance.now();
     //weylandDebug(JSON.stringify(chat[messageId]));
@@ -455,9 +466,24 @@ async function formatMessage(messageId) {
 
     const characterName = chat[messageId].name;
 
-    const originalMessage = settings?.debug ? chat[messageId].mes : chat[messageId].mes.replace(weylandRegex.thinkFull, "");
+    const originalMessage = settings?.experimental ? chat[messageId].mes : chat[messageId].mes.replace(weylandRegex.thinkFull, "");
+
+    if (!settings?.experimental) {
+        if (chat[messageId].extra.reasoning)
+            chat[messageId].extra.reasoning = "";
+        try {
+            chat[messageId].swipe_info?.forEach(swipe => {
+                if (swipe.extra.reasoning) {
+                    swipe.extra.reasoning = "";
+                }
+            })
+        } catch {}
+    }
+
+    weylandDebug(`chatMes: ${JSON.stringify(chat[messageId])}`);
     
-    window.preFormatLastMessage = originalMessage;
+    if (settings.debug)
+        window.preFormatLastMessage = originalMessage;
 
     if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
@@ -465,8 +491,12 @@ async function formatMessage(messageId) {
         const paragraphs = await formatParagraphs(originalMessage);
     
         chat[messageId].mes = paragraphs.join("\n\n");
-        weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
     }
+
+    if (chat[messageId].extra.token_count) {
+        chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
+    }
+    weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
 }
 
 (async function () {
@@ -495,6 +525,13 @@ async function formatMessage(messageId) {
             weylandDebug(`[${MODULE_NAME}] Setting Debug: ${settings.debug}`);
             saveSettingsDebounced();
         });
+
+        // Experimental
+        $('#weylandFormatterExperimental').prop('checked', settings.experimental).on('input', function () {
+            settings.experimental = !!$(this).prop('checked');
+            weylandDebug(`[${MODULE_NAME}] Setting Experimental: ${settings.experimental}`);
+            saveSettingsDebounced();
+        });
     }
     
     console.debug(`[${MODULE_NAME}] Initializing v${extensionVersion}`);
@@ -512,8 +549,8 @@ async function formatMessage(messageId) {
     formatterEvents.forEach(e => eventSource.on(e, formatMessage));
 
     eventSource.on(event_types.CHAT_CHANGED, () => {
-        if (settings.debug)
-            toastr.warning('WARNING: Weyland-Formatter Debug mode enabled. Experience may be negatively impacted. It is recommended to disable debug mode.');
+        if (settings.experimental)
+            toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
     });
 })();
 
