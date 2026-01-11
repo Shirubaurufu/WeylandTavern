@@ -5,7 +5,7 @@ import { getTokenCountAsync } from '../../tokenizers.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.9.7";
+const extensionVersion = "1.9.8";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -479,8 +479,6 @@ async function formatMessage(messageId) {
             })
         } catch {}
     }
-
-    weylandDebug(`chatMes: ${JSON.stringify(chat[messageId])}`);
     
     if (settings.debug)
         window.preFormatLastMessage = originalMessage;
@@ -530,6 +528,9 @@ async function formatMessage(messageId) {
         $('#weylandFormatterExperimental').prop('checked', settings.experimental).on('input', function () {
             settings.experimental = !!$(this).prop('checked');
             weylandDebug(`[${MODULE_NAME}] Setting Experimental: ${settings.experimental}`);
+            if (settings.experimental) {
+                toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
+            }
             saveSettingsDebounced();
         });
     }
