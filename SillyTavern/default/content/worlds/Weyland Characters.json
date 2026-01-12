@@ -130,10 +130,12 @@
         "2": {
             "uid": 2,
             "key": [
-                "bleacher",
-                "bleachers",
-                "baseball",
-                "cheerleader"
+                "roommate",
+                "drunk",
+                "drink",
+                "drinking",
+                "party",
+                "wasted"
             ],
             "keysecondary": [],
             "comment": "Scenario",
@@ -5660,7 +5662,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Lyris & Vesper Outfit Codes",
-            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFITS (work clothes)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFITS (work clothes)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - {{char}}'s casual outfits\n• [XX] - No other code matches",
             "constant": false,
             "vectorized": false,
             "selective": true,
