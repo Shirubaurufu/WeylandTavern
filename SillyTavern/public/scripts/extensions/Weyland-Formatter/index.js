@@ -1,11 +1,13 @@
 import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor } from '../../../script.js';
 import { power_user } from '../../power-user.js';
 import { getGlobalVariable } from '../../variables.js';
+import { substituteParams } from '../../../script.js';
 import { getTokenCountAsync } from '../../tokenizers.js';
+import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.9.10";
+const extensionVersion = "1.10.3";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -444,25 +446,42 @@ function replaceText(text, regex, replace) {
     return text;
 }
 
+async function formatNewMessage(messageId) {
+    if (settings === undefined) getSettings();
+    if (!power_user.user_prompt_bias) {
+        chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.trim()}`;
+    } else if (/\[overwrite\]/i.test(power_user.user_prompt_bias)) {
+        chat[messageId].mes = chat[messageId].mes.replace(/\[overwrite\]\s?/i,"");
+    } else {
+        chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.replace(power_user.user_prompt_bias,"").trim()}`;
+    }
+    await formatMessage(messageId);
+}
+
 async function formatMessage(messageId) {
     if (settings === undefined) getSettings();
     window.preFormatLastMessage = "";
+
+    const originalMessage = chat[messageId].mes;
+
     if (!settings?.enabled) {
         if (!settings?.experimental) {
-            const originalMessage = chat[messageId].mes;
             if (settings?.debug){
                 window.preFormatLastMessage = originalMessage;
             }
-            chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
-            if (chat[messageId].extra.token_count) {
-                chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
+            if (weylandRegex.thinkFull.test(originalMessage)) {
+                chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
+            } else if (weylandRegex.thinkStart.test(originalMessage)) {
+                chat[messageId].mes = "";
             }
+        }
+        if (chat[messageId].extra.token_count) {
+            chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
         }
         return;
     }
 
     const formatMessageStartTime = performance.now();
-    //weylandDebug(JSON.stringify(chat[messageId]));
 
     const isUser = chat[messageId].is_user;
     const isSystem = chat[messageId].is_system;
@@ -470,8 +489,6 @@ async function formatMessage(messageId) {
     if (isUser || isSystem) return;
 
     const characterName = chat[messageId].name;
-
-    const originalMessage = chat[messageId].mes
 
     if (!settings?.experimental) {
         if (chat[messageId].extra.reasoning)
@@ -495,9 +512,11 @@ async function formatMessage(messageId) {
         const paragraphs = await formatParagraphs(settings?.experimental ? originalMessage : originalMessage.replace(weylandRegex.thinkFull, "").trim());
     
         chat[messageId].mes = paragraphs.join("\n\n");
+    } else if (!settings?.experimental && !weylandRegex.thinkFull.test(originalMessage) && weylandRegex.thinkStart.test(originalMessage) && characterName !== "Kressa" && characterName !== "Kinsbane Manor") {
+        chat[messageId].mes = "";
     }
 
-    if (chat[messageId].extra.token_count && !settings?.experimental) {
+    if (chat[messageId].extra.token_count) {
         chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
     }
     weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
@@ -536,6 +555,20 @@ async function formatMessage(messageId) {
             weylandDebug(`[${MODULE_NAME}] Setting Experimental: ${settings.experimental}`);
             if (settings.experimental) {
                 toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
+            } else {
+                oai_settings.stream_openai = false;
+                $('#stream_toggle').prop('checked', false);
+            }
+            saveSettingsDebounced();
+        });
+        
+        $('#stream_toggle').prop('checked', oai_settings.stream_openai).on('change', function () {
+            if (!settings.experimental) {
+                oai_settings.stream_openai = false;
+                $('#stream_toggle').prop('checked', false);
+                toastr.warning('WARNING: Streaming is not recommended for Weyland-Tavern.');
+            } else {
+                oai_settings.stream_openai = !!$('#stream_toggle').prop('checked');
             }
             saveSettingsDebounced();
         });
@@ -548,13 +581,8 @@ async function formatMessage(messageId) {
 
     updateReloadMarkdownProcessor(); //Adds markdown
 
-    const formatterEvents = [
-        event_types.MESSAGE_RECEIVED,
-        event_types.MESSAGE_EDITED
-    ];
-
-    formatterEvents.forEach(e => eventSource.on(e, formatMessage));
-
+    eventSource.on(event_types.MESSAGE_RECEIVED, formatNewMessage);
+    eventSource.on(event_types.MESSAGE_EDITED, formatMessage);
     eventSource.on(event_types.CHAT_CHANGED, () => {
         if (settings.experimental)
             toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');

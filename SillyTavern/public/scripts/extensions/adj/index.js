@@ -1,3 +1,7 @@
+import { getGlobalVariable } from '../../variables.js';
+import { substituteParams } from '../../../script.js';
+import { power_user } from '../../power-user.js';
+
 const def = 1.0;
 const ltm = 0.4;
 
@@ -10,24 +14,41 @@ const ltm = 0.4;
             // @ts-ignore
             let body = JSON.parse(request.body);
             if (body) {
+                console.debug(`[adj] Old: ${request.body}`);
                 if (body.chat_completion_source === "custom") {
                     if (!/https:\/\/(?:helixmind\.online|api\.electronhub\.ai|api\.zukijourney\.com|api\.zanity\.xyz(?:\/rp)?|fresedgpt\.space|ai\.megallm\.io|api\.z\.ai\/api\/coding\/paas(?:\/v4))(?:\/v1|)?/.test(body.custom_url)) {
                         delete request.body;
                         return originalFetch.apply(this, [url, request]);
                     }
                 }
-                if (!/claude-sonnet-4.5-rp|glm-4.7-thinking|kimi-k2-thinking/.test(body.model)) {
-                    const mes = body.messages.at(-1);
-                    if (mes.role === "assistant" && mes.content.startsWith("<think>")) {
-                        body.messages = body.messages.slice(0, -1);
+                const mes = body.messages.at(-1);
+                const charBlacklist = body.char_name === "Kressa" || body.char_name === "Kinsbane Manor";
+                const assistant = mes.role === "assistant";
+                if (/(?!.*rp2$)(?=.*sonnet)(?=.*4\.5).*|glm-4\.7|kimi-k2-thinking/i.test(body.model)) {
+                    if (!assistant && !charBlacklist) {
+                        body.messages.push({"role":"assistant","content":substituteParams(getGlobalVariable("Thinking"))});
+                    } else {
+                        if (charBlacklist) {
+                            body.messages = body.messages.slice(0, -1);
+                        } else {
+                            if (/\[overwrite\]/i.test(mes.content)) {
+                                mes.content = mes.content.replace(/\[overwrite\]\s?/i,"");
+                            } else {
+                                mes.content = substituteParams(getGlobalVariable("Thinking"));
+                            }
+                        }
                     }
+                } else if ((charBlacklist || mes.content.startsWith(power_user.user_prompt_bias)) && assistant) {
+                    body.messages = body.messages.slice(0, -1);
                 }
+
                 body.temperature = def;
-                if (body.messages.findLast(({role, content}) => role === "user" && content.startsWith("LTM Creation in Process..."))) {
+                if (body.messages.findLast(({role, content}) => role === "user" && content.startsWith("LTM Creation in Pro"))) {
                     body.temperature = ltm;
                     body.custom_include_body = body.custom_include_body.replace(/(?:(?:\\n)?- ?)?temperature: \d\.\d/g,"");
                 }
                 request.body = JSON.stringify(body);
+                console.debug(`[adj] New: ${request.body}`);
             }
         }
 
