@@ -5,7 +5,7 @@ import { getTokenCountAsync } from '../../tokenizers.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.9.9";
+const extensionVersion = "1.9.10";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -283,7 +283,7 @@ async function formatParagraphs(message) {
             }
 
             if (!foundHeader) {
-                if (!weylandRegex.tavernTails.test(paragraph) && !settings.experimental) {
+                if (!weylandRegex.tavernTails.test(paragraph) && !settings?.experimental) {
                     paragraphs[index] = "";
                 }
                 return;
@@ -454,9 +454,9 @@ async function formatMessage(messageId) {
                 window.preFormatLastMessage = originalMessage;
             }
             chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
-        }
-        if (chat[messageId].extra.token_count) {
-            chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
+            if (chat[messageId].extra.token_count) {
+                chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
+            }
         }
         return;
     }
@@ -492,12 +492,12 @@ async function formatMessage(messageId) {
     if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
         weylandDebug(`Formatting character: ${characterName}`);
-        const paragraphs = await formatParagraphs(settings?.experimental ? originalMessage.replace(weylandRegex.thinkFull, "").trim() : originalMessage);
+        const paragraphs = await formatParagraphs(settings?.experimental ? originalMessage : originalMessage.replace(weylandRegex.thinkFull, "").trim());
     
         chat[messageId].mes = paragraphs.join("\n\n");
     }
 
-    if (chat[messageId].extra.token_count) {
+    if (chat[messageId].extra.token_count && !settings?.experimental) {
         chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
     }
     weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
