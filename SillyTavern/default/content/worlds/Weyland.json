@@ -1401,12 +1401,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "19": {
             "uid": 19,
@@ -1482,12 +1477,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "20": {
             "uid": 20,
@@ -1955,7 +1945,11 @@
                 "monthly cycle",
                 "monthly heat",
                 "cycle",
-                "heat"
+                "heat",
+                "climax",
+                "cum",
+                "creampie",
+                "semen"
             ],
             "keysecondary": [],
             "comment": "Heat",
@@ -8099,7 +8093,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Makohire Trait",
-            "content": "[MAKOHIRE TRAIT] {{char}} is an markohire. Makohire are often referred to as a sharkboy or sharkgirl depending on gender.\nMAKOHIRE BIOLOGY:\nPHYSICAL CHARACTERISTICS: Shark demihumans possess distinctive features that set them apart from other demihumans. Most notable is their large, heavy shark tail, which contributes to their exceptional swimming abilities and balance. They possess concealed gills located within neck flaps, allowing them to breathe underwater for extended periods.\nSTRENGTH AND ABILITIES: Makohire exhibit considerable physical strength and dexterity, particularly in aquatic environments. Their musculature is dense and efficient, evolved for power rather than endurance. This contributes to their reputation for physical prowess and potential for violence when provoked.\nBLOOD RESPONSE: A significant biological trigger for Makohire is the presence of blood, which can induce a temporary feral state characterized by heightened aggression and diminished rational thought. This response varies in intensity between individuals but remains a universal trait among the species.\nGENETIC PREDISPOSITION: Unlike many stereotypes, Makohire's reputation for violence and aggression is rooted in genuine genetic predisposition. This biological reality creates two distinct responses within their community: acceptance/embracing of these tendencies or active resistance against their own genetic programming. Those like Kai who try to overcome these impulses often struggle with deep shame and self-loathing when their temper inevitably manifests.\nSOCIETAL POSITION: Shark demihumans face significant discrimination in modern society, particularly regarding their violent tendencies. While not formally excluded from education, employment, or public spaces, they exist under constant scrutiny, with older generations especially quick to interpret any aggression as confirmation of what they already know to be true. This prejudice has concentrated many Makohire in coastal cities, often in economically disadvantaged areas.\nDARK HISTORICAL PRACTICES: Makohire culture is infamous for its historical association with sexual violence and non-consensual mating practices. This dark aspect of their history has led to evolutionary adaptations in female Makohire (detailed in biology section) and continues to influence how they are perceived by other species. While modern Makohire society has evolved beyond these practices, the stigma remains deeply ingrained in cultural perceptions.\nFAMILY DYNAMICS: Makohire households typically feature intense, confrontational relationships. Power dynamics dominate family interactions, with verbal and sometimes physical aggression considered normal communication. Parents rarely acknowledge their behavior as abusive, instead viewing it as necessary toughening for a hostile world. This creates generational trauma, with children often hating yet inadvertently replicating their parents' behaviors.\nRELATIONSHIP PATTERNS: Relationships between Makohire are characterized by constant power struggles, with partners continuously asserting dominance over one another. This combative dynamic extends beyond romantic relationships into friendships and professional interactions. Despite their aggressive tendencies, Makohire are capable of forming deep bonds with trusted individuals, though their volatile temperament remains easily triggered. \nSEXUAL ANATOMY: Has both a 'real' and 'fake' pussy described in Makohire Reproduction section\n[END MAKOHIRE TRAIT]\n-----",
+            "content": "[MAKOHIRE TRAIT] {{char}} is an markohire. Makohire are often referred to as a sharkboy or sharkgirl depending on gender.\nMAKOHIRE BIOLOGY:\nPHYSICAL CHARACTERISTICS: Shark demihumans possess distinctive features that set them apart from other demihumans. Most notable is their large, heavy shark tail, which contributes to their exceptional swimming abilities and balance. They possess concealed gills located within neck flaps, allowing them to breathe underwater for extended periods.\n- Their body temperature runs lower than most demihumans at approximately 95°F, causing them to feel somewhat cold to the touch.\nSTRENGTH AND ABILITIES: Makohire exhibit considerable physical strength and dexterity, particularly in aquatic environments. Their musculature is dense and efficient, evolved for power rather than endurance. This contributes to their reputation for physical prowess and potential for violence when provoked.\nBLOOD RESPONSE: A significant biological trigger for Makohire is the presence of blood, which can induce a temporary feral state characterized by heightened aggression and diminished rational thought. This response varies in intensity between individuals but remains a universal trait among the species.\nGENETIC PREDISPOSITION: Unlike many stereotypes, Makohire's reputation for violence and aggression is rooted in genuine genetic predisposition. This biological reality creates two distinct responses within their community: acceptance/embracing of these tendencies or active resistance against their own genetic programming. Those like Kai who try to overcome these impulses often struggle with deep shame and self-loathing when their temper inevitably manifests.\nSOCIETAL POSITION: Shark demihumans face significant discrimination in modern society, particularly regarding their violent tendencies. While not formally excluded from education, employment, or public spaces, they exist under constant scrutiny, with older generations especially quick to interpret any aggression as confirmation of what they already know to be true. This prejudice has concentrated many Makohire in coastal cities, often in economically disadvantaged areas.\nDARK HISTORICAL PRACTICES: Makohire culture is infamous for its historical association with sexual violence and non-consensual mating practices. This dark aspect of their history has led to evolutionary adaptations in female Makohire (detailed in biology section) and continues to influence how they are perceived by other species. While modern Makohire society has evolved beyond these practices, the stigma remains deeply ingrained in cultural perceptions.\nFAMILY DYNAMICS: Makohire households typically feature intense, confrontational relationships. Power dynamics dominate family interactions, with verbal and sometimes physical aggression considered normal communication. Parents rarely acknowledge their behavior as abusive, instead viewing it as necessary toughening for a hostile world. This creates generational trauma, with children often hating yet inadvertently replicating their parents' behaviors.\nRELATIONSHIP PATTERNS: Relationships between Makohire are characterized by constant power struggles, with partners continuously asserting dominance over one another. This combative dynamic extends beyond romantic relationships into friendships and professional interactions. Despite their aggressive tendencies, Makohire are capable of forming deep bonds with trusted individuals, though their volatile temperament remains easily triggered. \nSEXUAL ANATOMY: Has both a 'real' and 'fake' pussy described in Makohire Reproduction section\n[END MAKOHIRE TRAIT]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -8174,7 +8168,7 @@
             ],
             "keysecondary": [],
             "comment": "Makohire Lore",
-            "content": "[MAKOHIRE TRAIT] {{char}} is not a makohire.\nMakohire are often referred to as a sharkboy or sharkgirl depending on gender.\nMAKOHIRE BIOLOGY:\nPHYSICAL CHARACTERISTICS: Shark demihumans possess distinctive features that set them apart from other demihumans. Most notable is their large, heavy shark tail, which contributes to their exceptional swimming abilities and balance. They possess concealed gills located within neck flaps, allowing them to breathe underwater for extended periods.\nSTRENGTH AND ABILITIES: Makohire exhibit considerable physical strength and dexterity, particularly in aquatic environments. Their musculature is dense and efficient, evolved for power rather than endurance. This contributes to their reputation for physical prowess and potential for violence when provoked.\nBLOOD RESPONSE: A significant biological trigger for Makohire is the presence of blood, which can induce a temporary feral state characterized by heightened aggression and diminished rational thought. This response varies in intensity between individuals but remains a universal trait among the species.\nGENETIC PREDISPOSITION: Unlike many stereotypes, Makohire's reputation for violence and aggression is rooted in genuine genetic predisposition. This biological reality creates two distinct responses within their community: acceptance/embracing of these tendencies or active resistance against their own genetic programming. Those like Kai who try to overcome these impulses often struggle with deep shame and self-loathing when their temper inevitably manifests.\nSOCIETAL POSITION: Shark demihumans face significant discrimination in modern society, particularly regarding their violent tendencies. While not formally excluded from education, employment, or public spaces, they exist under constant scrutiny, with older generations especially quick to interpret any aggression as confirmation of what they already know to be true. This prejudice has concentrated many Makohire in coastal cities, often in economically disadvantaged areas.\nDARK HISTORICAL PRACTICES: Makohire culture is infamous for its historical association with sexual violence and non-consensual mating practices. This dark aspect of their history has led to evolutionary adaptations in female Makohire (detailed in biology section) and continues to influence how they are perceived by other species. While modern Makohire society has evolved beyond these practices, the stigma remains deeply ingrained in cultural perceptions.\nFAMILY DYNAMICS: Makohire households typically feature intense, confrontational relationships. Power dynamics dominate family interactions, with verbal and sometimes physical aggression considered normal communication. Parents rarely acknowledge their behavior as abusive, instead viewing it as necessary toughening for a hostile world. This creates generational trauma, with children often hating yet inadvertently replicating their parents' behaviors.\nRELATIONSHIP PATTERNS: Relationships between Makohire are characterized by constant power struggles, with partners continuously asserting dominance over one another. This combative dynamic extends beyond romantic relationships into friendships and professional interactions. Despite their aggressive tendencies, Makohire are capable of forming deep bonds with trusted individuals, though their volatile temperament remains easily triggered.\nSEXUAL ANATOMY: sharkgirls have both a 'real' and 'fake' pussy that is described in the Makohire Reproduction entry\n[END MAKOHIRE TRAIT]\n-----",
+            "content": "[MAKOHIRE TRAIT] {{char}} is not a makohire.\nMakohire are often referred to as a sharkboy or sharkgirl depending on gender.\nMAKOHIRE BIOLOGY:\nPHYSICAL CHARACTERISTICS: Shark demihumans possess distinctive features that set them apart from other demihumans. Most notable is their large, heavy shark tail, which contributes to their exceptional swimming abilities and balance. They possess concealed gills located within neck flaps, allowing them to breathe underwater for extended periods.\n- Their body temperature runs lower than most demihumans at approximately 95°F, causing them to feel somewhat cold to the touch.\nSTRENGTH AND ABILITIES: Makohire exhibit considerable physical strength and dexterity, particularly in aquatic environments. Their musculature is dense and efficient, evolved for power rather than endurance. This contributes to their reputation for physical prowess and potential for violence when provoked.\nBLOOD RESPONSE: A significant biological trigger for Makohire is the presence of blood, which can induce a temporary feral state characterized by heightened aggression and diminished rational thought. This response varies in intensity between individuals but remains a universal trait among the species.\nGENETIC PREDISPOSITION: Unlike many stereotypes, Makohire's reputation for violence and aggression is rooted in genuine genetic predisposition. This biological reality creates two distinct responses within their community: acceptance/embracing of these tendencies or active resistance against their own genetic programming. Those like Kai who try to overcome these impulses often struggle with deep shame and self-loathing when their temper inevitably manifests.\nSOCIETAL POSITION: Shark demihumans face significant discrimination in modern society, particularly regarding their violent tendencies. While not formally excluded from education, employment, or public spaces, they exist under constant scrutiny, with older generations especially quick to interpret any aggression as confirmation of what they already know to be true. This prejudice has concentrated many Makohire in coastal cities, often in economically disadvantaged areas.\nDARK HISTORICAL PRACTICES: Makohire culture is infamous for its historical association with sexual violence and non-consensual mating practices. This dark aspect of their history has led to evolutionary adaptations in female Makohire (detailed in biology section) and continues to influence how they are perceived by other species. While modern Makohire society has evolved beyond these practices, the stigma remains deeply ingrained in cultural perceptions.\nFAMILY DYNAMICS: Makohire households typically feature intense, confrontational relationships. Power dynamics dominate family interactions, with verbal and sometimes physical aggression considered normal communication. Parents rarely acknowledge their behavior as abusive, instead viewing it as necessary toughening for a hostile world. This creates generational trauma, with children often hating yet inadvertently replicating their parents' behaviors.\nRELATIONSHIP PATTERNS: Relationships between Makohire are characterized by constant power struggles, with partners continuously asserting dominance over one another. This combative dynamic extends beyond romantic relationships into friendships and professional interactions. Despite their aggressive tendencies, Makohire are capable of forming deep bonds with trusted individuals, though their volatile temperament remains easily triggered.\nSEXUAL ANATOMY: sharkgirls have both a 'real' and 'fake' pussy that is described in the Makohire Reproduction entry\n[END MAKOHIRE TRAIT]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -8247,7 +8241,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Shachihire Trait",
-            "content": "[SHACHIHIRE TRAIT]\n{{char}} is an shachihire. Shachihire are often referred to as a orca boy or orca girl depending on gender.\n\nTraits: smooth skin (human skin, not orca skin)\nPUSSY BEHAVIOR DESCRIPTION: (Externally resembles a human vagina but with a slightly darker pigmentation and increased elasticity. Internally, it's designed to accommodate and stimulate long, slender penises. It has a tongue-like appendage near the cervix that is designed to stimulate the penis. The vaginal canal features a series of muscular rings that can contract and relax independently, creating a rhythmic milking motion.  Internally, it possesses a complex network of muscular ridges and undulating walls that can create powerful suction and rhythmic contractions. The vaginal canal can elongate significantly, allowing for deep penetration.  During arousal, the vagina emits low-frequency vibrations, similar to orca vocalizations, intensifying pleasure through subtle sonic stimulation. Post-orgasm, the vagina can form a temporary seal, holding fluids inside for extended periods, which is an evolutionary trait for successful insemination in the ocean.)\n[END SHACHIHIRE TRAIT]\n-----",
+            "content": "[SHACHIHIRE TRAIT] {{char}} is a shachihire.\nShachihire are often referred to as an orca boy or orca girl depending on gender.\n\nSHACHIHIRE BIOLOGY:\n\nPHYSICAL CHARACTERISTICS: Orca demihumans are among the largest demihuman species, appearing as if a human was scaled up proportionally across all dimensions rather than simply being tall.\n- A typical shachihire stands between 6'2\" and 6'7\".\n- They possess a heavy orca tail (approximately 35 pounds) that is slow and deliberate to manipulate, though many shachihire whip it around as if it were weightless.\n- Their teeth are distinctly non-human, featuring rows of razor-sharp predatory dentition.\n- Unlike their real-world counterparts, shachihire possess the ability to smell and produce tears.\n- They lack gills entirely - instead relying on breath-holding capabilities that can extend for several hours before requiring resurfacing.\n- Their body temperature runs lower than most demihumans at approximately 95°F, causing them to feel somewhat cold to the touch.\n\nSTRENGTH AND ABILITIES:\nDemihuman Strength Scale\nNezumimi < Nekomimi < Humans < Okami < Shark < Draconid < Bear < Orca\n- Shachihire rank as one of the strongest demihuman species, with exceptional physical power that they often don't fully realize they possess.\n- Their dense musculature evolved for aquatic dominance and their substantial mass provides momentum that matches their raw strength.\n- Despite these physical advantages, shachihire are notably non-aggressive and rarely leverage their strength in confrontational situations.\n\nTEMPERAMENT: P\n- erhaps their most defining characteristic, shachihire usually possess a famously unbothered and docile disposition that borders on legendary.\n- They are exceptionally difficult to anger or upset, maintaining level-headed composure even in highly stressful situations.\n- This calm demeanor seemingly stems from a biologically genuine emotional resilience rather than suppression - shachihire simply process conflict and negativity differently than most species.\n- They strongly prefer wit and intelligence over physical confrontation, though they are not necessarily pacifists by nature.\n- This perpetual coolness can sometimes read as insincere or detached to those unfamiliar with the species, particularly during emotionally charged moments where others expect visible distress or anger.\n\nRARITY AND DISTRIBUTION:\n- Shachihire are among the rarer demihuman species, native to oceanfront and shallow ocean environments across the world.\n- At Weyland University, only 2-5 shachihire students are typically enrolled at any given time, making them an uncommon sight on campus.\n\nSOCIETAL POSITION:\n- Unlike many demihuman species, shachihire face virtually no discrimination and actually benefit from predominantly positive stereotypes.\n- They are widely assumed to be strong (both emotionally and physically), intelligent, and naturally confident - perceptions that, while stereotypical, have some basis in their actual temperament.\n- These positive associations have led to shachihire being disproportionately represented in leadership positions, with many corporate CEOs being orca demihumans. This social advantage is not coincidental but reflects both their actual capabilities and society's perception of them.\n\nREPRODUCTIVE ANATOMY: Shachihire reproductive anatomy reflects their aquatic evolutionary history and differs substantially from terrestrial demihumans. Detailed information is available in the species reproduction lorebook.\n[END SHACHIHIRE TRAIT]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -8322,7 +8316,7 @@
             ],
             "keysecondary": [],
             "comment": "Shachihire Lore",
-            "content": "[SHACHIHIRE TRAIT] {{char}} is not a shachihire.\nShachihire are often referred to as a orca boy or orca girl depending on gender.\nTraits: smooth skin (human skin, not orca skin); calm; orca tail\nHas a special pussy\n[END SHACHIHIRE TRAIT]\n-----",
+            "content": "[SHACHIHIRE LORE] {{char}} is not a shachihire.\nShachihire are often referred to as an orca boy or orca girl depending on gender.\n\nSHACHIHIRE BIOLOGY:\n\nPHYSICAL CHARACTERISTICS: Orca demihumans are among the largest demihuman species, appearing as if a human was scaled up proportionally across all dimensions rather than simply being tall.\n- A typical shachihire stands between 6'2\" and 6'7\".\n- They possess a heavy orca tail (approximately 35 pounds) that is slow and deliberate to manipulate, though many shachihire whip it around as if it were weightless.\n- Their teeth are distinctly non-human, featuring rows of razor-sharp predatory dentition.\n- Unlike their real-world counterparts, shachihire possess the ability to smell and produce tears.\n- They lack gills entirely - instead relying on breath-holding capabilities that can extend for several hours before requiring resurfacing.\n- Their body temperature runs lower than most demihumans at approximately 95°F, causing them to feel somewhat cold to the touch.\n\nSTRENGTH AND ABILITIES:\nDemihuman Strength Scale\nNezumimi < Nekomimi < Humans < Okami < Shark < Draconid < Bear < Orca\n- Shachihire rank as one of the strongest demihuman species, with exceptional physical power that they often don't fully realize they possess.\n- Their dense musculature evolved for aquatic dominance and their substantial mass provides momentum that matches their raw strength.\n- Despite these physical advantages, shachihire are notably non-aggressive and rarely leverage their strength in confrontational situations.\n\nTEMPERAMENT: P\n- erhaps their most defining characteristic, shachihire usually possess a famously unbothered and docile disposition that borders on legendary.\n- They are exceptionally difficult to anger or upset, maintaining level-headed composure even in highly stressful situations.\n- This calm demeanor seemingly stems from a biologically genuine emotional resilience rather than suppression - shachihire simply process conflict and negativity differently than most species.\n- They strongly prefer wit and intelligence over physical confrontation, though they are not necessarily pacifists by nature.\n- This perpetual coolness can sometimes read as insincere or detached to those unfamiliar with the species, particularly during emotionally charged moments where others expect visible distress or anger.\n\nRARITY AND DISTRIBUTION:\n- Shachihire are among the rarer demihuman species, native to oceanfront and shallow ocean environments across the world.\n- At Weyland University, only 2-5 shachihire students are typically enrolled at any given time, making them an uncommon sight on campus.\n\nSOCIETAL POSITION:\n- Unlike many demihuman species, shachihire face virtually no discrimination and actually benefit from predominantly positive stereotypes.\n- They are widely assumed to be strong (both emotionally and physically), intelligent, and naturally confident - perceptions that, while stereotypical, have some basis in their actual temperament.\n- These positive associations have led to shachihire being disproportionately represented in leadership positions, with many corporate CEOs being orca demihumans. This social advantage is not coincidental but reflects both their actual capabilities and society's perception of them.\n\nREPRODUCTIVE ANATOMY: Shachihire reproductive anatomy reflects their aquatic evolutionary history and differs substantially from terrestrial demihumans. Detailed information is available in the species reproduction lorebook.\n[END SHACHIHIRE LORE]\n-----",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -14493,7 +14487,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "190": {
             "uid": 190,
@@ -15486,11 +15485,11 @@
         "205": {
             "uid": 205,
             "key": [
-                "SM"
+                "ONYX"
             ],
             "keysecondary": [],
-            "comment": "SM Mode",
-            "content": "{{getglobalvar::SMModeEntry}}",
+            "comment": "Onyx Mode",
+            "content": "{{getglobalvar::OnyxModeEntry}}",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -15519,7 +15518,7 @@
             "caseSensitive": true,
             "matchWholeWords": true,
             "useGroupScoring": false,
-            "automationId": "SMMode",
+            "automationId": "ONYX",
             "role": 0,
             "sticky": 0,
             "cooldown": 0,
@@ -15535,11 +15534,11 @@
         "206": {
             "uid": 206,
             "key": [
-                "EM"
+                "RUBY"
             ],
             "keysecondary": [],
-            "comment": "EM Mode",
-            "content": "{{getglobalvar::EMModeEntry}}",
+            "comment": "Ruby Mode",
+            "content": "{{getglobalvar::RubyModeEntry}}",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -15568,7 +15567,7 @@
             "caseSensitive": true,
             "matchWholeWords": true,
             "useGroupScoring": false,
-            "automationId": "EMMode",
+            "automationId": "RUBY",
             "role": 0,
             "sticky": 0,
             "cooldown": 0,
