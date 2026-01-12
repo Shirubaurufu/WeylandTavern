@@ -821,7 +821,7 @@
                     1,
                     2
                 ],
-                "disabled": false,
+                "disabled": true,
                 "markdownOnly": true,
                 "promptOnly": false,
                 "runOnEdit": true,
@@ -1145,8 +1145,9 @@
                 "B~J9T5X,W2": "0#KVQLN7YA",
                 "X,5N~K0VQ7": "#2TA9WJBL`",
                 "LTMMessages": "50",
-                "LTMTokens": "300",
-                "LTMHowMany": "10",
+                "LTMHowMany": "3",
+                "aithink1": "<p style=\"display: none;\">",
+                "aithink2": "</p>",
                 "001": "/user/images/Weyland/001.png",
                 "002": "/user/images/Weyland/002.webp",
                 "003": "/user/images/Weyland/003.png",
@@ -2713,6 +2714,8 @@
         "password": ""
     }
 }
+
+
 
 
 
