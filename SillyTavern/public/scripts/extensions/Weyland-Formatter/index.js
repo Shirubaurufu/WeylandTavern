@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.10.3";
+const extensionVersion = "1.10.4";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -119,7 +119,7 @@ let settings = undefined;
 /** @type {WeylandFormatterRegex} */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(?:[^"*~_`]*\n(?<!\n\n))?[^"*~_`\n\r]*~[^"*_`\n\r]*(?:[ap]m) ~[^"*_`\n\r]*[~\]\)]$/mi,
+    detectHeader: /^(?:\*{1,3})?([^"*~_`\n\r]*)~([^"*_`\n\r]*)~([^"*_`\n\r]*)[~\]\)](?:\*{1,3})?$/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -272,6 +272,7 @@ async function formatParagraphs(message) {
             if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
                 if (!thinking) {
                     //Format Header
+                    paragraph = replaceText(paragraph, weylandRegex.asterisk, "");
                     paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
                     if (!foundHeader) {
                         paragraphCount -= index;
@@ -290,32 +291,26 @@ async function formatParagraphs(message) {
                 }
                 return;
             }
-
-            if (weylandRegex.spacer.test(paragraph) || weylandRegex.spacer2.test(paragraph)) {
-                paragraphCount -= 1;
-                if (foundFooter)
-                    paragraphs[index] = "";
-                return;
-            }
-
-            if (weylandRegex.breakbar.test(paragraph)) {
-                paragraphCount -= 1;
-                return;
-            }
-
-            try {
-                const expCloPar = paragraph.match(weylandRegex.expressionClothingParagraph);
-                if (expCloPar) {
-                    foundFooter = true;
-                    expCloPar[3] = `[${paragraphCount - (paragraphs.length-index)}]`;
-                    paragraph = replaceText(paragraph, weylandRegex.expressionClothingParagraph, `${expCloPar[1]} ${expCloPar[2]} ${expCloPar[3]}`);
-                }
-            } catch (e) {
-                weylandDebug(`#${index} - expCloPar error: ${e}`);
-            }
-            
             if (foundFooter) {
-                paragraphs[index] = replaceText(paragraph, weylandRegex.asterisk, "");
+                paragraphs[index] = "";
+                return;
+            } else {
+                try {
+                    const expCloPar = paragraph.match(weylandRegex.expressionClothingParagraph);
+                    if (expCloPar) {
+                        foundFooter = true;
+                        expCloPar[3] = `[${paragraphCount - (paragraphs.length-index)}]`;
+                        paragraph = replaceText(paragraph, weylandRegex.expressionClothingParagraph, `${expCloPar[1]} ${expCloPar[2]} ${expCloPar[3]}`);
+                        paragraphs[index] = replaceText(paragraph, weylandRegex.asterisk, "");
+                        return;
+                    }
+                } catch (e) {
+                    weylandDebug(`#${index} - expCloPar error: ${e}`);
+                }
+            }
+
+            if (weylandRegex.spacer.test(paragraph) || weylandRegex.spacer2.test(paragraph) || weylandRegex.breakbar.test(paragraph)) {
+                paragraphCount -= 1;
                 return;
             }
 
@@ -448,12 +443,19 @@ function replaceText(text, regex, replace) {
 
 async function formatNewMessage(messageId) {
     if (settings === undefined) getSettings();
-    if (!power_user.user_prompt_bias) {
+    if (messageId === 0) return;
+    const char = chat[messageId].name;
+    const blacklistChar = char === "Kressa" || char === "Kinsbane Manor";
+    weylandDebug(power_user.user_prompt_bias);
+    if (!power_user.user_prompt_bias && !blacklistChar) {
         chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.trim()}`;
+        weylandDebug("1");
     } else if (/\[overwrite\]/i.test(power_user.user_prompt_bias)) {
         chat[messageId].mes = chat[messageId].mes.replace(/\[overwrite\]\s?/i,"");
-    } else {
+        weylandDebug("2");
+    } else if (!blacklistChar) {
         chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.replace(power_user.user_prompt_bias,"").trim()}`;
+        weylandDebug("3");
     }
     await formatMessage(messageId);
 }
@@ -462,13 +464,13 @@ async function formatMessage(messageId) {
     if (settings === undefined) getSettings();
     window.preFormatLastMessage = "";
 
-    const originalMessage = chat[messageId].mes;
+    let originalMessage = chat[messageId].mes;
+    if (settings.debug) {
+        window.preFormatLastMessage = originalMessage;
+    }
 
     if (!settings?.enabled) {
         if (!settings?.experimental) {
-            if (settings?.debug){
-                window.preFormatLastMessage = originalMessage;
-            }
             if (weylandRegex.thinkFull.test(originalMessage)) {
                 chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
             } else if (weylandRegex.thinkStart.test(originalMessage)) {
@@ -501,15 +503,15 @@ async function formatMessage(messageId) {
             })
         } catch {}
     }
-    
-    if (settings.debug) {
-        window.preFormatLastMessage = originalMessage;
+
+    if (!settings?.experimental) {
+        chat[messageId].mes = chat[messageId].mes.replace(weylandRegex.thinkFull, "").trim();
     }
 
     if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
         weylandDebug(`Formatting character: ${characterName}`);
-        const paragraphs = await formatParagraphs(settings?.experimental ? originalMessage : originalMessage.replace(weylandRegex.thinkFull, "").trim());
+        const paragraphs = await formatParagraphs(chat[messageId].mes);
     
         chat[messageId].mes = paragraphs.join("\n\n");
     } else if (!settings?.experimental && !weylandRegex.thinkFull.test(originalMessage) && weylandRegex.thinkStart.test(originalMessage) && characterName !== "Kressa" && characterName !== "Kinsbane Manor") {

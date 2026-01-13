@@ -28,12 +28,12 @@ const ltm = 0.4;
                     if (!assistant && !charBlacklist) {
                         body.messages.push({"role":"assistant","content":substituteParams(getGlobalVariable("Thinking"))});
                     } else {
-                        if (charBlacklist) {
+                        if (charBlacklist && assistant) {
                             body.messages = body.messages.slice(0, -1);
                         } else {
                             if (/\[overwrite\]/i.test(mes.content)) {
                                 mes.content = mes.content.replace(/\[overwrite\]\s?/i,"");
-                            } else {
+                            } else if (!charBlacklist) {
                                 mes.content = substituteParams(getGlobalVariable("Thinking"));
                             }
                         }
