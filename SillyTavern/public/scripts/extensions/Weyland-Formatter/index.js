@@ -1,4 +1,4 @@
-import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor } from '../../../script.js';
+import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor, updateMessageBlock } from '../../../script.js';
 import { power_user } from '../../power-user.js';
 import { getGlobalVariable } from '../../variables.js';
 import { substituteParams } from '../../../script.js';
@@ -119,7 +119,7 @@ let settings = undefined;
 /** @type {WeylandFormatterRegex} */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(?:\*{1,3})?([^"*~_`\n\r]*)~([^"*_`\n\r]*)~([^"*_`\n\r]*)[~\]\)](?:\*{1,3})?$/m,
+    detectHeader: /^(?:\*{1,3})?([^"*~_`\n\r]*)~([^"*_`\n\r]*)[~\]\)](?:\*{1,3})?$/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -448,8 +448,13 @@ function replaceText(text, regex, replace) {
 
 async function formatNewMessage(messageId) {
     if (settings === undefined) getSettings();
-    if (messageId === 0) return;
     const char = chat[messageId].name;
+    if (messageId === 0) {
+        if (char === "Weybot") {
+            await formatMessage(messageId);
+        }
+        return;
+    }
     const blacklistChar = char === "Kressa" || char === "Kinsbane Manor";
     if (!power_user.user_prompt_bias && !blacklistChar) {
         chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.trim()}`;
@@ -463,7 +468,8 @@ async function formatNewMessage(messageId) {
 
 async function formatMessage(messageId) {
     if (settings === undefined) getSettings();
-    if (messageId === 0) return;
+    const characterName = chat[messageId].name;
+    if (messageId === 0 && characterName !== "Weybot") return;
     window.preFormatLastMessage = "";
 
     let originalMessage = chat[messageId].mes;
@@ -476,7 +482,15 @@ async function formatMessage(messageId) {
             if (weylandRegex.thinkFull.test(originalMessage)) {
                 chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
             } else if (weylandRegex.thinkStart.test(originalMessage)) {
-                chat[messageId].mes = "";
+                if (weylandRegex.detectHeader) {
+                    chat[messageId].mes = originalMessage.slice(originalMessage.indexOf(originalMessage.match(weylandRegex.detectHeader))).trim();
+                } else if (chat[messageId].name === "Muse" && weylandRegex.detectMuseHeader) {
+                    chat[messageId].mes = originalMessage.slice(originalMessage.indexOf(originalMessage.match(weylandRegex.detectMuseHeader))).trim();
+                } else {
+                    chat[messageId].mes = "";
+                }
+            } else if (weylandRegex.thinkEnd.test(originalMessage)) {
+                chat[messageId].mes = originalMessage.split(weylandRegex.thinkEnd)[1].trim();
             }
         }
         if (chat[messageId].extra.token_count) {
@@ -492,8 +506,6 @@ async function formatMessage(messageId) {
 
     if (isUser || isSystem) return;
 
-    const characterName = chat[messageId].name;
-
     if (!settings?.experimental) {
         if (chat[messageId].extra.reasoning)
             chat[messageId].extra.reasoning = "";
@@ -507,7 +519,19 @@ async function formatMessage(messageId) {
     }
 
     if (!settings?.experimental) {
-        chat[messageId].mes = chat[messageId].mes.replace(weylandRegex.thinkFull, "").trim();
+        if (weylandRegex.thinkFull.test(originalMessage)) {
+            chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
+        } else if (weylandRegex.thinkStart.test(originalMessage)) {
+            if (weylandRegex.detectHeader) {
+                chat[messageId].mes = originalMessage.slice(originalMessage.indexOf(originalMessage.match(weylandRegex.detectHeader))).trim();
+            } else if (chat[messageId].name === "Muse" && weylandRegex.detectMuseHeader) {
+                chat[messageId].mes = originalMessage.slice(originalMessage.indexOf(originalMessage.match(weylandRegex.detectMuseHeader))).trim();
+            } else {
+                chat[messageId].mes = "";
+            }
+        } else if (weylandRegex.thinkEnd.test(originalMessage)) {
+            chat[messageId].mes = originalMessage.split(weylandRegex.thinkEnd)[1].trim();
+        }
     }
 
     if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
@@ -523,6 +547,7 @@ async function formatMessage(messageId) {
     if (chat[messageId].extra.token_count) {
         chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
     }
+    updateMessageBlock(messageId, chat[messageId]);
     weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
 }
 

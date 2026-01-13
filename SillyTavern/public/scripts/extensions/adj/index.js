@@ -14,7 +14,6 @@ const ltm = 0.4;
             // @ts-ignore
             let body = JSON.parse(request.body);
             if (body) {
-                console.debug(`[adj] Old: ${request.body}`);
                 if (body.chat_completion_source === "custom") {
                     if (!/https:\/\/(?:helixmind\.online|api\.electronhub\.ai|api\.zukijourney\.com|api\.zanity\.xyz(?:\/rp)?|fresedgpt\.space|ai\.megallm\.io|api\.z\.ai\/api\/coding\/paas(?:\/v4))(?:\/v1|)?/.test(body.custom_url)) {
                         delete request.body;
@@ -48,7 +47,6 @@ const ltm = 0.4;
                     body.custom_include_body = body.custom_include_body.replace(/(?:(?:\\n)?- ?)?temperature: \d\.\d/g,"");
                 }
                 request.body = JSON.stringify(body);
-                console.debug(`[adj] New: ${request.body}`);
             }
         }
 
