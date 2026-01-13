@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.10.4";
+const extensionVersion = "1.10.5";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -268,7 +268,11 @@ async function formatParagraphs(message) {
             const paragraphLoopStartTime = performance.now();
             paragraph = paragraph.trim();
             if (!thinking && weylandRegex.thinkStart.test(paragraph)) thinking = true;
-            if (thinking && weylandRegex.thinkEnd.test(paragraph)) thinking = false;
+            if (thinking) {
+                if (weylandRegex.thinkEnd.test(paragraph)) thinking = false;
+                return;
+            }
+            
             if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
                 if (!thinking) {
                     //Format Header
@@ -291,6 +295,7 @@ async function formatParagraphs(message) {
                 }
                 return;
             }
+            
             if (foundFooter) {
                 paragraphs[index] = "";
                 return;
@@ -446,22 +451,19 @@ async function formatNewMessage(messageId) {
     if (messageId === 0) return;
     const char = chat[messageId].name;
     const blacklistChar = char === "Kressa" || char === "Kinsbane Manor";
-    weylandDebug(power_user.user_prompt_bias);
     if (!power_user.user_prompt_bias && !blacklistChar) {
         chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.trim()}`;
-        weylandDebug("1");
     } else if (/\[overwrite\]/i.test(power_user.user_prompt_bias)) {
         chat[messageId].mes = chat[messageId].mes.replace(/\[overwrite\]\s?/i,"");
-        weylandDebug("2");
     } else if (!blacklistChar) {
-        chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.replace(power_user.user_prompt_bias,"").trim()}`;
-        weylandDebug("3");
+        chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.replace(substituteParams(power_user.user_prompt_bias),"").trim()}`;
     }
     await formatMessage(messageId);
 }
 
 async function formatMessage(messageId) {
     if (settings === undefined) getSettings();
+    if (messageId === 0) return;
     window.preFormatLastMessage = "";
 
     let originalMessage = chat[messageId].mes;
@@ -532,14 +534,14 @@ async function formatMessage(messageId) {
         // Enabled
         $('#weylandFormatterEnable').prop('checked', settings.enabled).on('input', function () {
             settings.enabled = !!$(this).prop('checked');
-            weylandDebug(`[${MODULE_NAME}] Setting Enabled: ${settings.enabled}`);
+            weylandDebug(`Setting Enabled: ${settings.enabled}`);
             saveSettingsDebounced();
         });
 
         // Markdown
         $('#weylandFormatterMarkdown').prop('checked', settings.markdown).on('input', function () {
             settings.markdown = !!$(this).prop('checked');
-            weylandDebug(`[${MODULE_NAME}] Setting Markdown: ${settings.markdown}`);
+            weylandDebug(`Setting Markdown: ${settings.markdown}`);
             updateReloadMarkdownProcessor();
             saveSettingsDebounced();
         });
@@ -547,14 +549,14 @@ async function formatMessage(messageId) {
         // Debug
         $('#weylandFormatterDebug').prop('checked', settings.debug).on('input', function () {
             settings.debug = !!$(this).prop('checked');
-            weylandDebug(`[${MODULE_NAME}] Setting Debug: ${settings.debug}`);
+            weylandDebug(`Setting Debug: ${settings.debug}`);
             saveSettingsDebounced();
         });
 
         // Experimental
         $('#weylandFormatterExperimental').prop('checked', settings.experimental).on('input', function () {
             settings.experimental = !!$(this).prop('checked');
-            weylandDebug(`[${MODULE_NAME}] Setting Experimental: ${settings.experimental}`);
+            weylandDebug(`Setting Experimental: ${settings.experimental}`);
             if (settings.experimental) {
                 toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
             } else {
