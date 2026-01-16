@@ -448,7 +448,7 @@ function replaceText(text, regex, replace) {
 
 async function formatNewMessage(messageId) {
     if (settings === undefined) getSettings();
-    const char = chat[messageId].name;
+    const char = chat[messageId]?.name;
     if (messageId === 0) {
         if (char === "Weybot") {
             await formatMessage(messageId);
@@ -456,7 +456,7 @@ async function formatNewMessage(messageId) {
         return;
     }
     const blacklistChar = char === "Kressa" || char === "Kinsbane Manor";
-    if (!power_user.user_prompt_bias && !blacklistChar) {
+    if (!power_user.user_prompt_bias && !blacklistChar && chat[messageId]?.mes) {
         chat[messageId].mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${chat[messageId].mes.trim()}`;
     } else if (/\[overwrite\]/i.test(power_user.user_prompt_bias)) {
         chat[messageId].mes = chat[messageId].mes.replace(/\[overwrite\]\s?/i,"");
@@ -468,7 +468,7 @@ async function formatNewMessage(messageId) {
 
 async function formatMessage(messageId) {
     if (settings === undefined) getSettings();
-    const characterName = chat[messageId].name;
+    const characterName = chat[messageId]?.name;
     if (messageId === 0 && characterName !== "Weybot") return;
     window.preFormatLastMessage = "";
 

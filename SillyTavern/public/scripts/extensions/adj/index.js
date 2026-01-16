@@ -41,6 +41,9 @@ const ltm = 0.4;
                     body.messages = body.messages.slice(0, -1);
                 }
 
+                if (/glm.*think/i.test(body.model)) {
+                    body.include_reasoning = true;
+                }
                 body.temperature = def;
                 if (body.messages.findLast(({role, content}) => role === "user" && content.startsWith("LTM Creation in Pro"))) {
                     body.temperature = ltm;
@@ -50,6 +53,23 @@ const ltm = 0.4;
             }
         }
 
-        return originalFetch.apply(this, [url, request]);
+        const response = await originalFetch.apply(this, [url, request]);
+        // @ts-ignore
+        if (url.includes('/generate') && request?.method === 'POST') {
+            const clonedResponse = response.clone();
+            const data = await clonedResponse.json();
+            const m = data.choices[0].message;
+            if (!m.content && m.reasoning_content) {
+                m.content = m.reasoning_content;
+                m.reasoning_content = "";
+            }
+            data.choices[0].message = m;
+            return new Response(JSON.stringify(data), {
+                status: response.status,
+                statusText: response.statusText,
+                headers: new Headers(response.headers)
+            });
+        }
+        return response;
     };
 })();
