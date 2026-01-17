@@ -25,15 +25,21 @@ const ltm = 0.4;
                 const assistant = mes.role === "assistant";
                 if (/(?!.*rp2$)(?=.*sonnet)(?=.*4\.5).*|glm-4\.7|kimi-k2-thinking/i.test(body.model)) {
                     if (!assistant && !charBlacklist) {
-                        body.messages.push({"role":"assistant","content":substituteParams(getGlobalVariable("Thinking"))});
+                        const sub = substituteParams(getGlobalVariable("Thinking"));
+                        if (sub) {
+                            body.messages.push({"role":"assistant","content":substituteParams(getGlobalVariable("Thinking"))});
+                        }
                     } else {
                         if (charBlacklist && assistant) {
                             body.messages = body.messages.slice(0, -1);
                         } else {
                             if (/\[overwrite\]/i.test(mes.content)) {
-                                mes.content = mes.content.replace(/\[overwrite\]\s?/i,"");
+                                mes.content = mes.content.replace(/\[overwrite\]\s?/i, "").trimStart();
                             } else if (!charBlacklist) {
                                 mes.content = substituteParams(getGlobalVariable("Thinking"));
+                            }
+                            if (!mes.content) {
+                                body.messages = body.messages.slice(0, -1);
                             }
                         }
                     }
@@ -55,7 +61,7 @@ const ltm = 0.4;
 
         const response = await originalFetch.apply(this, [url, request]);
         // @ts-ignore
-        if (url.includes('/generate') && request?.method === 'POST') {
+        if (url.includes('/generate') && request?.method === 'POST' && !(!!$('#stream_toggle').prop('checked'))) {
             const clonedResponse = response.clone();
             const data = await clonedResponse.json();
             const m = data.choices[0].message;
