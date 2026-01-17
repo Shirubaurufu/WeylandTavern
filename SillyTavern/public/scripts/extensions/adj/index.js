@@ -24,10 +24,10 @@ const ltm = 0.4;
                 const charBlacklist = body.char_name === "Kressa" || body.char_name === "Kinsbane Manor";
                 const assistant = mes.role === "assistant";
                 if (/(?!.*rp2$)(?=.*sonnet)(?=.*4\.5).*|glm-4\.7|kimi-k2-thinking/i.test(body.model)) {
+                    const sub = substituteParams(getGlobalVariable("Thinking"));
                     if (!assistant && !charBlacklist) {
-                        const sub = substituteParams(getGlobalVariable("Thinking"));
                         if (sub) {
-                            body.messages.push({"role":"assistant","content":substituteParams(getGlobalVariable("Thinking"))});
+                            body.messages.push({"role":"assistant","content":sub});
                         }
                     } else {
                         if (charBlacklist && assistant) {
@@ -36,7 +36,7 @@ const ltm = 0.4;
                             if (/\[overwrite\]/i.test(mes.content)) {
                                 mes.content = mes.content.replace(/\[overwrite\]\s?/i, "").trimStart();
                             } else if (!charBlacklist) {
-                                mes.content = substituteParams(getGlobalVariable("Thinking"));
+                                mes.content = sub;
                             }
                             if (!mes.content) {
                                 body.messages = body.messages.slice(0, -1);
