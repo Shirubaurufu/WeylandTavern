@@ -36,7 +36,7 @@ const ltm = 0.4;
 
         const response = await originalFetch.apply(this, [url, request]);
         // @ts-ignore
-        if (url.includes('/generate') && request?.method === 'POST') {
+        if (url.includes('/generate') && request?.method === 'POST' && !(!!$('#stream_toggle').prop('checked'))) {
             const clonedResponse = response.clone();
             const data = await clonedResponse.json();
             const m = data.choices[0].message;
