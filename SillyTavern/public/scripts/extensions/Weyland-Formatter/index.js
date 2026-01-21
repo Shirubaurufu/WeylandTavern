@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.10.6";
+const extensionVersion = "1.10.7";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -118,6 +118,8 @@ let settings = undefined;
  * @property {RegExp} spacer2
  * 
  * @property {RegExp} expressionClothingParagraph
+ * @property {RegExp} ltmFix
+ * @property {string} ltmFixReplace
  */
 
 /** @type {WeylandFormatterRegex} */
@@ -210,6 +212,8 @@ const weylandRegex = {
     spacer2: /^=+$/,
 
     expressionClothingParagraph: /^(\[\w+?\]) ?(\[\w+?\]) ?(\[\d+?\])?/i,
+    ltmFix: /[\s\S]*?(^\[.*[ap]m.*\][\s\S]*?\n\n#.*\n\n[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))[\s\S]*?/im,
+    ltmFixReplace: "$1",
 };
 
 
@@ -466,10 +470,7 @@ function replaceText(text, regex, replace) {
 async function formatNewMessage(messageId) {
     if (settings === undefined) getSettings();
     const char = chat[messageId]?.name;
-    if (messageId === 0) {
-        if (char === "Weybot") {
-            await formatMessage(messageId);
-        }
+    if (messageId === 0 && char !== "Weybot") {
         return;
     }
     const blacklistChar = char === "Kressa" || char === "Kinsbane Manor";
@@ -488,6 +489,7 @@ async function formatMessage(messageId) {
     const characterName = chat[messageId]?.name;
     if (messageId === 0 && characterName !== "Weybot") return;
     window.preFormatLastMessage = "";
+    window.postFormatLastMessage = "";
 
     let originalMessage = chat[messageId].mes;
     if (settings.debug) {
@@ -522,6 +524,11 @@ async function formatMessage(messageId) {
     const isSystem = chat[messageId].is_system;
 
     if (isUser || isSystem) return;
+
+    if (weylandRegex.ltmFix.test(originalMessage)) {
+        originalMessage = originalMessage.replace(weylandRegex.ltmFix, weylandRegex.ltmFixReplace).trim();
+        chat[messageId].mes = originalMessage;
+    }
 
     if (!settings?.experimental) {
         if (chat[messageId].extra.reasoning)
@@ -564,6 +571,7 @@ async function formatMessage(messageId) {
     if (chat[messageId].extra.token_count) {
         chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
     }
+    window.postFormatLastMessage = chat[messageId].mes;
     updateMessageBlock(messageId, chat[messageId]);
     weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
 }
