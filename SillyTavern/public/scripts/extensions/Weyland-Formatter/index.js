@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.10.9";
+const extensionVersion = "1.11.0";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
@@ -652,6 +652,38 @@ async function formatMessage(messageId, mes = undefined) {
                 $('#stream_toggle').prop('checked', false);
             }
             saveSettingsDebounced();
+        });
+
+        $('#weylandPreFormatLastMessageButton').on('click', async function () {
+            weylandDebug("Copy Pre-Format clicked.");
+            if (!preFormatLastMessage) {
+                toastr.warning('[Weyland-Formatter] Last message has not been set.');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(preFormatLastMessage);
+                toastr.info('[Weyland-Formatter] Copied Pre-Format Message to clipboard.');
+            } catch (err) {
+                console.error("[Weyland-Formatter] Clipboard Error:", err);
+                toastr.warning('[Weyland-Formatter] Failed to copy Pre-Format Message to clipboard.');
+            }
+        });
+
+        $('#weylandPostFormatLastMessageButton').on('click', async function () {
+            weylandDebug("Copy Post-Format clicked.");
+            if (!postFormatLastMessage) {
+                toastr.warning('[Weyland-Formatter] Last message has not been set.');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(postFormatLastMessage);
+                toastr.info('[Weyland-Formatter] Copied Post-Format Message to clipboard.');
+            } catch (err) {
+                console.error("[Weyland-Formatter] Clipboard Error:", err);
+                toastr.warning('[Weyland-Formatter] Failed to copy Post-Format Message to clipboard.');
+            }
         });
         
         $('#stream_toggle').prop('checked', oai_settings.stream_openai).on('change', function () {
