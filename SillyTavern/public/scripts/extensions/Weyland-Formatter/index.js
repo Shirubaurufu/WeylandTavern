@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.10.7";
+const extensionVersion = "1.10.8";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -119,7 +119,6 @@ let settings = undefined;
  * 
  * @property {RegExp} expressionClothingParagraph
  * @property {RegExp} ltmFix
- * @property {string} ltmFixReplace
  */
 
 /** @type {WeylandFormatterRegex} */
@@ -212,7 +211,7 @@ const weylandRegex = {
     spacer2: /^=+$/,
 
     expressionClothingParagraph: /^(\[\w+?\]) ?(\[\w+?\]) ?(\[\d+?\])?/i,
-    ltmFix: /(^\[.*[ap]m.*\][\s\S]*?\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im
+    ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im
 };
 
 
