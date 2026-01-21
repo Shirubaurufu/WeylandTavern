@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.10.5";
+const extensionVersion = "1.10.6";
 
 /**
  * @typedef {Object} WeylandFormatterSettings
@@ -109,6 +109,10 @@ let settings = undefined;
  * @property {RegExp} missingStartAsterisk
  * @property {string} missingStartAsteriskReplace
  * 
+ * @property {RegExp} detectPhone
+ * @property {RegExp} phoneFix
+ * @property {string} phoneFixReplace
+ * 
  * @property {RegExp} breakbar
  * @property {RegExp} spacer
  * @property {RegExp} spacer2
@@ -196,6 +200,10 @@ const weylandRegex = {
     missingEndAsteriskReplace: "*$1*",
     missingStartAsterisk: /(?<=["_\]][\s—]|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=[\s—]["_\[]|$)/g,
     missingStartAsteriskReplace: "*$1*",
+
+    detectPhone: /(?:incom|outgo)ing¦/i,
+    phoneFix: /[\s\S]*?(Phone¦[\s\S]*?\nTexting¦[\s\S]*?[\s\S]*)?((?=(?:Incoming|Outgoing).*).*)[\s\S]*/i,
+    phoneFixReplace: "$1$2",
 
     breakbar: /¦/i,
     spacer: /^---$/,
@@ -314,7 +322,16 @@ async function formatParagraphs(message) {
                 }
             }
 
-            if (weylandRegex.spacer.test(paragraph) || weylandRegex.spacer2.test(paragraph) || weylandRegex.breakbar.test(paragraph)) {
+            if (weylandRegex.breakbar.test(paragraph)) {
+                if (weylandRegex.detectPhone.test(paragraph)) {
+                    paragraphs[index] = replaceText(paragraph, weylandRegex.phoneFix, weylandRegex.phoneFixReplace);
+                } else {
+                    paragraphCount -= 1;
+                }
+                return; 
+            }
+
+            if (weylandRegex.spacer.test(paragraph) || weylandRegex.spacer2.test(paragraph)) {
                 paragraphCount -= 1;
                 return;
             }
