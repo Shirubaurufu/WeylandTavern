@@ -212,8 +212,7 @@ const weylandRegex = {
     spacer2: /^=+$/,
 
     expressionClothingParagraph: /^(\[\w+?\]) ?(\[\w+?\]) ?(\[\d+?\])?/i,
-    ltmFix: /[\s\S]*?(^\[.*[ap]m.*\][\s\S]*?\n\n#.*\n\n[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))[\s\S]*?/im,
-    ltmFixReplace: "$1",
+    ltmFix: /(^\[.*[ap]m.*\][\s\S]*?\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im
 };
 
 
@@ -525,8 +524,9 @@ async function formatMessage(messageId) {
 
     if (isUser || isSystem) return;
 
-    if (weylandRegex.ltmFix.test(originalMessage)) {
-        originalMessage = originalMessage.replace(weylandRegex.ltmFix, weylandRegex.ltmFixReplace).trim();
+    const ltmFix = originalMessage.match(weylandRegex.ltmFix);
+    if (ltmFix) {
+        originalMessage = ltmFix[1].trim();
         chat[messageId].mes = originalMessage;
     }
 
