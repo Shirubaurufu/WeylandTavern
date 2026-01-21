@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.11.0";
+const extensionVersion = "1.11.1";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
