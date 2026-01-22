@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.11.3";
+const extensionVersion = "1.11.4";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
@@ -792,7 +792,7 @@ function headerMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /(?<=.>)(?:¦¦)?\s?(.+~)\s?(?:¦¦)?(?=<\/.)/g,
+            regex: /(?<=.>)(?:¦¦)? ?(.+~) ?(?:¦¦)?(?=<\/.)/g,
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
