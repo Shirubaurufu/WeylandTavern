@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.11.2";
+const extensionVersion = "1.11.3";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
@@ -33,6 +33,7 @@ let settings = undefined;
 /**
  * @typedef {Object} WeylandFormatterRegex
  * @property {RegExp} paragraphSplit
+ * @property {RegExp} detectHeaderLegacy
  * @property {RegExp} detectHeader
  * @property {RegExp} detectMuseHeader
  * @property {RegExp} detectActionParagraph
@@ -125,7 +126,8 @@ let settings = undefined;
 /** @type {WeylandFormatterRegex} */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(?:\*{1,3})?([^"*~_`\n\r]*)~([^"*_`\n\r]*)[~\]\)](?:\*{1,3})?$/m,
+    detectHeaderLegacy: /(?:^|(?<=\\n))(?:\*{1,3})?(([^"*~_`\n\r\\]*)~([^"*_`\n\r]*)[~\]\)])(?:\*{1,3})?(?:$|(?=\\n))/m,
+    detectHeader: /^¦¦\s?(.+~)\s?¦¦$/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -206,7 +208,7 @@ const weylandRegex = {
     detectPhone: /(?:incom|outgo)ing¦/i,
     phoneFix: /(Phone¦.*\nTexting¦.*\n)?((?:(?:Incom|Outgo)ing¦.*(?:(?:\n)(?:Incom|Outgo)ing¦.*)*))/i,
 
-    breakbar: /¦/i,
+    breakbar: /¦/,
     spacer: /^---$/,
     spacer2: /^=+$/,
 
@@ -613,6 +615,19 @@ async function formatMessage(messageId, mes = undefined) {
     weylandDebug(`Finished formatting message [${messageId}]`);
 }
 
+async function formatOutgoingMessages(data) {
+    if (data.dryRun) return;
+    if (data.chat) { // OpenAI
+        data.chat.slice(-19).forEach(m => {
+            if (m.role === "assistant") {
+                m.content = m.content.replace(weylandRegex.detectHeaderLegacy, "¦¦ $1 ¦¦");
+            }
+        })
+    } else if (data.prompt) { // Non-OpenAI
+        // No idea what this looks like
+    }
+}
+
 (async function () {
     async function addExtensionSettings() {
         const template = await renderExtensionTemplateAsync(MODULE_NAME, 'settings');
@@ -704,6 +719,8 @@ async function formatMessage(messageId, mes = undefined) {
 
     updateReloadMarkdownProcessor(); //Adds markdown
 
+    eventSource.on(event_types.GENERATE_AFTER_COMBINE_PROMPTS, formatOutgoingMessages);
+    eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, formatOutgoingMessages);
     eventSource.on(event_types.MESSAGE_RECEIVED, formatNewMessage);
     eventSource.on(event_types.MESSAGE_EDITED, formatMessage);
     eventSource.on(event_types.CHAT_CHANGED, () => {
@@ -775,7 +792,7 @@ function headerMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /((?<=.>)([^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*(?:[ap]m) ~[^"*_`\n\r]*[~\]\)](?=<.| ))/gi,
+            regex: /(?<=.>)(?:¦¦)?\s?(.+~)\s?(?:¦¦)?(?=<\/.)/g,
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
