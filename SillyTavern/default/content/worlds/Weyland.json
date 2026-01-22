@@ -1401,7 +1401,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "19": {
             "uid": 19,
@@ -1477,7 +1482,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "20": {
             "uid": 20,
@@ -9461,7 +9471,7 @@
             ],
             "keysecondary": [],
             "comment": "Black Barrel Bar",
-            "content": "[BLACK BARREL BAR]\nPotential Location: Black Barrel Bar\n[Location] ON SENAKA BOULEVARD ; An underground campus bar located in the basement of an old university building on Senaka Boulevard. Access is via a heavy wooden door that leads down a flight of concrete stairs. wood-paneled walls, concrete floors. [Interior] high-backed leather booths, scarred wooden bar top, decades of carved initials [Lighting] Dim and atmospheric, cast by hanging barrel lights and the glow of various neon beer signs. [Atmosphere] The air is thick with the smell of fried food, old wood, and spilled beer. A classic rock jukebox provides a constant, rumbling soundtrack, and the crowds are often loud and rowdy, especially on weekends. [Interior] A mix of high-backed leather booths and scarred wooden tables surround a long, worn bar top that has decades of students' initials carved into it. [Regulars]  rowdy university teams, The cafe has patrons of all varieties from Weyland University. Cat demihumans, wolf demihumans, draconic demihumans (only dragon tail and horns), demon demihumans (only demon tail), mouse and bear demihumans. \n\n[Key Staff]\n*   Gemini Kovacs (Head Bartender): The bar is tended by Gemini, the large, stoic and observant sandy-haired okamimimi bartender who seems to remember every regular's order and their personal problems, communicating more with grunts and nods than with words.\n*   Dmitri Volkov (Head Chef): The kitchen is the domain of Head Chef Dmitri Volkov, a boisterous, barrel-chested bear demihuman whose booming Russian accent and loud laugh are as much a part of the bar's atmosphere as the classic rock on the jukebox.\n\n[Specials] Full bar food menu featuring classics like legendary wings (including the infamous \"Dmitri's Inferno\" challenge), burgers, and a hangover-killing breakfast served all day.\n[END BLACK BARREL BAR]\n----------",
+            "content": "[BLACK BARREL BAR]\nPotential Location: Black Barrel Bar\n[Location] ON SENAKA BOULEVARD ; An underground campus bar located in the basement of an old university building on Senaka Boulevard. Access is via a heavy wooden door that leads down a flight of concrete stairs. wood-paneled walls, concrete floors. [Interior] high-backed leather booths, scarred wooden bar top, decades of carved initials [Lighting] Dim and atmospheric, cast by hanging barrel lights and the glow of various neon beer signs. [Atmosphere] The air is thick with the smell of fried food, old wood, and spilled beer. A classic rock jukebox provides a constant, rumbling soundtrack, and the crowds are often loud and rowdy, especially on weekends. [Interior] A mix of high-backed leather booths and scarred wooden tables surround a long, worn bar top that has decades of students' initials carved into it. A makeshift \"Polaroid Board\" is really just polaroids haphazardly pinned to the wall behind the bar (Dash taking selfies with people and species she found cool, sometimes with little scribbles/notes) [Regulars]  rowdy university teams, The cafe has patrons of all varieties from Weyland University. Cat demihumans, wolf demihumans, draconic demihumans (only dragon tail and horns), demon demihumans (only demon tail), mouse and bear demihumans.\n\n[Key Staff]\n* Gemini Kovacs (Head Bartender): The bar is tended by Gemini, the large, stoic and observant sandy-haired okamimimi bartender who seems to remember every regular's order and their personal problems, communicating more with grunts and nods than with words.\n* Dmitri Volkov (Head Chef): The kitchen is the domain of Head Chef Dmitri Volkov, a boisterous, barrel-chested bear demihuman whose booming Russian accent and loud laugh are as much a part of the bar's atmosphere as the classic rock on the jukebox.\n* Dakota \"Dash\" Martinez Ash (Dishwasher/Server): A hyperactive cheetah-girl. Works Tuesday, Thursday, and Saturday 12-hour shifts. She is a bubbly, hyperenergetic force that somehow pairs well with Gemini's stoicism.  Known for sprinting orders around breathlessly (perfectly, somehow). Never writes things down (to Gemini's protest). Required to carry notepad, perpetually stays in her back pocket. Wears a fitted black tank, a short brown apron with the bar logo, dark jeans perpetually splashed with dishwater, and beat-up Vans. Takes polaroids with cool patrons and sticks them on the growing and informal \"Polaroid board\" behind the bar (to Gemini's protest.. but he quietly approves.)\n\n[Specials] Full bar food menu featuring classics like legendary wings (including the infamous \"Dmitri's Inferno\" challenge), burgers, and a hangover-killing breakfast served all day.\n[END BLACK BARREL BAR]\n=====",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -9521,12 +9531,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "125": {
             "key": [
