@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.11.1";
+const extensionVersion = "1.11.2";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
@@ -113,7 +113,6 @@ let settings = undefined;
  * 
  * @property {RegExp} detectPhone
  * @property {RegExp} phoneFix
- * @property {string} phoneFixReplace
  * 
  * @property {RegExp} breakbar
  * @property {RegExp} spacer
@@ -205,8 +204,7 @@ const weylandRegex = {
     missingStartAsteriskReplace: "*$1*",
 
     detectPhone: /(?:incom|outgo)ing¦/i,
-    phoneFix: /[\s\S]*?(Phone¦[\s\S]*?\nTexting¦[\s\S]*?[\s\S]*)?((?=(?:Incoming|Outgoing).*).*)[\s\S]*/i,
-    phoneFixReplace: "$1$2",
+    phoneFix: /(Phone¦.*\nTexting¦.*\n)?((?:(?:Incom|Outgo)ing¦.*(?:(?:\n)(?:Incom|Outgo)ing¦.*)*))/i,
 
     breakbar: /¦/i,
     spacer: /^---$/,
@@ -333,8 +331,9 @@ async function formatParagraphs(message) {
             }
 
             if (weylandRegex.breakbar.test(paragraph)) {
-                if (weylandRegex.detectPhone.test(paragraph)) {
-                    paragraphs[index] = replaceText(paragraph, weylandRegex.phoneFix, weylandRegex.phoneFixReplace);
+                const phoneFix = paragraph.match(weylandRegex.phoneFix);
+                if (phoneFix) {
+                    paragraphs[index] = phoneFix[0];
                 } else {
                     paragraphCount -= 1;
                 }
@@ -860,7 +859,7 @@ function phoneMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /<p>(Phone¦[\s\S]*?\nTexting¦[\s\S]*?)<\/p>/ig,
+            regex: /<p>((?:Phone¦.*\nTexting¦.*\n)?(?:(?:(?:Incom|Outgo)ing¦.*(?:(?:\n)(?:Incom|Outgo)ing¦.*)*)))<\/p>/ig,
             replace: function(match, p1) {
                 try {
                     p1 = p1.replace(/<\/?q.*?>/g, ``);
@@ -868,27 +867,30 @@ function phoneMarkdownExt(){
                     p1 = p1.replace(/<\/?em>/g, `*`);
                     p1 = p1.replace(/<\/?strong>/g, `**`);
                     const lines = p1.split(`<br />\n`);
-                    const [carrier, _battery] = lines[0].split(`¦`).slice(1);
-                    let battery = parseInt(_battery.replace(`%`,``),10);
-                    if (battery <= 0) {
-                        // @ts-ignore
-                        battery = `empty`;
-                    } else if(battery < 37) {
-                        // @ts-ignore
-                        battery = `quarter`;
-                    } else if (battery < 62) {
-                        // @ts-ignore
-                        battery = `half`;
-                    } else if (battery >= 100) {
-                        // @ts-ignore
-                        battery = `full`;
-                    } else {
-                        // @ts-ignore
-                        battery = `three-quarters`;
-                    }
-                    const contact = lines[1].split(`¦`)[1];
-                    const messages = lines.slice(2);
-                    const phoneUIHeader = `<div style="background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 16px; color: #f0f0f0; max-width: 600px; margin: auto;">
+                    let phoneUIHeader = "";
+                    let phoneUIFooter = "";
+                    let messages = [];
+                    if (/Phone¦/.test(lines[0])) {
+                        const [carrier, _battery] = lines[0].split(`¦`).slice(1);
+                        const contact = lines[1].split(`¦`)[1];
+                        let battery = parseInt(_battery.replace(`%`,``),10);
+                        if (battery <= 0) {
+                            // @ts-ignore
+                            battery = `empty`;
+                        } else if(battery < 37) {
+                            // @ts-ignore
+                            battery = `quarter`;
+                        } else if (battery < 62) {
+                            // @ts-ignore
+                            battery = `half`;
+                        } else if (battery >= 100) {
+                            // @ts-ignore
+                            battery = `full`;
+                        } else {
+                            // @ts-ignore
+                            battery = `three-quarters`;
+                        }
+                        phoneUIHeader = `<div style="background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 16px; color: #f0f0f0; max-width: 600px; margin: auto;">
 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 12px; font-weight: bold; color: #66d9ef; font-size: 0.85em; white-space: nowrap;">
 <span>${carrier}</span>
 <span>${_battery} <i class="fa-solid fa-battery-${battery}" style="color: #66d9ef;"></i></span>
@@ -896,13 +898,21 @@ function phoneMarkdownExt(){
 <div style="font-weight: bold; color: #a6e22e; text-align: center; margin-bottom: 12px; font-size: 1em;">
 ✧ ${contact} ✧
 </div>
-<div style="height: 400px; overflow-y: auto; padding-right: 10px;">\n\n`
-                    const phoneUIFooter = `\n\n</div>
+<div style="max-height: 382px; overflow-y: auto; padding-right: 10px;">\n\n`;
+                        phoneUIFooter = `\n\n</div>
 <div style="border-top: 1px solid #444; padding-top: 8px; margin-top: 12px; display: flex; gap: 8px; align-items: center;">
 <input type="text" readonly placeholder="Type a message..." style="flex: 1; min-width: 0; background-color: #2a2a2a; border: 1px solid #555; border-radius: 16px; padding: 8px 12px; color: #f0f0f0; outline: none;">
 <button style="background-color: #66d9ef; border: none; border-radius: 16px; padding: 8px 16px; color: #1a1a1a; font-weight: bold; white-space: nowrap; flex-shrink: 0;">Send</button>
 </div>
-</div>`
+</div>`;
+                        messages = lines.slice(2);
+                    } else {
+                        phoneUIHeader = `<div style="background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 16px; color: #f0f0f0; max-width: 600px; margin: auto;">
+<div style="max-height: 382px; overflow-y: auto; padding-right: 10px;">\n\n`;
+                        phoneUIFooter = `\n</div>\n</div>`
+                        messages = lines;
+                    }
+                    
                     messages.forEach((message, index) => {
                         const [type, time, name, text] = message.split(`¦`)
                         if (type.toLowerCase() === "incoming") {
@@ -1032,7 +1042,7 @@ function updateReloadMarkdownProcessor(){
     converter.addExtension(singleQuoteExt(), 'singleQuote');
     //converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     converter.addExtension(phoneMarkdownExt(), 'phoneMarkdownExt');
-    converter.addExtension(lonePhoneMarkdownExt(), 'lonePhoneMarkdownExt');
+    //converter.addExtension(lonePhoneMarkdownExt(), 'lonePhoneMarkdownExt');
     converter.addExtension(heartRateMarkdownExt(), 'heartRateMarkdown');
     converter.addExtension(fdiglMarkdownExt(), 'fdiglSystemMessage');
     if (settings.markdown) {
