@@ -4148,7 +4148,7 @@
             "sticky": 2,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 186,
+            "displayIndex": 188,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5835,7 +5835,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 185,
+            "displayIndex": 186,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -5991,7 +5991,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 185,
+            "displayIndex": 187,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6611,7 +6611,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 187,
+            "displayIndex": 192,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6764,7 +6764,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 195,
+            "displayIndex": 203,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6917,7 +6917,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 196,
+            "displayIndex": 204,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7069,7 +7069,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 188,
+            "displayIndex": 196,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7222,7 +7222,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 191,
+            "displayIndex": 199,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7375,7 +7375,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 197,
+            "displayIndex": 205,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9531,7 +9531,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "125": {
             "key": [
@@ -11292,7 +11297,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 199,
+            "displayIndex": 207,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -14758,7 +14763,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 202,
+            "displayIndex": 211,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -14805,7 +14810,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 203,
+            "displayIndex": 212,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -14870,7 +14875,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 192,
+            "displayIndex": 200,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -14941,7 +14946,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 198,
+            "displayIndex": 206,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -14996,7 +15001,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 193,
+            "displayIndex": 201,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15074,7 +15079,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 194,
+            "displayIndex": 202,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15149,7 +15154,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 186,
+            "displayIndex": 190,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15224,7 +15229,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 189,
+            "displayIndex": 197,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15452,7 +15457,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 190,
+            "displayIndex": 198,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15529,7 +15534,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 200,
+            "displayIndex": 208,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -15578,12 +15583,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 201,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "displayIndex": 209
         },
         "207": {
             "uid": 207,
@@ -16168,7 +16168,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 187,
+            "displayIndex": 193,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -16245,7 +16245,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 187,
+            "displayIndex": 194,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -16320,7 +16320,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 186,
+            "displayIndex": 191,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -16395,7 +16395,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 187,
+            "displayIndex": 195,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -16473,7 +16473,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 186,
+            "displayIndex": 189,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -17122,6 +17122,50 @@
                 "names": [],
                 "tags": []
             }
+        },
+        "227": {
+            "uid": 227,
+            "key": [
+                "OPAL"
+            ],
+            "keysecondary": [],
+            "comment": "Opal Mode",
+            "content": "{{getglobalvar::OpalModeEntry}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 999999,
+            "position": 4,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 0,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": true,
+            "matchWholeWords": true,
+            "useGroupScoring": false,
+            "automationId": "OPAL",
+            "role": 0,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 210
         }
     },
     "originalData": {
