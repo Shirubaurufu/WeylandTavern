@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.11.4";
+const extensionVersion = "1.11.5";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
@@ -127,7 +127,7 @@ let settings = undefined;
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
     detectHeaderLegacy: /(?:^|(?<=\\n))(?:\*{1,3})?(([^"*~_`\n\r\\]*)~([^"*_`\n\r]*)[~\]\)])(?:\*{1,3})?(?:$|(?=\\n))/m,
-    detectHeader: /^¦¦\s?(.+~)\s?¦¦$/m,
+    detectHeader: /^¦¦\s?(.+~ ?(?:\(\w{4}\) ?)?)¦¦$/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -212,7 +212,7 @@ const weylandRegex = {
     spacer: /^---$/,
     spacer2: /^=+$/,
 
-    expressionClothingParagraph: /^(\[\w+?\]) ?(\[\w+?\]) ?(\[\d+?\])?/i,
+    expressionClothingParagraph: /^((?:\[[a-z]+?\]) ?(?:\[[a-z]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*$/i,
     ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im
 };
 
@@ -322,8 +322,8 @@ async function formatParagraphs(message) {
                     const expCloPar = paragraph.match(weylandRegex.expressionClothingParagraph);
                     if (expCloPar) {
                         foundFooter = true;
-                        expCloPar[3] = `[${paragraphCount - (paragraphs.length-index)}]`;
-                        paragraph = replaceText(paragraph, weylandRegex.expressionClothingParagraph, `${expCloPar[1]} ${expCloPar[2]} ${expCloPar[3]}`);
+                        expCloPar[2] = `[${paragraphCount - (paragraphs.length-index)}]`;
+                        paragraph = replaceText(paragraph, weylandRegex.expressionClothingParagraph, `${expCloPar[1]} ${expCloPar[2]}`);
                         paragraphs[index] = replaceText(paragraph, weylandRegex.asterisk, "");
                         return;
                     }
@@ -792,7 +792,7 @@ function headerMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /(?<=.>)(?:¦¦)? ?(.+~) ?(?:¦¦)?(?=<\/.)/g,
+            regex: /(?<=.>)(?:¦¦)? ?(.+~(?: ?\(\w{4}\))?) ?(?:¦¦)?(?=<\/.)/g,
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
@@ -820,7 +820,7 @@ function expCloParCodeExt(){
     try {
         return [{
             type: 'output',
-            regex: /<p>\[\w+?\] ?\[\w+?\] ?\[?\d*\]?<\/p>/i,
+            regex: /<p>((?:\[[a-z]+?\]) ?(?:\[[a-z]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*<\/p>/i,
             replace: ``
         }];
     } catch (e) {
