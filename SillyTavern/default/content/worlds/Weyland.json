@@ -1810,7 +1810,7 @@
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -11472,12 +11472,14 @@
             "key": [
                 "Belle's room",
                 "Belle's dorm",
+                "Dash's room",
+                "Dash's dorm",
                 "(#281)",
                 "room 281"
             ],
             "keysecondary": [],
-            "comment": "Belle Room",
-            "content": "Potential Location: Belle's Dorm Room \nRoom #281: The room has a surprisingly clean, almost sterile aesthetic despite its inhabitant's punk sensibilities. \n\nThe walls are painted a neutral beige, though one entire wall is covered in a massive periodic table poster. \n\nHer queen-sized bed sits in the corner, its black sheets and red comforter neatly made. A small nightstand sits beside it, hosting a cluttered assortment of chemistry textbooks, a lava lamp, and a pack of cigarettes. \n\nThe desk area is surprisingly organized, with a state-of-the-art chemistry set, various beakers and flasks, and a laptop that looks way too expensive for a college student. A shelf above the desk holds a row of meticulously labeled chemicals and a few textbooks. \n\nThe closet door is slightly ajar, revealing an array of black band tees, cargo pants, and leather jackets. A small hamper in the corner overflows with dirty laundry. \n\nThe floor is mostly clear, save for a few pairs of scuffed combat boots and a stray chemistry textbook left open on the floor. \n\nThe room smells faintly of tobacco, vanilla, and chemicals.\n\nShared bathroom with room 279 (Summer): Two sinks, open shower with small curtain, small lockable room with toilet\n-----",
+            "comment": "Belle & Dash Room",
+            "content": "[Bell & Dash's Dorm Room]\nPotential Location: Belle & Dash's Dorm Room\nRoom #281, Sterling Hall, 2nd Floor\n\n[LAYOUT AND ENTRY]\nThe door opens from the hallway into a narrow, rectangular space—roughly 12 feet wide and 26 feet deep. The room has that lived-in chaos that comes from two high-energy personalities coexisting in close quarters.\n\nImmediately to your right as you enter is a built-in closet unit spanning about 11 feet along the entry wall. On the far right is Dash's closet—door perpetually half-open, revealing a chaotic jumble of athletic wear, ripped jeans, worn sneakers, and her prized leather jacket slung over a hanger. The left side holds Belle's closet, significantly more organized with her collection of band tees, cargo pants, and leather jackets arranged by color (all black, obviously). Between the two closets is an open middle section with a power outlet—currently home to a Keurig and random snacks, bottles of booze, one of Belle's vape pens, and a concerning number of shot glasses that neither of them have bothered to wash.\n\nDirectly across from the closet is the door to the shared suite bathroom. The door has no lock since it connects to room 279 (Summer's room). Inside: two sinks (one perpetually covered in Belle's makeup and the other with Dash's sports tape and bandaids), an open shower with a flimsy curtain, and a separate small room with a locking door that contains the toilet.\n\n[MIDDLE SECTION - DESKS]\nWalking deeper into the room toward the back window, you pass between two simple wooden desks flanking the walkway.\n\nBelle's desk (LEFT): Surprisingly organized despite her chaotic reputation. A state-of-the-art chemistry set sits front and center—beakers, flasks, burner, the works. Her expensive-looking laptop is closed beside it. Above the desk, she's mounted a shelf holding meticulously labeled chemical containers (some legal, some... questionable) and chemistry textbooks with cracked spines from actual use. A lava lamp provides ambient light. The desk surface also holds: scattered index cards with chemical formulas, her vape pen charging cable, a half-empty pack of cigarettes, a glass ashtray shaped like a crystal heart, and a Polaroid Dash took of her mid-laugh at some party that she pretends to hate but hasn't thrown away.\n\nDash's desk (RIGHT): Organized chaos incarnate. Her laptop is buried under: printed photos from her Pawstigram account waiting to be posted, climbing chalk in a small bag, rolls of athletic tape, her portable phone charger, a pair of sunglasses with a cracked lens she refuses to replace. Tacked to the wall above her desk is a corkboard COVERED in Polaroids—action shots of her mid-skate, mid-climb, mid-jump. There's no organization to it, just pure visual chaos. A skateboard is propped against the desk leg.\n\n[BACK SECTION - BEDS]\nThe lofted beds dominate the back portion of the room, each raised about 5 feet off the ground.\n\nBelle's bed (LEFT): The loft itself has black sheets and a red comforter that's usually half-kicked off. A small reading light is clipped to the bed frame. Underneath the loft: a 32\" Vizio Smart TV mounted on a small stand, displaying those annoying rotating ads on its home screen when not in use. The wall beside her bed has a massive periodic table poster and a few band posters (punk and metal).\n\nDash's bed (RIGHT): Also lofted to match Belle's height. Her bedding is a mismatched mess—different colored sheets, a weighted blanket she stole from home, and about four pillows. A charging cable snakes up the bedpost. Underneath the loft: a black futon currently configured as a couch (as close as college students get to real furniture). It's covered in throw blankets stacked beside it—some for actual warmth, others just collected over time. The futon has seen EVERYTHING—late night conversations, hookups, Dash passing out after a particularly intense stunt, Belle doing homework at 3am because the desk chair hurts her back.\n\nStored carefully beneath the futon, hidden from casual view, are several shoeboxes. These are Dash's most private possession—her Polaroid collection, organized by feeling rather than chronology. Each box is labeled in her hurried handwriting: \"FELT ALIVE\" (sunsets mid-skate, the split second before a dangerous jump, genuine candid laughs), \"ALMOST DIED\" (failed stunts, blood, triumph), \"RIGHTEOUS SHIT\" (perfect tricks, achievements, victory moments), and most secret of all, tucked in the very back, \"WANTED TO STAY\"—photos of people and moments where she felt the pull to stop running. A sleeping partner's face in early morning light. A quiet moment that felt like home. These boxes are off limits and Dash has made that abundantly clear. Belle respects it.\n\n[BACK WALL AND WINDOW]\nThe back wall features a single window—40 inches wide by 64 inches tall—with a simple plastic blind that's usually pulled up during the day. It overlooks the Sterling Hall courtyard below. The windowsill has become a dumping ground: another ashtray (generic circle), a half-empty pack of cigarettes, and a Polaroid of both of them flipping off the camera at some party. The window is perpetually cracked open.\n\nShared bathroom with room 279 (Summer): Two sinks, open shower with small curtain, small lockable room with toilet\n\n[END Belle & Dash's Dorm Room]\n=====",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -11629,7 +11631,7 @@
             ],
             "keysecondary": [],
             "comment": "Bianca Room",
-            "content": "Potential Location: Bianca's Dorm Room \nRoom #290: Two lofted beds dominate the space - Bianca's a chaotic nest of tangled blankets, while Herra's stands in stark contrast: pristinely made, untouched, like a shrine or silent plea for return. Under Bianca's bed sits a small couch facing a wall-mounted TV, while a mini-fridge hums in the corner, containing only empty cola cans and old takeout.\n\nThe setting sun filters through partially drawn curtains, supplemented by small lights that accent polaroid photos on the wall - with obvious empty spaces where Herra's pictures used to be. Lo-fi beats play softly from a bluetooth speaker.\n\nSigns of struggle scatter the room - hidden syringes, piled laundry, and untouched assignments. Her expensive camera gathers dust while her drawing pad shows signs of recent, aggressive use. Personal touches attempt comfort - plush Pokemon, soft blankets, and an essential oil diffuser masking other scents. A mirror hangs partially covered by a shirt.\n\nBianca has a well worn and loved teddy bear on her bed - Samson - that was given to her early in her childhood by Herra. It is missing one eye - something Bianca intentionally did after her injury. It smells strongly of Bianca's perfume and musk, having been held through countless lonely sob sessions, cuddling sessions and silent nights.\n-----",
+            "content": "[BIANCA'S DORM ROOM]\nPotential Location: Bianca's Dorm Room\nRoom #290, Sterling Hall, 2nd Floor\n\nFor reference, Herra was a brown-haired, blue-eyed wolfgirl.\n\n[LAYOUT AND ENTRY]\nStandard double-occupancy dorm room, approximately 12 feet wide by 26 feet deep. Room is dark - blackout curtains cover the window at the far end. Single desk lamp provides dim yellow lighting. Air quality is poor due to lack of ventilation, unwashed laundry, old food containers, and body odor. Chemical smell present from improperly disposed medical waste.\n\nImmediately right of entry: built-in closet unit spanning approximately 11 feet along wall. Two closet sections with middle utility area.\n\nBianca's closet (right): Door open, minimal clothing on hangers. Most clothing in pile on floor. Camera bag with expensive digital camera in back corner.\n\nHerra's closet (left): Empty. All hangers bare, no items remaining.\n\nMiddle section between closets: Mini-fridge. Keurig coffee maker on top. Scattered items: empty water bottles, empty prescription bottles.\n\nAcross from closet is the door to the shared suite bathroom. Connects to room 288.\n[MIDDLE SECTION - DESKS]\nTwo wooden desks flanking central walkway.\n\nBianca's desk (LEFT): Laptop closed, perpetually plugged in. Surface items: loose papers, open sketchbook (half-finished charcoal drawing), charcoal smudges, polaroid camera. Small trash can beside desk contains: visible used needles (partially covered with paper), empty baggies, tissues. Two full and tied trash bags on floor beside trash can.\n\nCorkboard above desk: Most photos removed. Remaining photos show Bianca and Herra together.\n\nHerra's desk (RIGHT): Clean and organized. Essentially empty and baren. Framed photo of Bianca and Herra from freshman year facing room. Thin layer of dust on all surfaces.\n\n[BACK SECTION - BEDS]\nTwo lofted beds, approximately 5 feet height clearance.\n\nBianca's bed (LEFT): Sheets unchanged for extended period. Bedding tangled and stained. Comforter partially on floor. Pillows bunched against wall, stained with tears and makeup.\n\nBianca has a well worn and loved teddy bear on her bed - Samson - that was given to her early in her childhood by Herra. It is missing one eye - something Bianca intentionally did after her injury. It smells strongly of Bianca's perfume and musk, having been held through countless lonely sob sessions, cuddling sessions and silent nights.\n\nBedside items within reach: Multiple water bottles (various fill levels), phone charger, food wrappers (granola bars, instant ramen)\n\nUnder loft: 32\" Samsung Smart TV, Pile of dirty laundry. Backpack with textbooks.\n\nHerra's lofted bed (RIGHT): empty, bare mattress. Untouched since her leaving\n\nUnder Herra's lofted bed: grey futon covered in laundry and throw blankets\n\n[BACK WALL AND WINDOW]\nSingle window (40\" W x 64\" H). Blinds drawn but window perpetually cracked open\n\n[ATMOSPHERE DETAILS]\nRoom temperature slightly elevated from lack of air circulation. Dust visible on Herra's side.\n\nShared bathroom layout: Two sinks, open shower with curtain, separate toilet stall with lock.\n\n[END BIANCA'S DORM ROOM]\n===========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -11689,12 +11691,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "153": {
             "key": [
@@ -17217,7 +17214,59 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 210
+            "displayIndex": 210,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
+        },
+        "229": {
+            "uid": 229,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Constant Context",
+            "content": "{{getvar::ConstantContext}}",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 8,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 212,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         }
     },
     "originalData": {
