@@ -129,16 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "party",
-                "alcohol",
-                "Rivera",
-                "flirting",
-                "flirt",
-                "Summer",
-                "drunk",
-                "drinking"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -2812,7 +2803,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Rosa Outfit Codes",
-            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black t-shirt and short black skirt with fishnet leggings)\n• [LG] - ONLY wearing undergarments (underwear)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black t-shirt and short black skirt with fishnet leggings)\n• [LG] - ONLY wearing undergarments (underwear)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Leather Jacket with crop top band shirt and jeans\n• [XX] - No other code matches",
             "constant": false,
             "vectorized": false,
             "selective": true,
