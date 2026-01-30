@@ -1810,7 +1810,7 @@
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -11691,7 +11691,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "153": {
             "key": [
@@ -17200,7 +17205,7 @@
             "delayUntilRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "depth": 2,
+            "depth": 0,
             "group": "",
             "groupOverride": false,
             "groupWeight": 100,
