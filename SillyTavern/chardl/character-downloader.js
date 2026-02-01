@@ -589,7 +589,7 @@ function downloaderLog(text) {
 
                     downloaderLog('Verifying password with Weyland servers...');
                     const accessTiers = [
-                        { name: 'Alpha', id: 'wQ3\~sD\&yF6' },
+                        { name: 'Alpha', id: 'wQ3\~sD&yF6' },
                         { name: 'Beta', id: 'fJ4\~kM\+\$hU9' },
                         { name: 'Debug', id: 'aENvY3VW' }
                     ];
