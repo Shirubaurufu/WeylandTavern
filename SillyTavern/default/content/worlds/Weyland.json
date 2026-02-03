@@ -17145,7 +17145,7 @@
             "addMemo": true,
             "order": 999999,
             "position": 4,
-            "disable": false,
+            "disable": true,
             "ignoreBudget": false,
             "excludeRecursion": false,
             "preventRecursion": true,
@@ -17172,12 +17172,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 210,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "displayIndex": 210
         },
         "228": {
             "uid": 228,
@@ -17192,7 +17187,7 @@
             "addMemo": true,
             "order": 999999,
             "position": 4,
-            "disable": false,
+            "disable": true,
             "ignoreBudget": false,
             "excludeRecursion": false,
             "preventRecursion": true,
@@ -17219,12 +17214,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 210,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "displayIndex": 210
         },
         "229": {
             "uid": 229,
