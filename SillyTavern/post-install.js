@@ -94,6 +94,16 @@ function createDefaultFiles() {
             defaultPath: './default/content/worlds/Weyland Characters.json',
             productionPath: './data/default-user/worlds/Weyland Characters.json',
         },
+            type: 'file',
+            defaultPath: './default/content/themes/Aesthetica ~ Ratcherito Ver ~.json',
+            productionPath: './data/default-user/themes/Aesthetica ~ Ratcherito Ver ~.json',
+        },
+
+        },
+            type: 'file',
+            defaultPath: './default/content/themes/Aesthetica.json',
+            productionPath: './data/default-user/themes/Aesthetica.json',
+        },
         {
             type: 'file',
             defaultPath: './default/content/settings.json',
