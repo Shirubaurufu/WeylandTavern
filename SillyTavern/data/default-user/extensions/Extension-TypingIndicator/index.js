@@ -4,10 +4,10 @@ import {
     event_types,
     isStreamingEnabled,
     saveSettingsDebounced,
-} from '../../../../script.js';
-import { extension_settings } from '../../../extensions.js';
-import { selected_group } from '../../../group-chats.js';
-import { t } from '../../../i18n.js';
+} from '../../../script.js';
+import { extension_settings } from '../../extensions.js';
+import { selected_group } from '../../group-chats.js';
+import { t } from '../../i18n.js';
 
 const MODULE = 'typing_indicator';
 const legacyIndicatorTemplate = document.getElementById('typing_indicator_template');
@@ -192,4 +192,5 @@ function hideTypingIndicator() {
     showIndicatorEvents.forEach(e => eventSource.on(e, showTypingIndicator));
     hideIndicatorEvents.forEach(e => eventSource.on(e, hideTypingIndicator));
 })();
+
 
