@@ -129,10 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "selfie",
-                "drunk"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -785,57 +782,6 @@
             "matchCreatorNotes": false,
             "ignoreBudget": false,
             "triggers": []
-        },
-        "14": {
-            "uid": 14,
-            "key": [],
-            "keysecondary": [],
-            "comment": "Blake History",
-            "content": "",
-            "constant": false,
-            "vectorized": false,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Blake",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 24,
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Blake"
-                ],
-                "tags": [
-                    "0ead9e69-cc6a-4754-a1f6-4fe49140a15a"
-                ]
-            }
         },
         "15": {
             "uid": 15,
