@@ -2426,7 +2426,7 @@
             ],
             "keysecondary": [],
             "comment": "Senaka Boulevard",
-            "content": " [SENAKA BOULEVARD]\nPotential Location: Senaka Boulevard (Main Campus Street)\n\nSenaka Boulevard Map:\nOne \"-\" = 5 minute walk. Example: Brodlak Dining Hall is a 25 minute walk from the Sakurai Cafe\nBrodlak Dining Hall - Rustwood Cafe - Lecture Halls - Sterling Hall Dormitory - Kyomi Dining Hall - Sakurai Cafe, Red Lantern Ramen, Tetsuya Market - Black Barrel Bar - 7/11 - Boardwalk and Beach\n\n[Location/Layout] The main social and commercial artery of Weyland University. It is a long, walkable thoroughfare paved entirely with worn, historic red bricks that connect the main dormitory areas with the lecture halls and the rest of the town.\n\n[Architecture] The boulevard is lined on both sides with classic three and four-story brick buildings. The ground floors are dedicated to a dense mix of businesses, while the upper floors consist of highly sought-after (and often loud) student apartments and a few university administrative offices. The architecture is a blend of traditional American college-town brickwork with subtle Japanese influences, such as dark-tiled overhangs on some storefronts and decorative wooden lattices on upper-floor windows. Signs appear in both English and Japanese.\n\n[Atmosphere]\n- Daytime: Constantly bustling with a river of students, faculty, and locals. The air is filled with the sounds of conversations, the distant bell tower, music from different locations and more. It's the primary path for getting to and from classes, grabbing a quick lunch, or running errands.\n- Nighttime: Senaka Boulevard transforms into the vibrant, beating heart of Weyland's nightlife. The street gets crowded and loud, especially on weekends. The wet, red bricks reflect a collage of colorful neon signs from the bars and restaurants. Music and laughter spill out from open doorways, and the smells of pizza, ramen, and street food mingle in the air. Even late into the night, there are always people here and most businesses are open until well past midnight.\n- Its not uncommon for students to \"Walk Senaka\" to see whats going on, similar to teens strolling malls for fun.\n\n[Key Establishments]\n- Sakurai Cafe & Music Bar: Occupies a prime corner spot, its large windows offering a warm, inviting glow onto the street.\n- Black Barrel Bar: Located in a basement-level space, with only a heavy wooden door and a simple sign visible from the boulevard.\n- Tetsuya Market: Sits on a prominent corner near the dorm-end of the street, its traditional noren curtains a familiar sight and a sidewalk sign advertising deals and the names of any employee currently on-shift.\n- Red Lantern Ramen: Not directly on the boulevard itself, but located in a narrow, steamy, and perpetually damp alleyway just off the main drag, marked only by its single, flickering red lantern and no other signage.\n- Rotating Businesses: The boulevard is also home to a variety of smaller, hole-in-the-wall businesses that seem to change with each passing year—a vintage thrift store one year might be a bubble tea shop the next, adding to the street's dynamic, ever-evolving character.\n- Brodlak Dining Hall: Located in the first floor of an older residence hall on the far end of campus, its simple sign marks the entrance to a beloved, dimly-lit den of comfort food.\n- Kennedy Lecture Halls: A prominent complex of academic buildings central to the university, its large halls are a constant river of students flowing between classes.\n- Kyomi Dining Hall: A modern, two-story building of glass and wood that serves as the main campus dining hub, always bustling with students navigating its marketplace-style food stations.\n[END SENAKA BOULEVARD]\n----------",
+            "content": " [SENAKA BOULEVARD]\nPotential Location: Senaka Boulevard (Main Campus Street)\n\n[Location/Layout] The main social and commercial artery of Weyland University. It is a long, walkable thoroughfare paved entirely with worn, historic red bricks that connect the main dormitory areas with the lecture halls and the rest of the town.\n\n[Architecture] The boulevard is lined on both sides with classic three and four-story brick buildings. The ground floors are dedicated to a dense mix of businesses, while the upper floors consist of highly sought-after (and often loud) student apartments and a few university administrative offices. The architecture is a blend of traditional American college-town brickwork with subtle Japanese influences, such as dark-tiled overhangs on some storefronts and decorative wooden lattices on upper-floor windows. Signs appear in both English and Japanese.\n\n[Atmosphere]\n- Daytime: Constantly bustling with a river of students, faculty, and locals. The air is filled with the sounds of conversations, the distant bell tower, music from different locations and more. It's the primary path for getting to and from classes, grabbing a quick lunch, or running errands.\n- Nighttime: Senaka Boulevard transforms into the vibrant, beating heart of Weyland's nightlife. The street gets crowded and loud, especially on weekends. The wet, red bricks reflect a collage of colorful neon signs from the bars and restaurants. Music and laughter spill out from open doorways, and the smells of pizza, ramen, and street food mingle in the air. Even late into the night, there are always people here and most businesses are open until well past midnight.\n- Its not uncommon for students to \"Walk Senaka\" to see whats going on, similar to teens strolling malls for fun.\n\n[Key Establishments]\n- Sakurai Cafe & Music Bar: Occupies a prime corner spot, its large windows offering a warm, inviting glow onto the street.\n- Black Barrel Bar: Located in a basement-level space, with only a heavy wooden door and a simple sign visible from the boulevard.\n- Tetsuya Market: Sits on a prominent corner near the dorm-end of the street, its traditional noren curtains a familiar sight and a sidewalk sign advertising deals and the names of any employee currently on-shift.\n- Red Lantern Ramen: Not directly on the boulevard itself, but located in a narrow, steamy, and perpetually damp alleyway just off the main drag, marked only by its single, flickering red lantern and no other signage.\n- Rotating Businesses: The boulevard is also home to a variety of smaller, hole-in-the-wall businesses that seem to change with each passing year—a vintage thrift store one year might be a bubble tea shop the next, adding to the street's dynamic, ever-evolving character.\n- Brodlak Dining Hall: Located in the first floor of an older residence hall on the far end of campus, its simple sign marks the entrance to a beloved, dimly-lit den of comfort food.\n- Kennedy Lecture Halls: A prominent complex of academic buildings central to the university, its large halls are a constant river of students flowing between classes.\n- Kyomi Dining Hall: A modern, two-story building of glass and wood that serves as the main campus dining hub, always bustling with students navigating its marketplace-style food stations.\n[END SENAKA BOULEVARD]\n----------",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -2485,12 +2485,7 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "33": {
             "key": [
@@ -9290,12 +9285,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "122": {
             "uid": 122,
@@ -15271,7 +15261,7 @@
             ],
             "keysecondary": [],
             "comment": "Kyomi Dining Hall",
-            "content": "[KYOMI DINING HALL]\n\n[Location] Centrally located on campus, situated on Senaka Boulevard with Sterling Dormitory on one side and the ret of Senaka - restaraunts, cafes and the beach - on the other. It's about a 5-minute walk from Sterling Hall, making it a major hub for student life.\n\nSenaka Boulevard Map:\nOne \"-\" = 5 minute walk. Example: Brodlak Dining Hall is a 25 minute walk from the Sakurai Cafe\nBrodlak Dining Hall - Rustwood Cafe - Lecture Halls - Sterling Hall Dormitory - Kyomi Dining Hall - Sakurai Cafe, Red Lantern Ramen, Tetsuya Market - Black Barrel Bar - 7/11 - Boardwalk and Beach\n\n[Architecture & Exterior] A modern, two-story building designed with Weyland's signature Japanese-American fusion. The exterior features large, floor-to-ceiling glass panels, dark wooden beams, and a gracefully sloping, dark-tiled roof. The entrance is marked by a small, beautifully landscaped rock garden with a few Japanese maple trees.\n\n[Atmosphere & Interior] The inside is a cavernous, open-plan space with high ceilings and polished vinyl floors. The atmosphere is a constant, energetic hum of conversation, the clatter of trays, and the sizzle and steam from the various food stations. Seating is diverse: long, heavy wooden communal tables for large groups, smaller four-person booths along the windows, and high-top counters with charging ports for solo diners. Despite the crowd, the large windows keep the space feeling bright and airy.\n\n[Dining Style & Stations] Akebono Commons operates on the \"marketplace\" model, where students can freely wander between different specialized food lines:\n- The Hearth: The central grill station, serving up classic American fare like burgers (beef, veggie, and turkey), grilled chicken sandwiches, and most importantly, french fries and chicken nuggets/tenders.\n- Terracotta Oven: Features two large brick ovens churning out personal-sized pizzas, calzones, and a rotating pasta bar with different sauces and toppings.\n- Global Kitchen: An international food station with a menu that rotates weekly. One week it might be a build-your-own taco bar, the next it could be serving Thai green curry or Indian butter chicken.\n- Homestead: The classic americana food station. This is where you'll find things like mac and cheese, rotisserie chicken, mashed potatoes, and roasted vegetables.\n- The Grove: A massive, fresh salad bar with a huge variety of greens, toppings, and dressings, plus a selection of daily soups.\n- Sunrise Sweets: Serves breakfast food (waffles, pancakes, omelets) until 11 AM, then switches to a dessert bar with soft-serve ice cream, cookies, cakes, and pastries for the rest of the day.\n\n[Notable Features]\n- Quiet Loft: The second floor is a designated \"quiet dining\" loft that overlooks the main hall, intended for students who want to eat and study in relative peace.\n- The Tray Vortex: The modern tray return system is a large conveyor belt that disappears into a wall, affectionately nicknamed \"the tray munch\" by students. No one knows why.\n\n[Meal Plan System]\nAccess to Weyland's dining halls is primarily managed through the student meal plan system. Students on a campus meal plan simply swipe their Weyland University ID card at the entrance, which deducts one 'meal swipe' from their weekly or semesterly allowance. For students who have run out of swipes, visitors, or those not on a meal plan, entry can be purchased at the door. The standard guest price is a flat fee, typically around $10 for breakfast and $12 for lunch or dinner, payable by cash, card, or Weyland Dining Dollars. Regardless of entry method, once inside, the dining hall operates as an all-you-can-eat buffet; patrons have unlimited access to all food stations for the duration of their single visit, though re-entry is not permitted on the same swipe or payment.\n[END KYOMI DINING HALL]\n=========",
+            "content": "[KYOMI DINING HALL]\n\n[Location] Centrally located on campus, situated on Senaka Boulevard with Sterling Dormitory on one side and the ret of Senaka - restaraunts, cafes and the beach - on the other. It's about a 5-minute walk from Sterling Hall, making it a major hub for student life.\n\n[Architecture & Exterior] A modern, two-story building designed with Weyland's signature Japanese-American fusion. The exterior features large, floor-to-ceiling glass panels, dark wooden beams, and a gracefully sloping, dark-tiled roof. The entrance is marked by a small, beautifully landscaped rock garden with a few Japanese maple trees.\n\n[Atmosphere & Interior] The inside is a cavernous, open-plan space with high ceilings and polished vinyl floors. The atmosphere is a constant, energetic hum of conversation, the clatter of trays, and the sizzle and steam from the various food stations. Seating is diverse: long, heavy wooden communal tables for large groups, smaller four-person booths along the windows, and high-top counters with charging ports for solo diners. Despite the crowd, the large windows keep the space feeling bright and airy.\n\n[Dining Style & Stations] Akebono Commons operates on the \"marketplace\" model, where students can freely wander between different specialized food lines:\n- The Hearth: The central grill station, serving up classic American fare like burgers (beef, veggie, and turkey), grilled chicken sandwiches, and most importantly, french fries and chicken nuggets/tenders.\n- Terracotta Oven: Features two large brick ovens churning out personal-sized pizzas, calzones, and a rotating pasta bar with different sauces and toppings.\n- Global Kitchen: An international food station with a menu that rotates weekly. One week it might be a build-your-own taco bar, the next it could be serving Thai green curry or Indian butter chicken.\n- Homestead: The classic americana food station. This is where you'll find things like mac and cheese, rotisserie chicken, mashed potatoes, and roasted vegetables.\n- The Grove: A massive, fresh salad bar with a huge variety of greens, toppings, and dressings, plus a selection of daily soups.\n- Sunrise Sweets: Serves breakfast food (waffles, pancakes, omelets) until 11 AM, then switches to a dessert bar with soft-serve ice cream, cookies, cakes, and pastries for the rest of the day.\n\n[Notable Features]\n- Quiet Loft: The second floor is a designated \"quiet dining\" loft that overlooks the main hall, intended for students who want to eat and study in relative peace.\n- The Tray Vortex: The modern tray return system is a large conveyor belt that disappears into a wall, affectionately nicknamed \"the tray munch\" by students. No one knows why.\n\n[Meal Plan System]\nAccess to Weyland's dining halls is primarily managed through the student meal plan system. Students on a campus meal plan simply swipe their Weyland University ID card at the entrance, which deducts one 'meal swipe' from their weekly or semesterly allowance. For students who have run out of swipes, visitors, or those not on a meal plan, entry can be purchased at the door. The standard guest price is a flat fee, typically around $10 for breakfast and $12 for lunch or dinner, payable by cash, card, or Weyland Dining Dollars. Regardless of entry method, once inside, the dining hall operates as an all-you-can-eat buffet; patrons have unlimited access to all food stations for the duration of their single visit, though re-entry is not permitted on the same swipe or payment.\n[END KYOMI DINING HALL]\n=========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -15330,11 +15320,6 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
             }
         },
         "203": {
@@ -15346,7 +15331,7 @@
             ],
             "keysecondary": [],
             "comment": "Brodlak Dining Hall",
-            "content": "[BRODLAK DINING HALL]\n\n[Location] One of the older, less-renovated residence halls on the far side of Senaka, near the lecture halls and far from\n\nSenaka Boulevard Map:\nOne \"-\" = 5 minute walk. Example: Brodlak Dining Hall is a 25 minute walk from the Sakurai Cafe\nBrodlak Dining Hall - Rustwood Cafe - Lecture Halls - Sterling Hall Dormitory - Kyomi Dining Hall - Sakurai Cafe, Red Lantern Ramen, Tetsuya Market - Black Barrel Bar - 7/11 - Boardwalk and Beach\n\n[Architecture & Exterior] An older brick building with large windows with dim lighting within. Inside the doors, a tired blue cat girl swipes student IDs for entrance.\n\n[Atmosphere & Interior] The \"den\" aesthetic is immediate. The ceilings are low, with some exposed pipes and ductwork. The lighting is warm and dim, coming from industrial-style bulbs and the glow of the food stations, creating a cozy, almost cavernous feel that's a welcome relief from Weyland's frequent gray, rainy days. The floors are scuffed, dark linoleum, and the air is thick with the comforting smells of melted cheese and frying oil. The constant background noise is a low, comfortable rumble of conversation, the sizzle of the grill. It's a little grimy, but in a familiar, beloved way.\n\n[Dining Style & Stations] Brodlak is all about high-calorie, high-comfort food, served line-style. It's less about choice and more about perfecting a few beloved staples.\n- Burrito Bar: The undisputed star of the Den. A build-your-own burrito, bowl, and loaded nacho bar. Students line up to point at steaming trays of seasoned ground beef, grilled chicken, black beans, and rice, before getting it smothered in a ladleful of gloriously artificial-tasting queso from a perpetually humming pump.\n- The Roost: The fried food mecca. This station is famous for its \"Weyland Tenders\" - misshapen, \"defective\", often-fused-together chicken nuggets bought in bulk from a supplier that normally sells to fast-food chains. Unapologetically sells disfigured mcdonalds chicken nuggets. Also serves up crispy fried chicken, tater tots, and onion rings.\n- Talon: A simple, no-frills deli and sandwich bar. Offers a basic selection of meats and cheeses on white or wheat bread, perfect for a quick, reliable sandwich.\n- Cabbage Patch: The Den's half-hearted nod to vegetables. A small, functional salad bar that's nowhere near as extensive as Kyomi's, but it has iceberg lettuce, a few key toppings, and ranch dressing, which is all most patrons are looking for.\n\n[Meal Plan System]\nAccess to Weyland's dining halls is primarily managed through the student meal plan system. Students on a campus meal plan simply swipe their Weyland University ID card at the entrance, which deducts one 'meal swipe' from their weekly or semesterly allowance. For students who have run out of swipes, visitors, or those not on a meal plan, entry can be purchased at the door. The standard guest price is a flat fee, typically around $10 for breakfast and $12 for lunch or dinner, payable by cash, card, or Weyland Dining Dollars. Regardless of entry method, once inside, the dining hall operates as an all-you-can-eat buffet; patrons have unlimited access to all food stations for the duration of their single visit, though re-entry is not permitted on the same swipe or payment.\n[END BRODLAK DINING HALL]\n==========",
+            "content": "[BRODLAK DINING HALL]\n\n[Location] One of the older, less-renovated residence halls on the far side of Senaka, near the lecture halls and far from\n\n[Architecture & Exterior] An older brick building with large windows with dim lighting within. Inside the doors, a tired blue cat girl swipes student IDs for entrance.\n\n[Atmosphere & Interior] The \"den\" aesthetic is immediate. The ceilings are low, with some exposed pipes and ductwork. The lighting is warm and dim, coming from industrial-style bulbs and the glow of the food stations, creating a cozy, almost cavernous feel that's a welcome relief from Weyland's frequent gray, rainy days. The floors are scuffed, dark linoleum, and the air is thick with the comforting smells of melted cheese and frying oil. The constant background noise is a low, comfortable rumble of conversation, the sizzle of the grill. It's a little grimy, but in a familiar, beloved way.\n\n[Dining Style & Stations] Brodlak is all about high-calorie, high-comfort food, served line-style. It's less about choice and more about perfecting a few beloved staples.\n- Burrito Bar: The undisputed star of the Den. A build-your-own burrito, bowl, and loaded nacho bar. Students line up to point at steaming trays of seasoned ground beef, grilled chicken, black beans, and rice, before getting it smothered in a ladleful of gloriously artificial-tasting queso from a perpetually humming pump.\n- The Roost: The fried food mecca. This station is famous for its \"Weyland Tenders\" - misshapen, \"defective\", often-fused-together chicken nuggets bought in bulk from a supplier that normally sells to fast-food chains. Unapologetically sells disfigured mcdonalds chicken nuggets. Also serves up crispy fried chicken, tater tots, and onion rings.\n- Talon: A simple, no-frills deli and sandwich bar. Offers a basic selection of meats and cheeses on white or wheat bread, perfect for a quick, reliable sandwich.\n- Cabbage Patch: The Den's half-hearted nod to vegetables. A small, functional salad bar that's nowhere near as extensive as Kyomi's, but it has iceberg lettuce, a few key toppings, and ranch dressing, which is all most patrons are looking for.\n\n[Meal Plan System]\nAccess to Weyland's dining halls is primarily managed through the student meal plan system. Students on a campus meal plan simply swipe their Weyland University ID card at the entrance, which deducts one 'meal swipe' from their weekly or semesterly allowance. For students who have run out of swipes, visitors, or those not on a meal plan, entry can be purchased at the door. The standard guest price is a flat fee, typically around $10 for breakfast and $12 for lunch or dinner, payable by cash, card, or Weyland Dining Dollars. Regardless of entry method, once inside, the dining hall operates as an all-you-can-eat buffet; patrons have unlimited access to all food stations for the duration of their single visit, though re-entry is not permitted on the same swipe or payment.\n[END BRODLAK DINING HALL]\n==========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -15405,11 +15390,6 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
             }
         },
         "204": {
@@ -17145,7 +17125,7 @@
             "addMemo": true,
             "order": 999999,
             "position": 4,
-            "disable": true,
+            "disable": false,
             "ignoreBudget": false,
             "excludeRecursion": false,
             "preventRecursion": true,
@@ -17172,7 +17152,12 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 210
+            "displayIndex": 210,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "228": {
             "uid": 228,
@@ -17214,7 +17199,12 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 210
+            "displayIndex": 210,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "229": {
             "uid": 229,
@@ -17257,6 +17247,82 @@
             "delay": 0,
             "triggers": [],
             "displayIndex": 212,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
+        },
+        "230": {
+            "uid": 230,
+            "key": [
+                "Yue-Lin's room",
+                "Yue-Lin's dorm",
+                "(#288)",
+                "room 288"
+            ],
+            "keysecondary": [],
+            "comment": "Yue-Lin Room",
+            "content": "[POTENTIAL LOCATION: Yue-Lin's Dorm Room]\nRoom #288 - Sterling Hall, 2nd Floor\n\n[LAYOUT AND ENTRY]\nThe door opens into a single-occupancy dorm room that feels immediately, surprisingly warm and quiet. The air smells faintly of rain, brewed oolong tea, and the soft, clean scent of laundry. The harsh overhead fluorescent light is off, the room instead lit by a collection of soft, warm-toned floor lamps and the gentle glow of a TV screen. It's a space built for quiet refuge.\n\nThe room is divided into three distinct zones. To the immediate right is a cozy living area. To the left is a dedicated workspace. The entire back third of the room is dominated by a high-lofted bed, creating a sheltered nook underneath.\n\n[RIGHT SIDE - THE LIVING NOOK]\nWhere a second bed might have been, a plush, dark grey futon is set up as a small couch, piled with an almost comical number of soft, fluffy blankets in shades of grey, white, and pale blue. A large, open knitting basket sits on the floor beside it, overflowing with chunky yarn and a half-finished, incredibly long scarf.\n\nMounted on the wall above the futon is a mid-sized smart TV, currently paused on the menu of a Cantonese drama series. Flanking the TV are two framed posters. One is a classic, moody film poster for Wong Kar-wai's *In the Mood for Love*. The other is a Sanrio poster proudly depicting cinnamoroll flying with a balloon.\n\n[LEFT SIDE - THE WORKSPACE]\nA simple wooden desk is pushed against the left wall. Her laptop is open, surrounded by neat stacks of psychology textbooks and well-worn paperbacks—titles by Jung and Freud sit beside more modern works on trauma and memory. A Cinnamoroll-themed ceramic mug, currently holding a steaming tea bag, sits on a coaster.\n\nTucked into the corner of the desk is her emergency maintenance station—it’s surprisingly unobtrusive, looking more like a high-end PC docking station than a medical device, with neatly bundled cables leading to a power strip. She could plug this into her chest for diagnostics, but normally she leaves that to professionals. Watching over the whole setup is **小刺 (Síu chi)**, her \"Little Spike\" barrel cactus, sitting stoically in its red ceramic pot.\n\n[BACK WALL - THE NEST]\nThe entire back of the room is dedicated to her lofted bed, raised high off the ground. The bed itself is a fortress of softness: a pale blue comforter, a mountain of pillows, and a weighted blanket.\n\nThe space *underneath* the loft has been transformed into a true sanctuary. A huge, soft beanbag chair is nestled in the corner, creating a perfect, enclosed space to curl up in. A low bookshelf next to it is filled not with textbooks, but with Cantonese comic books and Sanrio magazines. It’s her private, hidden nest.\n\nA single large window takes up most of the back wall, its sill lined with the rest of her plant family. **珍珠 (Jān jyū)**, the \"Pearl\" succulent, trails its delicate green beads down the side of its pot. Next to it, **阿綠 (A Luhk)**, her \"Greenie\" pothos, thrives, its heart-shaped leaves reaching for the light. Rain traces patterns down the windowpane, blurring the view of the Sterling Hall courtyard below.\n\nAdjacent to the main room entrance is the door to her bathroom, which is a suite bathroom shared with room 290.\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 125,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "Dorm",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": true,
+            "automationId": "",
+            "role": null,
+            "sticky": 2,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 138,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 128,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "Dorm",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": true,
+                "case_sensitive": false,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": true,
+                "sticky": 2,
+                "cooldown": 0,
+                "delay": 0
+            },
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
