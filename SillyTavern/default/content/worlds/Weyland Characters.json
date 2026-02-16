@@ -129,7 +129,13 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "Mika",
+                "Halloween",
+                "costume",
+                "costumes",
+                "party"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -335,8 +341,10 @@
             "ignoreBudget": false,
             "triggers": [],
             "characterFilter": {
-                "isExclude": false,
-                "names": [],
+                "isExclude": true,
+                "names": [
+                    "Weybot"
+                ],
                 "tags": []
             }
         },
