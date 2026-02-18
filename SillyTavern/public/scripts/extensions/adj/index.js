@@ -23,7 +23,7 @@ const ltm = 0.4;
                 const mes = body.messages.at(-1);
                 const charBlacklist = body.char_name === "Kressa" || body.char_name === "Kinsbane Manor";
                 const assistant = mes.role === "assistant";
-                if (/(?!.*rp2$)(?=.*sonnet)(?=.*4\.5).*|glm-4\.7|kimi-k2-thinking|gemini-3/i.test(body.model)) {
+                if (/(?=.*sonnet)(?=.*4\.5|).*|glm-4\.7|glm-5|kimi-k2-thinking|gemini-3/i.test(body.model)) {
                     const sub = substituteParams(getGlobalVariable("Thinking"));
                     if (!assistant && !charBlacklist) {
                         if (sub) {
