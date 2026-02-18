@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.11.5";
+const extensionVersion = "1.11.8";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
@@ -127,7 +127,7 @@ let settings = undefined;
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
     detectHeaderLegacy: /(?:^|(?<=\\n))(?:\*{1,3})?(([^"*~_`\n\r\\]*)~([^"*_`\n\r]*)[~\]\)])(?:\*{1,3})?(?:$|(?=\\n))/m,
-    detectHeader: /^¦¦\s?(.+~ ?(?:\(\w{4}\) ?)?)¦¦$/m,
+    detectHeader: /^¦+\s?(.+? ?(?:\(\w{4}\) ?)?)¦+$/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -797,6 +797,59 @@ function headerMarkdownExt(){
 }
 
 /** @returns {showdown.ShowdownExtension[]} */
+function headerV2MarkdownExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /(?<=.>)(?:¦+) ?(.+?(?: ?\(\w{4}\))?) ?(?:¦+)(?=<\/.)/g,
+            replace: function(match, p1) {
+                try {
+                    p1 = p1.replace(/<\/?q.*?>/g, ``);
+                    p1 = p1.replace(/<\/?u>/g, ``);
+                    p1 = p1.replace(/<\/?em>/g, ``);
+                    p1 = p1.replace(/<\/?strong>/g, ``);
+                    const split = p1.split(`~`);
+                    const dateIndex = split.findIndex(x => /mon|tue|thu|wed|fri|sat|sun|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i.test(x));
+                    const timeIndex = split.findIndex(x => /(?: |\d)[ap]m/i.test(x));
+                    const modeIndex = split.findIndex(x => /saph|onyx|ruby/i.test(x));
+                    const locationIndex = split.findIndex((x, index) => {
+                        if (dateIndex > -1 && dateIndex === index) return false;
+                        if (timeIndex > -1 && timeIndex === index) return false;
+                        if (modeIndex > -1 && modeIndex === index) return false;
+                        return true;
+                    });
+                    if (dateIndex < 0 || timeIndex < 0 || locationIndex < 0) {
+                        return `<strong style="color: darkred;">${p1}</strong>`
+                    }
+                    
+                    return `<div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 8px 12px; border-bottom: 1px solid ${power_user.italics_text_color}; font-family: -apple-system, sans-serif; font-size: 12px; color: rgba(255,255,255,0.6);">
+<div style="color: #fff; font-weight: 500;">${split[locationIndex].trim()}</div>
+<div>${modeIndex > -1 ? `\n<span style="color: #e99bff; font-weight: 500; margin-right: 15px;">${(() => {
+        return split[modeIndex];
+        //const gem = split[modeIndex].match(/.*(saph|ruby|onyx).*/i);
+        //if (!gem) return split[modeIndex];
+        //return `<img src="/user/images/Weyland/${gem[1].toLowerCase()}.png" height=16>`
+    })()}</span>` : ''}
+<span style="margin-right: 15px;">${split[dateIndex].trim()}</span>
+<span>${split[timeIndex].trim()}</span></div>
+</div>`
+                } catch (e) {
+                    console.error(`[${MODULE_NAME}] Error in headerV2MarkdownExt extension:`, e);
+                    p1 = p1.replace(/<\/?q.*?>/g, ``);
+                    p1 = p1.replace(/<\/?u>/g, ``);
+                    p1 = p1.replace(/<\/?em>/g, ``);
+                    p1 = p1.replace(/<\/?strong>/g, ``);
+                    return `<strong style="color: darkred;">${p1}</strong>`
+                }
+            }
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
+        return [];
+    }
+}
+
+/** @returns {showdown.ShowdownExtension[]} */
 function headerMarkdownMuseExt(){
     try {
         return [{
@@ -1047,7 +1100,7 @@ function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
     converter.addExtension(introImagesExt(), 'introImages');
-    converter.addExtension(headerMarkdownExt(), 'weylandHeader');
+    converter.addExtension(headerV2MarkdownExt(), 'weylandHeader');
     converter.addExtension(headerMarkdownMuseExt(), 'weylandHeaderMuse');
     converter.addExtension(expCloParCodeExt(), 'expCloparCodeExt');
     converter.addExtension(weyBotRelationsExt(), 'weyBotRelationsExt');
