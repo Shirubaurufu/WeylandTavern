@@ -129,13 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "Mika",
-                "Halloween",
-                "costume",
-                "costumes",
-                "party"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -790,6 +784,57 @@
             "matchCreatorNotes": false,
             "ignoreBudget": false,
             "triggers": []
+        },
+        "14": {
+            "uid": 14,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Yue-Lin Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black band shirt and ripped jeans)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Yue-Lin",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 116,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Yue-Lin"
+                ],
+                "tags": [
+                    "a95b4a6f-94dd-41d6-a7a5-52283383b152"
+                ]
+            }
         },
         "15": {
             "uid": 15,
