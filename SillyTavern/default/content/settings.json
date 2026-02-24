@@ -2423,7 +2423,7 @@
         "top_a_openai": 0,
         "repetition_penalty_openai": 1,
         "stream_openai": false,
-        "openai_max_context": 55000,
+        "openai_max_context": 65000,
         "openai_max_tokens": 5000,
         "wrap_in_quotes": false,
         "prompts": [
@@ -2714,6 +2714,7 @@
         "password": ""
     }
 }
+
 
 
 
