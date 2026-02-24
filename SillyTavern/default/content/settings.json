@@ -1202,7 +1202,7 @@
                 "SettingC34": "true",
                 "SettingC35": "true",
                 "9$DqA7b~3C": "234Sfv~2I",
-                "SettingC36": "true"
+                "SettingC37": "true"
             }
         },
         "attachments": [],
@@ -2423,7 +2423,7 @@
         "top_a_openai": 0,
         "repetition_penalty_openai": 1,
         "stream_openai": false,
-        "openai_max_context": 55000,
+        "openai_max_context": 65000,
         "openai_max_tokens": 5000,
         "wrap_in_quotes": false,
         "prompts": [
@@ -2658,7 +2658,7 @@
         "deepseek_model": "deepseek-chat",
         "custom_model": "claude-3-7-sonnet-rp",
         "custom_url": "https://helixmind.online/v1",
-        "custom_include_body": "- stop: \n  - \"<user>\"\n  - \"</user>\"\n  - \"User:\"\n  - \"</assistant>\"\n  - \"{{user}}:\"\n  - \"{user}:\"\n  - \"{{User}}:\"\n  - \"{User}:\"\n  - \"user:\"\n- temperature: 1.0",
+        "custom_include_body": "- stop: \n  - \"<user>\"\n  - \"</user>\"\n  - \"User:\"\n  - \"</assistant>\"\n  - \"{{user}}:\"\n  - \"{user}:\"\n  - \"{{User}}:\"\n  - \"{User}:\"\n  - \"user:\"\n- temperature: 0.9",
         "custom_exclude_body": "",
         "custom_include_headers": "",
         "windowai_model": "",
@@ -2714,6 +2714,8 @@
         "password": ""
     }
 }
+
+
 
 
 
