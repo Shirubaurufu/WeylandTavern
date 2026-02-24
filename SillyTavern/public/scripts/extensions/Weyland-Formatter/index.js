@@ -822,16 +822,13 @@ function headerV2MarkdownExt(){
                         return `<strong style="color: darkred;">${p1}</strong>`
                     }
                     
-                    return `<div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 8px 12px; border-bottom: 1px solid ${power_user.italics_text_color}; font-family: -apple-system, sans-serif; font-size: 12px; color: rgba(255,255,255,0.6);">
+                    return `<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; padding: 8px 12px; border-bottom: 1px solid ${power_user.italics_text_color}; font-family: -apple-system, sans-serif; color: rgba(255,255,255,0.6); font-size: clamp(8px, 1.8vw, 14px);">
 <div style="color: #fff; font-weight: 500;">${split[locationIndex].trim()}</div>
-<div>${modeIndex > -1 ? `\n<span style="color: #e99bff; font-weight: 500; margin-right: 15px;">${(() => {
-        return split[modeIndex];
-        //const gem = split[modeIndex].match(/.*(saph|ruby|onyx).*/i);
-        //if (!gem) return split[modeIndex];
-        //return `<img src="/user/images/Weyland/${gem[1].toLowerCase()}.png" height=16>`
-    })()}</span>` : ''}
-<span style="margin-right: 15px;">${split[dateIndex].trim()}</span>
-<span>${split[timeIndex].trim()}</span></div>
+<div style="display: flex; flex-direction: row; align-items: flex-end; gap: 12px;">
+${modeIndex > -1 ? `<span style="color: #e99bff; font-weight: 500;">${split[modeIndex].trim()}</span>` : ''}
+<span>${split[dateIndex].trim()}</span>
+<span>${split[timeIndex].trim()}</span>
+</div>
 </div>`
                 } catch (e) {
                     console.error(`[${MODULE_NAME}] Error in headerV2MarkdownExt extension:`, e);
