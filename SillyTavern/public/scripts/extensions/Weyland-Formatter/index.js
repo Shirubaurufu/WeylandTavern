@@ -822,7 +822,7 @@ function headerV2MarkdownExt(){
                         return `<strong style="color: darkred;">${p1}</strong>`
                     }
                     
-                    return `<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; padding: 8px 12px; border-bottom: 1px solid ${power_user.italics_text_color}; font-family: -apple-system, sans-serif; color: rgba(255,255,255,0.6); font-size: clamp(8px, 1.8vw, 14px);">
+                    return `<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; padding: 8px 4px; border-bottom: 1px solid ${power_user.italics_text_color}; font-family: -apple-system, sans-serif; color: rgba(255,255,255,0.6); font-size: clamp(8px, 1.8vw, 14px);">
 <div style="color: #fff; font-weight: 500;">${split[locationIndex].trim()}</div>
 <div style="display: flex; flex-direction: row; align-items: flex-end; gap: 12px;">
 ${modeIndex > -1 ? `<span style="color: #e99bff; font-weight: 500;">${split[modeIndex].trim()}</span>` : ''}
