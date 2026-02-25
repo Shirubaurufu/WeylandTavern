@@ -96,6 +96,21 @@ function createDefaultFiles() {
         },
         {
             type: 'file',
+            defaultPath: './default/content/worlds/Walled City.json',
+            productionPath: './data/default-user/worlds/Walled City.json',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/themes/Aesthetica ~ Ratcherito Ver ~.json',
+            productionPath: './data/default-user/themes/Aesthetica ~ Ratcherito Ver ~.json',
+        },
+        {
+            type: 'file',
+            defaultPath: './default/content/themes/Aesthetica.json',
+            productionPath: './data/default-user/themes/Aesthetica.json',
+        },
+        {
+            type: 'file',
             defaultPath: './default/content/settings.json',
             productionPath: './data/default-user/settings.json',
         },

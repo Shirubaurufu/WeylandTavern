@@ -22,7 +22,7 @@ const legacyIndicatorTemplate = document.getElementById('typing_indicator_templa
  * @type {TypingIndicatorSettings}
  */
 const defaultSettings = {
-    enabled: true,
+    enabled: false,
     streaming: false,
 };
 
@@ -192,3 +192,6 @@ function hideTypingIndicator() {
     showIndicatorEvents.forEach(e => eventSource.on(e, showTypingIndicator));
     hideIndicatorEvents.forEach(e => eventSource.on(e, hideTypingIndicator));
 })();
+
+
+

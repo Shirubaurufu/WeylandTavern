@@ -7,22 +7,33 @@
             </div>
 
             <div class="inline-drawer-content">
-                <label class="checkbox_label" for="weylandFormatterEnable" title="Enable Weyland Formatter" data-i18n="[title]Enable Weyland Formatter"">
-                    <input id="weylandFormatterEnable" type="checkbox">
-                    <span data-i18n="Enabled">Enabled</span>
-                </label>
-				<label class="checkbox_label" for="weylandFormatterMarkdown" title="Enable Markdown" data-i18n="[title]Enable Markdown"">
-                    <input id="weylandFormatterMarkdown" type="checkbox">
-                    <span data-i18n="Markdown">Markdown</span>
-                </label>
-                <label class="checkbox_label" for="weylandFormatterDebug" title="Debug Weyland Formatter" data-i18n="[title]Debug Weyland Formatter">
-                    <input id="weylandFormatterDebug" type="checkbox">
-                    <span data-i18n="Debug">Debug</span>
-                </label>
-                <label class="checkbox_label" for="weylandFormatterExperimental" title="Debug Weyland Formatter" data-i18n="[title]Enable Experimental">
-                    <input id="weylandFormatterExperimental" type="checkbox">
-                    <span data-i18n="Experimental">Experimental</span>
-                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                    <label class="checkbox_label" for="weylandFormatterEnable" title="Enable Weyland Formatter" data-i18n="[title]Enable Weyland Formatter">
+                        <input id="weylandFormatterEnable" type="checkbox">
+                        <span data-i18n="Enabled">Enabled</span>
+                    </label>
+                    <label class="checkbox_label" for="weylandFormatterMarkdown" title="Enable Markdown" data-i18n="[title]Enable Markdown">
+                        <input id="weylandFormatterMarkdown" type="checkbox">
+                        <span data-i18n="Markdown">Markdown</span>
+                    </label>
+                    <label class="checkbox_label" for="weylandFormatterDebug" title="Debug Weyland Formatter" data-i18n="[title]Debug Weyland Formatter">
+                        <input id="weylandFormatterDebug" type="checkbox">
+                        <span data-i18n="Debug">Debug</span>
+                    </label>
+                    <label class="checkbox_label" for="weylandFormatterExperimental" title="Experiment Weyland Formatter" data-i18n="[title]Enable Experimental">
+                        <input id="weylandFormatterExperimental" type="checkbox">
+                        <span data-i18n="Experimental">Experimental</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 5px; width: 100%; margin-top: 5px;">
+                    <label class="button_label" for="weylandPreFormatLastMessageButton" title="Copy Pre-Format Last Message" data-i18n="[title]Copy Pre-Format Last Message" style="flex: 1; margin: 0;">
+                        <input id="weylandPreFormatLastMessageButton" type="button" class="menu_button" value="Copy Pre-Format" style="width: 100%;" />
+                    </label>
+                    <label class="button_label" for="weylandPostFormatLastMessageButton" title="Copy Post-Format Last Message" data-i18n="[title]Copy Post-Format Last Message" style="flex: 1; margin: 0;">
+                        <input id="weylandPostFormatLastMessageButton" type="button" class="menu_button" value="Copy Post-Format" style="width: 100%;" />
+                    </label>
+                </div>
             </div>
         </div>
     </div>
