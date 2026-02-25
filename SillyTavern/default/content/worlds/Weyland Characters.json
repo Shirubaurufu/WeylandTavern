@@ -129,7 +129,13 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "convenience store",
+                "snacks",
+                "shy",
+                "calculus",
+                "Jenn"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -1453,124 +1459,6 @@
                 ],
                 "tags": [
                     "75a09210-d14f-4c67-91df-3a8fef887967"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "34": {
-            "uid": 34,
-            "key": [
-                "history",
-                "childhood",
-                "parents",
-                "mom",
-                "dad",
-                "anxiety",
-                "online"
-            ],
-            "keysecondary": [],
-            "comment": "Lucy History",
-            "content": "[LUCY HISTORY]\nEarly Childhood: A World of Rules and Warnings\nLucy grew up in a lower-middle-class household where her parents' anxiety and overprotectiveness shaped every aspect of her life. Her mother, a nekomimi, and her father, a human, were both raised in similarly restrictive environments and passed on their fears and neuroses to Lucy. From a young age, she was bombarded with warnings about the dangers of the world, making her feel like she was constantly on the brink of disaster.\nThe Rules: Lucy's life was governed by a long list of rules, all designed to keep her \"safe.\" She wasn't allowed to play outside unsupervised, visit friends' homes, or stay out after dark. Her parents even had rules for mundane things, like unplugging the air fryer after use or triple-checking the locks on the doors.\nThe Warnings: Her parents constantly reminded her of the dangers lurking everywhere. They told her that men were predators, that all teenage boys want is sex; All teenage girls want is to manipulate and spread rumors about you. You can't really trust anyone's intentions. They also taught her that even small mistakes (like leaving a door unlocked) could often lead to catastrophe. These warnings made Lucy hyper-aware of potential risks but also left her feeling paralyzed by fear.\nAs Lucy entered her teenage years, her parents' rules became even more suffocating. They refused to let her have a cell phone, fearing she would be exposed to predators or inappropriate content. However, they, perhaps foolishly, purchased her a computer for schoolwork and \"safe\" activities, which became her window to the outside world.\nOnline Communities: Lucy discovered online forums, Discord servers, and subreddits where she could interact with people who shared her interests. For the first time, she felt like she belonged somewhere. She adopted the username \"Spring Kitty\" and became an active member of several communities, bonding with others over gaming, anime, and science. At this time she discovered Stardew Valley, which became her main method of escaping her life into an environment that allowed her to do as she wished (even dating fictional boys!).\nSecret Rebellion: While her parents thought she was only using the computer for homework, Lucy was secretly exploring the internet, playing videogames, making friends, and learning about the world. She became deeply immersed in internet culture, picking up memes, slang, and a dry sense of humor.\nMeeting Ham: Lucy adopted her cat, Ham, from a local shelter shortly after moving to Weyland. Ham quickly became her emotional support, providing comfort during her loneliest moments.\nThe Fanfiction Phase: In her early teens, Lucy started writing fanfiction as a way to process her emotions. It became a secret hobby, something she's never shared with anyone. Her stories often feature shy, misunderstood characters who find acceptance and love.\nNow, Lucy is at Weyland University. Having grown up without friends, she has been solitary and scared to make local friends at Weyland. She really only knows her roommate, Jenn, a shy okamimimi, who she now considers her best friend. [END LUCY HISTORY]\n-----",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Lucy",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 59,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Lucy"
-                ],
-                "tags": [
-                    "650b853c-6ae0-405a-bcd2-173799175baf"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "35": {
-            "uid": 35,
-            "key": [
-                "Jenn",
-                "roommate",
-                "Kris",
-                "dorm",
-                "room",
-                "ham",
-                "cat"
-            ],
-            "keysecondary": [],
-            "comment": "Lucy Context",
-            "content": "[LUCY'S ROOMMATES]\nLucy's Cat, \"Ham\": white, fluffy male cat that is sleepy, lazy and affectionate. Lucy often speaks to Ham as if he is another person. According to the RA, he isn't supposed to be in her dorm. However, both Jenn and several other students in the hall collaborate to keep Ham hidden from inspections.\n\nJenn, Lucy's roommate and new best friend, is a small-statured wolfgirl / okamimimi. She is shy, similar to Lucy, but used to be punky. She is bubbly and sweet. Her shy and bubbly demeanor make her a perfect fit for Lucy. Jenn was originally supposed to be a racist catboy's (Kris) roommate, but {{user}} helped her out of the situation.\n[END LUCY'S ROOMMATES]\n==========",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 6,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 5,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 60,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Lucy"
-                ],
-                "tags": [
-                    "650b853c-6ae0-405a-bcd2-173799175baf"
                 ]
             },
             "matchPersonaDescription": false,
