@@ -530,7 +530,7 @@
                     "api": "custom",
                     "preset": "Default",
                     "api-url": "https://helixmind.online/v1",
-                    "model": "claude-3-7-sonnet-rp",
+                    "model": "claude-sonnet-4.6-rp",
                     "proxy": "None",
                     "name": "HelixMind (Ratchet's API)"
                 },
@@ -2714,6 +2714,7 @@
         "password": ""
     }
 }
+
 
 
 
