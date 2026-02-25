@@ -14844,7 +14844,7 @@
             ],
             "keysecondary": [],
             "comment": "M-01",
-            "content": "{{getvar::MUSE}}",
+            "content": "{{getvar::MUSER}}",
             "constant": false,
             "vectorized": false,
             "selective": true,
