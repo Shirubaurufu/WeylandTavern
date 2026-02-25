@@ -14,3 +14,104 @@
     content: "";
     width: 0px;
 }
+
+/* =========================================
+   BASE STYLES (Mobile Formatting)
+   ========================================= */
+.custom-message-header {
+  container-type: inline-size;
+  width: 100%;
+  
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: -apple-system, sans-serif;
+  color: rgba(255, 255, 255, 0.6);
+  
+  row-gap: 6px; 
+  column-gap: 12px; 
+}
+
+.custom-message-location {
+  color: #fff;
+  font-weight: 500;
+  white-space: normal;
+  word-break: break-word; 
+
+  flex: 1 1 auto; 
+  font-size: clamp(1px, 6cqi, var(--mainFontSize)); 
+}
+
+.custom-message-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0; 
+  
+  margin-left: auto; 
+  
+  font-size: clamp(11px, 2.5cqi, var(--mainFontSize));
+}
+
+/* =========================================
+   DESKTOP STYLES
+   ========================================= */
+@media screen and (min-width: 768px) {
+  .custom-message-header {
+    padding: 10px 12px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .custom-message-location {
+    font-weight: 600;
+  }
+}
+
+/* =========================================
+   MODE COLORS & ICONS
+   ========================================= */
+.custom-message-mode {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  color: #fdff9b; /* Fallback color */
+}
+
+/* Base setup for the injected icon */
+.custom-message-mode::before {
+  content: "";
+  display: inline-block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  width: 0.8em;
+  margin-right: 4px;
+
+  aspect-ratio: 1;
+}
+
+/* --- RUBY --- */
+.custom-message-mode[data-mode*="RUBY" i] { color: #d84343; }
+.custom-message-mode[data-mode*="RUBY" i]::before {
+  background-image: url('https://i.ibb.co/Nddr8cjZ/ruby.png');
+ width:0.7em;
+}
+
+/* --- SAPH --- */
+.custom-message-mode[data-mode*="SAPH" i] { color: #6b8eac; }
+.custom-message-mode[data-mode*="SAPH" i]::before {
+  background-image: url('https://i.ibb.co/Q7VDC47B/saph.png');
+  width:0.8em;
+}
+
+/* --- ONYX --- */
+.custom-message-mode[data-mode*="ONYX" i] { color: #e99bff; }
+.custom-message-mode[data-mode*="ONYX" i]::before {
+  background-image: url('https://i.ibb.co/h197D8j5/onyx.png');
+  width: 0.8em;
+}
