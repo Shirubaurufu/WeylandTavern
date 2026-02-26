@@ -50,6 +50,9 @@ const ltm = 0.4;
                 if (/glm.*think/i.test(body.model)) {
                     body.include_reasoning = true;
                 }
+                if (/glm.*think/i.test(body.model)) {
+                    body.include_reasoning = true;
+                }
                 body.temperature = def;
                 if (body.messages.findLast(({role, content}) => role === "user" && (content.constructor === Array ? content.find(x => x.type === "text").text : content).startsWith("LTM Creation in Pro"))) {
                     body.temperature = ltm;
