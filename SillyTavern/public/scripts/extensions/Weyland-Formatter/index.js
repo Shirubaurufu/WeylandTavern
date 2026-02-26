@@ -1,35 +1,39 @@
-import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor } from '../../../script.js';
+import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor, updateMessageBlock } from '../../../script.js';
 import { power_user } from '../../power-user.js';
 import { getGlobalVariable } from '../../variables.js';
+import { substituteParams } from '../../../script.js';
+import { getTokenCountAsync } from '../../tokenizers.js';
+import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.8.4";
+const extensionVersion = "1.11.8";
+let preFormatLastMessage = undefined;
+let postFormatLastMessage = undefined;
 
 /**
  * @typedef {Object} WeylandFormatterSettings
  * @property {boolean} enabled
  * @property {boolean} markdown
  * @property {boolean} debug
+ * @property {boolean} experimental
  */
 
-/**
- * @type {WeylandFormatterSettings}
- */
+/** @type {WeylandFormatterSettings} */
 const defaultSettings = {
     enabled: true,
     markdown: true,
     debug: false,
+    experimental: false,
 };
 
-/**
- * @type {WeylandFormatterSettings}
- */
+/** @type {WeylandFormatterSettings} */
 let settings = undefined;
 
 /**
  * @typedef {Object} WeylandFormatterRegex
  * @property {RegExp} paragraphSplit
+ * @property {RegExp} detectHeaderLegacy
  * @property {RegExp} detectHeader
  * @property {RegExp} detectMuseHeader
  * @property {RegExp} detectActionParagraph
@@ -37,6 +41,10 @@ let settings = undefined;
  * @property {RegExp} greedyDetectAction
  * @property {RegExp} greedyDetectActionQuotes
  * @property {RegExp} detectHTMLParagraph
+ * @property {RegExp} tavernTails
+ * @property {RegExp} thinkFull
+ * @property {RegExp} thinkStart
+ * @property {RegExp} thinkEnd
  * 
  * @property {RegExp} asterisk
  * 
@@ -104,22 +112,32 @@ let settings = undefined;
  * @property {RegExp} missingStartAsterisk
  * @property {string} missingStartAsteriskReplace
  * 
+ * @property {RegExp} detectPhone
+ * @property {RegExp} phoneFix
+ * 
  * @property {RegExp} breakbar
  * @property {RegExp} spacer
+ * @property {RegExp} spacer2
+ * 
+ * @property {RegExp} expressionClothingParagraph
+ * @property {RegExp} ltmFix
  */
 
-/**
- * @type {WeylandFormatterRegex}
- */
+/** @type {WeylandFormatterRegex} */
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
-    detectHeader: /^(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)]$/m,
+    detectHeaderLegacy: /(?:^|(?<=\\n))(?:\*{1,3})?(([^"*~_`\n\r\\]*)~([^"*_`\n\r]*)[~\]\)])(?:\*{1,3})?(?:$|(?=\\n))/m,
+    detectHeader: /^¦+\s?(.+? ?(?:\(\w{4}\) ?)?)¦+$/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
     greedyDetectAction: /(?<=[\s—]|^)\*([^"_\[\]\n\r]+)\*(?=[\s—]|$)/g,
     greedyDetectActionQuotes: /(?<=\*[\s—]|__[\s—]|^)"[^"]+"(?=[\s—]\*|[\s—]__|$)/,
     detectHTMLParagraph: /^<[\s\S]*>$/,
+    tavernTails: /^<div style="text-align: center;"><font size="6"><strong>Tavern Tails<\/strong><\/font><\/div>/,
+    thinkFull: /<.*think.*>[\w\W]+?<.*\/.*think.*>/,
+    thinkStart: /^<.*think.*>/,
+    thinkEnd: /<.*\/.*think.*>$/,
 
     asterisk: /\*/g,
 
@@ -141,7 +159,7 @@ const weylandRegex = {
     singleQuoteBetweenAction: /(?<!\*)\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*(?!\*)/g,
     singleQuoteBetweenActionReplace: "—'$1'—",
 
-    actionEmphasisOne: /(?<=[\s—]|^)\*(?![\s—\*])([^"_`]*)\*(?<![\s—])(?=[\s—]|$)/g,
+    actionEmphasisOne: /(?<=[\s—]|^)\*(?:\*{1,3})?(?![\s—\*])([^"_`*]*)(?:\*{1,3})?\*(?<![\s—])(?=[\s—]|$)/g,
     actionEmphasisOneSingleQuoteGuard: /\*[\s—]'[^']*?'\s\*/g,
     actionEmphasisTwo: /(?<=[\s—]|^)\*+(?![\s—])([^*]*)\*+(?<![\s—])(?=[\s—]|$|[.,?!])/g,
     actionEmphasisTwoReplace: "***$1***",
@@ -187,8 +205,15 @@ const weylandRegex = {
     missingStartAsterisk: /(?<=["_\]][\s—]|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=[\s—]["_\[]|$)/g,
     missingStartAsteriskReplace: "*$1*",
 
-    breakbar: /¦/i,
+    detectPhone: /(?:incom|outgo)ing¦/i,
+    phoneFix: /(Phone¦.*\nTexting¦.*\n)?((?:(?:Incom|Outgo)ing¦.*(?:(?:\n)(?:Incom|Outgo)ing¦.*)*))/i,
+
+    breakbar: /¦/,
     spacer: /^---$/,
+    spacer2: /^=+$/,
+
+    expressionClothingParagraph: /^((?:\[[a-z]+?\]) ?(?:\[[a-z]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*$/i,
+    ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im
 };
 
 
@@ -206,9 +231,15 @@ function getSettings() {
     settings = extensionSettings[MODULE_NAME];
 }
 
-function weylandDebug(text) {
+function weylandDebug(text, error) {
     if (settings === undefined) getSettings();
-    if (settings?.debug) console.debug(`[${MODULE_NAME}] ${text}`);
+    if (settings?.debug) {
+        if (error) {
+            console.debug(`[${MODULE_NAME}] ${text}`, error);
+        } else {
+            console.debug(`[${MODULE_NAME}] ${text}`);
+        }
+    }
 }
 
 async function formatParagraphs(message) {
@@ -242,6 +273,10 @@ async function formatParagraphs(message) {
     message = replaceText(message, weylandRegex.speech, weylandRegex.speechReplace);
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
+    let paragraphCount = paragraphs.length;
+    let thinking = false;
+    let foundHeader = false;
+    let foundFooter = false;
 
     weylandDebug(`Paragraph count: ${paragraphs.length}`);
 
@@ -250,15 +285,65 @@ async function formatParagraphs(message) {
             weylandDebug(`#${index} - Formatting...`);
             const paragraphLoopStartTime = performance.now();
             paragraph = paragraph.trim();
-            if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
-                //Format Header
-                paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
-                paragraphs[index] = paragraph;
-                weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
+            if (!thinking && weylandRegex.thinkStart.test(paragraph)) thinking = true;
+            if (thinking) {
+                if (weylandRegex.thinkEnd.test(paragraph)) thinking = false;
                 return;
             }
+            
+            if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
+                if (!thinking) {
+                    //Format Header
+                    paragraph = replaceText(paragraph, weylandRegex.asterisk, "");
+                    paragraph = replaceText(paragraph, weylandRegex.headerFix, "");
+                    if (!foundHeader) {
+                        paragraphCount -= index;
+                        foundHeader = true;
+                    }
+                    paragraphCount -= 1;
+                    paragraphs[index] = paragraph;
+                    weylandDebug(`#${index} - Formatting header took ${performance.now()-paragraphLoopStartTime} miliseconds`);
+                    return;
+                }
+            }
 
-            if (weylandRegex.breakbar.test(paragraph) || weylandRegex.spacer.test(paragraph)) {
+            if (!foundHeader) {
+                if (!weylandRegex.tavernTails.test(paragraph) && !settings?.experimental) {
+                    paragraphs[index] = "";
+                }
+                return;
+            }
+            
+            if (foundFooter) {
+                paragraphs[index] = "";
+                return;
+            } else {
+                try {
+                    const expCloPar = paragraph.match(weylandRegex.expressionClothingParagraph);
+                    if (expCloPar) {
+                        foundFooter = true;
+                        expCloPar[2] = `[${paragraphCount - (paragraphs.length-index)}]`;
+                        paragraph = replaceText(paragraph, weylandRegex.expressionClothingParagraph, `${expCloPar[1]} ${expCloPar[2]}`);
+                        paragraphs[index] = replaceText(paragraph, weylandRegex.asterisk, "");
+                        return;
+                    }
+                } catch (e) {
+                    weylandDebug(`#${index} - expCloPar error: ${e}`);
+                }
+            }
+
+            if (weylandRegex.breakbar.test(paragraph)) {
+                const phoneFix = paragraph.match(weylandRegex.phoneFix);
+                if (phoneFix) {
+                    paragraphs[index] = phoneFix[0];
+                } else {
+                    paragraphCount -= 1;
+                }
+                return; 
+            }
+
+            if (weylandRegex.spacer.test(paragraph) || weylandRegex.spacer2.test(paragraph)) {
+                paragraphCount -= 1;
                 return;
             }
 
@@ -377,7 +462,7 @@ async function formatParagraphs(message) {
     });
 
     weylandDebug(`formatParagraphs took ${performance.now()-formatParagraphsStartTime} miliseconds`);
-    return paragraphs;
+    return paragraphs.filter(paragraph => paragraph.length !== 0);
 }
 
 function replaceText(text, regex, replace) {
@@ -389,29 +474,152 @@ function replaceText(text, regex, replace) {
     return text;
 }
 
-async function formatMessage(messageId) {
+async function formatNewMessage(messageId) {
     if (settings === undefined) getSettings();
-    if (!settings.enabled) return;
+    const char = chat[messageId]?.name;
+    if (messageId === 0 && char !== "Weybot") return;
+    const blacklistChar = char === "Kressa" || char === "Kinsbane Manor";
+    let mes = chat[messageId]?.mes;
+    if (mes) {
+        if (!blacklistChar) {
+            if (!power_user.user_prompt_bias) {
+                mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${mes.trim()}`;
+                console.log(`[Weyland-Debug] 1`);
+            } else if (!/^\s?\[overwrite\]\s?/i.test(power_user.user_prompt_bias)) {
+                mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${mes.replace(substituteParams(power_user.user_prompt_bias),"").trim()}`;
+                console.log(`[Weyland-Debug] 2`);
+            }
+        }
+        if (/^\s?\[overwrite\]\s?/i.test(mes)) {
+            mes = mes.replace(/^\s?\[overwrite\]\s?/i, "");
+            console.log(`[Weyland-Debug] 3`);
+        }
+    }
+    await formatMessage(messageId, mes);
+}
+
+async function formatMessage(messageId, mes = undefined) {
+    if (settings === undefined) getSettings();
+    const characterName = chat[messageId]?.name;
+    if (messageId === 0 && characterName !== "Weybot") return;
+
+    let originalMessage = mes ? mes : chat[messageId].mes;
+
+    preFormatLastMessage = originalMessage;
+    window.preFormatLastMessage = originalMessage;
+
+    if (!settings?.enabled) {
+        if (!settings?.experimental) {
+            if (weylandRegex.thinkFull.test(originalMessage)) {
+                chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
+            } else if (weylandRegex.thinkStart.test(originalMessage)) {
+                if (weylandRegex.detectHeader) {
+                    chat[messageId].mes = originalMessage.slice(originalMessage.indexOf(originalMessage.match(weylandRegex.detectHeader))).trim();
+                } else if (chat[messageId].name === "Muse" && weylandRegex.detectMuseHeader) {
+                    chat[messageId].mes = originalMessage.slice(originalMessage.indexOf(originalMessage.match(weylandRegex.detectMuseHeader))).trim();
+                } else {
+                    chat[messageId].mes = "";
+                }
+            } else if (weylandRegex.thinkEnd.test(originalMessage)) {
+                chat[messageId].mes = originalMessage.split(weylandRegex.thinkEnd)[1].trim();
+            }
+        }
+        if (chat[messageId].extra.token_count) {
+            chat[messageId].extra.token_count = await getTokenCountAsync(chat[messageId].mes, 0);
+        }
+        return;
+    }
 
     const formatMessageStartTime = performance.now();
-    //weylandDebug(JSON.stringify(chat[messageId]));
 
     const isUser = chat[messageId].is_user;
     const isSystem = chat[messageId].is_system;
 
     if (isUser || isSystem) return;
 
-    const characterName = chat[messageId].name;
+    const ltmFix = originalMessage.match(weylandRegex.ltmFix);
+    if (ltmFix) {
+        originalMessage = ltmFix[1].trim();
+        chat[messageId].mes = originalMessage;
+    }
 
-    const originalMessage = chat[messageId].mes;
+    const thinkFull = originalMessage.match(weylandRegex.thinkFull);
+    let reason = settings?.experimental && chat[messageId].extra.reasoning ? `${chat[messageId].extra.reasoning}\n\n---\n\n` : "";
+    if (thinkFull) {
+        if (settings?.experimental) {
+            reason = `${reason}${thinkFull[0].replace(weylandRegex.thinkStart,"").replace(weylandRegex.thinkEnd,"").trim()}`;
+        }
+        originalMessage = originalMessage.replace(thinkFull[0], "").trim();
+    } else {
+        if (weylandRegex.thinkStart.test(originalMessage)) {
+            const detectHeader = originalMessage.match(weylandRegex.detectHeader);
+            if (detectHeader) {
+                const index = originalMessage.indexOf(detectHeader[0]);
+                if (settings?.experimental) {
+                    reason = `${reason}${originalMessage.slice(0, index).replace(weylandRegex.thinkStart,"").trim()}`;
+                }
+                originalMessage = originalMessage.slice(index).trimStart();
+            } else if (chat[messageId].name === "Muse") {
+                const detectMuseHeader = originalMessage.match(weylandRegex.detectMuseHeader);
+                if (detectMuseHeader) {
+                    const index = originalMessage.indexOf(detectMuseHeader[0]);
+                    if (settings?.experimental) {
+                        reason = `${reason}${originalMessage.slice(0, index).replace(weylandRegex.thinkStart,"").trim()}`;
+                    }
+                    originalMessage = originalMessage.slice(index).trimStart();
+                } else {
+                    originalMessage = "";
+                }
+            } else {
+                originalMessage = "";
+            }
+        } else if (weylandRegex.thinkEnd.test(originalMessage)) {
+            const split = originalMessage.split(weylandRegex.thinkEnd);
+            if (settings?.experimental) {
+                reason = `${reason}${split[0].replace(weylandRegex.thinkEnd,"").trim()}`;
+            }
+            originalMessage = split[1].trim();
+        }
+    }
+    chat[messageId].extra.reasoning = reason;
 
     if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
         weylandDebug(`Formatting character: ${characterName}`);
         const paragraphs = await formatParagraphs(originalMessage);
     
-        chat[messageId].mes = paragraphs.join("\n\n");
-        weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
+        originalMessage = paragraphs.join("\n\n");
+    } else if (!settings?.experimental && !weylandRegex.thinkFull.test(originalMessage) && weylandRegex.thinkStart.test(originalMessage) && characterName !== "Kressa" && characterName !== "Kinsbane Manor") {
+        originalMessage = "";
+    }
+    chat[messageId].mes = originalMessage;
+
+    weylandDebug(`formatMessage took ${performance.now()-formatMessageStartTime} miliseconds`);
+
+    postFormatLastMessage = originalMessage;
+    window.postFormatLastMessage = originalMessage;
+
+    if (chat[messageId]?.extra?.token_count && !settings?.experimental) {
+        try {
+            chat[messageId].extra.token_count = await getTokenCountAsync(originalMessage, 0);
+        } catch (error) {
+            weylandDebug(`Failed to update token count for message [${messageId}]`, error);
+        }
+    }
+
+    weylandDebug(`Finished formatting message [${messageId}]`);
+}
+
+async function formatOutgoingMessages(data) {
+    if (data.dryRun) return;
+    if (data.chat) { // OpenAI
+        data.chat.slice(-19).forEach(m => {
+            if (m.role === "assistant") {
+                m.content = m.content.replace(weylandRegex.detectHeaderLegacy, "¦¦ $1 ¦¦");
+            }
+        })
+    } else if (data.prompt) { // Non-OpenAI
+        // No idea what this looks like
     }
 }
 
@@ -423,14 +631,14 @@ async function formatMessage(messageId) {
         // Enabled
         $('#weylandFormatterEnable').prop('checked', settings.enabled).on('input', function () {
             settings.enabled = !!$(this).prop('checked');
-            weylandDebug(`[${MODULE_NAME}] Setting Enabled: ${settings.enabled}`);
+            weylandDebug(`Setting Enabled: ${settings.enabled}`);
             saveSettingsDebounced();
         });
 
         // Markdown
         $('#weylandFormatterMarkdown').prop('checked', settings.markdown).on('input', function () {
             settings.markdown = !!$(this).prop('checked');
-            weylandDebug(`[${MODULE_NAME}] Setting Markdown: ${settings.markdown}`);
+            weylandDebug(`Setting Markdown: ${settings.markdown}`);
             updateReloadMarkdownProcessor();
             saveSettingsDebounced();
         });
@@ -438,7 +646,63 @@ async function formatMessage(messageId) {
         // Debug
         $('#weylandFormatterDebug').prop('checked', settings.debug).on('input', function () {
             settings.debug = !!$(this).prop('checked');
-            weylandDebug(`[${MODULE_NAME}] Setting Debug: ${settings.debug}`);
+            weylandDebug(`Setting Debug: ${settings.debug}`);
+            saveSettingsDebounced();
+        });
+
+        // Experimental
+        $('#weylandFormatterExperimental').prop('checked', settings.experimental).on('input', function () {
+            settings.experimental = !!$(this).prop('checked');
+            weylandDebug(`Setting Experimental: ${settings.experimental}`);
+            if (settings.experimental) {
+                toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
+            } else {
+                oai_settings.stream_openai = false;
+                $('#stream_toggle').prop('checked', false);
+            }
+            saveSettingsDebounced();
+        });
+
+        $('#weylandPreFormatLastMessageButton').on('click', async function () {
+            weylandDebug("Copy Pre-Format clicked.");
+            if (!preFormatLastMessage) {
+                toastr.warning('[Weyland-Formatter] Last message has not been set.');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(preFormatLastMessage);
+                toastr.info('[Weyland-Formatter] Copied Pre-Format Message to clipboard.');
+            } catch (err) {
+                console.error("[Weyland-Formatter] Clipboard Error:", err);
+                toastr.warning('[Weyland-Formatter] Failed to copy Pre-Format Message to clipboard.');
+            }
+        });
+
+        $('#weylandPostFormatLastMessageButton').on('click', async function () {
+            weylandDebug("Copy Post-Format clicked.");
+            if (!postFormatLastMessage) {
+                toastr.warning('[Weyland-Formatter] Last message has not been set.');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(postFormatLastMessage);
+                toastr.info('[Weyland-Formatter] Copied Post-Format Message to clipboard.');
+            } catch (err) {
+                console.error("[Weyland-Formatter] Clipboard Error:", err);
+                toastr.warning('[Weyland-Formatter] Failed to copy Post-Format Message to clipboard.');
+            }
+        });
+        
+        $('#stream_toggle').prop('checked', oai_settings.stream_openai).on('change', function () {
+            if (!settings.experimental) {
+                oai_settings.stream_openai = false;
+                $('#stream_toggle').prop('checked', false);
+                toastr.warning('WARNING: Streaming is not recommended for Weyland-Tavern.');
+            } else {
+                oai_settings.stream_openai = !!$('#stream_toggle').prop('checked');
+            }
             saveSettingsDebounced();
         });
     }
@@ -450,24 +714,24 @@ async function formatMessage(messageId) {
 
     updateReloadMarkdownProcessor(); //Adds markdown
 
-    const formatterEvents = [
-        event_types.MESSAGE_RECEIVED,
-        event_types.MESSAGE_EDITED
-    ];
-
-    formatterEvents.forEach(e => eventSource.on(e, formatMessage));
+    eventSource.on(event_types.GENERATE_AFTER_COMBINE_PROMPTS, formatOutgoingMessages);
+    eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, formatOutgoingMessages);
+    eventSource.on(event_types.MESSAGE_RECEIVED, formatNewMessage);
+    eventSource.on(event_types.MESSAGE_EDITED, formatMessage);
+    eventSource.on(event_types.CHAT_CHANGED, () => {
+        if (settings.experimental)
+            toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
+    });
 })();
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function introImagesExt(){
     try {
         return [{
             type: 'output',
             regex: /\[\s*[IP](\d{3})\s*\]/g,
             replace: function(match, p1) {
-                return `<div style="text-align: center;"><img src="${getGlobalVariable(p1)}" height="500"></div>`
+                return `<div style="text-align: center;"><img src="${getGlobalVariable(p1)}" style="max-height: 500px; height: auto; width: auto;"></div>`
             }
         }];
     } catch (e) {
@@ -476,9 +740,7 @@ function introImagesExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/**  @returns {showdown.ShowdownExtension[]} */
 function hiccupMarkdownExt(){
     try {
         return [{
@@ -492,9 +754,7 @@ function hiccupMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function nonItalicsExt(){
     try {
         return [{
@@ -508,9 +768,7 @@ function nonItalicsExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function singleQuoteExt(){
     try {
         return [{
@@ -524,14 +782,12 @@ function singleQuoteExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function headerMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /((?<=.>)(?:[^"*~_`]*\n)?[^"*~_`\n\r]*~[^"*_`\n\r]*[~\]\)](?=<.|\s))/,
+            regex: /(?<=.>)(?:¦¦)? ?(.+~(?: ?\(\w{4}\))?) ?(?:¦¦)?(?=<\/.)/g,
             replace: `<strong style="color: darkred;">$1</strong>`
         }];
     } catch (e) {
@@ -540,9 +796,58 @@ function headerMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
+function headerV2MarkdownExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /(?<=.>)(?:¦+) ?(.+?(?: ?\(\w{4}\))?) ?(?:¦+)(?=<\/.)/g,
+            replace: function(match, p1) {
+                try {
+                    p1 = p1.replace(/<\/?q.*?>/g, ``);
+                    p1 = p1.replace(/<\/?u>/g, ``);
+                    p1 = p1.replace(/<\/?em>/g, ``);
+                    p1 = p1.replace(/<\/?strong>/g, ``);
+                    const split = p1.split(`~`);
+                    const dateIndex = split.findIndex(x => /mon|tue|thu|wed|fri|sat|sun|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i.test(x));
+                    const timeIndex = split.findIndex(x => /(?: |\d)[ap]m/i.test(x));
+                    const modeIndex = split.findIndex(x => /saph|onyx|ruby/i.test(x));
+                    const locationIndex = split.findIndex((x, index) => {
+                        if (dateIndex > -1 && dateIndex === index) return false;
+                        if (timeIndex > -1 && timeIndex === index) return false;
+                        if (modeIndex > -1 && modeIndex === index) return false;
+                        return true;
+                    });
+                    if (dateIndex < 0 || timeIndex < 0 || locationIndex < 0) {
+                        return `<strong style="color: darkred;">${p1}</strong>`
+                    }
+                    const mode = modeIndex > -1 ? split[modeIndex].match(/saph|onyx|ruby/i)[0] : undefined;
+                    
+                    return `<div class="message-header">
+<div class="message-location">${split[locationIndex].trim()}</div>
+<div class="message-meta">
+${modeIndex > -1 ? `<span class="message-mode"${mode ? ` data-mode="${mode.toUpperCase()}"` : ''}>${mode ? mode.toUpperCase().trim() : split[modeIndex].trim()}</span>` : ''}
+<span>${split[dateIndex].trim()}</span>
+<span>${split[timeIndex].trim()}</span>
+</div>
+</div>`
+                } catch (e) {
+                    console.error(`[${MODULE_NAME}] Error in headerV2MarkdownExt extension:`, e);
+                    p1 = p1.replace(/<\/?q.*?>/g, ``);
+                    p1 = p1.replace(/<\/?u>/g, ``);
+                    p1 = p1.replace(/<\/?em>/g, ``);
+                    p1 = p1.replace(/<\/?strong>/g, ``);
+                    return `<strong style="color: darkred;">${p1}</strong>`
+                }
+            }
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in phoneMarkdownExt extension:`, e);
+        return [];
+    }
+}
+
+/** @returns {showdown.ShowdownExtension[]} */
 function headerMarkdownMuseExt(){
     try {
         return [{
@@ -556,9 +861,35 @@ function headerMarkdownMuseExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
+function expCloParCodeExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /<p>((?:\[[a-z]+?\]) ?(?:\[[a-z]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*<\/p>/i,
+            replace: ``
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in expCloParCodeExt extension:`, e);
+        return [];
+    }
+}
+
+/** @returns {showdown.ShowdownExtension[]} */
+function weyBotRelationsExt(){
+    try {
+        return [{
+            type: 'output',
+            regex: /(?:<p>)?(?:<strong>)?(?:<em>)?New \w+:(?:<\/em>)?(?:<\/strong>)? {\w+}(?:<\/p>|<br>)?/ig,
+            replace: ``
+        }];
+    } catch (e) {
+        console.error(`[${MODULE_NAME}] Error in expCloParCodeExt extension:`, e);
+        return [];
+    }
+}
+
+/** @returns {showdown.ShowdownExtension[]} */
 function thinkMarkdownExt(){
     try {
         return [{
@@ -572,9 +903,7 @@ function thinkMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function fdiglMarkdownExt(){
     try {
         return [{
@@ -588,14 +917,12 @@ function fdiglMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function phoneMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /<p>(Phone¦[\s\S]*?\nTexting¦[\s\S]*?)<\/p>/ig,
+            regex: /<p>((?:Phone¦.*\nTexting¦.*\n)?(?:(?:(?:Incom|Outgo)ing¦.*(?:(?:\n)(?:Incom|Outgo)ing¦.*)*)))<\/p>/ig,
             replace: function(match, p1) {
                 try {
                     p1 = p1.replace(/<\/?q.*?>/g, ``);
@@ -603,27 +930,30 @@ function phoneMarkdownExt(){
                     p1 = p1.replace(/<\/?em>/g, `*`);
                     p1 = p1.replace(/<\/?strong>/g, `**`);
                     const lines = p1.split(`<br />\n`);
-                    const [carrier, _battery] = lines[0].split(`¦`).slice(1);
-                    let battery = parseInt(_battery.replace(`%`,``),10);
-                    if (battery <= 0) {
-                        // @ts-ignore
-                        battery = `empty`;
-                    } else if(battery < 37) {
-                        // @ts-ignore
-                        battery = `quarter`;
-                    } else if (battery < 62) {
-                        // @ts-ignore
-                        battery = `half`;
-                    } else if (battery >= 100) {
-                        // @ts-ignore
-                        battery = `full`;
-                    } else {
-                        // @ts-ignore
-                        battery = `three-quarters`;
-                    }
-                    const contact = lines[1].split(`¦`)[1];
-                    const messages = lines.slice(2);
-                    const phoneUIHeader = `<div style="background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 16px; color: #f0f0f0; max-width: 600px; margin: auto;">
+                    let phoneUIHeader = "";
+                    let phoneUIFooter = "";
+                    let messages = [];
+                    if (/Phone¦/.test(lines[0])) {
+                        const [carrier, _battery] = lines[0].split(`¦`).slice(1);
+                        const contact = lines[1].split(`¦`)[1];
+                        let battery = parseInt(_battery.replace(`%`,``),10);
+                        if (battery <= 0) {
+                            // @ts-ignore
+                            battery = `empty`;
+                        } else if(battery < 37) {
+                            // @ts-ignore
+                            battery = `quarter`;
+                        } else if (battery < 62) {
+                            // @ts-ignore
+                            battery = `half`;
+                        } else if (battery >= 100) {
+                            // @ts-ignore
+                            battery = `full`;
+                        } else {
+                            // @ts-ignore
+                            battery = `three-quarters`;
+                        }
+                        phoneUIHeader = `<div style="background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 16px; color: #f0f0f0; max-width: 600px; margin: auto;">
 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 12px; font-weight: bold; color: #66d9ef; font-size: 0.85em; white-space: nowrap;">
 <span>${carrier}</span>
 <span>${_battery} <i class="fa-solid fa-battery-${battery}" style="color: #66d9ef;"></i></span>
@@ -631,13 +961,21 @@ function phoneMarkdownExt(){
 <div style="font-weight: bold; color: #a6e22e; text-align: center; margin-bottom: 12px; font-size: 1em;">
 ✧ ${contact} ✧
 </div>
-<div style="height: 400px; overflow-y: auto; padding-right: 10px;">\n\n`
-                    const phoneUIFooter = `\n\n</div>
+<div style="max-height: 382px; overflow-y: auto; padding-right: 10px;">\n\n`;
+                        phoneUIFooter = `\n\n</div>
 <div style="border-top: 1px solid #444; padding-top: 8px; margin-top: 12px; display: flex; gap: 8px; align-items: center;">
 <input type="text" readonly placeholder="Type a message..." style="flex: 1; min-width: 0; background-color: #2a2a2a; border: 1px solid #555; border-radius: 16px; padding: 8px 12px; color: #f0f0f0; outline: none;">
 <button style="background-color: #66d9ef; border: none; border-radius: 16px; padding: 8px 16px; color: #1a1a1a; font-weight: bold; white-space: nowrap; flex-shrink: 0;">Send</button>
 </div>
-</div>`
+</div>`;
+                        messages = lines.slice(2);
+                    } else {
+                        phoneUIHeader = `<div style="background-color: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 16px; color: #f0f0f0; max-width: 600px; margin: auto;">
+<div style="max-height: 382px; overflow-y: auto; padding-right: 10px;">\n\n`;
+                        phoneUIFooter = `\n</div>\n</div>`
+                        messages = lines;
+                    }
+                    
                     messages.forEach((message, index) => {
                         const [type, time, name, text] = message.split(`¦`)
                         if (type.toLowerCase() === "incoming") {
@@ -673,9 +1011,7 @@ function phoneMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function lonePhoneMarkdownExt(){
     try {
         return [{
@@ -720,9 +1056,7 @@ function lonePhoneMarkdownExt(){
     }
 }
 
-/**
- * @returns {showdown.ShowdownExtension[]}
- */
+/** @returns {showdown.ShowdownExtension[]} */
 function heartRateMarkdownExt(){
     try {
         return [{
@@ -764,12 +1098,14 @@ function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
     converter.addExtension(introImagesExt(), 'introImages');
-    converter.addExtension(headerMarkdownExt(), 'weylandHeader');
+    converter.addExtension(headerV2MarkdownExt(), 'weylandHeader');
     converter.addExtension(headerMarkdownMuseExt(), 'weylandHeaderMuse');
+    converter.addExtension(expCloParCodeExt(), 'expCloparCodeExt');
+    converter.addExtension(weyBotRelationsExt(), 'weyBotRelationsExt');
     converter.addExtension(singleQuoteExt(), 'singleQuote');
     //converter.addExtension(nonItalicsExt(), 'insideAsterisks');
     converter.addExtension(phoneMarkdownExt(), 'phoneMarkdownExt');
-    converter.addExtension(lonePhoneMarkdownExt(), 'lonePhoneMarkdownExt');
+    //converter.addExtension(lonePhoneMarkdownExt(), 'lonePhoneMarkdownExt');
     converter.addExtension(heartRateMarkdownExt(), 'heartRateMarkdown');
     converter.addExtension(fdiglMarkdownExt(), 'fdiglSystemMessage');
     if (settings.markdown) {
