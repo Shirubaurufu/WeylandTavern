@@ -7,7 +7,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.11.11";
+const extensionVersion = "1.11.12";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
@@ -207,7 +207,7 @@ const weylandRegex = {
     detectPhone: /(?:incom|outgo)ing¦/i,
     phoneFix: /(Phone¦.*\nTexting¦.*\n)?((?:(?:Incom|Outgo)ing¦.*(?:(?:\n)(?:Incom|Outgo)ing¦.*)*))/i,
 
-    subbotNameFix: /^(__.+:)(?!__).*?(?= )/gm,
+    subbotNameFix: /^(__[^"*_]+:)(?!__).*?(?= )/gm,
     subbotNameFixReplace: "$1__",
 
     breakbar: /¦/,
