@@ -46,7 +46,8 @@ function initWelcomeInfoPanel() {
             if (infoType === 'character') {
                 document.getElementById('characterInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="character"]').classList.add('active');
-                fetchAndRenderMarkdown('character');
+                // Instead of fetching markdown, embed the webpage
+                embedWebpage('character');
             } else if (infoType === 'dorm') {
                 document.getElementById('dormInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="dorm"]').classList.add('active');
@@ -120,6 +121,34 @@ function initWelcomeInfoPanel() {
 
     // Also try to set up right away in case the panel is already there
     setupInfoPanel();
+}
+
+/**
+ * Embeds a webpage into the specified container using an iframe
+ * @param {string} type The type of content (currently only 'dorm')
+ */
+function embedWebpage(type) {
+    const container = document.getElementById(`${type}Info`);
+    if (!container) {
+        console.error(`Could not find container for ${type}Info`);
+        return;
+    }
+
+    // Clear any existing content
+    container.innerHTML = '';
+
+    // Create an iframe element
+    const iframe = document.createElement('iframe');
+    iframe.src = 'https://cast.weybooru.com/';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.style.minHeight = '600px'; // Adjust as needed
+    
+    // Add the iframe to the container
+    container.appendChild(iframe);
+    
+    console.log(`Embedded webpage for ${type}`);
 }
 
 async function fetchAndRenderGoogleDoc() {
