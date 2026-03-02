@@ -128,27 +128,82 @@ function initWelcomeInfoPanel() {
  * @param {string} type The type of content (currently only 'dorm')
  */
 function embedWebpage(type) {
+    if (document.getElementById(`${type}IframeOverlay`)) {
+        return;
+    }
+
     const container = document.getElementById(`${type}Info`);
     if (!container) {
         console.error(`Could not find container for ${type}Info`);
         return;
     }
-
-    // Clear any existing content
+    
     container.innerHTML = '';
 
-    // Create an iframe element
+    // Create a fixed overlay wrapper that escapes the message box bounds
+    const overlay = document.createElement('div');
+    overlay.id = `${type}IframeOverlay`;
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        background: var(--SmartThemeBlurTintColor, #1a1a1a);
+        display: flex;
+        flex-direction: column;
+    `;
+
+    // Optional: a thin close/back bar at the top so users can return
+    const topBar = document.createElement('div');
+    topBar.style.cssText = `
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        background: var(--SmartThemeBodyColor, #111);
+        border-bottom: 1px solid var(--SmartThemeBorderColor, #444);
+        flex-shrink: 0;
+    `;
+
+    const backBtn = document.createElement('button');
+    backBtn.textContent = '← Back';
+    backBtn.style.cssText = `
+        background: transparent;
+        border: 1px solid var(--SmartThemeBorderColor, #666);
+        color: var(--SmartThemeBodyTextColor, #fff);
+        padding: 4px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    `;
+
+    backBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        overlay.remove();
+        const welcomePanel = document.querySelector('.welcomePanel');
+        if (welcomePanel) welcomePanel.classList.remove('infoMode');
+    });
+    
+    topBar.appendChild(backBtn);
+
     const iframe = document.createElement('iframe');
     iframe.src = 'https://cast.weybooru.com/';
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.style.minHeight = '600px'; // Adjust as needed
-    
-    // Add the iframe to the container
-    container.appendChild(iframe);
-    
-    console.log(`Embedded webpage for ${type}`);
+    iframe.style.cssText = `
+        width: 100%;
+        height: 100%;
+        border: none;
+        flex: 1;
+    `;
+
+    overlay.appendChild(topBar);
+    overlay.appendChild(iframe);
+
+    // Attach to body so it's completely outside the message box DOM
+    document.body.appendChild(overlay);
+
+    console.log(`Embedded webpage for ${type} as full-screen overlay`);
 }
 
 async function fetchAndRenderGoogleDoc() {
