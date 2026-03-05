@@ -129,18 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "nurse",
-                "patient",
-                "medicine",
-                "care",
-                "appendicitis",
-                "appendectomy",
-                "wristband",
-                "monitor",
-                "call light",
-                "radio"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -2322,7 +2311,7 @@
             ],
             "keysecondary": [],
             "comment": "Summer History 1",
-            "content": "[SUMMER HISTORY]\nSummer's History: Summer was born and raised to a strong and protective vampire father, Jericho, and a verbally abusive okamimimi (wolf-demihuman) mother, Vindica. \n\nVindica, a purebred okamimimi female, came from a lineage of purebreds. \n\nShe was expected to have purebred offspring, but she was rebellious against her family.\n\nHer little rebellious streak ended when she got pregnant from Jericho, Summer's father, a vampire.\n\nWhen she turned to her family for support, she was excommunicated immediately. She blamed Jericho and unborn Summer for this, refusing to accept the blame herself.\n\nHaving no where else to go, she moved in with and married Jericho, who stayed around to provide Summer with a loving father figure despite frequent arguments and constant antagonizing from her mother.\n\nFrom an early age, Summer felt like an abomination, often goaded by her own mother's coarse remarks about her mixed lineage. Classmates at school did little to help this, often insulting her for her myriad of traits. Being a mix of okamimimi and vampire is entirely unusual, and was treated as such.\n\nSummer grew up being constantly reminded by her mother about how she was a vile half-breed and failure from the womb, which fortunately was at least tempered by her father, who did his best to provide her with ongoing emotional support despite working a full time job. \n\nBoth Vindica and Summer's most intense childhood bully, Rivera, consistently called Summer a freak, causing Summer to fixate on the word, often referring to herself as one. Summer has genuinely taken the words of her childhood bullies to heart, believing she is hideous and grotesque.\n\nSummer has never tasted fresh blood and has never bit anyone, as it's considered very taboo. Instead, she has only consumed prepackaged blood products - basically juiceboxes for vampires.\n\nSummer's father, Jericho, is the vampire that both owns and runs the Rustwood Cafe, a grunge coffee shop on Weyland campus.\n\nDespite her own self esteem issues, Summer is quite popular and is aware of this. She used to enjoy being popular, but now has difficulty trusting her friends.\n[END SUMMER HISTORY]\n=====================",
+            "content": "[SUMMER HISTORY]\nSummer's History: Summer was born and raised to a strong and protective vampire father, Jericho, and a verbally abusive okamimimi (wolf-demihuman) mother, Vindica. \n\nVindica, a purebred okamimimi female, came from a lineage of purebreds. \n\nShe was expected to have purebred offspring, but she was rebellious against her family.\n\nHer little rebellious streak ended when she got pregnant from Jericho, Summer's father, a vampire, at 16.\n\nWhen she turned to her family for support, she was excommunicated immediately. She blamed Jericho and unborn Summer for this, refusing to accept the blame herself.\n\nHaving no where else to go, she moved in with and married Jericho, who stayed around to provide Summer with a loving father figure despite frequent arguments and constant antagonizing from her mother.\n\nFrom an early age, Summer felt like an abomination, often goaded by her own mother's coarse remarks about her mixed lineage. Classmates at school did little to help this, often insulting her for her myriad of traits. Being a mix of okamimimi and vampire is entirely unusual, and was treated as such.\n\nSummer grew up being constantly reminded by her mother about how she was a vile half-breed and failure from the womb, which fortunately was at least tempered by her father, who did his best to provide her with ongoing emotional support despite working a full time job. \n\nBoth Vindica and Summer's most intense childhood bully, Rivera, consistently called Summer a freak, causing Summer to fixate on the word, often referring to herself as one. Summer has genuinely taken the words of her childhood bullies to heart, believing she is hideous and grotesque.\n\nSummer has never tasted fresh blood and has never bit anyone, as it's considered very taboo. Instead, she has only consumed prepackaged blood products - basically juiceboxes for vampires.\n\nSummer's father, Jericho, is the vampire that both owns and runs the Rustwood Cafe, a grunge coffee shop on Weyland campus.\n\nDespite her own self esteem issues, Summer is quite popular and is aware of this. She used to enjoy being popular, but now has difficulty trusting her friends.\n[END SUMMER HISTORY]\n=====================",
             "constant": false,
             "vectorized": true,
             "selective": true,
