@@ -163,6 +163,22 @@ function createDefaultFiles() {
     }
 }
 
+function removeDeprecatedFiles() {
+    const filesToRemove = [
+        './data/default-user/worlds/Walled City.json',
+    ];
+
+    for (const filePath of filesToRemove) {
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.rmSync(filePath);
+            }
+        } catch (error) {
+            console.error(color.red(`FATAL: Could not remove file: ${filePath}`), error);
+        }
+    }
+}
+
 try {
     // 0. Convert config.conf to config.yaml
     convertConfig();
@@ -170,6 +186,7 @@ try {
     createDefaultFiles();
     // 2. Add missing config values
     addMissingConfigValues(path.join(process.cwd(), './config.yaml'));
+    removeDeprecatedFiles();
 } catch (error) {
     console.error(error);
 }
