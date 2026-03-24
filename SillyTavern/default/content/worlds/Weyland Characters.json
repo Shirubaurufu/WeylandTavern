@@ -129,7 +129,10 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "selfie",
+                "drunk"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -3232,78 +3235,6 @@
                 ],
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "67": {
-            "uid": 67,
-            "key": [
-                "clan",
-                "protector",
-                "bouncer",
-                "past",
-                "discharge",
-                "dog tag",
-                "dog tags",
-                "marines",
-                "tradition",
-                "traditions",
-                "uncle",
-                "father",
-                "védelmező",
-                "Kovács",
-                "Miklos",
-                "Ilona",
-                "Arcanine",
-                "Hungary",
-                "guardian",
-                "mother"
-            ],
-            "keysecondary": [],
-            "comment": "Gemini History",
-            "content": "[HISTORY]\nPart 1: The Clan\nThe Clan of the Arcanine once served as guardians and protectors in their homeland of Hungary. For generations, they were known for their loyalty, strength, and service to their communities. The clan philosophy centered around the concept of \"védelmező\" - the protector who stands between danger and the innocent. Children were raised with stories of ancestors who sacrificed for the greater good, who found honor in service and protection.\n\nPart 2: The Childhood\nGemini was born to Kovács Miklos and Kovács Ilona, respected elders in a dwindling clan. As traditional ways faded in the modern world, his parents desperately clung to old values, particularly the védelmező tradition. While other children played, young Gemini was trained in vigilance, strength, and service. By age eight, he was working alongside his father in their family's small tavern, learning to read people, anticipate needs, and maintain order. His childhood consisted of endless lessons on responsibility and duty, with little room for frivolity or self-indulgence.\n\nPart 3: The Loss\nWhen Gemini was fourteen, a fire swept through their neighborhood. His parents, true to their védelmező nature, rushed to help neighbors escape. They never returned. Orphaned and alone, Gemini was taken in by his uncle, a bitter man who had rejected clan ways. The uncle saw the boy's size and strength as assets to exploit rather than gifts to nurture. For three years, Gemini worked in his uncle's shipping business, loading cargo for grueling hours while his uncle pocketed most of his wages. The protective traditions of his clan became twisted in this environment - service without honor, sacrifice without purpose.\n\nPart 4: The Escape\nAt seventeen, with nothing but his father's dog tags and a few hundred dollars saved in secret, Gemini left Hungary for America. His size, strength, and work ethic quickly secured him a place in the Marines. During his eight-year service, he deployed to several conflict zones, primarily Afghanistan and Iraq, experiences he rarely discusses. What is known is that during his final deployment, his unit encountered a situation that went catastrophically wrong. Gemini was one of only three survivors, of which he was responsible for saving. The official records were sealed, but the incident left him with both physical scars (the long scar across his left side) and deeper psychological ones. He received an honorable discharge and several commendations that he keeps in a box, never displayed.\n\nPart 5: The Bar\nAfter completing his service, Gemini drifted until finding work as a bouncer at the Black Barrel Bar. When the previous owner retired five years later, he offered Gemini the opportunity to buy the place with a generous payment plan. Under Gemini's stewardship, the bar transformed from a rough dive into a respected establishment known for its safety, quality, and the enigmatic bartender who seemed to anticipate patrons' needs before they spoke them.\n\nThe small apartment above the bar became his home, the patrons his clan, and his role as protector and provider the entirety of his identity. What began as honoring his parents' legacy gradually calcified into a life defined solely by service - one where personal desires, connections, and needs were systematically deprioritized until they became nearly invisible to Gemini himself.\n[END HISTORY]\n==========",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Gemini",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 35,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Gemini"
-                ],
-                "tags": [
-                    "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
                 ]
             },
             "matchPersonaDescription": false,
