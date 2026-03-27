@@ -1,0 +1,12 @@
+{
+    "display_name": "Weyland Tavern Helix Usage Monitor",
+    "author": "MonGauss",
+    "version": "1.0",
+    "description": "Displays API usage information for HelixMind API users. Altered slightly for WT specific use.",
+    "js": "helix_usage.js",
+    "css": "helix_usage.css",
+    "loading_order": 999,
+    "requires": [],
+    "optional": [],
+    "auto_update": false
+}

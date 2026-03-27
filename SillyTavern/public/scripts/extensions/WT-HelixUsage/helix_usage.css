@@ -1,0 +1,57 @@
+/* Styles for Helix Usage Monitor extension */
+#helix-usage-container {
+    padding: 8px 10px; /* Adjusted padding */
+    margin: 10px 0;    /* Consistent vertical margins */
+    border-top: 1px solid var(--border-color, #303030); /* Separator line above */
+    border-bottom: 1px solid var(--border-color, #303030); /* Separator line below */
+    display: none; /* Hidden by default */
+}
+
+#helix-usage-container.helix-active {
+    display: block;
+}
+
+#helix-usage-container p {
+    margin: 5px 0; /* Spacing between text lines */
+}
+
+.st-helix-usage-settings .st_helix_usage_block {
+    margin-bottom: 1rem; /* Space below each setting block */
+}
+
+.st-helix-usage-settings .st_helix_usage_block .form-group {
+    display: flex;
+    align-items: center; /* Vertically align items in the center */
+}
+
+.st-helix-usage-settings .st_helix_usage_block .form-group input[type="checkbox"] {
+    margin-right: 8px; /* Consistent spacing, can be adjusted */
+    /* The following are often default, but good to be aware of for alignment */
+    vertical-align: middle; /* Helps if flex align-items isn't enough */
+    flex-shrink: 0; /* Prevent checkbox from shrinking if label is long */
+}
+
+#helix-hourly-breakdown-list {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-color, #444); /* Separator from main display */
+    display: none; /* Hidden by default, JS will manage visibility */
+}
+#helix-hourly-breakdown-list p { /* If using p tags for items */
+    font-size: 0.9em;
+    margin: 3px 0;
+    opacity: 0.85;
+}
+
+#helix-hourly-breakdown-list h4 {
+    font-size: 0.95em; /* Slightly larger than item text */
+    font-weight: bold;
+    margin-top: 10px; /* Space above header */
+    margin-bottom: 4px; /* Space between header and first item */
+    opacity: 0.9;
+    color: var(--text_color, #E0E0E0); /* Ensure it's visible */
+}
+
+#helix-hourly-breakdown-list h4:first-child {
+    margin-top: 0; /* No top margin for the very first header in the list */
+}
