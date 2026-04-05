@@ -129,7 +129,15 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "rain",
+                "Yerren",
+                "soaked",
+                "shivering",
+                "lost",
+                "raining",
+                "soaking"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
