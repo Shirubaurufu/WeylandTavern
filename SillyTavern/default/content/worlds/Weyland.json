@@ -68,7 +68,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "1": {
             "uid": 1,
@@ -485,7 +490,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "7": {
             "uid": 7,
@@ -703,7 +713,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "10": {
             "key": [
@@ -851,7 +866,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "12": {
             "key": [
@@ -921,7 +941,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "13": {
             "key": [
@@ -2077,6 +2102,7 @@
             "characterFilter": {
                 "isExclude": true,
                 "names": [
+                    "Aiko",
                     "Kinsbane Manor"
                 ],
                 "tags": [
@@ -14403,7 +14429,12 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 16
+            "displayIndex": 16,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "189": {
             "uid": 189,
@@ -14569,7 +14600,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "192": {
             "uid": 192,
@@ -18236,6 +18272,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "243": {
@@ -18311,6 +18352,159 @@
             },
             "characterFilter": {
                 "isExclude": false,
+                "names": [],
+                "tags": []
+            }
+        },
+        "244": {
+            "uid": 244,
+            "key": [
+                "Somnia",
+                "SyncDeck",
+                "vr",
+                "virtual reality",
+                "SyncDecks",
+                "Kyana"
+            ],
+            "keysecondary": [],
+            "comment": "7-Eleven",
+            "content": "[SOMNIA]\nPotential Location: Somnia (SyncDeck Lounge)\n\n[Location] ON SENAKA BOULEVARD ; Somnia sits between two older brick buildings like it slipped in from another timeline entirely. Its facade is a clean panel of dark, floor-to-ceiling glass framed in brushed black steel, so unassuming that students walk past it for weeks before noticing it. A neon pink sign above the entrance reads SOMNIA in a curvy, playful all-caps font that pulses faintly even in daylight. Through the glass you can see warm lighting, sleek furniture, people laughing and milling around with drinks. It looks like a very stylish lounge. It is not just a very stylish lounge.\n\n[The Exterior Deception]\nThe glass facade is entirely intentional. From outside, Somnia reads as a trendy student lounge, maybe a tutoring center, maybe some kind of upscale study hall. The furniture near the windows is real — a small seating area where guests wait for their sessions or decompress after. Kyana's reception desk is fully visible through the glass, and she is always the first thing you see: whatever she's wearing that day, whatever character she's inhabiting, poised behind her wall of numbered headsets like the world's most stylish gatekeeper.\n\n[Kyana — Desk Clerk]\nKyana is a playful and energetic arctic sharkgirl with naturally white hair she dyes freely and blue eyes that shift dramatically depending on her look that day because of her obsessive cosplay and roleplay passion. She is the face, the vibe, and the unofficial mascot of Somnia. She takes the cosplay seriously — not in an annoying way, but in the way a good actor commits to a bit. Some days she's a sharp-tongued corporate fixer in a sleek longcoat, fake LED cigarette between her fingers, answering every question with clipped professionalism. Other days she's bubbly kawaii-cyber in pastel chrome and pigtails, calling everyone \"sweetie\" and stamping your receipt with a little heart. The character changes. The competence doesn't. She knows every headset by number, knows the kiosk menu cold, and has probably seen everything. She will smile warmly and remind you, completely unprompted: \"We are not responsible for what happens inside. Sessions are private, unmonitored, and unrecorded. Have a great time!~\" She unlocks the door with a button behind the desk, allowing admission.\n\n[Pricing]\nSession Pass (2hr minimum): ~$18 base, ~$7 per additional hour billed to campus credit\nSyncDeck Cartridges: Included in session fee for standard library titles. Premium or rare carts available via the AutoKiosk for additional cost.\nBar: Expensive. Cocktails run $16-$24. The robots don't negotiate.\n\n[Admission & Access]\nA minimum two-hour session pass is purchased at Kyana's desk. Additional hours are billed to a campus credit account automatically. Pricing is heavily subsidized through Weyland University's ongoing research partnership — this technology isn't available commercially, and the university considers participant usage part of a broader long-term study on shared-experience immersion. Guests are asked (never required) to complete a brief digital exit survey flagging any negative side effects. Nobody really does. The bar, however, is priced like a bar that knows it has a captive audience.\n\n[The Reveal — Through The Door]\nThe interior door is matte black with a small illuminated handle. There's no window. You push through it and the campus disappears entirely.\n\nThe room beyond is long and low-ceilinged, bathed in deep blue and violet ambient light broken up by strips of neon pink that trace the edges of booths, the underside of the bar, the seams of the ceiling. The air is cooler than outside and carries the faint smell of something electric — not unpleasant, like the air before a storm. Synthwave hums at a volume that fills the space without swallowing conversation. The walls are paneled in dark matte material with faint grid-line detailing that gives the whole room a digital-blueprint feeling. It is immediately, unmistakably, cyberpunk — but warm. Lived in. Social.\n\nBooths line both walls, semicircular and deep, upholstered in dark vinyl with neon trim along the backrest. Some are full of people mid-conversation, drinks on the table, costumes and streetwear mixing freely. Others hold parties of two, four, six — all slumped gently back into the cushioned seats, headsets on, completely still. Watching a booth of silent, headset-wearing people from the outside is a little eerie and a little beautiful, like watching people dream.\n\nBooths have a tablet that allows parties to order drinks from the bar.\n\n[The Bar]\nA long bar runs along the back wall, tended by two small waiter robots — compact, smooth-bodied units about the height of a large dog, gliding silently between tables on hidden wheels and carrying drinks on flat magnetic trays. They do not speak. They do not make eye contact. They simply appear beside you, wait, and glide away. The bar menu is short, curated, and expensive. Cocktails with names like SIGNAL LOST, NULL SPACE, and DEEP DIVE and often have swirling colors, glitter or glowing icecubes. Mocktails are big.\n\n[The Kiosk]\nAlong the right wall, between booths, sits a sleek automated kiosk — matte black chassis, touchscreen interface in neon pink UI. This is where SyncDecks are browsed and ordered. The catalog contains hundreds of cartridges. Guests can browse by genre, setting, tone, or player count. The kiosk also features a BLEND function — guests describe what they want in plain language and the system attempts to generate a hybrid experience by combining compatible cartridge elements. Results vary. The kiosk disclaims this enthusiastically.\n\n[SyncDecks & Headsets]\nSyncDeck cartridges are small — roughly the size and form factor of a Nintendo Switch game card, housed in slim cases with a small label on the front: title, genre tag, recommended player count, and a one-line descriptor. They slot into the side of the headset with a satisfying click.\n\nThe headsets themselves are sleek and close-fitting, somewhere between a VR visor and a sleep mask. The frame is matte black with faint neon trim matching the booth it came from. A soft silicone eyepiece seals gently against the face. They are lighter than they look.\n\nWhen a session begins, the first thing felt is the eyepiece — a faint, creeping static at the skin's edge, like the gentle pins-and-needles of a limb waking up, except it's happening to your face. Then a low, pleasant dizziness rolls through the body. Not nauseating — more like the feeling of leaning back in a chair too far and catching yourself, stretched into several seconds. Then the body goes. Not painfully. It simply relaxes downward into the cushions, weight releasing all at once, like exhaling after holding your breath for too long. The static expands. The lounge dissolves. Then you are somewhere else entirely.\n\nBeing in another space feels entirely natural and real. You feel everything like a real body, but death in the digital world wakes you up in the real world. Hours can pass in a SyncDeck while only minutes pass IRL. Users can be any avatar they would like - a wolfgirl could choose to be a male neko or a giant wolf or a robot assassin.. or herself, in an outfit. Or whatever. Some experiences (i.e. action, thriller, fantasy) may cap what users can do to prevent \"cheating\" or removijng tension, penalizing them for trying to go \"God Mode\"\n\n\n[Rules & Privacy]\nThere are none; no content restrictions on sessions.  Sessions are fully private, generate no recorded data, and are not monitored by staff or the university. What occurs inside a SyncDeck experience is entirely at the discretion of participants. Kyana will tell you this herself before you walk through the door, pleasantly and without elaboration. The university's research interest is in neurological response data voluntarily submitted via exit survey — not content. Somnia does not ask. Somnia does not tell. Somnia is a licensed research-adjacent facility operating under Weyland University's emerging immersive technology program, which keeps session costs significantly below what the technology would otherwise command. It is not available off-campus.\n\n\n[Atmosphere Notes]\n- Cosplay and cyber-fashion are common but never required; streetwear fits in just as naturally\n- The crowd skews creative, curious, and adventurous — artists, writers, couples, friend groups, the occasional solo visitor\n- First-timers are easy to spot: they pause just inside the door and just... look\n- Regulars have favorite booths, favorite cartridges, favorite drinks\n- Nobody bothers anyone. The vibe is conspiratorial in the best way — everyone here is in on something\n[END SOMNIA]\n==========",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 90,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": true,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 2,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 46,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 22,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": false,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": true,
+                "sticky": 2,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
+        },
+        "245": {
+            "uid": 245,
+            "key": [
+                "!Kyana",
+                "Kyana",
+                "!kyana"
+            ],
+            "keysecondary": [],
+            "comment": "Kyana",
+            "content": "{{getvar::KYA}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 208,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 164,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": true,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
                 "names": [],
                 "tags": []
             }
