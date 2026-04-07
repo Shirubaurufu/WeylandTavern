@@ -4,6 +4,8 @@ import { WT_DOWNLOAD_MODULE_NAME } from "../index.js";
 /** @import { Manifest, ManifestResponse, DownloadEvent, VersionedCharacter } from "../types.js" */
 let csrfToken = null;
 
+/** @type {ManifestResponse | null} */ export let manifestCache = null;
+
 /**
  * @returns {Promise<string | null>}
  */
@@ -85,7 +87,7 @@ export async function fetchManifests(forceRebuild = false) {
         });
         const data = await response.json();
         if (response.status !== 200) return data.error;
-        console.log(`[${WT_DOWNLOAD_MODULE_NAME}] Manifest Debug:`, data);
+        manifestCache = data;
         return data;
     } catch (error) {
         return error.message;

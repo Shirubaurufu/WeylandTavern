@@ -1,5 +1,5 @@
 import { saveSettingsDebounced } from "../../../script.js";
-import { fetchManifests, fetchKeyFile, openDownloadStream, downloadCharacters, listCharacters, listCharactersVersioned, downloadCharactersTest } from "./Modules/backend.js";
+import { fetchManifests, fetchKeyFile, openDownloadStream, downloadCharacters, listCharacters, listCharactersVersioned, downloadCharactersTest, manifestCache } from "./Modules/backend.js";
 
 const { extensionSettings, renderExtensionTemplateAsync } = SillyTavern.getContext();
 export const WT_DOWNLOAD_MODULE_NAME = "Weyland-Downloader";
@@ -14,11 +14,13 @@ const extensionDirectory = '/scripts/extensions/Weyland-Downloader';
 /**
  * @typedef {Object} WeylandDownloaderSettings
  * @property {boolean} debug
+ * @property {boolean} autoupdate
  */
 
 /** @type {WeylandDownloaderSettings} */
 const defaultSettings = {
-    debug: false
+    debug: false,
+    autoupdate: true
 };
 
 /** @type {WeylandDownloaderSettings} */
@@ -588,6 +590,15 @@ async function addExtensionSettings() {
             toastr.warning("[Weyland-Downloader] Failed to open character downloader.");
         }
     });
+
+    // Auto Update
+    // @ts-ignore
+    $('#weylandDownloadAuto').prop('checked', settings.autoupdate).on('input', function () {
+        // @ts-ignore
+        settings.autoupdate = !!$(this).prop('checked');
+        weylandDebug(`Setting Debug: ${settings.autoupdate}`);
+        saveSettingsDebounced();
+    });
 }
 
 /**
@@ -931,5 +942,24 @@ jQuery(async () => {
 
     initWeylandUI();
     bindWeylandEvents();
-    refreshRoster();
+    await refreshRoster();
+    if (settings.autoupdate) {
+        try {
+            const manifests = manifestCache;
+            if (typeof manifests === 'string') throw new Error(manifests);
+            const updateCount = manifests?.pendingDiff?.characters?.length;
+            if (updateCount && updateCount > 0) {
+                // @ts-ignore
+                toastr.info(`Auto-Updating ${updateCount} character${updateCount > 1 ? `s` : ``}`);
+                const downloadResult = await downloadCharacters(listCharacters(manifests.pendingDiff));
+                if (typeof downloadResult === 'string') throw new Error(downloadResult);
+                // @ts-ignore
+                toastr.info(`Auto-Update Complete`);
+            }
+        } catch (error) {
+            console.error(`[${WT_DOWNLOAD_MODULE_NAME}] Failed to auto-update characters: ${error.message}`);
+            // @ts-ignore
+            toastr.error(`Character Auto-Update Failed`);
+        }
+    }
 });
