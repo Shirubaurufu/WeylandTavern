@@ -493,7 +493,7 @@ router.get('/fetch-key', async (request, response) => {
     try {
         const password = request.header('X-Password');
         if (!password || typeof password !== 'string') return response.status(400).json({ error: 'Invalid or missing password' });
-        const url = `${BASE_URL}/WeyKey/${sha224(password)}/key.wtk`;
+        const url = `${BASE_URL}/WeyKey/${sha224(password.trim())}/key.wtk`;
 
         const keyFile = await fetchFromBunny(url);
         if (!keyFile) {
