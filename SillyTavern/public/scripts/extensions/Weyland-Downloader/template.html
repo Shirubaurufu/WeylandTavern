@@ -1,0 +1,107 @@
+<div class="st-modal-overlay" id="wt-modal-overlay" style="display: none;">
+    <div class="st-modal-window" id="app-container">
+        <header class="st-modal-header">
+            <div id="brand-header"><i class="fa-solid fa-server" style="color:var(--rb-accent); margin-right:8px;"></i>
+                WEYLAND UNIVERSITY ROSTER</div>
+            <button class="wt-close-btn" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+        </header>
+
+        <div class="st-grid-container">
+            <nav class="pane pane-menu">
+                <div class="menu-section">
+                    <button class="menu-btn" id="btn-update-chars"><span class="menu-btn-icon"><i
+                                class="fa-solid fa-rotate"></i> Get Updates Only</span></button>
+                    <button class="menu-btn" id="btn-dl-new"><span class="menu-btn-icon"><i
+                                class="fa-solid fa-asterisk"></i> Get New / Updates</span></button>
+                    <button class="menu-btn" id="btn-dl-selected" style="display: none;"><span class="menu-btn-icon"><i
+                                class="fa-solid fa-check-double"></i> Download Selected</span></button>
+
+                    <label class="pw-label">Paw Patrol Access Key</label>
+                    <input type="password" class="pw-input" id="pw-access" placeholder="Enter password...">
+                </div>
+
+                <div class="menu-bottom-section">
+                    <button class="menu-btn" id="btn-debug-disconnect"
+                        style="margin-bottom: 10px; justify-content: center; display: none;"><i
+                            class="fa-solid fa-plug-circle-xmark" style="margin-right: 8px;"></i> Simulate
+                        Disconnect</button>
+                    <button class="menu-btn" id="btn-update-wt" style="margin-bottom: 10px; justify-content: center;"><i
+                            class="fa-solid fa-refresh" style="margin-right: 8px;"></i> Update WeylandTavern</button>
+                    <button class="menu-btn" id="btn-check-updates"
+                        style="margin-bottom: 0; justify-content: center;"><i
+                            class="fa-solid fa-magnifying-glass-arrow-right" style="margin-right: 8px;"></i> Check for
+                        Updates</button>
+                </div>
+
+                <div class="menu-footer">powered by wolfus and <a href="https://cast.weybooru.com"
+                        target="_blank">cast.weybooru.com</a></div>
+            </nav>
+
+            <main class="pane pane-main">
+                <div class="list-scroll-area">
+                    <div class="list-header" id="list-header">
+                        <div class="cell-checkbox"><input type="checkbox" id="chk-all"></div>
+                        <div class="sortable active" data-sort="name">Character Name <i class="fa-solid fa-sort-up"></i></div>
+                        <div class="sortable" data-sort="status" style="text-align: right; padding-right: 10px;">Status <i class="fa-solid fa-sort"></i></div>
+                        <div style="text-align: right; padding-right:15px;">Action</div>
+                    </div>
+
+                    <div id="banner-all-installed" class="top-banner banner-success"><i class="fa-solid fa-face-smile"
+                            style="margin-right: 5px;"></i> Looks like everyone is here~! ^u^</div>
+                    <div id="banner-error" class="top-banner banner-error"><i class="fa-solid fa-triangle-exclamation"
+                            style="margin-right: 5px;"></i> Failed to contact the Roster Service ;-;</div>
+
+                    <div id="character-list"></div>
+                </div>
+
+                <div class="status-bar" id="status-bar">
+                    <div class="status-stats">
+                        <span id="status-bar-text">No Characters Selected</span>
+                        <span id="status-bar-total" style="opacity: 0.5;">0 Total</span>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="pane pane-info">
+                <div id="mika-bg"></div>
+                <div class="info-container active-view" id="view-info">
+                    <button class="mobile-back-btn" onclick="wt_setMobileView('main')"><i
+                            class="fa-solid fa-arrow-left"></i> Back to Roster</button>
+                    <div class="info-portrait" id="info-img"></div>
+                    <h2 class="info-title" id="info-name">Hover or Select</h2>
+                    <div class="info-desc" id="info-desc">Review matrix files and specifications before initiating
+                        network transfer.</div>
+                    <button id="btn-info-dl" class="info-action-btn"><i class="fa-solid fa-download"></i> Download
+                        Character</button>
+                </div>
+
+                <div class="dl-container" id="view-dl">
+                    <h2 class="info-title" style="margin-bottom:15px;"><i class="fa-solid fa-terminal"></i> Transfer
+                        Protocol</h2>
+                    <div class="terminal" id="terminal-output"></div>
+                    <div id="progress-container" style="display:none;">
+                        <div class="term-line" id="progress-target" style="font-family: monospace; font-size: 11px;">
+                        </div>
+                        <div class="progress-wrapper">
+                            <div class="progress-fill" id="progress-bar"></div>
+                            <div class="progress-text" id="progress-text">0.00%</div>
+                        </div>
+                    </div>
+                    <div class="dl-actions" style="margin-top: 15px;">
+                        <button id="btn-dl-cancel" disabled><i class="fa-solid fa-ban"></i> CANCEL</button>
+                        <button id="btn-dl-copy" disabled><i class="fa-regular fa-copy"></i> COPY LOG</button>
+                        <button id="btn-dl-ok" disabled>OK</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <div class="mobile-nav">
+            <button class="mobile-nav-btn" onclick="wt_setMobileView('menu')"><i class="fa-solid fa-bars"></i></button>
+            <button class="mobile-nav-btn active" onclick="wt_setMobileView('main')"><i
+                    class="fa-solid fa-list"></i></button>
+            <button class="mobile-nav-btn" onclick="wt_setMobileView('info')"><i
+                    class="fa-solid fa-circle-info"></i></button>
+        </div>
+    </div>
+</div>

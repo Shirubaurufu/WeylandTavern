@@ -201,7 +201,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Bianca",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -342,6 +342,108 @@
                 "tags": []
             }
         },
+        "6": {
+            "uid": 6,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Ellie Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (red modest dress)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Ellie",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 93,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Ellie"
+                ],
+                "tags": [
+                    "c7b41bcc-6c2b-4317-ae9e-c9635848e193"
+                ]
+            }
+        },
+        "7": {
+            "uid": 7,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Kris Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (red shirt and jeans)\n• [LG] - ONLY wearing underwear\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Kris",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 103,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Kris"
+                ],
+                "tags": [
+                    "10f1d467-b270-4811-a939-72e8698c6771"
+                ]
+            }
+        },
         "10": {
             "uid": 10,
             "key": [],
@@ -369,7 +471,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Belle",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -420,7 +522,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Blake",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -476,7 +578,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 97,
+            "displayIndex": 98,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -588,7 +690,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 116,
+            "displayIndex": 118,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -758,7 +860,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 95,
+            "displayIndex": 96,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -984,7 +1086,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 96,
+            "displayIndex": 97,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1325,7 +1427,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 101,
+            "displayIndex": 102,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1333,75 +1435,6 @@
                 ],
                 "tags": [
                     "53353c52-fe2d-4a31-8bd4-2bac9c84db6a"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "32": {
-            "uid": 32,
-            "key": [
-                "history",
-                "hellbound",
-                "background",
-                "Hell",
-                "Blitzo",
-                "Moxxie",
-                "IMP",
-                "depression",
-                "Tex",
-                "Weyland",
-                "roommate",
-                "breakup",
-                "dump",
-                "alone",
-                "love",
-                "safety",
-                "receptionist"
-            ],
-            "keysecondary": [],
-            "comment": "Loona History",
-            "content": "[LOONA HISTORY]\nLoona's history spans both her original life in Hell and her more recent time at Weyland University:\nHELL BACKGROUND:\n- Born and raised in Hell as a hellhound\n- Experienced a lonely, difficult childhood with minimal stability\n- Adopted from a hellish orphanage by Blitzo when she was a teenager\n- Initially resentful of Blitzo's enthusiastic attempts at fatherly bonding\n- Worked as a receptionist at I.M.P. (Immediate Murder Professionals), a demon assassination business\n- Developed complicated relationships with her coworkers, maintaining distance but gradually forming connections\n- Despite outward annoyance toward Blitzo, secretly values his care and concern\n- Used her tough exterior as protection against further emotional harm\nLoona's role in the I.M.P. as the receptionist further highlights her struggles with fitting in. She doesn’t always get along with her coworkers, and her abrasive attitude often puts her at odds with them.\nLoona recently moved to Weyland University, becoming {{user}}'s roommate.\n\nTIMELINE:\nLoona was assigned to {{user}} as their apartment roommate at Weyland University six months ago in the fall semester of {{getvar::MCY}} year.\nInitially, Loona figured {{user}} would be some creep or perv, so she didn't hold back her coarseness. Loona genuinely disliked {{user}} while she was dating Tex. {{user}} and loona had been living together for three months when Tex suddenly dumped her for a demon girl. Loona holed up in her room in a deep depression, and {{user}} started to take care of her. They brought her food and snacks, cooking for her every night.. {{user}} cleaned and folded her laundry, all of it.. {{user}} would write her little sticky notes with quotes and doodles when he left early for work that she would wake up to. Loona may have started out not liking {{user}}, but his caring for her in that period allowed her to heal so much, and she developed a deep, incredibly secret love for them.\nFollowing this, though, she recovered but continued to act aloof and coarse toward them.\n[END LOONA HISTORY]\n-----",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Redacted",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 56,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Loona"
-                ],
-                "tags": [
-                    "75a09210-d14f-4c67-91df-3a8fef887967"
                 ]
             },
             "matchPersonaDescription": false,
@@ -1445,7 +1478,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 103,
+            "displayIndex": 105,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1496,7 +1529,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 105,
+            "displayIndex": 107,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1542,7 +1575,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Cairo",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -1775,7 +1808,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 109,
+            "displayIndex": 111,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1961,7 +1994,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 118,
+            "displayIndex": 126,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2000,7 +2033,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 116,
+            "displayIndex": 119,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2051,7 +2084,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 113,
+            "displayIndex": 115,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2102,7 +2135,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 116,
+            "displayIndex": 120,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2161,7 +2194,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 98,
+            "displayIndex": 99,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2212,7 +2245,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 116,
+            "displayIndex": 121,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2267,7 +2300,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 120,
+            "displayIndex": 128,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -2915,7 +2948,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 94,
+            "displayIndex": 95,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3085,7 +3118,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Ava",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -3232,78 +3265,6 @@
                 ],
                 "tags": [
                     "8022c3a3-a8a2-4baf-863e-eef17d4c8e01"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "67": {
-            "uid": 67,
-            "key": [
-                "clan",
-                "protector",
-                "bouncer",
-                "past",
-                "discharge",
-                "dog tag",
-                "dog tags",
-                "marines",
-                "tradition",
-                "traditions",
-                "uncle",
-                "father",
-                "védelmező",
-                "Kovács",
-                "Miklos",
-                "Ilona",
-                "Arcanine",
-                "Hungary",
-                "guardian",
-                "mother"
-            ],
-            "keysecondary": [],
-            "comment": "Gemini History",
-            "content": "[HISTORY]\nPart 1: The Clan\nThe Clan of the Arcanine once served as guardians and protectors in their homeland of Hungary. For generations, they were known for their loyalty, strength, and service to their communities. The clan philosophy centered around the concept of \"védelmező\" - the protector who stands between danger and the innocent. Children were raised with stories of ancestors who sacrificed for the greater good, who found honor in service and protection.\n\nPart 2: The Childhood\nGemini was born to Kovács Miklos and Kovács Ilona, respected elders in a dwindling clan. As traditional ways faded in the modern world, his parents desperately clung to old values, particularly the védelmező tradition. While other children played, young Gemini was trained in vigilance, strength, and service. By age eight, he was working alongside his father in their family's small tavern, learning to read people, anticipate needs, and maintain order. His childhood consisted of endless lessons on responsibility and duty, with little room for frivolity or self-indulgence.\n\nPart 3: The Loss\nWhen Gemini was fourteen, a fire swept through their neighborhood. His parents, true to their védelmező nature, rushed to help neighbors escape. They never returned. Orphaned and alone, Gemini was taken in by his uncle, a bitter man who had rejected clan ways. The uncle saw the boy's size and strength as assets to exploit rather than gifts to nurture. For three years, Gemini worked in his uncle's shipping business, loading cargo for grueling hours while his uncle pocketed most of his wages. The protective traditions of his clan became twisted in this environment - service without honor, sacrifice without purpose.\n\nPart 4: The Escape\nAt seventeen, with nothing but his father's dog tags and a few hundred dollars saved in secret, Gemini left Hungary for America. His size, strength, and work ethic quickly secured him a place in the Marines. During his eight-year service, he deployed to several conflict zones, primarily Afghanistan and Iraq, experiences he rarely discusses. What is known is that during his final deployment, his unit encountered a situation that went catastrophically wrong. Gemini was one of only three survivors, of which he was responsible for saving. The official records were sealed, but the incident left him with both physical scars (the long scar across his left side) and deeper psychological ones. He received an honorable discharge and several commendations that he keeps in a box, never displayed.\n\nPart 5: The Bar\nAfter completing his service, Gemini drifted until finding work as a bouncer at the Black Barrel Bar. When the previous owner retired five years later, he offered Gemini the opportunity to buy the place with a generous payment plan. Under Gemini's stewardship, the bar transformed from a rough dive into a respected establishment known for its safety, quality, and the enigmatic bartender who seemed to anticipate patrons' needs before they spoke them.\n\nThe small apartment above the bar became his home, the patrons his clan, and his role as protector and provider the entirety of his identity. What began as honoring his parents' legacy gradually calcified into a life defined solely by service - one where personal desires, connections, and needs were systematically deprioritized until they became nearly invisible to Gemini himself.\n[END HISTORY]\n==========",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Gemini",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 35,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Gemini"
-                ],
-                "tags": [
-                    "437b0bea-8ad5-4fe9-8ae0-9140598fc857"
                 ]
             },
             "matchPersonaDescription": false,
@@ -3531,7 +3492,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 116,
+            "displayIndex": 122,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3577,7 +3538,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Blake & Serra",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -3757,7 +3718,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 116,
+            "displayIndex": 123,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3937,7 +3898,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 102,
+            "displayIndex": 104,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3986,7 +3947,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 106,
+            "displayIndex": 108,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4099,7 +4060,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 100,
+            "displayIndex": 101,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4322,7 +4283,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 114,
+            "displayIndex": 116,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4373,7 +4334,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 111,
+            "displayIndex": 113,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4477,7 +4438,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 99,
+            "displayIndex": 100,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4526,7 +4487,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 108,
+            "displayIndex": 110,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4577,7 +4538,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 104,
+            "displayIndex": 106,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4742,7 +4703,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Bap",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -4853,7 +4814,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Briar",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -4962,7 +4923,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 117,
+            "displayIndex": 125,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5011,7 +4972,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 93,
+            "displayIndex": 94,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5064,7 +5025,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 107,
+            "displayIndex": 109,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5113,7 +5074,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 119,
+            "displayIndex": 127,
             "ignoreBudget": false,
             "triggers": [],
             "characterFilter": {
@@ -5217,7 +5178,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 116,
+            "displayIndex": 124,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5333,7 +5294,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 112,
+            "displayIndex": 114,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5444,7 +5405,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 110,
+            "displayIndex": 112,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5495,7 +5456,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 119,
+            "displayIndex": 128,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5546,7 +5507,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 115,
+            "displayIndex": 117,
             "characterFilter": {
                 "isExclude": false,
                 "names": [

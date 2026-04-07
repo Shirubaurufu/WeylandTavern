@@ -48,6 +48,8 @@ import { router as azureRouter } from './endpoints/azure.js';
 import { router as minimaxRouter } from './endpoints/minimax.js';
 import { router as dataMaidRouter } from './endpoints/data-maid.js';
 
+import { router as weylandRouter } from './endpoints/weyland.js'; // WEYLAND-TAVERN ADDITION
+
 /**
  * @typedef {object} ServerStartupResult
  * @property {boolean} v6Failed If the server failed to start on IPv6
@@ -175,6 +177,8 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/azure', azureRouter);
     app.use('/api/minimax', minimaxRouter);
     app.use('/api/data-maid', dataMaidRouter);
+
+    app.use('/api/weyland', weylandRouter); // WEYLAND-TAVERN ADDITION
 }
 
 /**
