@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const router = express.Router();
 const rateLimits = {
   'fetch-key': { lastCall: 0, cooldown: 2000 },
-  'fetch-manifests': { lastCall: 0, cooldown: 5000 },
+  'fetch-manifests': { lastCall: 0, cooldown: 2000 },
   'download': {lastCall: 0, cooldown: 5000 }
 };
 
