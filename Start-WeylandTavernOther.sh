@@ -145,10 +145,6 @@ echo ""
 export NODE_ENV=production
 cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null 2>&1
 
-# Check for character updates (silent mode with -u flag)
-#echo "Checking for character updates..."
-#node chardl/character-downloader.js -u
-
 echo ""
 echo "-----------------------------------------------------------"
 echo ""

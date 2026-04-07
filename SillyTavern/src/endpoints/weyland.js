@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const router = express.Router();
 const rateLimits = {
   'fetch-key': { lastCall: 0, cooldown: 2000 },
-  'fetch-manifests': { lastCall: 0, cooldown: 5000 },
+  'fetch-manifests': { lastCall: 0, cooldown: 2000 },
   'download': {lastCall: 0, cooldown: 5000 }
 };
 
@@ -493,7 +493,7 @@ router.get('/fetch-key', async (request, response) => {
     try {
         const password = request.header('X-Password');
         if (!password || typeof password !== 'string') return response.status(400).json({ error: 'Invalid or missing password' });
-        const url = `${BASE_URL}/WeyKey/${sha224(password)}/key.wtk`;
+        const url = `${BASE_URL}/WeyKey/${sha224(password.trim())}/key.wtk`;
 
         const keyFile = await fetchFromBunny(url);
         if (!keyFile) {
