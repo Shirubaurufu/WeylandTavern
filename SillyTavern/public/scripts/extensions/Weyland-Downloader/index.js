@@ -20,7 +20,7 @@ const extensionDirectory = '/scripts/extensions/Weyland-Downloader';
 /** @type {WeylandDownloaderSettings} */
 const defaultSettings = {
     debug: false,
-    autoupdate: true
+    autoupdate: false
 };
 
 /** @type {WeylandDownloaderSettings} */
