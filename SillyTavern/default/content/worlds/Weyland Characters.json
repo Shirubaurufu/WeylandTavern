@@ -129,15 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "rain",
-                "Yerren",
-                "soaked",
-                "shivering",
-                "lost",
-                "raining",
-                "soaking"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -209,7 +201,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Bianca",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -384,7 +376,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Ellie",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -398,6 +390,57 @@
                 ],
                 "tags": [
                     "c7b41bcc-6c2b-4317-ae9e-c9635848e193"
+                ]
+            }
+        },
+        "7": {
+            "uid": 7,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Kris Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (red shirt and jeans)\n• [LG] - ONLY wearing underwear\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Kris",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 103,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Kris"
+                ],
+                "tags": [
+                    "10f1d467-b270-4811-a939-72e8698c6771"
                 ]
             }
         },
@@ -428,7 +471,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Belle",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -479,7 +522,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Blake",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -647,7 +690,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 117,
+            "displayIndex": 118,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1403,75 +1446,6 @@
             "ignoreBudget": false,
             "triggers": []
         },
-        "32": {
-            "uid": 32,
-            "key": [
-                "history",
-                "hellbound",
-                "background",
-                "Hell",
-                "Blitzo",
-                "Moxxie",
-                "IMP",
-                "depression",
-                "Tex",
-                "Weyland",
-                "roommate",
-                "breakup",
-                "dump",
-                "alone",
-                "love",
-                "safety",
-                "receptionist"
-            ],
-            "keysecondary": [],
-            "comment": "Loona History",
-            "content": "[LOONA HISTORY]\nLoona's history spans both her original life in Hell and her more recent time at Weyland University:\nHELL BACKGROUND:\n- Born and raised in Hell as a hellhound\n- Experienced a lonely, difficult childhood with minimal stability\n- Adopted from a hellish orphanage by Blitzo when she was a teenager\n- Initially resentful of Blitzo's enthusiastic attempts at fatherly bonding\n- Worked as a receptionist at I.M.P. (Immediate Murder Professionals), a demon assassination business\n- Developed complicated relationships with her coworkers, maintaining distance but gradually forming connections\n- Despite outward annoyance toward Blitzo, secretly values his care and concern\n- Used her tough exterior as protection against further emotional harm\nLoona's role in the I.M.P. as the receptionist further highlights her struggles with fitting in. She doesn’t always get along with her coworkers, and her abrasive attitude often puts her at odds with them.\nLoona recently moved to Weyland University, becoming {{user}}'s roommate.\n\nTIMELINE:\nLoona was assigned to {{user}} as their apartment roommate at Weyland University six months ago in the fall semester of {{getvar::MCY}} year.\nInitially, Loona figured {{user}} would be some creep or perv, so she didn't hold back her coarseness. Loona genuinely disliked {{user}} while she was dating Tex. {{user}} and loona had been living together for three months when Tex suddenly dumped her for a demon girl. Loona holed up in her room in a deep depression, and {{user}} started to take care of her. They brought her food and snacks, cooking for her every night.. {{user}} cleaned and folded her laundry, all of it.. {{user}} would write her little sticky notes with quotes and doodles when he left early for work that she would wake up to. Loona may have started out not liking {{user}}, but his caring for her in that period allowed her to heal so much, and she developed a deep, incredibly secret love for them.\nFollowing this, though, she recovered but continued to act aloof and coarse toward them.\n[END LOONA HISTORY]\n-----",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Redacted",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 56,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Loona"
-                ],
-                "tags": [
-                    "75a09210-d14f-4c67-91df-3a8fef887967"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
         "33": {
             "uid": 33,
             "key": [],
@@ -1504,7 +1478,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 104,
+            "displayIndex": 105,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1555,7 +1529,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 106,
+            "displayIndex": 107,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -1601,7 +1575,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Cairo",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -1834,7 +1808,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 110,
+            "displayIndex": 111,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2020,7 +1994,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 125,
+            "displayIndex": 126,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2059,7 +2033,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 118,
+            "displayIndex": 119,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2110,7 +2084,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 114,
+            "displayIndex": 115,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2161,7 +2135,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 119,
+            "displayIndex": 120,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2271,7 +2245,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 120,
+            "displayIndex": 121,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3144,7 +3118,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Ava",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -3518,7 +3492,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 121,
+            "displayIndex": 122,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3564,7 +3538,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Blake & Serra",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -3744,7 +3718,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 122,
+            "displayIndex": 123,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3924,7 +3898,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 103,
+            "displayIndex": 104,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3973,7 +3947,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 107,
+            "displayIndex": 108,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4309,7 +4283,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 115,
+            "displayIndex": 116,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4360,7 +4334,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 112,
+            "displayIndex": 113,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4513,7 +4487,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 109,
+            "displayIndex": 110,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4564,7 +4538,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 105,
+            "displayIndex": 106,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4729,7 +4703,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Bap",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -4840,7 +4814,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Briar",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -4949,7 +4923,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 124,
+            "displayIndex": 125,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5051,7 +5025,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 108,
+            "displayIndex": 109,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5100,7 +5074,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 126,
+            "displayIndex": 127,
             "ignoreBudget": false,
             "triggers": [],
             "characterFilter": {
@@ -5204,7 +5178,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 123,
+            "displayIndex": 124,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5320,7 +5294,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 113,
+            "displayIndex": 114,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5431,7 +5405,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 111,
+            "displayIndex": 112,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5482,7 +5456,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 127,
+            "displayIndex": 128,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5533,7 +5507,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 116,
+            "displayIndex": 117,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
