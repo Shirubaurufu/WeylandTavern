@@ -9,6 +9,8 @@
         <div class="st-grid-container">
             <nav class="pane pane-menu">
                 <div class="menu-section">
+                    <button class="menu-btn" id="btn-check-updates"><span class="menu-btn-icon"><i
+                                class="fa-solid fa-magnifying-glass-arrow-right"></i> Check for Updates</span></button>
                     <button class="menu-btn" id="btn-update-chars"><span class="menu-btn-icon"><i
                                 class="fa-solid fa-rotate"></i> Get Updates Only</span></button>
                     <button class="menu-btn" id="btn-dl-new"><span class="menu-btn-icon"><i
@@ -27,10 +29,9 @@
                         Disconnect</button>
                     <button class="menu-btn" id="btn-update-wt" style="margin-bottom: 10px; justify-content: center;"><i
                             class="fa-solid fa-refresh" style="margin-right: 8px;"></i> Update WeylandTavern</button>
-                    <button class="menu-btn" id="btn-check-updates"
-                        style="margin-bottom: 0; justify-content: center;"><i
-                            class="fa-solid fa-magnifying-glass-arrow-right" style="margin-right: 8px;"></i> Check for
-                        Updates</button>
+                    <button class="menu-btn" id="btn-open-terminal"
+                        style="margin-bottom: 0; justify-content: center;"><i class="fa-solid fa-terminal"
+                            style="margin-right: 8px;"></i> Open Terminal</button>
                 </div>
 
                 <div class="menu-footer">powered by wolfus and <a href="https://cast.weybooru.com"
@@ -39,11 +40,26 @@
 
             <main class="pane pane-main">
                 <div class="list-scroll-area">
-                    <div class="list-header" id="list-header">
-                        <div class="cell-checkbox"><input type="checkbox" id="chk-all"></div>
-                        <div class="sortable active" data-sort="name">Character Name <i class="fa-solid fa-sort-up"></i></div>
-                        <div class="sortable" data-sort="status" style="text-align: right; padding-right: 10px;">Status <i class="fa-solid fa-sort"></i></div>
-                        <div style="text-align: right; padding-right:15px;">Action</div>
+                    <div class="wt-sticky-header" style="position: sticky; top: 0; z-index: 11; background: #111;">
+                        <div class="search-container"
+                            style="padding: 10px; border-bottom: 1px solid var(--rb-border); position: relative;">
+                            <input type="text" id="wt-search-input" placeholder="Search characters..."
+                                style="width: 100%; border-radius: 5px; border: 1px solid #444; background: #222; color: #eee; padding: 8px 30px 8px 10px; box-sizing: border-box; outline: none;">
+                            <button id="wt-search-clear"
+                                style="position: absolute; right: 20px; top: 12px; background: none; border: none; color: #888; cursor: pointer; display: none; padding: 5px;"><i
+                                    class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="list-header" id="list-header" style="position: static;">
+                            <div class="cell-checkbox"><input type="checkbox" id="chk-all"></div>
+                            <div class="sortable active" data-sort="name">Character Name <i
+                                    class="fa-solid fa-sort-up"></i>
+                            </div>
+                            <div class="sortable" data-sort="status" style="text-align: right; padding-right: 10px;">
+                                Status
+                                <i class="fa-solid fa-sort"></i>
+                            </div>
+                            <div style="text-align: right; padding-right:15px;">Action</div>
+                        </div>
                     </div>
 
                     <div id="banner-all-installed" class="top-banner banner-success"><i class="fa-solid fa-face-smile"

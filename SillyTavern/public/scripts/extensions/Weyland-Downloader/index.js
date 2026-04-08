@@ -10,7 +10,6 @@ export const WT_DOWNLOAD_MODULE_NAME = "Weyland-Downloader";
 
 const extensionVersion = "1.0.0";
 const extensionDirectory = '/scripts/extensions/Weyland-Downloader';
-let refreshRosterAuto = false;
 
 /**
  * @typedef {Object} WeylandDownloaderSettings
@@ -38,6 +37,14 @@ let currentSort = { col: 'name', asc: true };
 const sortWeights = { 'release': 3, 'beta': 2, 'alpha': 1 };
 let selectedCharacters = new Set();
 let filteredRenderData = [];
+let searchQuery = '';
+
+function convertInfoLinks(text) {
+    if (!text) return text;
+    return String(text).replace(/\[\[([^\]:]+)(?::([^\]]+))?\]\]/g, (match, group1, group2) => {
+        return group2 || group1;
+    });
+}
 
 function getSettings() {
     if (!extensionSettings[WT_DOWNLOAD_MODULE_NAME]) {
@@ -184,28 +191,28 @@ async function refreshRoster(forceRebuild = false) {
                 else if (botInfo && botInfo.image) imageUrl = `https://cast.weybooru.com/images/photos/${botInfo.image}.webp`;
 
                 const tagsRaw = charInfo?.tag || botInfo?.tags || botInfo?.tag || charInfo?.tags || '';
-                const tags = typeof tagsRaw === 'string' ? tagsRaw : (tagsRaw.name || '');
+                const tags = convertInfoLinks(typeof tagsRaw === 'string' ? tagsRaw : (tagsRaw.name || ''));
                 const summaryRaw = charInfo?.summary || botInfo?.summary || '';
-                const summary = typeof summaryRaw === 'string' ? summaryRaw : (summaryRaw.name || '');
+                const summary = convertInfoLinks(typeof summaryRaw === 'string' ? summaryRaw : (summaryRaw.name || ''));
 
                 let tagsHtml = tags ? `<div class="meta-tags">${tags.split(',').map(t => `<span class="tag-pill">${t.trim()}</span>`).join('')}</div>` : '';
                 const summaryHtml = summary ? `<div class="meta-summary">${summary}</div>` : '';
 
                 let detailsHtml = '<div class="meta-details">';
 
-                const description = charInfo?.description || botInfo?.description || '';
+                const description = convertInfoLinks(charInfo?.description || botInfo?.description || '');
                 let descHtml = description ? `<div class="meta-desc">${String(description).replace(/\n/g, '<br>')}</div>` : '';
 
                 const speciesRaw = charInfo?.species || '';
-                const species = typeof speciesRaw === 'string' ? speciesRaw : (speciesRaw.name || '');
+                const species = convertInfoLinks(typeof speciesRaw === 'string' ? speciesRaw : (speciesRaw.name || ''));
                 const genderRaw = charInfo?.gender || '';
-                const gender = typeof genderRaw === 'string' ? genderRaw : (genderRaw.name || '');
-                const age = charInfo?.age || '';
-                const height = charInfo?.height || '';
+                const gender = convertInfoLinks(typeof genderRaw === 'string' ? genderRaw : (genderRaw.name || ''));
+                const age = convertInfoLinks(charInfo?.age || '');
+                const height = convertInfoLinks(charInfo?.height || '');
                 const occupationRaw = charInfo?.occupation || '';
-                const occupation = typeof occupationRaw === 'string' ? occupationRaw : (occupationRaw.name || '');
+                const occupation = convertInfoLinks(typeof occupationRaw === 'string' ? occupationRaw : (occupationRaw.name || ''));
                 const homeRaw = charInfo?.home || '';
-                const home = typeof homeRaw === 'string' ? homeRaw : (homeRaw.name || '');
+                const home = convertInfoLinks(typeof homeRaw === 'string' ? homeRaw : (homeRaw.name || ''));
 
                 if (species) detailsHtml += `<div class="detail-item"><span class="detail-label">Species</span><span class="detail-val" title="${species}">${species}</span></div>`;
                 if (gender) detailsHtml += `<div class="detail-item"><span class="detail-label">Gender</span><span class="detail-val" title="${gender}">${gender}</span></div>`;
@@ -227,7 +234,7 @@ async function refreshRoster(forceRebuild = false) {
             return {
                 id: botId,
                 sysName: remoteChar.name,
-                name: charInfo?.name || botInfo?.name || remoteChar.name,
+                name: convertInfoLinks(charInfo?.name || botInfo?.name || remoteChar.name),
                 status: status,
                 version: remoteChar.version, //`v${remoteChar.version?.replace(/-/g, '.') || 'Unknown'}`,
                 installed: isInstalled,
@@ -266,7 +273,7 @@ async function refreshRoster(forceRebuild = false) {
                 CHARACTER_DATA.push({
                     id: botId,
                     sysName: localChar.name,
-                    name: charInfo?.name || botInfo?.name || localChar.name,
+                    name: convertInfoLinks(charInfo?.name || botInfo?.name || localChar.name),
                     status: 'unknown',
                     version: localChar.version, //`v${localChar.version?.replace(/-/g, '.') || 'Unknown'}`,
                     installed: true,
@@ -341,7 +348,7 @@ function updateSelectionState() {
     });
 
     const actionableCount = filteredRenderData.filter(c => !c.installed || c.updateAvailable).length;
-    
+
     const chkAll = /** @type {HTMLInputElement} */ (document.getElementById('chk-all'));
     chkAll.checked = (count > 0 && count === actionableCount);
     chkAll.indeterminate = (count > 0 && count < actionableCount);
@@ -359,6 +366,11 @@ function renderDownloader() {
 
     filteredRenderData = CHARACTER_DATA.filter(char => {
         if (char.unavailableOnServer && !char.installed) return false;
+        if (searchQuery) {
+            const matchesName = char.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSysName = char.sysName.toLowerCase().includes(searchQuery.toLowerCase());
+            if (!matchesName && !matchesSysName) return false;
+        }
         return true;
     });
 
@@ -431,23 +443,23 @@ function renderDownloader() {
     document.querySelectorAll('.update-all-divider').forEach(div => {
         div.addEventListener('click', () => {
             const updatesOnly = filteredRenderData.filter(c => c.installed && c.updateAvailable).map(c => c.id);
-            if (updatesOnly.length > 0) startDownload(updatesOnly);
+            if (updatesOnly.length > 0) startTestDownload(updatesOnly);
         });
     });
 
     document.querySelectorAll('.download-all-divider').forEach(div => {
         div.addEventListener('click', () => {
             const downloadsOnly = filteredRenderData.filter(c => !c.installed).map(c => c.id);
-            if (downloadsOnly.length > 0) startDownload(downloadsOnly);
+            if (downloadsOnly.length > 0) startTestDownload(downloadsOnly);
         });
     });
 
     document.querySelectorAll('.char-row').forEach(row => {
-        row.addEventListener('mouseenter', (e) => { 
+        row.addEventListener('mouseenter', (e) => {
             if (window.innerWidth > 900) {
                 const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
                 showCharacterInfo(currentTarget.getAttribute('data-id'))
-            }; 
+            };
         });
         row.addEventListener('click', (e) => {
             const target = /** @type {HTMLElement} */ (e.target);
@@ -457,27 +469,27 @@ function renderDownloader() {
         });
     });
 
-    document.querySelectorAll('.char-chk').forEach(chk => { 
+    document.querySelectorAll('.char-chk').forEach(chk => {
         chk.addEventListener('change', (e) => {
             const target = /** @type {HTMLInputElement} */ (e.target);
-            toggleCharacterSelection(target.getAttribute('data-id'), target.checked); 
-        }); 
+            toggleCharacterSelection(target.getAttribute('data-id'), target.checked);
+        });
     });
-    document.querySelectorAll('.btn-info').forEach(btn => { 
-        btn.addEventListener('click', (e) => { 
+    document.querySelectorAll('.btn-info').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
-            showCharacterInfo(currentTarget.getAttribute('data-id')); 
-        }); 
+            showCharacterInfo(currentTarget.getAttribute('data-id'));
+        });
     });
-    document.querySelectorAll('.btn-dl:not(:disabled)').forEach(btn => { 
-        btn.addEventListener('click', (e) => { 
+    document.querySelectorAll('.btn-dl:not(:disabled)').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
-            handleRowDownloadClick(currentTarget.getAttribute('data-id')); 
-        }); 
+            handleRowDownloadClick(currentTarget.getAttribute('data-id'));
+        });
     });
 
     document.getElementById('status-bar').addEventListener('click', () => {
-        if (selectedCharacters.size > 0) startDownload(Array.from(selectedCharacters));
+        if (selectedCharacters.size > 0) startTestDownload(Array.from(selectedCharacters));
     });
 
     updateSelectionState();
@@ -583,10 +595,6 @@ async function addExtensionSettings() {
     $('#weylandOpenDownloader').on('click', async function () {
         weylandDebug("Open Downloader clicked.");
         try {
-            if (refreshRosterAuto) {
-                await refreshRoster();
-                refreshRosterAuto = false;
-            }
             // @ts-ignore
             $('#wt-modal-overlay').css('display', 'flex');
         } catch (err) {
@@ -608,19 +616,13 @@ async function addExtensionSettings() {
 
 /**
  * @param {string} id
- * @param {boolean} reDownload
  */
-function handleRowDownloadClick(id, reDownload = false) {
-    if (selectedCharacters.size > 0) startDownload(Array.from(selectedCharacters), reDownload);
-    else startDownload([id], reDownload);
+function handleRowDownloadClick(id) {
+    if (selectedCharacters.size > 0) startTestDownload(Array.from(selectedCharacters));
+    else startTestDownload([id]);
 }
 
-/**
- * @param {*} targetIds 
- * @param {boolean} reDownload 
- * @returns 
- */
-async function startDownload(targetIds = [], reDownload = false) {
+async function startTestDownload(targetIds = []) {
     if (isProcessing || targetIds.length === 0) return;
     isProcessing = true;
 
@@ -779,7 +781,7 @@ async function startDownload(targetIds = [], reDownload = false) {
 
     try {
         addLine(`Transmitting handshake to backend API...`);
-        const response = await downloadCharacters(namesArray, reDownload);
+        const response = await downloadCharacters(namesArray);
         if (typeof response === 'string') throw new Error(response);
     } catch (err) {
         stream.close();
@@ -793,28 +795,6 @@ async function startDownload(targetIds = [], reDownload = false) {
     }
 }
 
-async function runAutoUpdate() {
-    try {
-        const manifests = manifestCache; if (typeof manifests === 'string') throw new Error(manifests);
-        if (!manifests?.pendingDiff?.characters) throw new Error(`pendingDiff missing or empty`);
-        const localCharList = manifests?.localManifest?.characters?.filter(c => c.version); if (!localCharList?.length) throw new Error(`localManifest missing or empty`);
-        const localCharSet = new Set(localCharList.map(c => c.name));
-        const pendingCharFiltered = manifests.pendingDiff.characters.filter(c => localCharSet.has(c.name)); if (!pendingCharFiltered?.length) return;
-        const updateOnlyNameList = pendingCharFiltered.map(c => c.name); if (!updateOnlyNameList?.length) return;
-        const updateCount = updateOnlyNameList.length;
-        // @ts-ignore
-        toastr.info(`Auto-Updating ${updateCount} character${updateCount > 1 ? `s` : ``}`);
-        const downloadResult = await downloadCharacters(updateOnlyNameList);
-        if (typeof downloadResult === 'string') throw new Error(downloadResult);
-        // @ts-ignore
-        toastr.info(`Auto-Update Complete`);
-        refreshRosterAuto = true;
-    } catch (error) {
-        console.error(`[${WT_DOWNLOAD_MODULE_NAME}] Failed to auto-update characters: ${error.message}`);
-        // @ts-ignore
-        toastr.error(`Character Auto-Update Failed`);
-    }
-}
 
 function bindWeylandEvents() {
     document.getElementById('btn-close-modal').addEventListener('click', (e) => {
@@ -852,9 +832,32 @@ function bindWeylandEvents() {
         setTimeout(() => { btn.innerHTML = originalHtml; btn.disabled = false; }, 2000);
     });
 
+    const searchInput = document.getElementById('wt-search-input');
+    const searchClear = document.getElementById('wt-search-clear');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const target = /** @type {HTMLInputElement} */ (e.target);
+            searchQuery = target.value;
+            if (searchClear) searchClear.style.display = searchQuery ? 'block' : 'none';
+            renderDownloader();
+        });
+    }
+    if (searchClear) {
+        searchClear.addEventListener('click', () => {
+            searchQuery = '';
+            if (searchInput) /** @type {HTMLInputElement} */ (searchInput).value = '';
+            searchClear.style.display = 'none';
+            renderDownloader();
+        });
+    }
+
+    document.getElementById('btn-open-terminal').addEventListener('click', () => {
+        showTerminal();
+    });
+
     document.getElementById('btn-check-updates').addEventListener('click', async (e) => {
         const btn = /** @type {HTMLButtonElement} */ (e.currentTarget); const originalHtml = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Checking...'; btn.disabled = true;
+        btn.innerHTML = '<span class="menu-btn-icon"><i class="fa-solid fa-spinner fa-spin"></i> Checking...</span>'; btn.disabled = true;
 
         if (!isDisconnected) {
             document.getElementById('banner-error').style.display = 'none';
@@ -868,16 +871,16 @@ function bindWeylandEvents() {
 
     document.getElementById('btn-update-chars').addEventListener('click', () => {
         const updatesOnly = filteredRenderData.filter(c => c.installed && c.updateAvailable).map(c => c.id);
-        if (updatesOnly.length > 0) startDownload(updatesOnly);
+        if (updatesOnly.length > 0) startTestDownload(updatesOnly);
     });
 
     document.getElementById('btn-dl-new').addEventListener('click', () => {
         const newOrUpdates = filteredRenderData.filter(c => !c.installed || c.updateAvailable).map(c => c.id);
-        if (newOrUpdates.length > 0) startDownload(newOrUpdates);
+        if (newOrUpdates.length > 0) startTestDownload(newOrUpdates);
     });
 
     document.getElementById('btn-dl-selected').addEventListener('click', () => {
-        if (selectedCharacters.size > 0) startDownload(Array.from(selectedCharacters));
+        if (selectedCharacters.size > 0) startTestDownload(Array.from(selectedCharacters));
     });
 
     document.getElementById('btn-dl-cancel').addEventListener('click', () => {
@@ -914,8 +917,7 @@ function bindWeylandEvents() {
     document.getElementById('btn-info-dl').addEventListener('click', (e) => {
         const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
         const id = currentTarget.getAttribute('data-id');
-        weylandDebug(`ID:`,id);
-        if (id) handleRowDownloadClick(id, true);
+        if (id) handleRowDownloadClick(id);
     });
 
     document.querySelectorAll('.sortable').forEach(header => {
@@ -978,6 +980,22 @@ jQuery(async () => {
     bindWeylandEvents();
     await refreshRoster();
     if (settings.autoupdate) {
-        await runAutoUpdate();
+        try {
+            const manifests = manifestCache;
+            if (typeof manifests === 'string') throw new Error(manifests);
+            const updateCount = manifests?.pendingDiff?.characters?.length;
+            if (updateCount && updateCount > 0) {
+                // @ts-ignore
+                toastr.info(`Auto-Updating ${updateCount} character${updateCount > 1 ? `s` : ``}`);
+                const downloadResult = await downloadCharacters(listCharacters(manifests.pendingDiff));
+                if (typeof downloadResult === 'string') throw new Error(downloadResult);
+                // @ts-ignore
+                toastr.info(`Auto-Update Complete`);
+            }
+        } catch (error) {
+            console.error(`[${WT_DOWNLOAD_MODULE_NAME}] Failed to auto-update characters: ${error.message}`);
+            // @ts-ignore
+            toastr.error(`Character Auto-Update Failed`);
+        }
     }
 });
