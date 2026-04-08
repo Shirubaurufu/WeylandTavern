@@ -17,6 +17,10 @@ const EXTENSION_PATH = join(__dirname, '..', '..', 'public', 'scripts', 'extensi
 const KEY_FILE_PATH = join(EXTENSION_PATH, 'key.wtk');
 const LOCAL_MANIFEST_PATH = join(EXTENSION_PATH, 'local-manifest.json');
 
+/** @type {Manifest | string | null} */
+let localManifest = null;
+/** @type {Manifest | string | null} */
+let remoteManifest = null;
 /** @type {Manifest | null} */
 let pendingDiff = null;
 
@@ -521,11 +525,11 @@ router.get('/fetch-manifests', async (request, response) => {
         const rebuildManifest = request.header('X-Rebuild-Manifest') ? true : false;
 
         // Fetch remote manifests
-        const remoteManifest = await fetchMergedRemoteManifest();
+        remoteManifest = await fetchMergedRemoteManifest();
         if (typeof remoteManifest === 'string') throw new Error(remoteManifest);
 
         // Load or build local manifest
-        const localManifest = await getLocalManifest(userHandle, remoteManifest, rebuildManifest);
+        localManifest = await getLocalManifest(userHandle, remoteManifest, rebuildManifest);
         if (typeof localManifest === 'string') throw new Error(localManifest);
 
         // Compute and store diff
@@ -545,6 +549,7 @@ router.post('/download', async (request, response) => {
     }
     try {
         const userHandle = request.header('X-User-Handle') || 'default-user';
+        const reDownload = (request.header('X-Redownload') || 'false').toLowerCase() === 'true';
         const { characters } = request.body;
         if (!pendingDiff) {
             return response.status(400).json({ error: 'No diff available, fetch manifests first' });
@@ -554,14 +559,27 @@ router.post('/download', async (request, response) => {
         const charactersPath = join(userPath, 'characters');
         const worldsPath = join(userPath, 'worlds');
 
-        // Load local manifest for updating
-        const localManifestContent = await readFile(LOCAL_MANIFEST_PATH, 'utf-8');
-        /** @type {Manifest} */
-        const localManifest = JSON.parse(localManifestContent);
+        if (!localManifest || typeof localManifest === 'string') {
+             // Load local manifest for updating
+            const localManifestContent = await readFile(LOCAL_MANIFEST_PATH, 'utf-8');
+            /** @type {Manifest} */
+            localManifest = JSON.parse(localManifestContent);
+        }
+        if (!localManifest || typeof localManifest === 'string') throw new Error (localManifest || `Failed to load Local Manifest`);
+       
         const localCharMap = new Map(localManifest.characters.map(c => [c.name, c]));
 
-        // Filter diff to only requested characters
-        const diffChars = pendingDiff.characters.filter(c => characters.includes(c.name));
+        /** @type {Character[] | null} */
+        let diffChars = null;
+        if (reDownload) {
+            if (!remoteManifest || typeof remoteManifest === 'string') throw new Error(`Cannot load character for re-download`);
+            // Filter remote to only requested characters
+            diffChars = remoteManifest.characters.filter(c => characters.includes(c.name)).map(c => ({...c, updatePng: true}));
+        } else {
+            // Filter diff to only requested characters
+            diffChars = pendingDiff.characters.filter(c => characters.includes(c.name));
+        }
+        if (!diffChars?.length) throw new Error(`No characters found for download`);
         const charTotals = buildCharacterTotals(diffChars);
 
         // Build flat list of all downloads
