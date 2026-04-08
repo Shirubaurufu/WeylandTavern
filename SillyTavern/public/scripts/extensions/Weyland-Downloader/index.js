@@ -39,6 +39,13 @@ let selectedCharacters = new Set();
 let filteredRenderData = [];
 let searchQuery = '';
 
+function convertInfoLinks(text) {
+    if (!text) return text;
+    return String(text).replace(/\[\[([^\]:]+)(?::([^\]]+))?\]\]/g, (match, group1, group2) => {
+        return group2 || group1;
+    });
+}
+
 function getSettings() {
     if (!extensionSettings[WT_DOWNLOAD_MODULE_NAME]) {
         extensionSettings[WT_DOWNLOAD_MODULE_NAME] = structuredClone(defaultSettings);
@@ -184,28 +191,28 @@ async function refreshRoster(forceRebuild = false) {
                 else if (botInfo && botInfo.image) imageUrl = `https://cast.weybooru.com/images/photos/${botInfo.image}.webp`;
 
                 const tagsRaw = charInfo?.tag || botInfo?.tags || botInfo?.tag || charInfo?.tags || '';
-                const tags = typeof tagsRaw === 'string' ? tagsRaw : (tagsRaw.name || '');
+                const tags = convertInfoLinks(typeof tagsRaw === 'string' ? tagsRaw : (tagsRaw.name || ''));
                 const summaryRaw = charInfo?.summary || botInfo?.summary || '';
-                const summary = typeof summaryRaw === 'string' ? summaryRaw : (summaryRaw.name || '');
+                const summary = convertInfoLinks(typeof summaryRaw === 'string' ? summaryRaw : (summaryRaw.name || ''));
 
                 let tagsHtml = tags ? `<div class="meta-tags">${tags.split(',').map(t => `<span class="tag-pill">${t.trim()}</span>`).join('')}</div>` : '';
                 const summaryHtml = summary ? `<div class="meta-summary">${summary}</div>` : '';
 
                 let detailsHtml = '<div class="meta-details">';
 
-                const description = charInfo?.description || botInfo?.description || '';
+                const description = convertInfoLinks(charInfo?.description || botInfo?.description || '');
                 let descHtml = description ? `<div class="meta-desc">${String(description).replace(/\n/g, '<br>')}</div>` : '';
 
                 const speciesRaw = charInfo?.species || '';
-                const species = typeof speciesRaw === 'string' ? speciesRaw : (speciesRaw.name || '');
+                const species = convertInfoLinks(typeof speciesRaw === 'string' ? speciesRaw : (speciesRaw.name || ''));
                 const genderRaw = charInfo?.gender || '';
-                const gender = typeof genderRaw === 'string' ? genderRaw : (genderRaw.name || '');
-                const age = charInfo?.age || '';
-                const height = charInfo?.height || '';
+                const gender = convertInfoLinks(typeof genderRaw === 'string' ? genderRaw : (genderRaw.name || ''));
+                const age = convertInfoLinks(charInfo?.age || '');
+                const height = convertInfoLinks(charInfo?.height || '');
                 const occupationRaw = charInfo?.occupation || '';
-                const occupation = typeof occupationRaw === 'string' ? occupationRaw : (occupationRaw.name || '');
+                const occupation = convertInfoLinks(typeof occupationRaw === 'string' ? occupationRaw : (occupationRaw.name || ''));
                 const homeRaw = charInfo?.home || '';
-                const home = typeof homeRaw === 'string' ? homeRaw : (homeRaw.name || '');
+                const home = convertInfoLinks(typeof homeRaw === 'string' ? homeRaw : (homeRaw.name || ''));
 
                 if (species) detailsHtml += `<div class="detail-item"><span class="detail-label">Species</span><span class="detail-val" title="${species}">${species}</span></div>`;
                 if (gender) detailsHtml += `<div class="detail-item"><span class="detail-label">Gender</span><span class="detail-val" title="${gender}">${gender}</span></div>`;
@@ -227,7 +234,7 @@ async function refreshRoster(forceRebuild = false) {
             return {
                 id: botId,
                 sysName: remoteChar.name,
-                name: charInfo?.name || botInfo?.name || remoteChar.name,
+                name: convertInfoLinks(charInfo?.name || botInfo?.name || remoteChar.name),
                 status: status,
                 version: remoteChar.version, //`v${remoteChar.version?.replace(/-/g, '.') || 'Unknown'}`,
                 installed: isInstalled,
@@ -266,7 +273,7 @@ async function refreshRoster(forceRebuild = false) {
                 CHARACTER_DATA.push({
                     id: botId,
                     sysName: localChar.name,
-                    name: charInfo?.name || botInfo?.name || localChar.name,
+                    name: convertInfoLinks(charInfo?.name || botInfo?.name || localChar.name),
                     status: 'unknown',
                     version: localChar.version, //`v${localChar.version?.replace(/-/g, '.') || 'Unknown'}`,
                     installed: true,
@@ -341,7 +348,7 @@ function updateSelectionState() {
     });
 
     const actionableCount = filteredRenderData.filter(c => !c.installed || c.updateAvailable).length;
-    
+
     const chkAll = /** @type {HTMLInputElement} */ (document.getElementById('chk-all'));
     chkAll.checked = (count > 0 && count === actionableCount);
     chkAll.indeterminate = (count > 0 && count < actionableCount);
@@ -448,11 +455,11 @@ function renderDownloader() {
     });
 
     document.querySelectorAll('.char-row').forEach(row => {
-        row.addEventListener('mouseenter', (e) => { 
+        row.addEventListener('mouseenter', (e) => {
             if (window.innerWidth > 900) {
                 const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
                 showCharacterInfo(currentTarget.getAttribute('data-id'))
-            }; 
+            };
         });
         row.addEventListener('click', (e) => {
             const target = /** @type {HTMLElement} */ (e.target);
@@ -462,23 +469,23 @@ function renderDownloader() {
         });
     });
 
-    document.querySelectorAll('.char-chk').forEach(chk => { 
+    document.querySelectorAll('.char-chk').forEach(chk => {
         chk.addEventListener('change', (e) => {
             const target = /** @type {HTMLInputElement} */ (e.target);
-            toggleCharacterSelection(target.getAttribute('data-id'), target.checked); 
-        }); 
+            toggleCharacterSelection(target.getAttribute('data-id'), target.checked);
+        });
     });
-    document.querySelectorAll('.btn-info').forEach(btn => { 
-        btn.addEventListener('click', (e) => { 
+    document.querySelectorAll('.btn-info').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
-            showCharacterInfo(currentTarget.getAttribute('data-id')); 
-        }); 
+            showCharacterInfo(currentTarget.getAttribute('data-id'));
+        });
     });
-    document.querySelectorAll('.btn-dl:not(:disabled)').forEach(btn => { 
-        btn.addEventListener('click', (e) => { 
+    document.querySelectorAll('.btn-dl:not(:disabled)').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
-            handleRowDownloadClick(currentTarget.getAttribute('data-id')); 
-        }); 
+            handleRowDownloadClick(currentTarget.getAttribute('data-id'));
+        });
     });
 
     document.getElementById('status-bar').addEventListener('click', () => {
