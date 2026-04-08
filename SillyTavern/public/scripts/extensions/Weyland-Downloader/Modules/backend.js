@@ -97,9 +97,10 @@ export async function fetchManifests(forceRebuild = false) {
 /**
  * **Make sure "fetchManifests()" has been called prior to calling "downloadCharacters()"**
  * @param {string[]} characterNames
+ * @param {boolean} reDownload
  * @returns {Promise<true | string>} **True** upon completion or **String** on error.
  */
-export async function downloadCharacters(characterNames) {
+export async function downloadCharacters(characterNames, reDownload = false) {
     try {
         if (!csrfToken) {
             if (!(await getCsrfToken())) {
@@ -111,7 +112,8 @@ export async function downloadCharacters(characterNames) {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Csrf-Token': csrfToken,
-                'X-User-Handle': getCurrentUserHandle() || 'default-user'
+                'X-User-Handle': getCurrentUserHandle() || 'default-user',
+                'X-Redownload': String(reDownload)
             },
             body: JSON.stringify({ characters: characterNames })
         });
