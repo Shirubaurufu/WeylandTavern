@@ -10,7 +10,6 @@ export const WT_DOWNLOAD_MODULE_NAME = "Weyland-Downloader";
 
 const extensionVersion = "1.0.0";
 const extensionDirectory = '/scripts/extensions/Weyland-Downloader';
-let refreshRosterAuto = false;
 
 /**
  * @typedef {Object} WeylandDownloaderSettings
@@ -38,6 +37,7 @@ let currentSort = { col: 'name', asc: true };
 const sortWeights = { 'release': 3, 'beta': 2, 'alpha': 1 };
 let selectedCharacters = new Set();
 let filteredRenderData = [];
+let searchQuery = '';
 
 function getSettings() {
     if (!extensionSettings[WT_DOWNLOAD_MODULE_NAME]) {
@@ -359,6 +359,11 @@ function renderDownloader() {
 
     filteredRenderData = CHARACTER_DATA.filter(char => {
         if (char.unavailableOnServer && !char.installed) return false;
+        if (searchQuery) {
+            const matchesName = char.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSysName = char.sysName.toLowerCase().includes(searchQuery.toLowerCase());
+            if (!matchesName && !matchesSysName) return false;
+        }
         return true;
     });
 
@@ -431,14 +436,14 @@ function renderDownloader() {
     document.querySelectorAll('.update-all-divider').forEach(div => {
         div.addEventListener('click', () => {
             const updatesOnly = filteredRenderData.filter(c => c.installed && c.updateAvailable).map(c => c.id);
-            if (updatesOnly.length > 0) startDownload(updatesOnly);
+            if (updatesOnly.length > 0) startTestDownload(updatesOnly);
         });
     });
 
     document.querySelectorAll('.download-all-divider').forEach(div => {
         div.addEventListener('click', () => {
             const downloadsOnly = filteredRenderData.filter(c => !c.installed).map(c => c.id);
-            if (downloadsOnly.length > 0) startDownload(downloadsOnly);
+            if (downloadsOnly.length > 0) startTestDownload(downloadsOnly);
         });
     });
 
@@ -477,7 +482,7 @@ function renderDownloader() {
     });
 
     document.getElementById('status-bar').addEventListener('click', () => {
-        if (selectedCharacters.size > 0) startDownload(Array.from(selectedCharacters));
+        if (selectedCharacters.size > 0) startTestDownload(Array.from(selectedCharacters));
     });
 
     updateSelectionState();
@@ -583,10 +588,6 @@ async function addExtensionSettings() {
     $('#weylandOpenDownloader').on('click', async function () {
         weylandDebug("Open Downloader clicked.");
         try {
-            if (refreshRosterAuto) {
-                await refreshRoster();
-                refreshRosterAuto = false;
-            }
             // @ts-ignore
             $('#wt-modal-overlay').css('display', 'flex');
         } catch (err) {
@@ -608,19 +609,13 @@ async function addExtensionSettings() {
 
 /**
  * @param {string} id
- * @param {boolean} reDownload
  */
-function handleRowDownloadClick(id, reDownload = false) {
-    if (selectedCharacters.size > 0) startDownload(Array.from(selectedCharacters), reDownload);
-    else startDownload([id], reDownload);
+function handleRowDownloadClick(id) {
+    if (selectedCharacters.size > 0) startTestDownload(Array.from(selectedCharacters));
+    else startTestDownload([id]);
 }
 
-/**
- * @param {*} targetIds 
- * @param {boolean} reDownload 
- * @returns 
- */
-async function startDownload(targetIds = [], reDownload = false) {
+async function startTestDownload(targetIds = []) {
     if (isProcessing || targetIds.length === 0) return;
     isProcessing = true;
 
@@ -779,7 +774,7 @@ async function startDownload(targetIds = [], reDownload = false) {
 
     try {
         addLine(`Transmitting handshake to backend API...`);
-        const response = await downloadCharacters(namesArray, reDownload);
+        const response = await downloadCharacters(namesArray);
         if (typeof response === 'string') throw new Error(response);
     } catch (err) {
         stream.close();
@@ -793,28 +788,6 @@ async function startDownload(targetIds = [], reDownload = false) {
     }
 }
 
-async function runAutoUpdate() {
-    try {
-        const manifests = manifestCache; if (typeof manifests === 'string') throw new Error(manifests);
-        if (!manifests?.pendingDiff?.characters) throw new Error(`pendingDiff missing or empty`);
-        const localCharList = manifests?.localManifest?.characters?.filter(c => c.version); if (!localCharList?.length) throw new Error(`localManifest missing or empty`);
-        const localCharSet = new Set(localCharList.map(c => c.name));
-        const pendingCharFiltered = manifests.pendingDiff.characters.filter(c => localCharSet.has(c.name)); if (!pendingCharFiltered?.length) return;
-        const updateOnlyNameList = pendingCharFiltered.map(c => c.name); if (!updateOnlyNameList?.length) return;
-        const updateCount = updateOnlyNameList.length;
-        // @ts-ignore
-        toastr.info(`Auto-Updating ${updateCount} character${updateCount > 1 ? `s` : ``}`);
-        const downloadResult = await downloadCharacters(updateOnlyNameList);
-        if (typeof downloadResult === 'string') throw new Error(downloadResult);
-        // @ts-ignore
-        toastr.info(`Auto-Update Complete`);
-        refreshRosterAuto = true;
-    } catch (error) {
-        console.error(`[${WT_DOWNLOAD_MODULE_NAME}] Failed to auto-update characters: ${error.message}`);
-        // @ts-ignore
-        toastr.error(`Character Auto-Update Failed`);
-    }
-}
 
 function bindWeylandEvents() {
     document.getElementById('btn-close-modal').addEventListener('click', (e) => {
@@ -852,9 +825,32 @@ function bindWeylandEvents() {
         setTimeout(() => { btn.innerHTML = originalHtml; btn.disabled = false; }, 2000);
     });
 
+    const searchInput = document.getElementById('wt-search-input');
+    const searchClear = document.getElementById('wt-search-clear');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const target = /** @type {HTMLInputElement} */ (e.target);
+            searchQuery = target.value;
+            if (searchClear) searchClear.style.display = searchQuery ? 'block' : 'none';
+            renderDownloader();
+        });
+    }
+    if (searchClear) {
+        searchClear.addEventListener('click', () => {
+            searchQuery = '';
+            if (searchInput) /** @type {HTMLInputElement} */ (searchInput).value = '';
+            searchClear.style.display = 'none';
+            renderDownloader();
+        });
+    }
+
+    document.getElementById('btn-open-terminal').addEventListener('click', () => {
+        showTerminal();
+    });
+
     document.getElementById('btn-check-updates').addEventListener('click', async (e) => {
         const btn = /** @type {HTMLButtonElement} */ (e.currentTarget); const originalHtml = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Checking...'; btn.disabled = true;
+        btn.innerHTML = '<span class="menu-btn-icon"><i class="fa-solid fa-spinner fa-spin"></i> Checking...</span>'; btn.disabled = true;
 
         if (!isDisconnected) {
             document.getElementById('banner-error').style.display = 'none';
@@ -868,16 +864,16 @@ function bindWeylandEvents() {
 
     document.getElementById('btn-update-chars').addEventListener('click', () => {
         const updatesOnly = filteredRenderData.filter(c => c.installed && c.updateAvailable).map(c => c.id);
-        if (updatesOnly.length > 0) startDownload(updatesOnly);
+        if (updatesOnly.length > 0) startTestDownload(updatesOnly);
     });
 
     document.getElementById('btn-dl-new').addEventListener('click', () => {
         const newOrUpdates = filteredRenderData.filter(c => !c.installed || c.updateAvailable).map(c => c.id);
-        if (newOrUpdates.length > 0) startDownload(newOrUpdates);
+        if (newOrUpdates.length > 0) startTestDownload(newOrUpdates);
     });
 
     document.getElementById('btn-dl-selected').addEventListener('click', () => {
-        if (selectedCharacters.size > 0) startDownload(Array.from(selectedCharacters));
+        if (selectedCharacters.size > 0) startTestDownload(Array.from(selectedCharacters));
     });
 
     document.getElementById('btn-dl-cancel').addEventListener('click', () => {
@@ -914,8 +910,7 @@ function bindWeylandEvents() {
     document.getElementById('btn-info-dl').addEventListener('click', (e) => {
         const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
         const id = currentTarget.getAttribute('data-id');
-        weylandDebug(`ID:`,id);
-        if (id) handleRowDownloadClick(id, true);
+        if (id) handleRowDownloadClick(id);
     });
 
     document.querySelectorAll('.sortable').forEach(header => {
@@ -978,6 +973,22 @@ jQuery(async () => {
     bindWeylandEvents();
     await refreshRoster();
     if (settings.autoupdate) {
-        await runAutoUpdate();
+        try {
+            const manifests = manifestCache;
+            if (typeof manifests === 'string') throw new Error(manifests);
+            const updateCount = manifests?.pendingDiff?.characters?.length;
+            if (updateCount && updateCount > 0) {
+                // @ts-ignore
+                toastr.info(`Auto-Updating ${updateCount} character${updateCount > 1 ? `s` : ``}`);
+                const downloadResult = await downloadCharacters(listCharacters(manifests.pendingDiff));
+                if (typeof downloadResult === 'string') throw new Error(downloadResult);
+                // @ts-ignore
+                toastr.info(`Auto-Update Complete`);
+            }
+        } catch (error) {
+            console.error(`[${WT_DOWNLOAD_MODULE_NAME}] Failed to auto-update characters: ${error.message}`);
+            // @ts-ignore
+            toastr.error(`Character Auto-Update Failed`);
+        }
     }
 });
