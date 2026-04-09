@@ -98,6 +98,7 @@ if (!cliArgs.enableIPv6 && !cliArgs.enableIPv4) {
 const app = express();
 app.use(helmet({
     contentSecurityPolicy: false,
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, //WEYLAND-TAVERN ADDITION
 }));
 app.use(compression());
 app.use(responseTime());
