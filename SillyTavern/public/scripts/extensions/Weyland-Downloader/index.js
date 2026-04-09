@@ -10,6 +10,7 @@ export const WT_DOWNLOAD_MODULE_NAME = "Weyland-Downloader";
 
 const extensionVersion = "1.0.0";
 const extensionDirectory = '/scripts/extensions/Weyland-Downloader';
+let refreshRosterAuto = false;
 
 /**
  * @typedef {Object} WeylandDownloaderSettings
@@ -595,6 +596,10 @@ async function addExtensionSettings() {
     $('#weylandOpenDownloader').on('click', async function () {
         weylandDebug("Open Downloader clicked.");
         try {
+            if (refreshRosterAuto) {
+                await refreshRoster();
+                refreshRosterAuto = false;
+            }
             // @ts-ignore
             $('#wt-modal-overlay').css('display', 'flex');
         } catch (err) {
@@ -800,6 +805,29 @@ async function startDownload(targetIds = [], reDownload = false) {
     }
 }
 
+async function runAutoUpdate() {
+    try {
+        const manifests = manifestCache; if (typeof manifests === 'string') throw new Error(manifests);
+        if (!manifests?.pendingDiff?.characters) throw new Error(`pendingDiff missing or empty`);
+        const localCharList = manifests?.localManifest?.characters?.filter(c => c.version); if (!localCharList) throw new Error(`localManifest missing or empty`);
+        const localCharSet = new Set(localCharList.map(c => c.name));
+        const pendingCharFiltered = manifests.pendingDiff.characters.filter(c => localCharSet.has(c.name)); if (!pendingCharFiltered) return;
+        const updateOnlyNameList = pendingCharFiltered.map(c => c.name); if (!updateOnlyNameList) return;
+        const updateCount = updateOnlyNameList.length;
+        // @ts-ignore
+        toastr.info(`Auto-Updating ${updateCount} character${updateCount > 1 ? `s` : ``}`);
+        const downloadResult = await downloadCharacters(updateOnlyNameList);
+        if (typeof downloadResult === 'string') throw new Error(downloadResult);
+        // @ts-ignore
+        toastr.info(`Auto-Update Complete`);
+        refreshRosterAuto = true;
+    } catch (error) {
+        console.error(`[${WT_DOWNLOAD_MODULE_NAME}] Failed to auto-update characters: ${error.message}`);
+        // @ts-ignore
+        toastr.error(`Character Auto-Update Failed`);
+    }
+}
+
 
 function bindWeylandEvents() {
     document.getElementById('btn-close-modal').addEventListener('click', (e) => {
@@ -985,22 +1013,6 @@ jQuery(async () => {
     bindWeylandEvents();
     await refreshRoster();
     if (settings.autoupdate) {
-        try {
-            const manifests = manifestCache;
-            if (typeof manifests === 'string') throw new Error(manifests);
-            const updateCount = manifests?.pendingDiff?.characters?.length;
-            if (updateCount && updateCount > 0) {
-                // @ts-ignore
-                toastr.info(`Auto-Updating ${updateCount} character${updateCount > 1 ? `s` : ``}`);
-                const downloadResult = await downloadCharacters(listCharacters(manifests.pendingDiff));
-                if (typeof downloadResult === 'string') throw new Error(downloadResult);
-                // @ts-ignore
-                toastr.info(`Auto-Update Complete`);
-            }
-        } catch (error) {
-            console.error(`[${WT_DOWNLOAD_MODULE_NAME}] Failed to auto-update characters: ${error.message}`);
-            // @ts-ignore
-            toastr.error(`Character Auto-Update Failed`);
-        }
+        await runAutoUpdate();
     }
 });
