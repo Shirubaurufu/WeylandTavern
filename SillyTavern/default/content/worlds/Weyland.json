@@ -196,8 +196,8 @@
         "3": {
             "uid": 3,
             "key": [
-                "Willow's room",
-                "Willow's dorm room",
+                "/Willow.?s room/",
+                "/Willow.?s dorm/",
                 "(#283)",
                 "room 383"
             ],
@@ -1105,8 +1105,8 @@
         "15": {
             "uid": 15,
             "key": [
-                "Rivera's dorm",
-                "Rivera's room",
+                "/Rivera.?s room/",
+                "/Rivera.?s dorm/",
                 "room 282",
                 "(#282)"
             ],
@@ -1723,8 +1723,8 @@
         "23": {
             "uid": 23,
             "key": [
-                "Rivet's room",
-                "Rivet's dorm room",
+                "/Rivet.?s room/",
+                "/Rivet.?s dorm/",
                 "(#270)",
                 "room 270"
             ],
@@ -2034,9 +2034,9 @@
         },
         "27": {
             "key": [
-                "Aiko's room",
-                "Aiko's bedroom",
-                "Kinsbane"
+                "Kinsbane",
+                "/Aiko.?s room/",
+                "/Aiko.?s bedroom/"
             ],
             "keysecondary": [],
             "comment": "Aiko Room",
@@ -4103,17 +4103,20 @@
         "54": {
             "uid": 54,
             "key": [
+                "/Astrid.?s room/",
+                "/Astrid.?s dorm/",
+                "/Astrid.?s trailer/",
+                "/Astrid.?s bedroom/",
+                "/Neshe.?s room/",
+                "/Neshe.?s dorm/",
+                "/Neshe.?s trailer/",
+                "/Neshe.?s bedroom/",
+                "/Fawne.?s room/",
+                "/Fawne.?s dorm/",
+                "/Fawne.?s trailer/",
+                "/Fawne.?s bedroom/",
                 "Soft Pike",
-                "trailer",
-                "Astrid's home",
-                "Astrid's trailer",
-                "Astrid's room",
-                "Fawne's home",
-                "Fawne's trailer",
-                "Fawne's room",
-                "Neshe's home",
-                "Neshe's trailer",
-                "Neshe's room"
+                "trailer"
             ],
             "keysecondary": [],
             "comment": "Cerberus Sisters' Trailer",
@@ -4176,12 +4179,7 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "55": {
             "key": [
@@ -4329,7 +4327,12 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "57": {
             "key": [
@@ -4565,8 +4568,8 @@
         "60": {
             "uid": 60,
             "key": [
-                "Briar's room",
-                "Briar's dorm room",
+                "/Briar.?s room/",
+                "/Briar.?s dorm/",
                 "(#309)",
                 "room 309",
                 "pet rock",
@@ -4633,12 +4636,7 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "61": {
             "key": [
@@ -4720,8 +4718,8 @@
         "62": {
             "uid": 62,
             "key": [
-                "Eve's room",
-                "Eve's dorm room",
+                "/Eve.?s room/",
+                "/Eve.?s dorm/",
                 "(#317)",
                 "room 317"
             ],
@@ -4786,12 +4784,7 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "63": {
             "key": [
@@ -6189,8 +6182,8 @@
         },
         "81": {
             "key": [
-                "Summer's dorm",
-                "Summer's room",
+                "/Summer.?s room/",
+                "/Summer.?s dorm/",
                 "room 279",
                 "(#279)"
             ],
@@ -6266,8 +6259,8 @@
         "82": {
             "uid": 82,
             "key": [
-                "Rosa's room",
-                "Rosa's dorm room",
+                "/Rosa.?s room/",
+                "/Rosa.?s dorm/",
                 "(#315)",
                 "room 315"
             ],
@@ -6332,12 +6325,7 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "83": {
             "key": [
@@ -11195,7 +11183,10 @@
         },
         "146": {
             "uid": 146,
-            "key": [],
+            "key": [
+                "/Nara.?s room/",
+                "/Nara.?s dorm/"
+            ],
             "keysecondary": [],
             "comment": "Nara Room",
             "content": "",
@@ -11317,10 +11308,10 @@
         },
         "148": {
             "key": [
-                "Ava's room",
-                "Ava's dorm",
                 "(#294)",
-                "room 294"
+                "room 294",
+                "/Ava.?s room/",
+                "/Ava.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Ava Room",
@@ -11623,10 +11614,10 @@
         },
         "152": {
             "key": [
-                "Bianca's room",
-                "Bianca's dorm",
                 "(#290)",
-                "room 290"
+                "room 290",
+                "/Bianca.?s room/",
+                "/Bianca.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Bianca Room",
@@ -11699,10 +11690,10 @@
         },
         "153": {
             "key": [
-                "Blake's room",
-                "Blake's dorm",
                 "(#271)",
-                "room 271"
+                "room 271",
+                "/Blake.?s room/",
+                "/Blake.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Blake & {{user}}'s Room",
@@ -11775,10 +11766,10 @@
         },
         "154": {
             "key": [
-                "Cairo's room",
-                "Cairo's dorm",
                 "(#275)",
-                "room 275"
+                "room 275",
+                "/Cario.?s room/",
+                "/Cario.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Cairo Room",
@@ -11851,10 +11842,10 @@
         },
         "155": {
             "key": [
-                "Karmen's room",
-                "karmen's dorm",
                 "(#311)",
-                "room 311"
+                "room 311",
+                "/Karmen.?s room/",
+                "/Karmen.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Karmen Room",
@@ -11927,9 +11918,9 @@
         },
         "156": {
             "key": [
-                "Hannah's room",
-                "Hannah's apartment",
-                "apartment"
+                "/Hannah.?s room/",
+                "/Hannah.?s bedroom/",
+                "/Hannah.?s apartment/"
             ],
             "keysecondary": [],
             "comment": "Hannah Room",
@@ -12083,10 +12074,10 @@
         },
         "158": {
             "key": [
-                "Indigo's room",
-                "Indigo's dorm",
                 "(#284)",
-                "room 284"
+                "room 284",
+                "/Indigo.?s room/",
+                "/Indigo.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Indigo Room",
@@ -12159,12 +12150,12 @@
         },
         "159": {
             "key": [
-                "Luna's room",
-                "Luna's dorm",
                 "(#274)",
                 "room 274",
-                "Gem's room",
-                "Gem's dorm"
+                "/Gem.?s room/",
+                "/Luna.?s room/",
+                "/Gem.?s dorm/",
+                "/Luna.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Gem & Luna Room",
@@ -12237,12 +12228,12 @@
         },
         "160": {
             "key": [
-                "Fasti's room",
-                "Fasti's dorm",
                 "(#292)",
                 "room 292",
-                "Vera's room",
-                "Vera's dorm"
+                "/Vera.?s room/",
+                "/Fasti.?s room/",
+                "/Vera.?s dorm/",
+                "/Fasti.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Fasti & Vera Room",
@@ -12315,10 +12306,10 @@
         },
         "161": {
             "key": [
-                "Ellie's room",
-                "Ellie's dorm",
                 "(#109)",
-                "room 109"
+                "room 109",
+                "/Ellie's.?s room/",
+                "/Ellie.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Ellie Room",
@@ -12391,12 +12382,12 @@
         },
         "162": {
             "key": [
-                "jenn's room",
-                "jenn's dorm",
                 "(#268)",
                 "room 268",
-                "lucy's dorm",
-                "lucy's room"
+                "/Jenn.?s room/",
+                "/Lucy.?s room/",
+                "/Lucy.?s dorm/",
+                "/Jenn.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Jenn & Lucy Room",
@@ -12469,14 +12460,14 @@
         },
         "163": {
             "key": [
-                "Kai's room",
-                "kai's dorm",
                 "(#273)",
                 "room 273",
-                "kiera's room",
-                "kiera's dorm",
                 "Nibbles",
-                "goldfish"
+                "goldfish",
+                "/Kai.?s room/",
+                "/Kiera.?s room/",
+                "/Kai.?s dorm/",
+                "/Kiera.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Kai & Kiera Room",
@@ -12549,10 +12540,10 @@
         },
         "164": {
             "key": [
-                "Lentyl's room",
-                "Lentyl's dorm",
                 "(#376)",
-                "room 376"
+                "room 376",
+                "/Lentyl.?s room/",
+                "/Lentyl.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Lentyl Room",
@@ -12625,10 +12616,9 @@
         },
         "165": {
             "key": [
-                "Seth's apartment",
-                "Seth's  room",
-                "apartment",
-                "Seth's bedroom"
+                "/Seth.?s room/",
+                "/Seth.?s bedroom/",
+                "/Seth.?s apartment/"
             ],
             "keysecondary": [],
             "comment": "Seth Room",
@@ -12703,10 +12693,11 @@
         },
         "166": {
             "key": [
-                "Koshizu's room",
-                "Koshizu's dorm",
                 "(#280)",
-                "room 280"
+                "room 280",
+                "/Koshizu.?s room/",
+                "/Koshizu.?s dorm/",
+                "/Koko.?s room/"
             ],
             "keysecondary": [],
             "comment": "Koshizu Room",
@@ -12779,14 +12770,14 @@
         },
         "167": {
             "key": [
-                "Lyris' room",
-                "Lyris' bedroom",
-                "Lyris' home",
-                "Vesper's room",
-                "Vesper's bedroom",
-                "Vesper's home",
-                "Vesper's house",
-                "Lyris' house"
+                "/Lyris.? room/",
+                "/Lyris.? house/",
+                "/Lyris.? bedroom/",
+                "/Lyrs.? home/",
+                "/Vesper.?s room/",
+                "/Vesper.?s house/",
+                "/Vesper.?s bedroom/",
+                "/Vesper.?s home/"
             ],
             "keysecondary": [],
             "comment": "Lyris & Vesper Room",
@@ -12859,10 +12850,10 @@
         },
         "168": {
             "key": [
-                "Kris' room",
-                "Kris' dorm",
                 "(#276)",
-                "room 276"
+                "room 276",
+                "/Kris.?s room/",
+                "/Kris.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Kris Room",
@@ -12935,10 +12926,10 @@
         },
         "169": {
             "key": [
-                "Lucy's room",
-                "Lucy's dorm",
                 "(#268)",
-                "room 268"
+                "room 268",
+                "/Lucy.?s room/",
+                "/Lucy.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Lucy Room (Solo)",
@@ -13088,10 +13079,10 @@
         },
         "171": {
             "key": [
-                "Lurkle's room",
-                "Lurkle's dorm",
                 "(#171)",
-                "room 171"
+                "room 171",
+                "/Lurkle.?s room/",
+                "/Lurkle.?s dorm/"
             ],
             "keysecondary": [],
             "comment": "Lurkle Room",
@@ -13241,10 +13232,12 @@
         },
         "173": {
             "key": [
-                "Khepri's room",
-                "Khepri's residence",
-                "Sobek's room",
-                "Shani's room",
+                "/Khepri.?s room/",
+                "/Khepri.?s residence/",
+                "/Sobek.?s room/",
+                "/Sobek.?s residence/",
+                "/Shani.?s room/",
+                "/Shani.?s residence/",
                 "moonstone"
             ],
             "keysecondary": [],
@@ -13395,11 +13388,9 @@
         },
         "175": {
             "key": [
-                "Warren's room",
-                "student apartment",
-                "bedroom",
-                "Warren's apartment",
-                "student housing"
+                "/Warren.?s room/",
+                "/Warren.?s apartment/",
+                "/Warren.?s bedroom/"
             ],
             "keysecondary": [],
             "comment": "Warren Room",
@@ -13550,8 +13541,8 @@
         },
         "177": {
             "key": [
-                "Mika's room",
-                "Mika's dorm",
+                "/Mika.?s room/",
+                "/Mika.?s dorm/",
                 "(#269)",
                 "room 269"
             ],
@@ -13626,8 +13617,8 @@
         },
         "178": {
             "key": [
-                "Nix's room",
-                "Nix's dorm",
+                "/Nix.?s room/",
+                "/Nix.?s dorm/",
                 "(#283)",
                 "room 283"
             ],
@@ -13702,12 +13693,11 @@
         },
         "179": {
             "key": [
-                "Rein's apartment",
-                "Rein's room",
-                "apartment",
-                "Rein's bedroom",
-                "Rein's living room",
-                "Mark's office"
+                "/Rein.?s room/",
+                "/Rein.?s apartment/",
+                "/Mark.?s office/",
+                "/Rein.?s bedroom/",
+                "/Rein.?s living/"
             ],
             "keysecondary": [],
             "comment": "Rein Room",
@@ -13780,12 +13770,11 @@
         },
         "180": {
             "key": [
-                "Serra's apartment",
-                "Serra's room",
-                "apartment",
-                "Serra's bedroom",
-                "Serra's living room",
-                "\"watch the rain\""
+                "\"watch the rain\"",
+                "/Serra.?s room/",
+                "/Serra.?s bedroom/",
+                "/Serra.?s living/",
+                "/Serra.?s apartment/"
             ],
             "keysecondary": [],
             "comment": "Serra Room",
@@ -16056,10 +16045,10 @@
         "213": {
             "uid": 213,
             "key": [
-                "Remy's trailer",
-                "Remy's home",
-                "Remy's room",
-                "Remy's bedroom",
+                "/Remy.?s room/",
+                "/Remy.?s bedroom/",
+                "/Remy.?s home/",
+                "/Remy.?s trailer/",
                 "trailer #4"
             ],
             "keysecondary": [],
@@ -16123,11 +16112,6 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
             }
         },
         "214": {
@@ -16435,12 +16419,14 @@
         "218": {
             "uid": 218,
             "key": [
-                "Adler's trailer",
                 "Alder Trailer",
-                "Lentyl's home",
                 "trailer #17",
                 "Adler family home",
-                "Adler home"
+                "Adler home",
+                "/Adler.?s trailer/",
+                "/Lentyl.?s home/",
+                "/Emily.?s room/",
+                "/Emily.?s bedroom/"
             ],
             "keysecondary": [],
             "comment": "Adler's Trailer",
@@ -16503,11 +16489,6 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
             }
         },
         "219": {
@@ -16746,13 +16727,15 @@
         "222": {
             "uid": 222,
             "key": [
-                "Bastet's room",
-                "Bastet's residence",
-                "Nefara's room",
-                "sunstone",
-                "Miu's room",
-                "Miu's residence",
-                "Nefara's residence"
+                "/Bastet.?s room/",
+                "/Bastet.?s residence/",
+                "/Nefara.?s room/",
+                "/Nefara.?s residence/",
+                "/Miu.?s room/",
+                "/Miu.?s residence/",
+                "/Ahset.?s room/",
+                "/Ahset.?s residence/",
+                "sunstone"
             ],
             "keysecondary": [],
             "comment": "Sunstone Pavilion",
@@ -17059,7 +17042,11 @@
                 "kemetic",
                 "sunrise festival",
                 "Egypt",
-                "caravan"
+                "caravan",
+                "May",
+                "Caravan",
+                "Kemetic",
+                "Sunrise Festival"
             ],
             "keysecondary": [],
             "comment": "Caravan Roster",
@@ -17089,7 +17076,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 4,
-            "caseSensitive": false,
+            "caseSensitive": true,
             "matchWholeWords": null,
             "useGroupScoring": false,
             "automationId": "Roster",
@@ -17275,8 +17262,8 @@
         "230": {
             "uid": 230,
             "key": [
-                "Yue-Lin's room",
-                "Yue-Lin's dorm",
+                "/Yue-Lin.?s room/",
+                "/Yue-Lin.?s dorm/",
                 "(#288)",
                 "room 288"
             ],
@@ -18423,6 +18410,11 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "245": {
