@@ -129,7 +129,13 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "drunk",
+                "drink",
+                "drinking",
+                "hiccup",
+                "hic"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
