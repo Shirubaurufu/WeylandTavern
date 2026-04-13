@@ -43,6 +43,18 @@ const findImage = async (character, expression) => {
     return null;
 };
 
+const getSideCharacterWidth = () => {
+    const sheld = document.getElementById('sheld');
+    if (sheld) {
+        const sheldRect = sheld.getBoundingClientRect();
+        const availableWidth = window.innerWidth - sheldRect.right;
+        if (availableWidth > 50) { // Only use if there's meaningful space
+            return `${availableWidth}px`;
+        }
+    }
+    return null; // Fall back to default
+};
+
 const updateSideCharacter = async (args) => {
     // Parse clear parameter
     const shouldClear = args.clear === 'true';
@@ -53,6 +65,7 @@ const updateSideCharacter = async (args) => {
     
     // If clearing, just remove and return
     if (shouldClear) {
+        window.removeEventListener('resize', window._sclResizeHandler);
         return 'Side character cleared';
     }
     
@@ -88,7 +101,8 @@ const updateSideCharacter = async (args) => {
     }
     
     // Only use expression image dimensions if height is at least 150px
-    const defaultWidth = (imgHeight >= 125) ? `${imgWidth}px` : '500px';
+    const autoWidth = getSideCharacterWidth();
+    const defaultWidth = autoWidth || ((imgHeight >= 125) ? `${imgWidth}px` : '500px');
     const defaultHeight = (imgHeight >= 125) ? `${imgHeight}px` : '1200px';
     
     // Parse parameters with defaults
@@ -129,6 +143,11 @@ const updateSideCharacter = async (args) => {
         }
     `;
     document.head.appendChild(style);
+
+    // Re-run on window resize to keep width in sync with #sheld
+    window.removeEventListener('resize', window._sclResizeHandler);
+    window._sclResizeHandler = () => updateSideCharacter(args);
+    window.addEventListener('resize', window._sclResizeHandler);
     
     return `Side character set to: ${character} - ${expression}`;
 };
