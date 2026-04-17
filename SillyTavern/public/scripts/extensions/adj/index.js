@@ -56,7 +56,8 @@ const ltm = 0.4;
                 body.temperature = def;
                 if (body.messages.findLast(({role, content}) => role === "user" && (content.constructor === Array ? content.find(x => x.type === "text").text : content).startsWith("LTM Creation in Pro"))) {
                     body.temperature = ltm;
-                    body.custom_include_body = body.custom_include_body.replace(/(?:(?:\\n)?- ?)?temperature: \d\.\d/g,"");
+                    if (typeof body?.custom_include_body === 'string')
+                        body.custom_include_body = body.custom_include_body.replace(/(?:(?:\\n)?- ?)?temperature: \d\.\d/g,"");
                 }
                 request.body = JSON.stringify(body);
             }
