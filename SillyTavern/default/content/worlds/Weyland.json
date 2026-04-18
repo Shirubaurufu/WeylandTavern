@@ -784,6 +784,7 @@
             "characterFilter": {
                 "isExclude": true,
                 "names": [
+                    "Aiko",
                     "Kinsbane Manor"
                 ],
                 "tags": [
@@ -881,7 +882,7 @@
             ],
             "keysecondary": [],
             "comment": "!Heat",
-            "content": "[OOC: !Heat Command - {{char}} goes into their monthly heat cycle. They should have decreased inhibitions, should be blushy with arousal and their dialogue should be frequently interrupted with fidgeting until they find an outlet for their lust. To show {{user}} that the command has worked, {{char}} will begin to fidget and blush deeply. If {{user}} and {{char}} have an intimate sexual relationship, {{char}} will seek to find a private spot with {{user}} to find relief. If {{user}} and {{char}} do not have an intimate relationship, {{char}} will seek to leave if possible and find a private spot to relief their lusts on their own. It is important to not allow the roleplay shift to overwrite {{char}}'s underlying personality. Interweave it with the existing character, ensuring the character retains their personality even in arousal.]",
+            "content": "{{getglobalvar::!Heat}}",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -1949,11 +1950,7 @@
         "26": {
             "uid": 26,
             "key": [
-                "in heat",
-                "heat cycle",
                 "period",
-                "monthly cycle",
-                "monthly heat",
                 "cycle",
                 "heat",
                 "climax",
@@ -1963,7 +1960,7 @@
             ],
             "keysecondary": [],
             "comment": "Heat",
-            "content": "[HEAT CYCLES]\nKemonomimis go into 'heat cycles' during their fertile period once a month instead of having a traditional period, though the two share many similarities. Heat cycles are as common knowledge as periods, and {{char}} should NEVER be surprised that {{user}} knows how heat cycles work. Heat cycles last about 2~3 day. The heat cycle will ONLY END EARLY IF the female is impregnated.\n\nWhile in heat, affected individuals:\n- have a significantly increased risk of pregnancy as eggs are released\n- will feel unusually heightened arousal and libido\n- often seek solitude or same-sex companionship to avoid unwanted encounters\n- experience intrusive thoughts driving them to reproduce that vary in intensity throughout the day\n- may give off increased pheromones\n- may be rougher and more forceful than usual during intimacy\n[END HEAT CYCLES]\n-----  ",
+            "content": "{{getglobalvar::HeatCycle}}",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -4179,7 +4176,12 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "55": {
             "key": [
@@ -4636,7 +4638,12 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "61": {
             "key": [
@@ -4784,7 +4791,12 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "63": {
             "key": [
@@ -6325,7 +6337,12 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "83": {
             "key": [
@@ -7641,7 +7658,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Okamimimi Trait",
-            "content": "[OKAMIMIMI TRAIT] {{char}} is an okamimimi. Okamimimi are often referred to as a wolfboy or wolfgirl depending on gender. It is also commonly shortened to okami.\n\nCOMMON - ~30% of population of Weyland\n\nOkami appear predominantly human with distinctive wolf features: pointed, furry ears positioned on top of their head and a matching furry tail. Their fur coloration varies greatly - natural hair colors of okamimimi are exotic, with blue, red and green being most common, followed by black, grey, brown, cyan and, rarely, other colors. Their hands appear completely human, though they possess retractable claws that only emerge when emotionally triggered or consciously extended. Okamimimi have pronounced canine teeth and their blush colors often match their fur tone rather than human pinks (like Luna's purple blush). Okamimimi tend to be naturally strong and have heightened senses, particularly smell and hearing, though not to supernatural levels. They typically blend into human society relatively easily compared to some other demihuman types, though historical prejudices still occasionally surface.\n\nTraits: retractable claws (only come out when highly stressed); NO HUMAN EARS (only wolf ears)\n\nIMPORTANT NOTE ON DEMIHUMAN ANATOMY: When describing demihuman characters, remember their hands appear completely human by default. Their claws are fully retractable and hidden within normal-looking fingertips. Never describe \"claws\" during casual interactions—instead use terms like \"fingers,\" \"hands,\" or \"fingertips.\" Claws should only be explicitly mentioned when: 1) The character is frightened, angry, or threatened, causing involuntary extension, 2) The character consciously chooses to extend them for a specific purpose, or 3) During intimate moments where they might carefully and deliberately extend them. Always make the extension of claws an intentional and noticeable event (e.g., \"her claws slowly emerged from her fingertips\" or \"she felt her claws extend involuntarily as fear gripped her\"). Never refer to normal finger interactions as involving claws when they're retracted.\n\nCulture: Okamimimi and Nekomimi have been integrated into European society for centuries, facing minimal discrimination in modern times - comparable to how Irish or French discrimination is now considered archaic.\n\nMATE-MARKING: Traditionally, mates would bite each other's necks hard enough to draw blood and create permanent scars. These bite patterns serve as unique, visible \"signatures\" marking bonded pairs. Unlike rings, mate-marks cost nothing financially - their price is pain and permanence.\nModern attitudes toward mate-marking are mixed. Many now choose wedding rings instead, having seen their parents' generation bearing marks from failed relationships. Those with mate-marks today may be viewed as either deeply committed or impulsively naive. Early-life mate-marking (particularly during school years) carries significant social stigma, similar to teenage pregnancy.\n\nSCENT MARKING: One tradition that persists is scent marking using cheek glands. This subtle practice remains important for marking mates and close friends, though the scent is often indistinguishable to non-okami.\n\nSub-variants: Okamimimi is a broad identifier for the demihumans of the canis family. Most commonly, okami are simply wolf demihumans, making up the overwhelming majority.\nHowever, some subvariants of okami can be seen.\n- Jackal - Rare. Native to Africa and Eurasia. Leaner, larger ears, built for endurance over strength. Dark hair colors.\n- Coyote - 10% of all okami. Native to NA. Leaner, scrappy, pointier, larger ears, built for endurance over strength. Earthy hair colors.\n- Inumimi would technically be considered subvariants, but are widely accepted as their own species.\n\nNote: While playing as an Okamimimi, it is essential that tail and ear behavior be incorporated into responses. Okami tails behave not unlike dog tails. [END OKAMIMIMI TRAIT]\n-----",
+            "content": "[OKAMIMIMI TRAIT]\n{{char}} is an okamimimi. Okamimimi are often referred to as a wolfboy or wolfgirl depending on gender. It is also commonly shortened to okami.\n\nCOMMON - ~30% of population of Weyland\n\nOkami appear predominantly human with distinctive wolf features: pointed, furry ears positioned on top of their head and a matching furry tail. Their fur coloration varies greatly - natural hair colors of okamimimi are exotic, with blue, red and green being most common, followed by black, grey, brown, cyan and, rarely, other colors. Their hands appear completely human, though they possess retractable claws that only emerge when emotionally triggered or consciously extended. Okamimimi have pronounced canine teeth and their blush colors often match their fur tone rather than human pinks (like Luna's purple blush). Okamimimi tend to be naturally strong and have heightened senses, particularly smell and hearing, though not to supernatural levels. They typically blend into human society relatively easily compared to some other demihuman types, though historical prejudices still occasionally surface.\n\nTraits: retractable claws (only come out when highly stressed); NO HUMAN EARS (only wolf ears)\n\nIMPORTANT NOTE ON DEMIHUMAN ANATOMY: When describing demihuman characters, remember their hands appear completely human by default. Their claws are fully retractable and hidden within normal-looking fingertips. Never describe \"claws\" during casual interactions—instead use terms like \"fingers,\" \"hands,\" or \"fingertips.\" Claws should only be explicitly mentioned when: 1) The character is frightened, angry, or threatened, causing involuntary extension, 2) The character consciously chooses to extend them for a specific purpose, or 3) During intimate moments where they might carefully and deliberately extend them. Always make the extension of claws an intentional and noticeable event (e.g., \"her claws slowly emerged from her fingertips\" or \"she felt her claws extend involuntarily as fear gripped her\"). Never refer to normal finger interactions as involving claws when they're retracted.\n\nCulture: Okamimimi and Nekomimi have been integrated into European society for centuries, facing minimal discrimination in modern times - comparable to how Irish or French discrimination is now considered archaic.\n\nMATE-MARKING: Traditionally, mates would bite each other's necks hard enough to draw blood and create permanent scars. These bite patterns serve as unique, visible \"signatures\" marking bonded pairs. Unlike rings, mate-marks cost nothing financially - their price is pain and permanence.\nModern attitudes toward mate-marking are mixed. Many now choose wedding rings instead, having seen their parents' generation bearing marks from failed relationships. Those with mate-marks today may be viewed as either deeply committed or impulsively naive. Early-life mate-marking (particularly during school years) carries significant social stigma, similar to teenage pregnancy.\n\nSCENT MARKING: One tradition that persists is scent marking using cheek glands. This subtle practice remains important for marking mates and close friends, though the scent is often indistinguishable to non-okami.\n\nSub-variants: Okamimimi is a broad identifier for the demihumans of the canis family. Most commonly, okami are simply wolf demihumans, making up the overwhelming majority.\nHowever, some subvariants of okami can be seen.\n- Jackal - Rare. Native to Africa and Eurasia. Leaner, larger ears, built for endurance over strength. Dark hair colors.\n- Coyote - 10% of all okami. Native to NA. Leaner, scrappy, pointier, larger ears, built for endurance over strength. Earthy hair colors.\n- Inumimi would technically be considered subvariants, but are widely accepted as their own species.\n\nNote: While playing as an Okamimimi, it is essential that tail and ear behavior be incorporated into responses. Okami tails behave not unlike dog tails.\n[END OKAMIMIMI TRAIT]\n-----",
             "constant": true,
             "vectorized": false,
             "selective": true,
@@ -16112,6 +16129,11 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "214": {
@@ -16489,6 +16511,11 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "219": {
