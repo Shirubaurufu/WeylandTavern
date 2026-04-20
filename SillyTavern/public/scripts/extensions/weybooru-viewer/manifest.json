@@ -1,0 +1,12 @@
+{
+  "display_name": "Weybooru Viewer",
+  "loading_order": 10,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "Lucky / Sakurai Armory",
+  "version": "0.3.1",
+  "homePage": "https://weybooru.com",
+  "auto_update": false
+}

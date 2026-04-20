@@ -1,0 +1,1907 @@
+/* ===========================================================================
+   Weybooru Viewer — SillyTavern Extension v0.2.0
+   Architecture & design tokens borrowed from Weyland Downloader (by Mika)
+   for visual consistency across the Weyland extension family.
+   =========================================================================== */
+
+/* =========================================
+   THEME & SCOPING
+   ========================================= */
+.st-modal-overlay#wbv-modal-overlay {
+  /* Mika's brand palette — shared with Weyland Downloader */
+  --rb-bg-darkest: #0e0e0e;
+  --rb-bg-pane:    #181818;
+  --rb-bg-hover:   #2a2a2a;
+  --rb-border:     #333333;
+  --rb-accent:     #ffffff;
+  --rb-text-main:  #dfdfdf;
+  --rb-text-muted: #888888;
+  --rb-success:    #00ff00;
+  --rb-danger:     #ff3333;
+  --rb-warning:    #ffcc00;
+
+  /* Weybooru-specific accents — used for highlights/active states */
+  --wbv-teal:    #3ecfbf;
+  --wbv-teal-dim: #2aa898;
+  --wbv-fav:     #e05a7a;
+  --wbv-like:    #e7b84d;
+  --wbv-pink:    #f7a8c0;
+  --wbv-teal-glow: rgba(62, 207, 191, 0.25);
+
+  --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: var(--rb-text-main);
+  font-family: var(--font-family);
+}
+
+#wbv-modal-overlay,
+#wbv-modal-overlay * {
+  box-sizing: border-box;
+}
+
+#wbv-modal-overlay i.fa-tags{
+  position:relative;
+  top:1.5px;
+}
+
+#wbv-modal-overlay i.fa-thumbs-up{
+  position:relative;
+  top:-0.5px;
+  left:1px
+}
+
+
+#wbv-play-btn i{
+  position:relative;
+  top:0.5px;
+}
+#wbv-play-btn span{
+  position:relative;
+  top:-1px
+}
+
+/* Custom scrollbars inside the modal */
+#wbv-modal-overlay ::-webkit-scrollbar { width: 8px; height: 8px; }
+#wbv-modal-overlay ::-webkit-scrollbar-track {
+  background: var(--rb-bg-darkest);
+  border-left: 1px solid var(--rb-border);
+}
+#wbv-modal-overlay ::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 0;
+}
+#wbv-modal-overlay ::-webkit-scrollbar-thumb:hover { background: #666; }
+
+/* Reset ST global form styles inside the overlay */
+#wbv-modal-overlay button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* width: 40px; */
+}
+#wbv-modal-overlay #wbv-ctrl-inner button{
+  width:40px;
+}
+/* Styled fields skip reset: #overlay input[type=password] beats #overlay .wbv-inp-sm. */
+#wbv-modal-overlay input[type="text"]:not(.wbv-inp-sm):not(.wbv-inp),
+#wbv-modal-overlay input[type="password"]:not(.wbv-inp-sm):not(.wbv-inp),
+#wbv-modal-overlay input[type="number"]:not(.wbv-inp-sm):not(.wbv-inp),
+#wbv-modal-overlay textarea:not(.wbv-inp),
+#wbv-modal-overlay select {
+  all: unset;
+  box-sizing: border-box;
+  font-family: inherit;
+  display: block;
+}
+#wbv-modal-overlay input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: var(--wbv-teal);
+}
+
+.wbv-hidden { display: none !important; }
+
+/* =========================================
+   MODAL & LAYOUT GRID
+   ========================================= */
+#wbv-modal-overlay .st-modal-window {
+  width: 95vw;
+  max-width: 1600px;
+  height: 90vh;
+  height: 90dvh;
+  background: var(--rb-bg-darkest);
+  border: 1px solid var(--rb-border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+#wbv-modal-overlay #wbv-app-container {
+  position: relative;
+}
+
+#wbv-modal-overlay .st-modal-header {
+  height: 44px;
+  background: var(--rb-bg-pane);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--rb-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+#wbv-brand-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+#wbv-brand-header:hover { color: var(--wbv-teal); }
+.wbv-brand-text {
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.wbv-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+#wbv-modal-overlay .wbv-icon-btn {
+  background: none;
+  color: var(--rb-text-muted);
+  font-size: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+#wbv-modal-overlay .wbv-icon-btn:hover {
+  color: var(--rb-accent);
+  background: var(--rb-bg-hover);
+}
+#wbv-modal-overlay .wbv-close-btn {
+  background: none;
+  color: var(--rb-text-muted);
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+#wbv-modal-overlay .wbv-close-btn:hover { color: var(--rb-danger); }
+
+/* Search bar — full width, below header */
+#wbv-modal-overlay .wbv-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: var(--rb-bg-pane);
+  border-bottom: 1px solid var(--rb-border);
+  flex-shrink: 0;
+}
+#wbv-modal-overlay #wbv-search {
+  flex: 1;
+  background: #222;
+  border: 1px solid var(--rb-border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--rb-text-main);
+  min-width: 0;
+  height: 34px;
+}
+#wbv-modal-overlay #wbv-search:focus {
+  border-color: var(--wbv-teal);
+  box-shadow: 0 0 0 2px var(--wbv-teal-glow);
+}
+#wbv-modal-overlay #wbv-search::placeholder { color: var(--rb-text-muted); }
+
+#wbv-modal-overlay .wbv-search-help-btn {
+  flex-shrink: 0;
+  width: 33px;
+  height: 33px;
+  border-radius: 4px;
+  background: var(--rb-bg-hover);
+  border: 1px solid var(--rb-border);
+  color: var(--rb-text-muted);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+#wbv-modal-overlay .wbv-search-help-btn:hover {
+  color: var(--wbv-teal);
+  border-color: var(--wbv-teal);
+  background: rgba(62, 207, 191, 0.12);
+}
+
+#wbv-modal-overlay .wbv-search-help-btn i{
+  position:relative;
+  top:0.5px;
+  left:-0.25px;
+}
+
+#wbv-modal-overlay .wbv-search-help-pop {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+}
+#wbv-search-help-pop p{
+  color:#DDDDDD !important;
+  line-height:170%;
+}
+#wbv-modal-overlay .wbv-search-help-dialog {
+  width: 100%;
+  max-width: 440px;
+  max-height: min(78vh, 720px);
+  background: var(--rb-bg-pane);
+  border: 1px solid var(--rb-border);
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#wbv-modal-overlay .wbv-search-help-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rb-border);
+  background: var(--rb-bg-darkest);
+}
+#wbv-modal-overlay .wbv-search-help-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rb-text-main);
+  letter-spacing: 0.02em;
+}
+#wbv-modal-overlay .wbv-search-help-body {
+  padding: 14px 16px 16px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--rb-text-main);
+}
+#wbv-modal-overlay .wbv-search-help-body p {
+  margin: 0 0 10px;
+}
+#wbv-modal-overlay .wbv-search-help-body p:last-child {
+  margin-bottom: 0;
+}
+#wbv-modal-overlay .wbv-search-help-body ul {
+  margin: 0 0 10px;
+  padding-left: 1.2em;
+}
+#wbv-modal-overlay .wbv-search-help-body li {
+  margin-bottom: 4px;
+}
+#wbv-modal-overlay .wbv-search-help-body code {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 12px;
+  background: var(--rb-bg-hover);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--rb-text-main);
+}
+#wbv-modal-overlay .wbv-search-help-foot {
+  font-size: 12px;
+  color: var(--rb-text-muted);
+  margin-top: 4px !important;
+}
+#wbv-modal-overlay .wbv-search-help-foot a {
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-search-help-foot a:hover {
+  text-decoration: underline;
+}
+
+#wbv-search-btn i{
+  position:relative;
+  top:0.5px;
+}
+#wbv-modal-overlay .wbv-char-hint {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: rgba(62, 207, 191, 0.15);
+  border: 1px solid var(--wbv-teal);
+  border-radius: 4px;
+  padding: 0 12px;
+  height: 34px;
+  font-size: 12px;
+  color: var(--wbv-teal);
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+#wbv-modal-overlay .wbv-char-hint:hover {
+  background: rgba(62, 207, 191, 0.28);
+  color: #fff;
+}
+#wbv-modal-overlay .wbv-char-hint.wbv-show { display: inline-flex; }
+
+#wbv-modal-overlay .wbv-sort-sel {
+  background: #222;
+  border: 1px solid var(--rb-border);
+  border-radius: 4px;
+  color: var(--rb-text-main);
+  font-size: 12px;
+  padding: 8px 28px 8px 12px;
+  line-height: 16px;
+  height: 34px;
+  cursor: pointer;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path fill='%23888888' d='M5 7L1 3h8z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+#wbv-modal-overlay .wbv-sort-sel:focus {
+  border-color: var(--wbv-teal);
+  box-shadow: 0 0 0 2px var(--wbv-teal-glow);
+}
+#wbv-modal-overlay .wbv-sort-sel option {
+  background: #222;
+  color: var(--rb-text-main);
+}
+
+#wbv-modal-overlay .wbv-btn-primary {
+  background: var(--wbv-teal);
+  color: #000;
+  border: 1px solid var(--wbv-teal);
+  border-radius: 4px;
+  padding: 0 16px;
+  height: 34px;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+#wbv-modal-overlay .wbv-btn-primary > i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: inherit;
+}
+#wbv-modal-overlay .wbv-btn-primary:hover {
+  background: var(--wbv-teal-dim);
+  border-color: var(--wbv-teal-dim);
+}
+
+/* Three-column grid */
+#wbv-modal-overlay .st-grid-container {
+  display: grid;
+  grid-template-columns: 240px 1fr 240px;
+  flex-grow: 1;
+  height: auto;
+  min-height: 0;
+}
+
+#wbv-modal-overlay .pane {
+  border-right: 1px solid var(--rb-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--rb-bg-pane);
+  position: relative;
+  min-width: 0;
+}
+#wbv-modal-overlay .pane:last-child { border-right: none; }
+
+/* =========================================
+   LEFT PANE
+   ========================================= */
+#wbv-modal-overlay .pane-menu {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+#wbv-modal-overlay .menu-section {
+  padding: 14px;
+  min-width: 0;
+}
+
+#wbv-modal-overlay .wbv-section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--rb-text-muted);
+  margin-bottom: 10px;
+}
+#wbv-modal-overlay .wbv-section-with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Menu buttons — match Mika's downloader exactly */
+#wbv-modal-overlay .wbv-menu-btn {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #222;
+  border: 1px solid var(--rb-border);
+  color: var(--rb-text-main);
+  text-align: left;
+  font-size: 13px;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  padding-right: 20px;
+}
+#wbv-modal-overlay .wbv-menu-btn:hover:not(:disabled) {
+  background: var(--rb-bg-hover);
+  border-color: var(--rb-accent);
+}
+#wbv-modal-overlay .wbv-menu-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+#wbv-modal-overlay .wbv-menu-btn i {
+  width: 18px;
+  text-align: center;
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-menu-btn-ghost {
+  background: transparent;
+}
+
+#wbv-modal-overlay .wbv-mini-btn {
+  background: #222;
+  border: 1px solid var(--rb-border);
+  color: var(--rb-text-muted);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: 0.15s;
+}
+#wbv-modal-overlay .wbv-mini-btn:hover {
+  border-color: var(--wbv-teal);
+  color: var(--wbv-teal);
+}
+
+/* Credentials */
+#wbv-modal-overlay .wbv-creds-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+#wbv-modal-overlay .wbv-creds-label {
+  font-size: 10px;
+  color: var(--rb-text-muted);
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+/* Sidebar text / number fields — shared look (API root is canonical) */
+#wbv-modal-overlay .wbv-inp-sm,
+#wbv-modal-overlay .pane input.wbv-inp {
+  background: #111;
+  border: 1px solid var(--rb-border);
+  border-radius: 3px;
+  padding: 6px 9px;
+  color: var(--rb-text-main);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+}
+/* Chrome, Safari, Edge, Opera */
+#wbv-modal-overlay input::-webkit-outer-spin-button,
+#wbv-modal-overlay input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+#wbv-modal-overlay input[type=number] {
+  -moz-appearance: textfield;
+}
+#wbv-modal-overlay .wbv-inp-sm:focus,
+#wbv-modal-overlay .pane input.wbv-inp:focus {
+  border-color: var(--wbv-teal);
+  box-shadow: 0 0 0 2px var(--wbv-teal-glow);
+}
+#wbv-modal-overlay .wbv-creds-hint {
+  font-size: 10px;
+  color: var(--rb-text-muted);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+#wbv-modal-overlay .wbv-saved-msg {
+  display: none;
+  font-size: 10px;
+  color: var(--rb-success);
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 8px;
+  padding: 5px;
+  background: rgba(0, 255, 0, 0.08);
+  border-radius: 3px;
+}
+#wbv-modal-overlay .wbv-saved-msg.wbv-show { display: block; }
+
+/* Favorites row */
+#wbv-modal-overlay .wbv-fav-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+#wbv-modal-overlay .wbv-fav-row span:first-child {
+  font-size: 11px;
+  color: var(--rb-text-muted);
+  flex: 1;
+}
+#wbv-modal-overlay .wbv-badge {
+  background: #111;
+  border: 1px solid var(--rb-border);
+  border-radius: 3px;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--rb-text-main);
+  font-weight: 600;
+}
+#wbv-modal-overlay #wbv-view-favs-btn { display: none; }
+#wbv-modal-overlay #wbv-view-favs-btn.wbv-show { display: flex; }
+
+/* Saved tag chips */
+#wbv-modal-overlay #wbv-saved-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+#wbv-modal-overlay .wbv-tag-chip {
+  display: inline-flex;
+  align-items: stretch;
+  background: #222;
+  border: 1px solid var(--rb-border);
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.15s;
+}
+#wbv-modal-overlay .wbv-tag-chip:hover { border-color: var(--wbv-teal); }
+#wbv-modal-overlay .wbv-tag-label {
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--rb-text-main);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#wbv-modal-overlay .wbv-tag-chip:hover .wbv-tag-label { color: var(--wbv-teal); }
+#wbv-modal-overlay .wbv-tag-remove {
+  padding: 0 7px;
+  font-size: 13px;
+  color: var(--rb-text-muted);
+  border-left: 1px solid var(--rb-border);
+  background: #111;
+  transition: 0.1s;
+  line-height: 1;
+}
+#wbv-modal-overlay .wbv-tag-remove:hover {
+  background: var(--rb-danger);
+  color: #fff;
+}
+
+/* Hotkeys collapsible */
+#wbv-modal-overlay .wbv-collapsible-toggle {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#wbv-modal-overlay .wbv-collapsible-toggle:hover { color: var(--rb-text-main); }
+#wbv-modal-overlay #wbv-hotkeys-arrow {
+  font-size: 9px;
+  color: var(--rb-text-muted);
+  transition: transform 0.2s;
+}
+#wbv-modal-overlay #wbv-hotkeys-arrow.wbv-open { transform: rotate(90deg); }
+#wbv-modal-overlay .wbv-collapsible-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s ease;
+}
+#wbv-modal-overlay .wbv-collapsible-body.wbv-open { max-height: 400px; }
+
+#wbv-modal-overlay .wbv-hotkey-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--rb-text-muted);
+  padding: 2px 0;
+}
+#wbv-modal-overlay .wbv-hotkey-row .wbv-hotkey-key {
+  color: var(--wbv-teal);
+  font-weight: 500;
+}
+
+/* Menu footer (shared with Mika's downloader) */
+#wbv-modal-overlay .menu-footer {
+  padding: 12px;
+  font-size: 11px;
+  color: var(--rb-text-muted);
+  text-align: center;
+  border-top: 1px solid var(--rb-border);
+}
+#wbv-modal-overlay .menu-footer a {
+  color: var(--wbv-teal);
+  text-decoration: none;
+}
+#wbv-modal-overlay .menu-footer a:hover { text-decoration: underline; }
+
+/* =========================================
+   CENTER PANE: image viewer
+   ========================================= */
+#wbv-modal-overlay .pane-main {
+  background: #060610;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+#wbv-modal-overlay #wbv-img-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+#wbv-modal-overlay #wbv-main-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  display: block;
+}
+#wbv-modal-overlay #wbv-main-vid {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+/* Tags overlay (top-right of current image) */
+#wbv-modal-overlay .wbv-image-tags-float {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: min(42vw, 240px);
+  pointer-events: none;
+}
+#wbv-modal-overlay .wbv-image-tags-float .wbv-image-tags-btn,
+#wbv-modal-overlay .wbv-image-tags-float .wbv-image-tags-panel {
+  pointer-events: auto;
+}
+
+/* Uploader line: plain text, top-left (click still runs search) */
+#wbv-modal-overlay #wbv-image-uploader-btn {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  z-index: 6;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  color: rgba(245, 245, 250, 0.95);
+  text-align: left;
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 1),
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 10px rgba(0, 0, 0, 0.75);
+  cursor: pointer;
+  max-width: min(58vw, 360px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+#wbv-modal-overlay #wbv-image-uploader-btn:hover {
+  color: var(--wbv-teal);
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 1),
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 12px rgba(0, 0, 0, 0.8);
+}
+#wbv-modal-overlay #wbv-image-uploader-btn:focus {
+  outline: none;
+}
+#wbv-modal-overlay #wbv-image-uploader-btn:focus-visible {
+  outline: 1px solid var(--wbv-teal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+#wbv-modal-overlay .wbv-image-tags-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--rb-text-main);
+  background: rgba(14, 14, 14, 0.92);
+  border: 1px solid var(--rb-border);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+#wbv-modal-overlay .wbv-image-tags-btn:hover {
+  border-color: var(--wbv-teal);
+  color: var(--wbv-teal);
+  background: rgba(62, 207, 191, 0.1);
+}
+#wbv-modal-overlay .wbv-image-tags-float.wbv-open .wbv-image-tags-btn {
+  border-color: var(--wbv-teal);
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-image-tags-panel {
+  width: 100%;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease, opacity 0.22s ease;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+}
+#wbv-modal-overlay .wbv-image-tags-float.wbv-open .wbv-image-tags-panel {
+  max-height: min(48vh, 300px);
+  opacity: 1;
+  border-color: var(--rb-border);
+  background: rgba(10, 10, 18, 0.94);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+#wbv-modal-overlay .wbv-image-tags-list {
+  max-height: min(48vh, 300px);
+  overflow-y: auto;
+  padding: 8px 10px;
+  text-align: right;
+}
+#wbv-modal-overlay .wbv-image-tags-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--rb-text-muted);
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  word-break: break-all;
+  cursor: pointer;
+  transition: color 0.12s;
+}
+#wbv-modal-overlay .wbv-image-tags-item:hover {
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-image-tags-item:last-child {
+  border-bottom: none;
+}
+#wbv-modal-overlay .wbv-image-tags-empty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--rb-text-muted);
+  padding: 6px 0;
+  text-align: right;
+}
+
+#wbv-modal-overlay .wbv-load-badge {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--rb-text-main);
+  background: rgba(14, 14, 14, 0.9);
+  border: 1px solid var(--rb-border);
+  padding: 4px 10px;
+  border-radius: 3px;
+  display: none;
+  z-index: 5;
+}
+#wbv-modal-overlay .wbv-load-badge.wbv-show { display: block; }
+
+/* ── Tag review (tag voting API) ─────────────────────────────────────────── */
+#wbv-modal-overlay .wbv-tagvote-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 118px;
+  transform: translate(-50%, 10px);
+  z-index: 9;
+  max-width: min(90vw, 380px);
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--rb-text-main);
+  background: rgba(14, 14, 22, 0.96);
+  border: 1px solid var(--wbv-teal);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+#wbv-modal-overlay .wbv-tagvote-toast.wbv-tagvote-toast--show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+#wbv-modal-overlay .wbv-tagvote-root {
+  position: absolute;
+  left: 50%;
+  top: 50px;
+  transform: translateX(-50%);
+  z-index: 7;
+  max-width: min(92vw, 400px);
+  width: calc(100% - 24px);
+  pointer-events: none;
+}
+#wbv-modal-overlay .wbv-tagvote-root > * {
+  pointer-events: auto;
+}
+#wbv-modal-overlay .wbv-tagvote-root.wbv-tagvote-collapsed > * {
+  pointer-events: none;
+}
+#wbv-modal-overlay .wbv-tagvote-root.wbv-hidden {
+  display: none !important;
+}
+/* After fetch the root leaves display:none — prime one open transition (see index.js). */
+#wbv-modal-overlay .wbv-tagvote-root.wbv-tagvote-root--enter .wbv-tagvote-panel {
+  opacity: 0;
+  transform: translateY(-14px);
+  transition: none;
+}
+#wbv-modal-overlay .wbv-tagvote-panel {
+  background: rgba(14, 14, 22, 0.7);
+  border: 1px solid rgba(28, 28, 44, 1);
+  border-radius: 8px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+  will-change: opacity, transform;
+}
+#wbv-modal-overlay .wbv-tagvote-root.wbv-tagvote-collapsed .wbv-tagvote-panel {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+#wbv-modal-overlay .wbv-tagvote-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.25);
+}
+#wbv-modal-overlay .wbv-tagvote-head-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+#wbv-modal-overlay .wbv-tagvote-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--rb-text-muted);
+}
+#wbv-modal-overlay .wbv-tagvote-progress {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--rb-text-muted);
+  white-space: nowrap;
+}
+#wbv-modal-overlay .wbv-tagvote-minimize {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: var(--rb-text-muted);
+  font-size: 12px;
+  transition: color 0.15s, background 0.15s;
+}
+#wbv-modal-overlay .wbv-tagvote-minimize:hover {
+  color: var(--wbv-teal);
+  background: rgba(62, 207, 191, 0.12);
+}
+#wbv-modal-overlay .wbv-tagvote-body {
+  padding: 10px 12px 12px;
+}
+#wbv-modal-overlay .wbv-tagvote-msg {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--rb-text-muted);
+  text-align: center;
+  padding: 10px 4px;
+  line-height: 1.45;
+}
+#wbv-modal-overlay .wbv-tagvote-msg.wbv-hidden {
+  display: none !important;
+}
+#wbv-modal-overlay .wbv-tagvote-error {
+  color: var(--rb-danger);
+}
+#wbv-modal-overlay .wbv-tagvote-active.wbv-hidden {
+  display: none !important;
+}
+#wbv-modal-overlay .wbv-tagvote-navrow {
+  display: flex;
+  align-items: stretch;
+  /* gap: 6px; */
+  margin-bottom: 10px;
+  height: 20px;
+}
+#wbv-modal-overlay .wbv-tagvote-arrow {
+  /* flex: 0 0 34px; */
+  width: 40px;
+  height: 40px;
+  /* min-height: 48px; */
+  border-radius: 4px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid var(--rb-border);
+  color: var(--rb-text-main);
+  font-size: 15px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, opacity 0.15s;
+  border-radius: 50%;
+  position: relative;
+  top: -24px;
+  right: -32px;
+}
+#wbv-modal-overlay .wbv-tagvote-arrow:first-of-type{
+  right:unset;
+  left:-32px;
+}
+#wbv-modal-overlay .wbv-tagvote-arrow:hover:not(:disabled) {
+  border-color: var(--wbv-teal);
+  color: var(--wbv-teal);
+  background: rgba(30, 30, 30, 0.95);
+}
+#wbv-modal-overlay .wbv-tagvote-arrow:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+#wbv-modal-overlay .wbv-tagvote-center {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2px 4px;
+}
+#wbv-modal-overlay .wbv-tagvote-tag-stage {
+  width: 100%;
+  min-height: 1.35em;
+  overflow-x: hidden;
+  overflow-y: visible;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#wbv-modal-overlay .wbv-tagvote-tag {
+  display: inline-block;
+  width: 100%;
+  max-width: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rb-text-main);
+  word-break: break-all;
+  line-height: 1.25;
+  text-align: center;
+  transform: translateX(0);
+  opacity: 1;
+  transition:
+    transform 0.28s ease,
+    opacity 0.28s ease;
+}
+#wbv-modal-overlay .wbv-tagvote-tag.wbv-tagvote-tag--no-trans {
+  transition: none !important;
+}
+#wbv-modal-overlay .wbv-tagvote-tag.wbv-tagvote-tag--out-left {
+  transform: translateX(-40%);
+  opacity: 0;
+}
+#wbv-modal-overlay .wbv-tagvote-tag.wbv-tagvote-tag--out-right {
+  transform: translateX(40%);
+  opacity: 0;
+}
+#wbv-modal-overlay .wbv-tagvote-tag.wbv-tagvote-tag--prep-right {
+  transform: translateX(55%);
+  opacity: 0;
+}
+#wbv-modal-overlay .wbv-tagvote-tag.wbv-tagvote-tag--prep-left {
+  transform: translateX(-55%);
+  opacity: 0;
+}
+#wbv-modal-overlay .wbv-tagvote-question {
+  font-size: 11px;
+  color: var(--rb-text-muted);
+  text-align: center;
+  margin: 0 0 8px;
+  line-height: 1.35;
+  /* text-shadow: 1px 1px 2px pink; */
+}
+#wbv-modal-overlay .wbv-tagvote-votes {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--rb-text-muted);
+  text-align: center;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  display: none;
+}
+#wbv-modal-overlay .wbv-tagvote-actions {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  margin-bottom: -28px;
+  margin-left: 30px;
+  margin-right: 30px;
+}
+#wbv-modal-overlay .wbv-tagvote-mid {
+  flex: 0 0 auto;
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: var(--rb-text-muted);
+  padding: 0 2px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transition: opacity 0.15s;
+  display: none;
+}
+#wbv-modal-overlay .wbv-tagvote-mid.wbv-show {
+  opacity: 1;
+  display: none;
+}
+#wbv-modal-overlay .wbv-tagvote-mid[data-pick='for'] {
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-tagvote-mid[data-pick='against'] {
+  color: #ffb3b3;
+}
+#wbv-modal-overlay .wbv-tagvote-side {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--rb-border);
+  background: rgba(20, 20, 20, 0.9);
+  color: var(--rb-text-main);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s, color 0.15s, opacity 0.15s;
+  /* position: relative; */
+  /* top: 28px; */
+}
+#wbv-modal-overlay .wbv-tagvote-side:hover:not(:disabled) {
+  border-color: rgba(62,207,191,1);
+  background: rgba(22,75,108,1);
+}
+#wbv-modal-overlay .wbv-tagvote-side:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+#wbv-modal-overlay .wbv-tagvote-side.wbv-tagvote-picked {
+  box-shadow: 0 0 0 2px rgba(62, 207, 191, 0.45);
+}
+#wbv-modal-overlay .wbv-tagvote-against.wbv-tagvote-picked {
+    border-color: rgba(62, 207, 191, 0.75);
+    background: rgba(15, 51, 72, 1.0);
+    color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-tagvote-for.wbv-tagvote-picked {
+  border-color: rgba(62, 207, 191, 0.75);
+  background: rgba(15, 51, 72, 1.0);
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-tagvote-bar-btn {
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid var(--rb-border);
+  border-radius: 4px;
+  padding: 0 12px;
+  height: 34px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--rb-text-muted);
+  transition: all 0.15s;
+}
+#wbv-modal-overlay .wbv-tagvote-bar-btn:hover {
+  border-color: var(--wbv-teal);
+  color: var(--wbv-teal);
+}
+@keyframes wbv-tagvote-bar-flash {
+  0% {
+    border-color: var(--rb-border);
+    color: var(--rb-text-muted);
+    box-shadow: none;
+  }
+  35% {
+    border-color: var(--wbv-teal);
+    color: var(--wbv-teal);
+    box-shadow: 0 0 0 2px rgba(62, 207, 191, 0.35), 0 0 14px rgba(62, 207, 191, 0.25);
+  }
+  100% {
+    border-color: var(--rb-border);
+    color: var(--rb-text-muted);
+    box-shadow: none;
+  }
+}
+#wbv-modal-overlay .wbv-tagvote-bar-btn.wbv-tagvote-bar-flash {
+  animation: wbv-tagvote-bar-flash 0.42s ease-out 1;
+}
+@media (max-width: 900px) {
+  #wbv-modal-overlay .wbv-tagvote-root {
+    bottom: 96px;
+    max-width: min(86vw, 400px);
+  }
+  #wbv-modal-overlay .wbv-tagvote-toast {
+    bottom: 200px;
+  }
+}
+
+/* State overlays */
+#wbv-modal-overlay .wbv-state-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--rb-text-muted);
+  font-size: 14px;
+  padding: 24px;
+  text-align: center;
+}
+#wbv-modal-overlay .wbv-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #222;
+  border-top-color: var(--wbv-teal);
+  border-radius: 50%;
+  animation: wbv-spin 0.7s linear infinite;
+}
+@keyframes wbv-spin { to { transform: rotate(360deg); } }
+#wbv-modal-overlay .wbv-empty-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--rb-text-main);
+  letter-spacing: 1px;
+}
+#wbv-modal-overlay .wbv-empty-sub {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--rb-text-muted);
+}
+
+/* Floating control bar (overlays bottom of image) */
+#wbv-modal-overlay #wbv-ctrl-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(6, 6, 16, 0.92) 60%, rgba(6, 6, 16, 0));
+  padding: 30px 16px 14px;
+  display: none;
+  pointer-events: none;
+  z-index: 4;
+}
+#wbv-modal-overlay #wbv-ctrl-bar.wbv-show { display: block; }
+#wbv-modal-overlay #wbv-ctrl-bar > * { pointer-events: auto; }
+
+#wbv-modal-overlay #wbv-ctrl-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+/* Row wrappers: invisible on desktop (children lay out in #wbv-ctrl-inner as before). */
+#wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row {
+  display: contents;
+}
+
+#wbv-modal-overlay #wbv-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--rb-text-main);
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid var(--rb-border);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+#wbv-modal-overlay #wbv-fav-btn {
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid var(--rb-border);
+  border-radius: 4px;
+  padding: 0 14px;
+  height: 34px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--rb-text-muted);
+  transition: all 0.15s;
+}
+#wbv-modal-overlay #wbv-fav-btn:hover {
+  border-color: var(--wbv-fav);
+  color: var(--wbv-fav);
+}
+
+#wbv-modal-overlay #wbv-like-btn {
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid var(--rb-border);
+  border-radius: 4px;
+  padding: 0 14px;
+  height: 34px;
+  /* width: 50px; */
+  font-size: 16px;
+  line-height: 1;
+  color: var(--rb-text-muted);
+  transition: all 0.15s;
+}
+#wbv-modal-overlay #wbv-like-btn:hover:not(:disabled) {
+  border-color: var(--wbv-like);
+  color: var(--wbv-like);
+}
+#wbv-modal-overlay #wbv-like-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+#wbv-modal-overlay .wbv-nav-btn {
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid var(--rb-border);
+  color: var(--rb-text-main);
+  padding: 0 14px;
+  height: 34px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+#wbv-modal-overlay .wbv-nav-btn:hover {
+  border-color: var(--wbv-teal);
+  background: rgba(62, 207, 191, 0.12);
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-nav-btn-primary {
+  background: var(--wbv-teal);
+  color: #000;
+  border-color: var(--wbv-teal);
+  font-weight: 700;
+  padding: 0 18px;
+  min-width: 95px;
+}
+#wbv-modal-overlay .wbv-nav-btn-primary:hover {
+  background: var(--wbv-teal-dim);
+  border-color: var(--wbv-teal-dim);
+  color: #000;
+}
+
+#wbv-modal-overlay #wbv-source-link {
+  display: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--wbv-teal);
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid var(--rb-border);
+  padding: 7px 12px;
+  border-radius: 4px;
+  margin-left: 8px;
+  text-decoration: none;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+#wbv-modal-overlay #wbv-source-link[href]:not([href=""]) { display: inline-flex; }
+#wbv-modal-overlay #wbv-source-link:hover {
+  border-color: var(--wbv-teal);
+  background: rgba(62, 207, 191, 0.15);
+  color: #fff;
+}
+
+#wbv-modal-overlay .wbv-btn-ghost {
+  background: rgba(20, 20, 20, 0.9);
+  color: var(--rb-text-main);
+  border: 1px solid var(--rb-border);
+  padding: 0 12px;
+  height: 28px;
+  font-size: 11px;
+  border-radius: 3px;
+  transition: 0.15s;
+}
+#wbv-modal-overlay .wbv-btn-ghost:hover {
+  border-color: var(--wbv-teal);
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay #wbv-exit-favs-btn {
+  display: none;
+  margin-left: 8px;
+}
+#wbv-modal-overlay #wbv-exit-favs-btn.wbv-show { display: inline-flex; }
+
+#wbv-modal-overlay #wbv-film-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  min-height: 50px;
+  align-items: center;
+}
+#wbv-modal-overlay .wbv-film-thumb {
+  width: 60px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 2px solid rgba(51, 51, 51, 0.7);
+  transition: all 0.15s;
+  flex-shrink: 0;
+  background: #222;
+}
+#wbv-modal-overlay .wbv-film-thumb:hover {
+  transform: scale(1.07);
+  border-color: var(--rb-text-muted);
+}
+#wbv-modal-overlay .wbv-film-thumb.wbv-active {
+  border-color: var(--wbv-teal);
+  box-shadow: 0 0 0 2px var(--wbv-teal-glow);
+}
+
+/* =========================================
+   RIGHT PANE: filters
+   ========================================= */
+#wbv-modal-overlay .wbv-row-inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+  min-width: 0;
+}
+#wbv-modal-overlay .wbv-row-inline .wbv-slideshow-fit {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+#wbv-modal-overlay .wbv-inline-label {
+  font-size: 11px;
+  color: var(--rb-text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+#wbv-modal-overlay .pane .wbv-inp.wbv-inp-mini {
+  width: 52px;
+  flex-shrink: 0;
+  text-align: center;
+}
+#wbv-modal-overlay .pane textarea.wbv-inp {
+  background: #111;
+  border: 1px solid var(--rb-border);
+  border-radius: 3px;
+  padding: 6px 9px;
+  color: var(--rb-text-main);
+  width: 100%;
+  min-width: 0;
+  min-height: 56px;
+  height: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  resize: vertical;
+  line-height: 1.4;
+  display: block;
+}
+#wbv-modal-overlay .pane textarea.wbv-inp:focus {
+  border-color: var(--wbv-teal);
+  box-shadow: 0 0 0 2px var(--wbv-teal-glow);
+}
+#wbv-modal-overlay .pane textarea.wbv-inp::placeholder { color: var(--rb-text-muted); }
+
+/* Pill-style toggles */
+#wbv-modal-overlay .wbv-pill-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+}
+#wbv-modal-overlay .wbv-pill-row .wbv-pill-check {
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+}
+#wbv-modal-overlay .wbv-pill-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+#wbv-modal-overlay .wbv-pill-check {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 6px 11px;
+  background: #222;
+  border: 1px solid var(--rb-border);
+  border-radius: 14px;
+  font-size: 11px;
+  color: var(--rb-text-muted);
+  cursor: pointer;
+  user-select: none;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.15s;
+}
+#wbv-modal-overlay .wbv-pill-col .wbv-pill-check { width: 100%; }
+#wbv-modal-overlay .wbv-pill-check:hover {
+  border-color: var(--rb-text-muted);
+  color: var(--rb-text-main);
+}
+#wbv-modal-overlay .wbv-pill-check:has(input:checked) {
+  background: rgba(62, 207, 191, 0.15);
+  border-color: var(--wbv-teal);
+  color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-pill-check input[type=checkbox] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0px;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+}
+#wbv-modal-overlay .wbv-pill-check .wbv-check-face {
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1.5px solid var(--rb-border);
+  background: rgba(0, 0, 0, 0.35);
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+#wbv-modal-overlay .wbv-pill-check:hover .wbv-check-face {
+  border-color: var(--rb-text-muted);
+}
+#wbv-modal-overlay .wbv-pill-check:has(input:checked) .wbv-check-face {
+  background: var(--wbv-teal);
+  border-color: var(--wbv-teal);
+}
+#wbv-modal-overlay .wbv-pill-check .wbv-check-face::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 4px;
+  height: 7px;
+  margin: 0;
+  border: solid rgba(10, 12, 14, 0.92);
+  border-width: 0 2px 2px 0;
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+  transition: opacity 0.12s ease;
+}
+#wbv-modal-overlay .wbv-pill-check:has(input:checked) .wbv-check-face::after {
+  opacity: 1;
+}
+#wbv-modal-overlay .wbv-pill-check:has(input:focus-visible) .wbv-check-face {
+  box-shadow: 0 0 0 2px rgba(62, 207, 191, 0.45);
+}
+#wbv-modal-overlay .wbv-pill-check .wbv-pill-check-text {
+  line-height: 1.2;
+}
+
+/* History */
+#wbv-modal-overlay #wbv-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  /* max-height: 110px; */
+  overflow-y: auto;
+}
+#wbv-modal-overlay .wbv-hist-item {
+  padding: 4px 8px 4px 8px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--rb-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #222;
+  border: 1px solid var(--rb-border);
+  transition: 0.15s;
+}
+#wbv-modal-overlay .wbv-hist-item:hover {
+  background: var(--rb-bg-hover);
+  color: var(--wbv-teal);
+  border-color: var(--rb-text-muted);
+}
+
+/* =========================================
+   PANELS HIDDEN MODE (Z key / ⛶ button)
+   Desktop only — on mobile it's the slide-overs that handle this.
+   ========================================= */
+@media (min-width: 901px) {
+  #wbv-modal-overlay.wbv-panels-hidden .st-grid-container {
+    grid-template-columns: 0 1fr 0;
+  }
+  #wbv-modal-overlay.wbv-panels-hidden .pane-menu,
+  #wbv-modal-overlay.wbv-panels-hidden .pane-info {
+    visibility: hidden;
+  }
+
+  /* Control strip: DOM is nav row then meta row (for mobile); restore classic left-to-right order on desktop. */
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-fav-btn { order: 1; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-like-btn { order: 2; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-tagvote-bar-btn { order: 3; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-first-btn { order: 4; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-prev-btn { order: 5; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-play-btn { order: 6; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-next-btn { order: 7; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-last-btn { order: 8; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-counter { order: 9; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-source-link { order: 10; }
+  #wbv-modal-overlay #wbv-ctrl-inner #wbv-exit-favs-btn { order: 11; }
+}
+
+/* Mobile back buttons hidden on desktop */
+#wbv-modal-overlay .wbv-mobile-back {
+  display: none;
+}
+
+/* =========================================
+   MOBILE NAV (hidden by default, shown <901px)
+   ========================================= */
+#wbv-modal-overlay .mobile-nav { display: none; }
+
+/* =========================================
+   MOBILE BREAKPOINT — slide-over panes
+   Pattern borrowed from Weyland Downloader by Mika.
+   ========================================= */
+@media (max-width: 900px) {
+  #wbv-modal-overlay .st-modal-window {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+
+  /* Search bar: row 1 = help + query (width not tied to row 2), row 2 = character + sort + search */
+  #wbv-modal-overlay .wbv-search-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  /* Force a wrap after the query so row-2 controls never widen column 1 of a shared grid */
+  #wbv-modal-overlay .wbv-search-bar::after {
+    content: "";
+    flex-basis: 100%;
+    width: 0;
+    height: 0;
+    order: 3;
+  }
+  #wbv-modal-overlay .wbv-search-help-btn {
+    order: 1;
+  }
+  #wbv-modal-overlay #wbv-search {
+    order: 2;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+  }
+  #wbv-modal-overlay .wbv-char-hint.wbv-show {
+    order: 4;
+  }
+  #wbv-modal-overlay .wbv-sort-sel {
+    order: 5;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+  }
+  #wbv-modal-overlay #wbv-search-btn {
+    order: 6;
+    flex-shrink: 0;
+  }
+
+  /* Header: hide expand button on mobile (use bottom nav instead) */
+  #wbv-modal-overlay #wbv-panels-btn { display: none; }
+  /* Tighten brand text */
+  #wbv-modal-overlay .wbv-brand-text { font-size: 11px; letter-spacing: 1.5px; }
+
+  /* Three panes become slide-overs */
+  #wbv-modal-overlay .st-grid-container {
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    height: auto;
+    flex-grow: 1;
+    min-height: 0;
+  }
+
+  #wbv-modal-overlay .pane {
+    min-width: 100%;
+    width: 100%;
+    transition: transform 0.3s ease;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-right: none;
+  }
+
+  #wbv-modal-overlay .pane-menu {
+    transform: translateX(-100%);
+    z-index: 3;
+  }
+  #wbv-modal-overlay .pane-main {
+    transform: translateX(0);
+    z-index: 1;
+  }
+  #wbv-modal-overlay .pane-info {
+    transform: translateX(100%);
+    z-index: 2;
+  }
+
+  #wbv-modal-overlay.show-menu .pane-menu { transform: translateX(0); }
+  #wbv-modal-overlay.show-info .pane-info { transform: translateX(0); }
+
+  /* Bottom nav */
+  #wbv-modal-overlay .mobile-nav {
+    display: flex;
+    height: 50px;
+    background: var(--rb-bg-pane);
+    border-top: 1px solid var(--rb-border);
+    width: 100%;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+  #wbv-modal-overlay .mobile-nav-btn {
+    flex: 1;
+    background: none;
+    color: var(--rb-text-muted);
+    font-size: 18px;
+    border-right: 1px solid var(--rb-border);
+    height: 100%;
+  }
+  #wbv-modal-overlay .mobile-nav-btn:last-child { border-right: none; }
+  #wbv-modal-overlay .mobile-nav-btn.active {
+    color: var(--wbv-teal);
+    background: rgba(62, 207, 191, 0.08);
+  }
+
+  /* Show "back to viewer" on side panes */
+  #wbv-modal-overlay .wbv-mobile-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    color: var(--wbv-teal);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 0;
+    margin-bottom: 12px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Touch gesture zones — invisible tap zones over image for prev/next */
+  #wbv-modal-overlay #wbv-img-area::before,
+  #wbv-modal-overlay #wbv-img-area::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 132px;
+    width: 30%;
+    z-index: 2;
+  }
+  #wbv-modal-overlay #wbv-img-area::before { left: 0; }
+  #wbv-modal-overlay #wbv-img-area::after { right: 0; }
+
+  /* On mobile, controls bar always visible (not just on hover) */
+  #wbv-modal-overlay #wbv-ctrl-bar {
+    padding: 20px 10px 10px;
+  }
+  #wbv-modal-overlay #wbv-ctrl-inner {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 6px;
+  }
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+  }
+  /* Row 2: keep five nav controls on one line */
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-nav {
+    flex-wrap: nowrap;
+    gap: 4px;
+    min-width: 0;
+  }
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-nav .wbv-nav-btn {
+    /* flex: 1 1 0; */
+    min-width: 40px;
+    width: auto;
+    padding: 0 6px;
+    font-size: 13px;
+  }
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-nav .wbv-nav-btn-primary {
+    min-width: 70px;
+  }
+  /* Bottom row: counter, source, fave / like / tag review, exit favs */
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-meta #wbv-counter,
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-meta #wbv-source-link,
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-meta #wbv-fav-btn,
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-meta #wbv-like-btn,
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-meta #wbv-tagvote-bar-btn,
+  #wbv-modal-overlay #wbv-ctrl-inner .wbv-ctrl-row-meta #wbv-exit-favs-btn {
+    margin-left: 0;
+  }
+  /* Hide source link & exit-favs in narrow mobile control bar to save space */
+  #wbv-modal-overlay #wbv-source-link,
+  #wbv-modal-overlay #wbv-exit-favs-btn { font-size: 10px; padding: 5px 8px; }
+  /* Smaller filmstrip on mobile */
+  #wbv-modal-overlay .wbv-film-thumb { width: 48px; height: 40px; }
+  #wbv-modal-overlay #wbv-film-row { min-height: 40px; }
+
+  /* NSFW filter: one row on mobile (same flex pattern as img/gif/vid) */
+  #wbv-modal-overlay .wbv-rating-pills.wbv-pill-col {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+  }
+  #wbv-modal-overlay .wbv-rating-pills.wbv-pill-col .wbv-pill-check {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    justify-content: center;
+  }
+}
+
+/* =============================================================================
+   ST HAMBURGER MENU ITEM
+   -----------------------------------------------------------------------------
+   Safety overrides so the injected "Weybooru Viewer" entry looks correct
+   regardless of which classes ST or your fork applies. NOT scoped to
+   #wbv-modal-overlay because it lives outside it.
+
+   Without these rules, the cloned menu item can pick up h1/h2 heading styles
+   on some forks (orange + bold). This forces it to inherit the menu's
+   normal item appearance.
+   ============================================================================= */
+#options #wbv-menu-item {
+  /* display: flex !important; */
+  /* align-items: center; */
+  /* gap: 10px; */
+  /* cursor: pointer !important; */
+  /* color: inherit; */             /* don't pick up heading colors */
+  /* font-weight: normal; */
+  /* font-size: inherit; */
+  /* text-decoration: none; */
+  /* padding: 8px 12px; */
+}
+#options #wbv-menu-item i {
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  /* color: #f7a8c0; */             /* sakura pink — Weyland brand accent */
+}
+#options #wbv-menu-item:hover {
+  filter: brightness(1.3);
+}
