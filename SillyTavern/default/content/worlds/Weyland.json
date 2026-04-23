@@ -198,8 +198,8 @@
             "key": [
                 "/Willow.?s room/",
                 "/Willow.?s dorm/",
-                "(#283)",
-                "room 383"
+                "(#383)",
+                "383"
             ],
             "keysecondary": [],
             "comment": "Willow Room",
@@ -229,7 +229,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -1108,7 +1108,7 @@
             "key": [
                 "/Rivera.?s room/",
                 "/Rivera.?s dorm/",
-                "room 282",
+                "282",
                 "(#282)"
             ],
             "keysecondary": [],
@@ -1138,7 +1138,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
-            "caseSensitive": false,
+            "caseSensitive": true,
             "matchWholeWords": null,
             "useGroupScoring": true,
             "automationId": "",
@@ -1727,7 +1727,7 @@
                 "/Rivet.?s room/",
                 "/Rivet.?s dorm/",
                 "(#270)",
-                "room 270"
+                "270"
             ],
             "keysecondary": [],
             "comment": "Rivet Room",
@@ -1751,7 +1751,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -2483,12 +2483,7 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "33": {
             "key": [
@@ -3402,7 +3397,9 @@
             },
             "characterFilter": {
                 "isExclude": true,
-                "names": [],
+                "names": [
+                    "Muse"
+                ],
                 "tags": [
                     "3b2eb8e9-75eb-47f7-8814-a1bff270392d"
                 ]
@@ -3705,7 +3702,9 @@
             },
             "characterFilter": {
                 "isExclude": false,
-                "names": [],
+                "names": [
+                    "Muse"
+                ],
                 "tags": [
                     "3b2eb8e9-75eb-47f7-8814-a1bff270392d"
                 ]
@@ -4573,7 +4572,7 @@
                 "/Briar.?s room/",
                 "/Briar.?s dorm/",
                 "(#309)",
-                "room 309",
+                "309",
                 "pet rock",
                 "Rosetta"
             ],
@@ -4605,7 +4604,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -4728,7 +4727,7 @@
                 "/Eve.?s room/",
                 "/Eve.?s dorm/",
                 "(#317)",
-                "room 317"
+                "317"
             ],
             "keysecondary": [],
             "comment": "Eve Room",
@@ -4758,7 +4757,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -6196,7 +6195,7 @@
             "key": [
                 "/Summer.?s room/",
                 "/Summer.?s dorm/",
-                "room 279",
+                "279",
                 "(#279)"
             ],
             "keysecondary": [],
@@ -6221,7 +6220,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -6274,7 +6273,7 @@
                 "/Rosa.?s room/",
                 "/Rosa.?s dorm/",
                 "(#315)",
-                "room 315"
+                "315"
             ],
             "keysecondary": [],
             "comment": "Rosa Room",
@@ -6304,7 +6303,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11326,7 +11325,7 @@
         "148": {
             "key": [
                 "(#294)",
-                "room 294",
+                "294",
                 "/Ava.?s room/",
                 "/Ava.?s dorm/"
             ],
@@ -11351,7 +11350,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
-            "caseSensitive": false,
+            "caseSensitive": true,
             "matchWholeWords": null,
             "useGroupScoring": true,
             "automationId": "",
@@ -11477,12 +11476,12 @@
         },
         "150": {
             "key": [
-                "Belle's room",
-                "Belle's dorm",
-                "Dash's room",
-                "Dash's dorm",
+                "/Belle.?s room/",
+                "/Belle.?s dorm/",
+                "/Dash.?s room/",
+                "/Dash.?s dorm/",
                 "(#281)",
-                "room 281"
+                "281"
             ],
             "keysecondary": [],
             "comment": "Belle & Dash Room",
@@ -11506,7 +11505,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11632,7 +11631,7 @@
         "152": {
             "key": [
                 "(#290)",
-                "room 290",
+                "290",
                 "/Bianca.?s room/",
                 "/Bianca.?s dorm/"
             ],
@@ -11658,7 +11657,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11708,7 +11707,7 @@
         "153": {
             "key": [
                 "(#271)",
-                "room 271",
+                "271",
                 "/Blake.?s room/",
                 "/Blake.?s dorm/"
             ],
@@ -11734,7 +11733,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11784,7 +11783,7 @@
         "154": {
             "key": [
                 "(#275)",
-                "room 275",
+                "275",
                 "/Cario.?s room/",
                 "/Cario.?s dorm/"
             ],
@@ -11810,7 +11809,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11860,7 +11859,7 @@
         "155": {
             "key": [
                 "(#311)",
-                "room 311",
+                "311",
                 "/Karmen.?s room/",
                 "/Karmen.?s dorm/"
             ],
@@ -11886,7 +11885,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12092,7 +12091,7 @@
         "158": {
             "key": [
                 "(#284)",
-                "room 284",
+                "284",
                 "/Indigo.?s room/",
                 "/Indigo.?s dorm/"
             ],
@@ -12118,7 +12117,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12168,7 +12167,7 @@
         "159": {
             "key": [
                 "(#274)",
-                "room 274",
+                "274",
                 "/Gem.?s room/",
                 "/Luna.?s room/",
                 "/Gem.?s dorm/",
@@ -12196,7 +12195,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12246,7 +12245,7 @@
         "160": {
             "key": [
                 "(#292)",
-                "room 292",
+                "292",
                 "/Vera.?s room/",
                 "/Fasti.?s room/",
                 "/Vera.?s dorm/",
@@ -12274,7 +12273,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12324,7 +12323,7 @@
         "161": {
             "key": [
                 "(#109)",
-                "room 109",
+                "109",
                 "/Ellie's.?s room/",
                 "/Ellie.?s dorm/"
             ],
@@ -12349,7 +12348,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
-            "caseSensitive": false,
+            "caseSensitive": true,
             "matchWholeWords": null,
             "useGroupScoring": true,
             "automationId": "",
@@ -12400,7 +12399,7 @@
         "162": {
             "key": [
                 "(#268)",
-                "room 268",
+                "268",
                 "/Jenn.?s room/",
                 "/Lucy.?s room/",
                 "/Lucy.?s dorm/",
@@ -12428,7 +12427,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "JLRoom",
             "role": null,
@@ -12478,7 +12477,7 @@
         "163": {
             "key": [
                 "(#273)",
-                "room 273",
+                "273",
                 "Nibbles",
                 "goldfish",
                 "/Kai.?s room/",
@@ -12508,7 +12507,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12558,7 +12557,7 @@
         "164": {
             "key": [
                 "(#376)",
-                "room 376",
+                "376",
                 "/Lentyl.?s room/",
                 "/Lentyl.?s dorm/"
             ],
@@ -12584,7 +12583,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12711,7 +12710,7 @@
         "166": {
             "key": [
                 "(#280)",
-                "room 280",
+                "280",
                 "/Koshizu.?s room/",
                 "/Koshizu.?s dorm/",
                 "/Koko.?s room/"
@@ -12738,7 +12737,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12868,7 +12867,7 @@
         "168": {
             "key": [
                 "(#276)",
-                "room 276",
+                "276",
                 "/Kris.?s room/",
                 "/Kris.?s dorm/"
             ],
@@ -12894,7 +12893,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12944,7 +12943,7 @@
         "169": {
             "key": [
                 "(#268)",
-                "room 268",
+                "268",
                 "/Lucy.?s room/",
                 "/Lucy.?s dorm/"
             ],
@@ -12970,7 +12969,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "LSRoom",
             "role": null,
@@ -13097,7 +13096,7 @@
         "171": {
             "key": [
                 "(#171)",
-                "room 171",
+                "171",
                 "/Lurkle.?s room/",
                 "/Lurkle.?s dorm/"
             ],
@@ -13123,7 +13122,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -13561,7 +13560,7 @@
                 "/Mika.?s room/",
                 "/Mika.?s dorm/",
                 "(#269)",
-                "room 269"
+                "269"
             ],
             "keysecondary": [],
             "comment": "Mika Room",
@@ -13585,7 +13584,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -13637,7 +13636,7 @@
                 "/Nix.?s room/",
                 "/Nix.?s dorm/",
                 "(#283)",
-                "room 283"
+                "283"
             ],
             "keysecondary": [],
             "comment": "Nix & Sunny Room",
@@ -13661,7 +13660,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -15276,7 +15275,7 @@
             ],
             "keysecondary": [],
             "comment": "Kyomi Dining Hall",
-            "content": "[KYOMI DINING HALL]\n\n[Location] Centrally located on campus, situated on Senaka Boulevard with Sterling Dormitory on one side and the ret of Senaka - restaraunts, cafes and the beach - on the other. It's about a 5-minute walk from Sterling Hall, making it a major hub for student life.\n\n[Architecture & Exterior] A modern, two-story building designed with Weyland's signature Japanese-American fusion. The exterior features large, floor-to-ceiling glass panels, dark wooden beams, and a gracefully sloping, dark-tiled roof. The entrance is marked by a small, beautifully landscaped rock garden with a few Japanese maple trees.\n\n[Atmosphere & Interior] The inside is a cavernous, open-plan space with high ceilings and polished vinyl floors. The atmosphere is a constant, energetic hum of conversation, the clatter of trays, and the sizzle and steam from the various food stations. Seating is diverse: long, heavy wooden communal tables for large groups, smaller four-person booths along the windows, and high-top counters with charging ports for solo diners. Despite the crowd, the large windows keep the space feeling bright and airy.\n\n[Dining Style & Stations] Akebono Commons operates on the \"marketplace\" model, where students can freely wander between different specialized food lines:\n- The Hearth: The central grill station, serving up classic American fare like burgers (beef, veggie, and turkey), grilled chicken sandwiches, and most importantly, french fries and chicken nuggets/tenders.\n- Terracotta Oven: Features two large brick ovens churning out personal-sized pizzas, calzones, and a rotating pasta bar with different sauces and toppings.\n- Global Kitchen: An international food station with a menu that rotates weekly. One week it might be a build-your-own taco bar, the next it could be serving Thai green curry or Indian butter chicken.\n- Homestead: The classic americana food station. This is where you'll find things like mac and cheese, rotisserie chicken, mashed potatoes, and roasted vegetables.\n- The Grove: A massive, fresh salad bar with a huge variety of greens, toppings, and dressings, plus a selection of daily soups.\n- Sunrise Sweets: Serves breakfast food (waffles, pancakes, omelets) until 11 AM, then switches to a dessert bar with soft-serve ice cream, cookies, cakes, and pastries for the rest of the day.\n\n[Notable Features]\n- Quiet Loft: The second floor is a designated \"quiet dining\" loft that overlooks the main hall, intended for students who want to eat and study in relative peace.\n- The Tray Vortex: The modern tray return system is a large conveyor belt that disappears into a wall, affectionately nicknamed \"the tray munch\" by students. No one knows why.\n\n[Meal Plan System]\nAccess to Weyland's dining halls is primarily managed through the student meal plan system. Students on a campus meal plan simply swipe their Weyland University ID card at the entrance, which deducts one 'meal swipe' from their weekly or semesterly allowance. For students who have run out of swipes, visitors, or those not on a meal plan, entry can be purchased at the door. The standard guest price is a flat fee, typically around $10 for breakfast and $12 for lunch or dinner, payable by cash, card, or Weyland Dining Dollars. Regardless of entry method, once inside, the dining hall operates as an all-you-can-eat buffet; patrons have unlimited access to all food stations for the duration of their single visit, though re-entry is not permitted on the same swipe or payment.\n[END KYOMI DINING HALL]\n=========",
+            "content": "[KYOMI DINING HALL]\n\n[Location] Centrally located on campus, situated on Senaka Boulevard with Sterling Dormitory on one side and the rest of Senaka - restaurants, cafes and the beach - on the other. It's about a 5-minute walk from Sterling Hall, making it a major hub for student life.\n\n[Architecture & Exterior] A modern, two-story building designed with Weyland's signature Japanese-American fusion. The exterior features large, floor-to-ceiling glass panels, dark wooden beams, and a gracefully sloping, dark-tiled roof. The entrance is marked by a small, beautifully landscaped rock garden with a few Japanese maple trees.\n\n[Atmosphere & Interior] The inside is a cavernous, open-plan space with high ceilings and polished vinyl floors. The atmosphere is a constant, energetic hum of conversation, the clatter of trays, and the sizzle and steam from the various food stations. Seating is diverse: long, heavy wooden communal tables for large groups, smaller four-person booths along the windows, and high-top counters with charging ports for solo diners. Despite the crowd, the large windows keep the space feeling bright and airy.\n\n[Dining Style & Stations] Akebono Commons operates on the \"marketplace\" model, where students can freely wander between different specialized food lines:\n- The Hearth: The central grill station, serving up classic American fare like burgers (beef, veggie, and turkey), grilled chicken sandwiches, and most importantly, french fries and chicken nuggets/tenders.\n- Terracotta Oven: Features two large brick ovens churning out personal-sized pizzas, calzones, and a rotating pasta bar with different sauces and toppings.\n- Global Kitchen: An international food station with a menu that rotates weekly. One week it might be a build-your-own taco bar, the next it could be serving Thai green curry or Indian butter chicken.\n- Homestead: The classic americana food station. This is where you'll find things like mac and cheese, rotisserie chicken, mashed potatoes, and roasted vegetables.\n- The Grove: A massive, fresh salad bar with a huge variety of greens, toppings, and dressings, plus a selection of daily soups.\n- Sunrise Sweets: Serves breakfast food (waffles, pancakes, omelets) until 11 AM, then switches to a dessert bar with soft-serve ice cream, cookies, cakes, and pastries for the rest of the day.\n\n[Notable Features]\n- Quiet Loft: The second floor is a designated \"quiet dining\" loft that overlooks the main hall, intended for students who want to eat and study in relative peace.\n- The Tray Vortex: The modern tray return system is a large conveyor belt that disappears into a wall, affectionately nicknamed \"the tray munch\" by students. No one knows why.\n\n[Meal Plan System]\nAccess to Weyland's dining halls is primarily managed through the student meal plan system. Students on a campus meal plan simply swipe their Weyland University ID card at the entrance, which deducts one 'meal swipe' from their weekly or semesterly allowance. For students who have run out of swipes, visitors, or those not on a meal plan, entry can be purchased at the door. The standard guest price is a flat fee, typically around $10 for breakfast and $12 for lunch or dinner, payable by cash, card, or Weyland Dining Dollars. Regardless of entry method, once inside, the dining hall operates as an all-you-can-eat buffet; patrons have unlimited access to all food stations for the duration of their single visit, though re-entry is not permitted on the same swipe or payment.\n[END KYOMI DINING HALL]\n=========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -15335,11 +15334,6 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
             }
         },
         "203": {
@@ -17292,7 +17286,7 @@
                 "/Yue-Lin.?s room/",
                 "/Yue-Lin.?s dorm/",
                 "(#288)",
-                "room 288"
+                "288"
             ],
             "keysecondary": [],
             "comment": "Yue-Lin Room",
@@ -17323,7 +17317,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,

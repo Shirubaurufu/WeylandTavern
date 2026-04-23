@@ -129,13 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "drunk",
-                "drink",
-                "drinking",
-                "hiccup",
-                "hic"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -146,7 +140,7 @@
             "addMemo": true,
             "order": 5,
             "position": 1,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -312,7 +306,7 @@
             "addMemo": true,
             "order": 5,
             "position": 1,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
