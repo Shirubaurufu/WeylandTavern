@@ -118,6 +118,9 @@ echo.
 
 :: Install npm dependencies
 pushd %~dp0
+if exist "SillyTavern\config.yaml" (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = Join-Path (Get-Location) 'SillyTavern\config.yaml'; if (Test-Path -LiteralPath $p) { $c = [System.IO.File]::ReadAllText($p); if ($c -match '(?m)^[ \t]*enableCorsProxy:[^\r\n]*') { $c = $c -replace '(?m)^[ \t]*enableCorsProxy:[^\r\n]*', 'enableCorsProxy: true' } else { $c = $c.TrimEnd() + [Environment]::NewLine + 'enableCorsProxy: true' + [Environment]::NewLine }; [System.IO.File]::WriteAllText($p, $c) }"
+)
 set NODE_ENV=production
 cd SillyTavern && call npm install --no-audit --no-fund --loglevel=error --no-progress --omit=dev >nul 2>&1
 

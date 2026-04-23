@@ -1,0 +1,33 @@
+<div class="wst-settings-container" id="wst-status-extension-root">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>Weyland Status Tracker</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+
+        <div class="inline-drawer-content">
+
+            <div class="wst-health-panel" aria-live="polite">
+                <div class="wst-health-panel-head">
+                    <div class="wst-health-title">External Service Health</div>
+                    <button type="button" class="wst-health-refresh" id="wst-service-health-refresh"
+                        title="Re-run status checks now" data-i18n="[title]Re-run status checks now">
+                        <span class="fa-solid fa-rotate-right" aria-hidden="true"></span>
+                        <span data-i18n="Refresh">Refresh</span>
+                    </button>
+                </div>
+                <div id="wst-service-health-root"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; margin-bottom: 10px;">
+                <label class="checkbox_label" for="wst-debug-checkbox" title="Debug Weyland Status Tracker"
+                    data-i18n="[title]Debug Weyland Status Tracker">
+                    <input id="wst-debug-checkbox" type="checkbox">
+                    <span data-i18n="Debug">Debug Logging</span>
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+</div>
