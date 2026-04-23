@@ -1,0 +1,10 @@
+{
+    "name": "Weyland-Status-Tracker",
+    "display_name": "Weyland Status Tracker",
+    "description": "Monitors service health and provides diagnostic feedback for outages.",
+    "version": "1.0.0",
+    "author": "Josh",
+    "js": "index.js",
+    "css": "style.css",
+    "optional": false
+}

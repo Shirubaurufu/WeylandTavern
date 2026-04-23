@@ -1,0 +1,42 @@
+{
+    "claude-haiku-4-5-rp":{
+        "name": "Claude Haiku 4.5 RP",
+        "description": "Uses 100% Claude Haiku 4.5."
+    },
+    "claude-sonnet-4.5-rp":{
+        "name": "Claude Sonnet 4.5 RP",
+        "description": "Uses 100% Claude Sonnet 4.5."
+    },
+    "claude-sonnet-4.5-rp2":{
+        "name": "Claude Sonnet 4.5 RP2",
+        "description": "Blends Sonnet 4.5 and GLM 5.0 Thinking."
+    },
+    "claude-sonnet-4.5-rp3":{
+        "name": "Claude Sonnet 4.5 RP3",
+        "description": "Blends Sonnet 4.5 and GLM 5.0 (alternate method)."
+    },
+    "claude-sonnet-4.6-rp":{
+        "name": "Claude Sonnet 4.6 RP",
+        "description": "Uses 100% Claude Sonnet 4.6."
+    },
+    "claude-sonnet-4.6-rp2":{
+        "name": "Claude Sonnet 4.6 RP2",
+        "description": "Blends Sonnet 4.6 and GLM 5.0 Thinking."
+    },
+    "claude-sonnet-4.6-rp3":{
+        "name": "Claude Sonnet 4.6 RP3",
+        "description": "Blends Sonnet 4.6 and GLM 5.0 (alternate method)."
+    },
+    "claude-sonnet-4.6-rp4":{
+        "name": "Claude Sonnet 4.6 RP4",
+        "description": "Blends Sonnet 4.6 and GLM 4.7 Thinking."
+    },
+    "claude-sonnet-4.6-rp5":{
+        "name": "Claude Sonnet 4.6 RP5",
+        "description": "Blends Sonnet 4.6 and Gemini 3.1 Pro."
+    },
+    "claude-sonnet-4.6-rp6":{
+        "name": "Claude Sonnet 4.6 RP6",
+        "description": "Blends Sonnet 4.6 and GLM 5.1."
+    }
+}
