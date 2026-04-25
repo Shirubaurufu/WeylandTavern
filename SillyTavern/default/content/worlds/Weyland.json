@@ -2483,7 +2483,12 @@
                 "delay": 0
             },
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "33": {
             "key": [
@@ -6767,7 +6772,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 217,
+            "displayIndex": 218,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6920,7 +6925,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 218,
+            "displayIndex": 219,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7225,7 +7230,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 212,
+            "displayIndex": 213,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7378,7 +7383,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 219,
+            "displayIndex": 220,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9389,9 +9394,7 @@
         },
         "123": {
             "key": [
-                "Sakurai Cafe",
-                "sakurai",
-                "sakurai's"
+                "Sakurai"
             ],
             "keysecondary": [],
             "comment": "Sakurai Cafe",
@@ -9467,7 +9470,6 @@
                 "Black Barrel Bar",
                 "black barrel",
                 "gemini",
-                "black barrel's",
                 "farkas",
                 "dmitri",
                 "volkov"
@@ -11303,7 +11305,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 222,
+            "displayIndex": 223,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -14769,7 +14771,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 227,
+            "displayIndex": 228,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -14816,7 +14818,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 229,
+            "displayIndex": 230,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -14881,7 +14883,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 214,
+            "displayIndex": 215,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -14952,7 +14954,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 220,
+            "displayIndex": 221,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -15007,7 +15009,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 215,
+            "displayIndex": 216,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15085,7 +15087,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 216,
+            "displayIndex": 217,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15334,6 +15336,11 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "203": {
@@ -15458,7 +15465,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 211,
+            "displayIndex": 212,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15535,7 +15542,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 223,
+            "displayIndex": 224,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -15584,7 +15591,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 224,
+            "displayIndex": 225,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -17179,7 +17186,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 225,
+            "displayIndex": 226,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -17226,7 +17233,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 226,
+            "displayIndex": 227,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -17273,7 +17280,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 228,
+            "displayIndex": 229,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -18482,7 +18489,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 213,
+            "displayIndex": 214,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -18560,7 +18567,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 221,
+            "displayIndex": 222,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -18593,6 +18600,156 @@
                 "tags": [
                     "75a09210-d14f-4c67-91df-3a8fef887967"
                 ]
+            }
+        },
+        "247": {
+            "uid": 247,
+            "key": [
+                "Mama's Den",
+                "dive bar",
+                "Zora"
+            ],
+            "keysecondary": [],
+            "comment": "Mama's Den",
+            "content": "[MAMA'S DEN]\nPOTENTIAL LOCATION\n\nMama's Den sits on the tail end of Senaka Boulevard, near the beach and 7-Eleven. It used to be called simply The Den - one of the two legendary bars at Weyland alongside the Black Barrel, for many years. Previously owned by a legendary bear demi - Rendvir - before he passed away suddenly. It fell into disrepair and was sold cheap. Zora bought it with inheritance money, slapped a neon \"Mama's\" overtop the existing white \"the\", resulting in a mismatch Neon and White \"Mama's Den\" sign, did the repairs that absolutely had to be done, and has been ignoring everything else ever since.\n\nThe main, shining draw of Mama's are the prices: they are low enough to border on being concerning.\n\nPoor students -> Love the bar despite everything. Informal home to many a society reject, even if it isn't warm.\nRIch students -> largely avoidant of it as a \"drug den\".\n\nThe bar is comparable in size to BBB but the comparison ends there. It is in utter disrepair. Dim as all hell, not just unclean but actively dirty, Some booths are genuinely not safe to sit in. The women's bathroom has been out of order for over a year. If a light burns out, it stays out - the other lights compensate. Many a mess goes entirely unacknowledged.\n\nThe bar top is the exception. It is immaculate. Zora wipes it compulsively the entire time she's working, an unconscious tick that is the closest she gets to meditation.\n\nZora considers herself a bartender. She has learned a few cocktails that are genuinely good. Its just hard to take seriously when she is reading some of them out of a cocktail recipe book (\"COCKTAILS FOR EVERY OCCASION\") she got from Kroger and pulling out a can of shasta twist from an abused mini fridge she looted from a dumpster during dorm moveouts to make it. (\"Shasta's the same, they make it in the same factory as sprite.\" You didnt ask.)\n\nMama's Den is not comfortable and is not a cozy reprieve. Its dirty, its uncomfortable, the people there can make you even more uncomfortable, and the bartender doesn't give a shit what your deal is. Watch for needles, passed out college students and mysterious stains. Occasionally, people try to have sex openly in the booths. Zora chases them out.\n\n[Lighting] Dim as all hell. Several fixtures have burned out and been left that way - the remaining lights compensate, casting the room in an uneven amber glow that makes everything look slightly older than it is. It is not atmospheric. It is just dark.\n\n[Atmosphere] Sticky, lived-in, and completely unbothered. The air carries stale beer, fryer grease, and the faint vanilla of Zora's body spray underneath it all. The jukebox provides a low, temperamental soundtrack. Nobody here is going to ask you how you're doing. This is either a problem or exactly what you needed.\n\n[Interior] The bar itself runs along the back wall, and it is the only surface in the establishment that is genuinely, immaculately clean. Zora wipes it compulsively throughout every shift. A dorm mini-fridge with anime decals sits on its far end. It is the closest she gets to meditation. The rest of the bar receives no such attention. Other mini fridges below and behind the bar.\n\n\nNotable features:\n- booth line the walls - Booths line the walls - the good ones are worn but functional, the bad ones are genuinely not safe and regulars know which is which. perfect for crying in or drinking until you pass out and Zora throws you out onto the street.\n\n- The jukebox: old, temperamental, and everyone knows you have to give it a firm smack when it sticks. \"Percussive maintenance,\" Zora calls it.\n\n- The mini fridges (all rescued from dormitory dumpsters): Zora keeps her shasta cans and random mixers spread haphazardly across five or six mini fridges that she has salvaged from years of campus dumpsters during move-out. Her favorite is proudly displayed on the bar: white, covered in anime and hentai decals from its previous college-aged owners. Literal hentai, literal tits. Not even like, ecchi. Just straight up tits. Zora has no idea who or what the characters are (doesnt know the word \"hentai\"), she just admires them. Houses the Shasta. \"yeah them cartoon girls got big hooters on 'em, but they dont bother me none. Tryna compete with me.\" *openly squeezes her breasts in front of a random customer* \"..but mines are REAL.\" (sic)\n\n- The Women's Bathroom: Out of order. Has been for over a year. \"Use the mens. The shitters all go to the same place. Anybody gives you grief, you let me know. I'll break their fuckin' legs.\"\n\n- The menu consists of alcohol and bar food such as macaroni bites, potato skins and pizza rolls.\n\n- On full display, directly behind the bar, she has two consumer-kitchen-grade Ninja air fryers that have seen hell. These are her kitchen. You might order the mini corn dogs from the menu, only to watch as she pulls them from some godforsaken freezer and thrusts them into the air fryer, feet away from you. \"Feel like a chef sometimes.\"\n\n- She doesn't have fancy ingredients and will absolutely extrapolate beyond reason on substitutions\n\n- The photo: behind the bar, slightly crooked, slightly dusty. Polipa, maybe eight years old (her daughter, also hyena, now adult).\n\n- The walls: remnants of The Den's glory days. Beer signs, windows trying to let in natural light. Zora hasn't added anything.\nHasn't taken anything down.\n\n- gets pissy about credit cards. \"Aint you got cash on you?\" (doesnt report most sales) \"okay, well I gotta charge you a 12% tax.\" (doesn't know the tax rate)\n\nDrinks: Cheapest in town, bar none. Full bar, Shasta products used freely as mixers. Mama's Moonshine available on request - a homemade concoction of god knows what that she brews herself that will make you white out. Not on the menu. She'll offer it when she likes you.\n\n[Atmosphere Notes]\n- Mama's Den is the only bar at Weyland where you can cry openly and nobody will make it weird by caring\n- Drug addicts and dealers, rough students, homeless, mixed in with otherwise normal students who just dont have a lot of money\n- Pickpockets during busy hours\n\n[END MAMA'S DEN]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 90,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": false,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 2,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 38,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 24,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": false,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": true,
+                "sticky": 2,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
+        },
+        "248": {
+            "uid": 248,
+            "key": [
+                "!Zora",
+                "!zora",
+                "Zora"
+            ],
+            "keysecondary": [],
+            "comment": "Zora",
+            "content": "{{getvar::ZORA}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 211,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 149,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": true,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": []
             }
         }
     },
