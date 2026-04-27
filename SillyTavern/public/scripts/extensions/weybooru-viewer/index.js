@@ -4,7 +4,7 @@
    Modal image viewer for ST. Uses szurubooru JSON API (weybooru.com).
 
    Files:  manifest.json | index.js (this) | template.html | style.css
-   Stores: persistent → ST's extensionSettings | session → local `state` obj
+   Stores: persistent → ST's extensionSettings (+ localStorage prefs mirror) | session → local `state` obj
    Mount:  ST hamburger menu (#options), with floating-button fallback
    =========================================================================== */
 
@@ -23,6 +23,8 @@ const TAG_VOTE_API_ORIGIN = 'https://tags.weybooru.com';
 const TAG_VOTE_TOKEN_STORAGE_KEY = `${WBV_MODULE_NAME}_tagVoteToken`;
 /** Last manual tag-review panel action: `'open'` | `'close'` (see tagReviewGetPanelPref). */
 const TAG_REVIEW_PANEL_PREF_STORAGE_KEY = `${WBV_MODULE_NAME}_tagReviewPanelPref`;
+/** Mirror of `prefs` for recovery when extensionSettings drops or nulls booleans after save/load. */
+const PREFS_MIRROR_STORAGE_KEY = `${WBV_MODULE_NAME}_prefsMirror`;
 
 // ── DEFAULTS ──────────────────────────────────────────────────────────────────
 // These get persisted to ST's extensionSettings (survives across page reloads)
@@ -37,7 +39,7 @@ const defaults = {
     slideSecs: 6,
     autofit: true,
     images: true, gifs: true, videos: false,
-    rS: true, rQ: true, rE: true,              // szurubooru: safe / sketchy / unsafe
+    rS: true, rQ: false, rE: false,           // szurubooru: safe / sketchy / unsafe (default: safe only)
     blacklist: '',
     sort: 'newest',
   },
@@ -107,6 +109,53 @@ let settings = undefined;
 let szuruDidBumpLogin = false;
 let wbvBlacklistSearchTimer = null;
 
+function normalizeStoredPrefs(p) {
+  const d = defaults.prefs;
+  if (!p || typeof p !== 'object') return structuredClone(d);
+  const base = { ...structuredClone(d), ...p };
+  const boolKeys = ['autofit', 'images', 'gifs', 'videos', 'rS', 'rQ', 'rE'];
+  for (const k of boolKeys) {
+    const v = base[k];
+    if (v === null || v === undefined) base[k] = d[k];
+    else if (typeof v === 'boolean') { /* keep */ }
+    else if (v === true || v === 'true' || v === 1 || v === '1') base[k] = true;
+    else if (v === false || v === 'false' || v === 0 || v === '0') base[k] = false;
+    else base[k] = d[k];
+  }
+  let ss = +base.slideSecs;
+  if (!Number.isFinite(ss)) ss = d.slideSecs;
+  base.slideSecs = Math.max(1, Math.min(300, ss));
+  if (typeof base.blacklist !== 'string') base.blacklist = d.blacklist;
+  if (typeof base.sort !== 'string' || !base.sort) base.sort = d.sort;
+  return base;
+}
+
+/** Fill prefs missing or null from a localStorage mirror (written in persistFromUI). */
+function mergePrefsFromMirror(stored) {
+  let mirror = null;
+  try {
+    const raw = localStorage.getItem(PREFS_MIRROR_STORAGE_KEY);
+    if (raw) mirror = JSON.parse(raw);
+  } catch {
+    mirror = null;
+  }
+  if (!mirror || typeof mirror !== 'object') return stored;
+  if (!stored || typeof stored !== 'object') return { ...mirror };
+  const keys = ['autofit', 'images', 'gifs', 'videos', 'rS', 'rQ', 'rE', 'slideSecs', 'blacklist', 'sort'];
+  const out = { ...stored };
+  for (const k of keys) {
+    if ((out[k] === null || out[k] === undefined) && mirror[k] != null) out[k] = mirror[k];
+  }
+  return out;
+}
+
+function readCheckboxFromUI(sel, fallback) {
+  const $el = $(sel);
+  if (!$el.length) return fallback;
+  const v = $el.prop('checked');
+  return typeof v === 'boolean' ? v : fallback;
+}
+
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function getSettings() {
   if (!extensionSettings[WBV_MODULE_NAME]) {
@@ -131,9 +180,15 @@ function getSettings() {
     if (s.prefs.rG === false) s.prefs.rQ = false;
     delete s.prefs.rG;
   }
-  for (const k of Object.keys(defaults.prefs)) {
-    if (s.prefs[k] === undefined) s.prefs[k] = defaults.prefs[k];
+  if (!s.prefs || typeof s.prefs !== 'object') {
+    s.prefs = structuredClone(defaults.prefs);
+  } else {
+    s.prefs = mergePrefsFromMirror(s.prefs);
+    for (const k of Object.keys(defaults.prefs)) {
+      if (s.prefs[k] === undefined) s.prefs[k] = defaults.prefs[k];
+    }
   }
+  s.prefs = normalizeStoredPrefs(s.prefs);
   for (const k of Object.keys(defaults.creds)) {
     if (s.creds[k] === undefined) s.creds[k] = defaults.creds[k];
   }
@@ -143,22 +198,39 @@ function getSettings() {
 
 function persistFromUI() {
   const s = getSettings();
+  const prev = { ...s.prefs };
   s.favorites = [...state.favorites];
   s.favPostsData = state.favPosts;
   s.history = state.history;
   s.savedTags = state.savedTags;
-  s.prefs = {
-    slideSecs: +$('#wbv-slide-secs').val() || 6,
-    autofit:   $('#wbv-autofit').prop('checked'),
-    images:    $('#wbv-f-images').prop('checked'),
-    gifs:      $('#wbv-f-gifs').prop('checked'),
-    videos:    $('#wbv-f-videos').prop('checked'),
-    rS: $('#wbv-r-s').prop('checked'),
-    rQ: $('#wbv-r-q').prop('checked'),
-    rE: $('#wbv-r-e').prop('checked'),
-    blacklist: $('#wbv-blacklist').val(),
-    sort:      $('#wbv-sort').val(),
-  };
+
+  const $secs = $('#wbv-slide-secs');
+  let slideSecs = prev.slideSecs ?? defaults.prefs.slideSecs;
+  if ($secs.length) {
+    const n = +$secs.val();
+    if (Number.isFinite(n)) slideSecs = Math.max(1, Math.min(300, n || slideSecs));
+  }
+
+  const $bl = $('#wbv-blacklist');
+  const $sort = $('#wbv-sort');
+  s.prefs = normalizeStoredPrefs({
+    slideSecs,
+    autofit: readCheckboxFromUI('#wbv-autofit', prev.autofit),
+    images: readCheckboxFromUI('#wbv-f-images', prev.images),
+    gifs: readCheckboxFromUI('#wbv-f-gifs', prev.gifs),
+    videos: readCheckboxFromUI('#wbv-f-videos', prev.videos),
+    rS: readCheckboxFromUI('#wbv-r-s', prev.rS),
+    rQ: readCheckboxFromUI('#wbv-r-q', prev.rQ),
+    rE: readCheckboxFromUI('#wbv-r-e', prev.rE),
+    blacklist: $bl.length ? String($bl.val() ?? '') : prev.blacklist,
+    sort: $sort.length ? ($sort.val() || prev.sort) : prev.sort,
+  });
+
+  try {
+    localStorage.setItem(PREFS_MIRROR_STORAGE_KEY, JSON.stringify(s.prefs));
+  } catch {
+    /* quota / private mode */
+  }
   saveSettingsDebounced();
 }
 
@@ -970,6 +1042,7 @@ async function ensureBuilt() {
 
 async function openOverlay(initialQuery) {
   await ensureBuilt();
+  applySettingsToUI();
   $('#wbv-modal-overlay').css('display', 'flex');
   state.open = true;
 
@@ -989,8 +1062,8 @@ async function openOverlay(initialQuery) {
     }
   }
   updateCharHint();
-  // focus search if no current view
-  if (!state.didSearch) {
+  // focus search if no current view (skip when search strip is collapsed)
+  if (!state.didSearch && !state.panelsHidden) {
     setTimeout(() => $('#wbv-search').focus(), 50);
   }
 }
@@ -1250,6 +1323,8 @@ async function toggleLike() {
 function togglePanels() {
   state.panelsHidden = !state.panelsHidden;
   $('#wbv-modal-overlay').toggleClass('wbv-panels-hidden', state.panelsHidden);
+  $('#wbv-search-bar-wrap').attr('aria-hidden', state.panelsHidden ? 'true' : 'false');
+  if (state.panelsHidden) $('#wbv-search').trigger('blur');
 }
 
 function splitPostTags(tagsStr) {
@@ -1335,14 +1410,9 @@ function renderViewer() {
     imgEl.style.maxWidth = autofit ? '100%' : 'none';
     imgEl.style.maxHeight = autofit ? '100%' : 'none';
     if (imgEl.src !== post.file_url) {
-      imgEl.crossOrigin = 'anonymous';
+      imgEl.removeAttribute('crossorigin');
       imgEl.src = post.file_url;
       imgEl.onerror = () => {
-        if (imgEl.crossOrigin) {
-          imgEl.crossOrigin = null;
-          imgEl.src = post.file_url;
-          return;
-        }
         if (post.sample && imgEl.src !== post.sample) imgEl.src = post.sample;
       };
     }
@@ -1357,6 +1427,7 @@ function renderViewer() {
   renderImageTagsOverlay(post);
   $('#wbv-exit-favs-btn').toggleClass('wbv-show', state.showFavs);
   void loadTagReviewForPost(post);
+  wbvResetMainMediaSwipeStyle();
 }
 
 function updateCounter() {
@@ -1487,6 +1558,25 @@ function updateSaveTokenButtonEnabled() {
   const typed = ($('#wbv-wb-token').val() || '').trim();
   const saved = (getSettings().creds.token || '').trim();
   $('#wbv-save-creds').prop('disabled', !typed || typed === saved);
+}
+
+/** Visible main viewer media (image or video), for mobile swipe offset. */
+function wbvSwipeVisibleMainMedia() {
+  const img = document.getElementById('wbv-main-img');
+  const vid = document.getElementById('wbv-main-vid');
+  if (img && !img.classList.contains('wbv-hidden')) return img;
+  if (vid && !vid.classList.contains('wbv-hidden')) return vid;
+  return null;
+}
+
+function wbvResetMainMediaSwipeStyle() {
+  for (const id of ['wbv-main-img', 'wbv-main-vid']) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.transition = '';
+      el.style.transform = '';
+    }
+  }
 }
 
 // ── EVENT WIRING ──────────────────────────────────────────────────────────────
@@ -1706,10 +1796,71 @@ function wireEvents() {
   // re-render viewer when autofit toggled
   $('#wbv-autofit').on('change', () => { if (state.didSearch || state.showFavs) renderViewer(); });
 
-  // mobile touch zones — left half = prev, right half = next
-  // (delegated to img-area's pseudo-elements via real button click handlers)
+  // mobile touch zones — left/right tap + horizontal swipe (swipe right = prev, left = next)
+  const wbvImgAreaMobile = {
+    swipeX0: null,
+    swipeY0: null,
+    swipeT0: null,
+    swipeId: null,
+    ignoreClickUntil: 0,
+    swipeHoriz: false,
+  };
+  function wbvImgAreaMobileIgnoreTarget(el) {
+    if (!el || typeof el.closest !== 'function') return true;
+    if (el.closest('#wbv-ctrl-bar')) return true;
+    if (el.closest('#wbv-image-tags-float')) return true;
+    if (el.closest('#wbv-tagvote-root')) return true;
+    if (el.closest('#wbv-image-uploader-btn')) return true;
+    return false;
+  }
+  const WBV_SWIPE_MIN_PX = 50;
+  const WBV_SWIPE_DOMINANCE = 1.25;
+  const WBV_SWIPE_MAX_MS = 900;
+  const WBV_SWIPE_COMMIT_PX = 14;
+  const WBV_SWIPE_MAX_DRAG_RATIO = 0.92;
+
+  function wbvImgAreaTouchFromList(list, id) {
+    if (!list || !list.length) return null;
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].identifier === id) return list[i];
+    }
+    return null;
+  }
+
+  function wbvSetMainMediaSwipeOffset(dx) {
+    const el = wbvSwipeVisibleMainMedia();
+    if (!el) return;
+    el.style.transition = '';
+    el.style.transform = `translateX(${dx}px)`;
+  }
+
+  function wbvAnimateMainMediaSwipeRelease() {
+    const el = wbvSwipeVisibleMainMedia();
+    if (!el) {
+      wbvResetMainMediaSwipeStyle();
+      return;
+    }
+    el.style.transition = 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)';
+    el.style.transform = 'translateX(0)';
+    const fin = () => {
+      el.removeEventListener('transitionend', fin);
+      wbvResetMainMediaSwipeStyle();
+    };
+    el.addEventListener('transitionend', fin, { once: true });
+    setTimeout(fin, 300);
+  }
+
+  function wbvImgAreaResetSwipeTracking() {
+    wbvImgAreaMobile.swipeX0 = null;
+    wbvImgAreaMobile.swipeY0 = null;
+    wbvImgAreaMobile.swipeT0 = null;
+    wbvImgAreaMobile.swipeId = null;
+    wbvImgAreaMobile.swipeHoriz = false;
+  }
+
   $('#wbv-img-area').on('click', e => {
     if (window.innerWidth > 900) return;
+    if (Date.now() < wbvImgAreaMobile.ignoreClickUntil) return;
     // ignore clicks on the control bar
     if ($(e.target).closest('#wbv-ctrl-bar').length) return;
     if ($(e.target).closest('#wbv-image-tags-float').length) return;
@@ -1719,6 +1870,91 @@ function wireEvents() {
     const x = e.clientX - rect.left;
     if (x < rect.width * 0.3) prev();
     else if (x > rect.width * 0.7) next();
+  });
+
+  $('#wbv-img-area').on('touchstart', e => {
+    if (window.innerWidth > 900) return;
+    if (wbvImgAreaMobileIgnoreTarget(e.target)) return;
+    const te = e.originalEvent || e;
+    const t = te.touches && te.touches[0];
+    if (!t) return;
+    wbvResetMainMediaSwipeStyle();
+    wbvImgAreaMobile.swipeHoriz = false;
+    wbvImgAreaMobile.swipeX0 = t.clientX;
+    wbvImgAreaMobile.swipeY0 = t.clientY;
+    wbvImgAreaMobile.swipeT0 = Date.now();
+    wbvImgAreaMobile.swipeId = t.identifier;
+  });
+
+  const wbvImgAreaEl = document.getElementById('wbv-img-area');
+  if (wbvImgAreaEl) {
+    wbvImgAreaEl.addEventListener('touchmove', e => {
+      if (window.innerWidth > 900) return;
+      if (wbvImgAreaMobile.swipeX0 == null) return;
+      const t = wbvImgAreaTouchFromList(e.touches, wbvImgAreaMobile.swipeId);
+      if (!t) return;
+      const dx = t.clientX - wbvImgAreaMobile.swipeX0;
+      const dy = t.clientY - wbvImgAreaMobile.swipeY0;
+      if (!wbvImgAreaMobile.swipeHoriz) {
+        if (Math.abs(dx) < WBV_SWIPE_COMMIT_PX) return;
+        if (Math.abs(dx) < Math.abs(dy) * WBV_SWIPE_DOMINANCE) return;
+        wbvImgAreaMobile.swipeHoriz = true;
+      }
+      const maxDx = wbvImgAreaEl.clientWidth * WBV_SWIPE_MAX_DRAG_RATIO;
+      const clamped = Math.max(-maxDx, Math.min(maxDx, dx));
+      wbvSetMainMediaSwipeOffset(clamped);
+    }, { passive: true });
+  }
+
+  $('#wbv-img-area').on('touchend touchcancel', e => {
+    if (window.innerWidth > 900) return;
+    if (e.type === 'touchcancel') {
+      const hadHoriz = wbvImgAreaMobile.swipeHoriz;
+      wbvImgAreaResetSwipeTracking();
+      if (hadHoriz) wbvAnimateMainMediaSwipeRelease();
+      else wbvResetMainMediaSwipeStyle();
+      return;
+    }
+    if (wbvImgAreaMobile.swipeX0 == null) return;
+    const te = e.originalEvent || e;
+    const list = te.changedTouches;
+    if (!list || !list.length) {
+      const hadHoriz = wbvImgAreaMobile.swipeHoriz;
+      wbvImgAreaResetSwipeTracking();
+      if (hadHoriz) wbvAnimateMainMediaSwipeRelease();
+      else wbvResetMainMediaSwipeStyle();
+      return;
+    }
+    const t = Array.from(list).find(x => x.identifier === wbvImgAreaMobile.swipeId) || list[0];
+    if (!t) {
+      const hadHoriz = wbvImgAreaMobile.swipeHoriz;
+      wbvImgAreaResetSwipeTracking();
+      if (hadHoriz) wbvAnimateMainMediaSwipeRelease();
+      else wbvResetMainMediaSwipeStyle();
+      return;
+    }
+    const x0 = wbvImgAreaMobile.swipeX0;
+    const y0 = wbvImgAreaMobile.swipeY0;
+    const t0 = wbvImgAreaMobile.swipeT0;
+    const hadHoriz = wbvImgAreaMobile.swipeHoriz;
+    wbvImgAreaResetSwipeTracking();
+    if (t0 == null) return;
+    const dt = Date.now() - t0;
+    const dx = t.clientX - x0;
+    const dy = t.clientY - y0;
+    const swipeOk = dt <= WBV_SWIPE_MAX_MS
+      && Math.abs(dx) >= WBV_SWIPE_MIN_PX
+      && Math.abs(dx) >= Math.abs(dy) * WBV_SWIPE_DOMINANCE;
+    if (swipeOk) {
+      wbvResetMainMediaSwipeStyle();
+      if (dx > 0) prev();
+      else next();
+      wbvImgAreaMobile.ignoreClickUntil = Date.now() + 450;
+    } else if (hadHoriz) {
+      wbvAnimateMainMediaSwipeRelease();
+    } else {
+      wbvResetMainMediaSwipeStyle();
+    }
   });
 }
 
