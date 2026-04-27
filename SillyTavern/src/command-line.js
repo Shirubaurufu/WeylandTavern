@@ -65,7 +65,7 @@ export class CommandLineParser {
             browserLaunchHostname: 'auto',
             browserLaunchPort: -1,
             browserLaunchAvoidLocalhost: false,
-            enableCorsProxy: false,
+            enableCorsProxy: true,
             disableCsrf: false,
             ssl: false,
             certPath: 'certs/cert.pem',

@@ -141,6 +141,16 @@ echo ""
 echo "-----------------------------------------------------------"
 echo ""
 
+CONFIG_FILE="SillyTavern/config.yaml"
+if [ -f "$CONFIG_FILE" ]; then
+    if grep -qE '^[[:space:]]*enableCorsProxy:' "$CONFIG_FILE"; then
+        tmpfile=$(mktemp)
+        sed 's/^[[:space:]]*enableCorsProxy:.*/enableCorsProxy: true/' "$CONFIG_FILE" > "$tmpfile" && mv "$tmpfile" "$CONFIG_FILE"
+    else
+        printf '\nenableCorsProxy: true\n' >> "$CONFIG_FILE"
+    fi
+fi
+
 # Install npm dependencies
 export NODE_ENV=production
 cd SillyTavern && npm i --no-audit --no-fund --loglevel=error --no-progress --omit=dev > /dev/null 2>&1

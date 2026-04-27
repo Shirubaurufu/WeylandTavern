@@ -198,8 +198,8 @@
             "key": [
                 "/Willow.?s room/",
                 "/Willow.?s dorm/",
-                "(#283)",
-                "room 383"
+                "(#383)",
+                "383"
             ],
             "keysecondary": [],
             "comment": "Willow Room",
@@ -229,7 +229,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -1108,7 +1108,7 @@
             "key": [
                 "/Rivera.?s room/",
                 "/Rivera.?s dorm/",
-                "room 282",
+                "282",
                 "(#282)"
             ],
             "keysecondary": [],
@@ -1138,7 +1138,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
-            "caseSensitive": false,
+            "caseSensitive": true,
             "matchWholeWords": null,
             "useGroupScoring": true,
             "automationId": "",
@@ -1727,7 +1727,7 @@
                 "/Rivet.?s room/",
                 "/Rivet.?s dorm/",
                 "(#270)",
-                "room 270"
+                "270"
             ],
             "keysecondary": [],
             "comment": "Rivet Room",
@@ -1751,7 +1751,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -3402,7 +3402,9 @@
             },
             "characterFilter": {
                 "isExclude": true,
-                "names": [],
+                "names": [
+                    "Muse"
+                ],
                 "tags": [
                     "3b2eb8e9-75eb-47f7-8814-a1bff270392d"
                 ]
@@ -3705,7 +3707,9 @@
             },
             "characterFilter": {
                 "isExclude": false,
-                "names": [],
+                "names": [
+                    "Muse"
+                ],
                 "tags": [
                     "3b2eb8e9-75eb-47f7-8814-a1bff270392d"
                 ]
@@ -4573,7 +4577,7 @@
                 "/Briar.?s room/",
                 "/Briar.?s dorm/",
                 "(#309)",
-                "room 309",
+                "309",
                 "pet rock",
                 "Rosetta"
             ],
@@ -4605,7 +4609,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -4728,7 +4732,7 @@
                 "/Eve.?s room/",
                 "/Eve.?s dorm/",
                 "(#317)",
-                "room 317"
+                "317"
             ],
             "keysecondary": [],
             "comment": "Eve Room",
@@ -4758,7 +4762,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -6196,7 +6200,7 @@
             "key": [
                 "/Summer.?s room/",
                 "/Summer.?s dorm/",
-                "room 279",
+                "279",
                 "(#279)"
             ],
             "keysecondary": [],
@@ -6221,7 +6225,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -6274,7 +6278,7 @@
                 "/Rosa.?s room/",
                 "/Rosa.?s dorm/",
                 "(#315)",
-                "room 315"
+                "315"
             ],
             "keysecondary": [],
             "comment": "Rosa Room",
@@ -6304,7 +6308,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -6768,7 +6772,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 217,
+            "displayIndex": 218,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -6921,7 +6925,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 218,
+            "displayIndex": 219,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7226,7 +7230,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 212,
+            "displayIndex": 213,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -7379,7 +7383,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 219,
+            "displayIndex": 220,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -9223,12 +9227,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "121": {
             "key": [],
@@ -9390,9 +9389,7 @@
         },
         "123": {
             "key": [
-                "Sakurai Cafe",
-                "sakurai",
-                "sakurai's"
+                "Sakurai"
             ],
             "keysecondary": [],
             "comment": "Sakurai Cafe",
@@ -9468,7 +9465,6 @@
                 "Black Barrel Bar",
                 "black barrel",
                 "gemini",
-                "black barrel's",
                 "farkas",
                 "dmitri",
                 "volkov"
@@ -11304,7 +11300,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 222,
+            "displayIndex": 223,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -11326,7 +11322,7 @@
         "148": {
             "key": [
                 "(#294)",
-                "room 294",
+                "294",
                 "/Ava.?s room/",
                 "/Ava.?s dorm/"
             ],
@@ -11351,7 +11347,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
-            "caseSensitive": false,
+            "caseSensitive": true,
             "matchWholeWords": null,
             "useGroupScoring": true,
             "automationId": "",
@@ -11477,12 +11473,12 @@
         },
         "150": {
             "key": [
-                "Belle's room",
-                "Belle's dorm",
-                "Dash's room",
-                "Dash's dorm",
+                "/Belle.?s room/",
+                "/Belle.?s dorm/",
+                "/Dash.?s room/",
+                "/Dash.?s dorm/",
                 "(#281)",
-                "room 281"
+                "281"
             ],
             "keysecondary": [],
             "comment": "Belle & Dash Room",
@@ -11506,7 +11502,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11632,7 +11628,7 @@
         "152": {
             "key": [
                 "(#290)",
-                "room 290",
+                "290",
                 "/Bianca.?s room/",
                 "/Bianca.?s dorm/"
             ],
@@ -11658,7 +11654,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11708,7 +11704,7 @@
         "153": {
             "key": [
                 "(#271)",
-                "room 271",
+                "271",
                 "/Blake.?s room/",
                 "/Blake.?s dorm/"
             ],
@@ -11734,7 +11730,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11784,7 +11780,7 @@
         "154": {
             "key": [
                 "(#275)",
-                "room 275",
+                "275",
                 "/Cario.?s room/",
                 "/Cario.?s dorm/"
             ],
@@ -11810,7 +11806,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -11860,7 +11856,7 @@
         "155": {
             "key": [
                 "(#311)",
-                "room 311",
+                "311",
                 "/Karmen.?s room/",
                 "/Karmen.?s dorm/"
             ],
@@ -11886,7 +11882,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12092,7 +12088,7 @@
         "158": {
             "key": [
                 "(#284)",
-                "room 284",
+                "284",
                 "/Indigo.?s room/",
                 "/Indigo.?s dorm/"
             ],
@@ -12118,7 +12114,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12168,7 +12164,7 @@
         "159": {
             "key": [
                 "(#274)",
-                "room 274",
+                "274",
                 "/Gem.?s room/",
                 "/Luna.?s room/",
                 "/Gem.?s dorm/",
@@ -12196,7 +12192,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12246,7 +12242,7 @@
         "160": {
             "key": [
                 "(#292)",
-                "room 292",
+                "292",
                 "/Vera.?s room/",
                 "/Fasti.?s room/",
                 "/Vera.?s dorm/",
@@ -12274,7 +12270,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12324,7 +12320,7 @@
         "161": {
             "key": [
                 "(#109)",
-                "room 109",
+                "109",
                 "/Ellie's.?s room/",
                 "/Ellie.?s dorm/"
             ],
@@ -12349,7 +12345,7 @@
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
-            "caseSensitive": false,
+            "caseSensitive": true,
             "matchWholeWords": null,
             "useGroupScoring": true,
             "automationId": "",
@@ -12400,7 +12396,7 @@
         "162": {
             "key": [
                 "(#268)",
-                "room 268",
+                "268",
                 "/Jenn.?s room/",
                 "/Lucy.?s room/",
                 "/Lucy.?s dorm/",
@@ -12428,7 +12424,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "JLRoom",
             "role": null,
@@ -12478,7 +12474,7 @@
         "163": {
             "key": [
                 "(#273)",
-                "room 273",
+                "273",
                 "Nibbles",
                 "goldfish",
                 "/Kai.?s room/",
@@ -12508,7 +12504,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12558,7 +12554,7 @@
         "164": {
             "key": [
                 "(#376)",
-                "room 376",
+                "376",
                 "/Lentyl.?s room/",
                 "/Lentyl.?s dorm/"
             ],
@@ -12584,7 +12580,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12711,7 +12707,7 @@
         "166": {
             "key": [
                 "(#280)",
-                "room 280",
+                "280",
                 "/Koshizu.?s room/",
                 "/Koshizu.?s dorm/",
                 "/Koko.?s room/"
@@ -12738,7 +12734,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12868,7 +12864,7 @@
         "168": {
             "key": [
                 "(#276)",
-                "room 276",
+                "276",
                 "/Kris.?s room/",
                 "/Kris.?s dorm/"
             ],
@@ -12894,7 +12890,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -12944,7 +12940,7 @@
         "169": {
             "key": [
                 "(#268)",
-                "room 268",
+                "268",
                 "/Lucy.?s room/",
                 "/Lucy.?s dorm/"
             ],
@@ -12970,7 +12966,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "LSRoom",
             "role": null,
@@ -13097,7 +13093,7 @@
         "171": {
             "key": [
                 "(#171)",
-                "room 171",
+                "171",
                 "/Lurkle.?s room/",
                 "/Lurkle.?s dorm/"
             ],
@@ -13123,7 +13119,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -13561,7 +13557,7 @@
                 "/Mika.?s room/",
                 "/Mika.?s dorm/",
                 "(#269)",
-                "room 269"
+                "269"
             ],
             "keysecondary": [],
             "comment": "Mika Room",
@@ -13585,7 +13581,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -13637,7 +13633,7 @@
                 "/Nix.?s room/",
                 "/Nix.?s dorm/",
                 "(#283)",
-                "room 283"
+                "283"
             ],
             "keysecondary": [],
             "comment": "Nix & Sunny Room",
@@ -13661,7 +13657,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -14770,7 +14766,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 227,
+            "displayIndex": 228,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -14817,7 +14813,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 229,
+            "displayIndex": 230,
             "matchPersonaDescription": false,
             "matchCharacterDescription": false,
             "matchCharacterPersonality": false,
@@ -14882,7 +14878,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 214,
+            "displayIndex": 215,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -14953,7 +14949,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 220,
+            "displayIndex": 221,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -15008,7 +15004,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 215,
+            "displayIndex": 216,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15086,7 +15082,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 216,
+            "displayIndex": 217,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15276,7 +15272,7 @@
             ],
             "keysecondary": [],
             "comment": "Kyomi Dining Hall",
-            "content": "[KYOMI DINING HALL]\n\n[Location] Centrally located on campus, situated on Senaka Boulevard with Sterling Dormitory on one side and the ret of Senaka - restaraunts, cafes and the beach - on the other. It's about a 5-minute walk from Sterling Hall, making it a major hub for student life.\n\n[Architecture & Exterior] A modern, two-story building designed with Weyland's signature Japanese-American fusion. The exterior features large, floor-to-ceiling glass panels, dark wooden beams, and a gracefully sloping, dark-tiled roof. The entrance is marked by a small, beautifully landscaped rock garden with a few Japanese maple trees.\n\n[Atmosphere & Interior] The inside is a cavernous, open-plan space with high ceilings and polished vinyl floors. The atmosphere is a constant, energetic hum of conversation, the clatter of trays, and the sizzle and steam from the various food stations. Seating is diverse: long, heavy wooden communal tables for large groups, smaller four-person booths along the windows, and high-top counters with charging ports for solo diners. Despite the crowd, the large windows keep the space feeling bright and airy.\n\n[Dining Style & Stations] Akebono Commons operates on the \"marketplace\" model, where students can freely wander between different specialized food lines:\n- The Hearth: The central grill station, serving up classic American fare like burgers (beef, veggie, and turkey), grilled chicken sandwiches, and most importantly, french fries and chicken nuggets/tenders.\n- Terracotta Oven: Features two large brick ovens churning out personal-sized pizzas, calzones, and a rotating pasta bar with different sauces and toppings.\n- Global Kitchen: An international food station with a menu that rotates weekly. One week it might be a build-your-own taco bar, the next it could be serving Thai green curry or Indian butter chicken.\n- Homestead: The classic americana food station. This is where you'll find things like mac and cheese, rotisserie chicken, mashed potatoes, and roasted vegetables.\n- The Grove: A massive, fresh salad bar with a huge variety of greens, toppings, and dressings, plus a selection of daily soups.\n- Sunrise Sweets: Serves breakfast food (waffles, pancakes, omelets) until 11 AM, then switches to a dessert bar with soft-serve ice cream, cookies, cakes, and pastries for the rest of the day.\n\n[Notable Features]\n- Quiet Loft: The second floor is a designated \"quiet dining\" loft that overlooks the main hall, intended for students who want to eat and study in relative peace.\n- The Tray Vortex: The modern tray return system is a large conveyor belt that disappears into a wall, affectionately nicknamed \"the tray munch\" by students. No one knows why.\n\n[Meal Plan System]\nAccess to Weyland's dining halls is primarily managed through the student meal plan system. Students on a campus meal plan simply swipe their Weyland University ID card at the entrance, which deducts one 'meal swipe' from their weekly or semesterly allowance. For students who have run out of swipes, visitors, or those not on a meal plan, entry can be purchased at the door. The standard guest price is a flat fee, typically around $10 for breakfast and $12 for lunch or dinner, payable by cash, card, or Weyland Dining Dollars. Regardless of entry method, once inside, the dining hall operates as an all-you-can-eat buffet; patrons have unlimited access to all food stations for the duration of their single visit, though re-entry is not permitted on the same swipe or payment.\n[END KYOMI DINING HALL]\n=========",
+            "content": "[KYOMI DINING HALL]\n\n[Location] Centrally located on campus, situated on Senaka Boulevard with Sterling Dormitory on one side and the rest of Senaka - restaurants, cafes and the beach - on the other. It's about a 5-minute walk from Sterling Hall, making it a major hub for student life.\n\n[Architecture & Exterior] A modern, two-story building designed with Weyland's signature Japanese-American fusion. The exterior features large, floor-to-ceiling glass panels, dark wooden beams, and a gracefully sloping, dark-tiled roof. The entrance is marked by a small, beautifully landscaped rock garden with a few Japanese maple trees.\n\n[Atmosphere & Interior] The inside is a cavernous, open-plan space with high ceilings and polished vinyl floors. The atmosphere is a constant, energetic hum of conversation, the clatter of trays, and the sizzle and steam from the various food stations. Seating is diverse: long, heavy wooden communal tables for large groups, smaller four-person booths along the windows, and high-top counters with charging ports for solo diners. Despite the crowd, the large windows keep the space feeling bright and airy.\n\n[Dining Style & Stations] Akebono Commons operates on the \"marketplace\" model, where students can freely wander between different specialized food lines:\n- The Hearth: The central grill station, serving up classic American fare like burgers (beef, veggie, and turkey), grilled chicken sandwiches, and most importantly, french fries and chicken nuggets/tenders.\n- Terracotta Oven: Features two large brick ovens churning out personal-sized pizzas, calzones, and a rotating pasta bar with different sauces and toppings.\n- Global Kitchen: An international food station with a menu that rotates weekly. One week it might be a build-your-own taco bar, the next it could be serving Thai green curry or Indian butter chicken.\n- Homestead: The classic americana food station. This is where you'll find things like mac and cheese, rotisserie chicken, mashed potatoes, and roasted vegetables.\n- The Grove: A massive, fresh salad bar with a huge variety of greens, toppings, and dressings, plus a selection of daily soups.\n- Sunrise Sweets: Serves breakfast food (waffles, pancakes, omelets) until 11 AM, then switches to a dessert bar with soft-serve ice cream, cookies, cakes, and pastries for the rest of the day.\n\n[Notable Features]\n- Quiet Loft: The second floor is a designated \"quiet dining\" loft that overlooks the main hall, intended for students who want to eat and study in relative peace.\n- The Tray Vortex: The modern tray return system is a large conveyor belt that disappears into a wall, affectionately nicknamed \"the tray munch\" by students. No one knows why.\n\n[Meal Plan System]\nAccess to Weyland's dining halls is primarily managed through the student meal plan system. Students on a campus meal plan simply swipe their Weyland University ID card at the entrance, which deducts one 'meal swipe' from their weekly or semesterly allowance. For students who have run out of swipes, visitors, or those not on a meal plan, entry can be purchased at the door. The standard guest price is a flat fee, typically around $10 for breakfast and $12 for lunch or dinner, payable by cash, card, or Weyland Dining Dollars. Regardless of entry method, once inside, the dining hall operates as an all-you-can-eat buffet; patrons have unlimited access to all food stations for the duration of their single visit, though re-entry is not permitted on the same swipe or payment.\n[END KYOMI DINING HALL]\n=========",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -15464,7 +15460,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 211,
+            "displayIndex": 212,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -15541,7 +15537,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 223,
+            "displayIndex": 224,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -15590,7 +15586,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 224,
+            "displayIndex": 225,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -17185,7 +17181,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 225,
+            "displayIndex": 226,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -17232,7 +17228,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 226,
+            "displayIndex": 227,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -17279,7 +17275,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 228,
+            "displayIndex": 229,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -17292,7 +17288,7 @@
                 "/Yue-Lin.?s room/",
                 "/Yue-Lin.?s dorm/",
                 "(#288)",
-                "room 288"
+                "288"
             ],
             "keysecondary": [],
             "comment": "Yue-Lin Room",
@@ -17323,7 +17319,7 @@
             "groupWeight": 100,
             "scanDepth": 2,
             "caseSensitive": false,
-            "matchWholeWords": null,
+            "matchWholeWords": true,
             "useGroupScoring": true,
             "automationId": "",
             "role": null,
@@ -18488,7 +18484,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 213,
+            "displayIndex": 214,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -18566,7 +18562,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 221,
+            "displayIndex": 222,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -18599,6 +18595,156 @@
                 "tags": [
                     "75a09210-d14f-4c67-91df-3a8fef887967"
                 ]
+            }
+        },
+        "247": {
+            "uid": 247,
+            "key": [
+                "Mama's Den",
+                "dive bar",
+                "Zora"
+            ],
+            "keysecondary": [],
+            "comment": "Mama's Den",
+            "content": "[MAMA'S DEN]\nPOTENTIAL LOCATION\n\nMama's Den sits on the tail end of Senaka Boulevard, near the beach and 7-Eleven. It used to be called simply The Den - one of the two legendary bars at Weyland alongside the Black Barrel, for many years. Previously owned by a legendary bear demi - Rendvir - before he passed away suddenly. It fell into disrepair and was sold cheap. Zora bought it with inheritance money, slapped a neon \"Mama's\" overtop the existing white \"the\", resulting in a mismatch Neon and White \"Mama's Den\" sign, did the repairs that absolutely had to be done, and has been ignoring everything else ever since.\n\nThe main, shining draw of Mama's are the prices: they are low enough to border on being concerning.\n\nPoor students -> Love the bar despite everything. Informal home to many a society reject, even if it isn't warm.\nRIch students -> largely avoidant of it as a \"drug den\".\n\nThe bar is comparable in size to BBB but the comparison ends there. It is in utter disrepair. Dim as all hell, not just unclean but actively dirty, Some booths are genuinely not safe to sit in. The women's bathroom has been out of order for over a year. If a light burns out, it stays out - the other lights compensate. Many a mess goes entirely unacknowledged.\n\nThe bar top is the exception. It is immaculate. Zora wipes it compulsively the entire time she's working, an unconscious tick that is the closest she gets to meditation.\n\nZora considers herself a bartender. She has learned a few cocktails that are genuinely good. Its just hard to take seriously when she is reading some of them out of a cocktail recipe book (\"COCKTAILS FOR EVERY OCCASION\") she got from Kroger and pulling out a can of shasta twist from an abused mini fridge she looted from a dumpster during dorm moveouts to make it. (\"Shasta's the same, they make it in the same factory as sprite.\" You didnt ask.)\n\nMama's Den is not comfortable and is not a cozy reprieve. Its dirty, its uncomfortable, the people there can make you even more uncomfortable, and the bartender doesn't give a shit what your deal is. Watch for needles, passed out college students and mysterious stains. Occasionally, people try to have sex openly in the booths. Zora chases them out.\n\n[Lighting] Dim as all hell. Several fixtures have burned out and been left that way - the remaining lights compensate, casting the room in an uneven amber glow that makes everything look slightly older than it is. It is not atmospheric. It is just dark.\n\n[Atmosphere] Sticky, lived-in, and completely unbothered. The air carries stale beer, fryer grease, and the faint vanilla of Zora's body spray underneath it all. The jukebox provides a low, temperamental soundtrack. Nobody here is going to ask you how you're doing. This is either a problem or exactly what you needed.\n\n[Interior] The bar itself runs along the back wall, and it is the only surface in the establishment that is genuinely, immaculately clean. Zora wipes it compulsively throughout every shift. A dorm mini-fridge with anime decals sits on its far end. It is the closest she gets to meditation. The rest of the bar receives no such attention. Other mini fridges below and behind the bar.\n\n\nNotable features:\n- booth line the walls - Booths line the walls - the good ones are worn but functional, the bad ones are genuinely not safe and regulars know which is which. perfect for crying in or drinking until you pass out and Zora throws you out onto the street.\n\n- The jukebox: old, temperamental, and everyone knows you have to give it a firm smack when it sticks. \"Percussive maintenance,\" Zora calls it.\n\n- The mini fridges (all rescued from dormitory dumpsters): Zora keeps her shasta cans and random mixers spread haphazardly across five or six mini fridges that she has salvaged from years of campus dumpsters during move-out. Her favorite is proudly displayed on the bar: white, covered in anime and hentai decals from its previous college-aged owners. Literal hentai, literal tits. Not even like, ecchi. Just straight up tits. Zora has no idea who or what the characters are (doesnt know the word \"hentai\"), she just admires them. Houses the Shasta. \"yeah them cartoon girls got big hooters on 'em, but they dont bother me none. Tryna compete with me.\" *openly squeezes her breasts in front of a random customer* \"..but mines are REAL.\" (sic)\n\n- The Women's Bathroom: Out of order. Has been for over a year. \"Use the mens. The shitters all go to the same place. Anybody gives you grief, you let me know. I'll break their fuckin' legs.\"\n\n- The menu consists of alcohol and bar food such as macaroni bites, potato skins and pizza rolls.\n\n- On full display, directly behind the bar, she has two consumer-kitchen-grade Ninja air fryers that have seen hell. These are her kitchen. You might order the mini corn dogs from the menu, only to watch as she pulls them from some godforsaken freezer and thrusts them into the air fryer, feet away from you. \"Feel like a chef sometimes.\"\n\n- She doesn't have fancy ingredients and will absolutely extrapolate beyond reason on substitutions\n\n- The photo: behind the bar, slightly crooked, slightly dusty. Polipa, maybe eight years old (her daughter, also hyena, now adult).\n\n- The walls: remnants of The Den's glory days. Beer signs, windows trying to let in natural light. Zora hasn't added anything.\nHasn't taken anything down.\n\n- gets pissy about credit cards. \"Aint you got cash on you?\" (doesnt report most sales) \"okay, well I gotta charge you a 12% tax.\" (doesn't know the tax rate)\n\nDrinks: Cheapest in town, bar none. Full bar, Shasta products used freely as mixers. Mama's Moonshine available on request - a homemade concoction of god knows what that she brews herself that will make you white out. Not on the menu. She'll offer it when she likes you.\n\n[Atmosphere Notes]\n- Mama's Den is the only bar at Weyland where you can cry openly and nobody will make it weird by caring\n- Drug addicts and dealers, rough students, homeless, mixed in with otherwise normal students who just dont have a lot of money\n- Pickpockets during busy hours\n\n[END MAMA'S DEN]\n=====",
+            "constant": false,
+            "vectorized": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 90,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": false,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 2,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 38,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 24,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": false,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": true,
+                "sticky": 2,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
+        },
+        "248": {
+            "uid": 248,
+            "key": [
+                "!Zora",
+                "!zora",
+                "Zora"
+            ],
+            "keysecondary": [],
+            "comment": "Zora",
+            "content": "{{getvar::ZORA}}",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": true,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": false,
+            "matchWholeWords": null,
+            "useGroupScoring": false,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 211,
+            "extensions": {
+                "position": 1,
+                "exclude_recursion": false,
+                "display_index": 149,
+                "probability": 100,
+                "useProbability": true,
+                "depth": 4,
+                "selectiveLogic": 0,
+                "group": "",
+                "group_override": false,
+                "group_weight": 100,
+                "prevent_recursion": true,
+                "delay_until_recursion": false,
+                "scan_depth": 2,
+                "match_whole_words": null,
+                "use_group_scoring": false,
+                "case_sensitive": true,
+                "automation_id": "",
+                "role": 0,
+                "vectorized": false,
+                "sticky": 0,
+                "cooldown": 0,
+                "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": true,
+                "names": [],
+                "tags": []
             }
         }
     },

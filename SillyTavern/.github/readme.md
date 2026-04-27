@@ -1,94 +1,108 @@
-<a name="readme-top"></a>
+# Weyland Tavern
 
-![][cover]
+**A purpose-built client for Weyland University.**
 
-<div align="center">
+Weyland Tavern is a fork of [SillyTavern](https://github.com/SillyTavern/SillyTavern), heavily modified to serve as the frontend for a single fictional setting: Weyland University, a roleplay world developed by Lucky Paw and collaborators. It is not a general-purpose SillyTavern replacement, and it is not cross-compatible with standard SillyTavern character cards.
 
-English | [German](readme-de_de.md) | [中文](readme-zh_cn.md) | [繁體中文](readme-zh_tw.md) | [日本語](readme-ja_jp.md) | [Русский](readme-ru_ru.md) | [한국어](readme-ko_kr.md)
+If you're looking for a general-purpose LLM roleplay frontend for your own characters and settings, you want [SillyTavern](https://github.com/SillyTavern/SillyTavern). It's excellent, it's actively developed, and it's what Weyland Tavern is built on top of.
 
-[![GitHub Stars](https://img.shields.io/github/stars/SillyTavern/SillyTavern.svg)](https://github.com/SillyTavern/SillyTavern/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/SillyTavern/SillyTavern.svg)](https://github.com/SillyTavern/SillyTavern/forks)
-[![GitHub Issues](https://img.shields.io/github/issues/SillyTavern/SillyTavern.svg)](https://github.com/SillyTavern/SillyTavern/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/SillyTavern/SillyTavern.svg)](https://github.com/SillyTavern/SillyTavern/pulls)
+\---
 
-</div>
+## 🔗 Join Us
 
----
+# [**➡️ Join the Weyland Discord**](Discord.gg/Weyland)
 
-SillyTavern provides a single unified interface for many LLM APIs (KoboldAI/CPP, Horde, NovelAI, Ooba, Tabby, OpenAI, OpenRouter, Claude, Mistral and more), a mobile-friendly layout, Visual Novel Mode, Automatic1111 & ComfyUI API image generation integration, TTS, WorldInfo (lorebooks), customizable UI, auto-translate, more prompt options than you'd ever want or need, and endless growth potential via third-party extensions.
+# [**☕ Support on Ko-fi (Paw Patrol Subscription)**](https://ko-fi.com/luckypaw)
 
-We have a [Documentation website](https://docs.sillytavern.app/) to answer most of your questions and help you get started.
+\---
 
-## What is SillyTavern?
+## Credit where it's due
 
-SillyTavern (or ST for short) is a locally installed user interface that allows you to interact with text generation LLMs, image generation engines, and TTS voice models.
+Weyland Tavern exists because SillyTavern exists. The core frontend — the engine, the extension system, the API handling, the prompt architecture — is the work of **Cohee**, **RossAscends**, **Wolfsblvt**, and the 300+ contributors to the SillyTavern project. Weyland Tavern is a derivative work that adds a specific setting, character system, various features and UI layer on top of their foundation.
 
-Beginning in February 2023 as a fork of TavernAI 1.2.8, SillyTavern now has over 200 contributors and 2 years of independent development under its belt, and continues to serve as a leading software for savvy AI hobbyists.
+SillyTavern is licensed under **AGPL-3.0**, and Weyland Tavern inherits that license. The LICENSE file in this repository is the original, unmodified SillyTavern license. All modifications made by the Weyland Tavern team are released under the same license and are publicly visible in this repository's commit history.
 
-## Our Vision
+* **Upstream project:** https://github.com/SillyTavern/SillyTavern
+* **Upstream documentation:** https://docs.sillytavern.app
 
-1. We aim to empower users with as much utility and control over their LLM prompts as possible. The steep learning curve is part of the fun!
-2. We do not provide any online or hosted services, nor programmatically track any user data.
-3. SillyTavern is a passion project brought to you by a dedicated community of LLM enthusiasts, and will always be free and open sourced.
+\---
 
-## Do I need a powerful PC to run SillyTavern?
+## What Weyland Tavern is
 
-The hardware requirements are minimal: it will run on anything that can run NodeJS 18 or higher. If you intend to do LLM inference on your local machine, we recommend a 3000-series NVIDIA graphics card with at least 6GB of VRAM, but actual requirements may vary depending on the model and backend you choose to use.
+Weyland Tavern is a client for the **Weyland University** roleplay setting — a closed-world narrative environment with a wide cast of deeply hand-written characters, a shared campus, a unified aesthetic, and a heavily pre-configured backend designed to remove the technical setup burden from the user.
 
-## Questions or suggestions?
+Features built on top of SillyTavern include:
 
-### Discord server
+* A visual novel-style interface with per-character expression and outfit suites
+* An integrated character downloader and updater
+* An in-app message tracker
+* A snooze-able long-term memory system
+* Custom narrator/writing-style presets
+* World-wide shared location and cast data across every character
+* +many more
 
-| [![][discord-shield-badge]][discord-link] | [Join our Discord community!](https://discord.gg/sillytavern) Get support, share favorite characters and prompts. |
-| :---------------------------------------- | :----------------------------------------------------------------------------------------------------------------- |
+## What Weyland Tavern is not
 
-Or get in touch with the developers directly:
+* **It is not cross-compatible with SillyTavern.** Weyland Tavern has no card import button. Standard SillyTavern character cards will not function here, and Weyland characters will not function in standard SillyTavern.
+* **It is not a general-purpose roleplay frontend.** The entire system is tuned for one setting. If you want flexibility, use SillyTavern.
+* **It is not a replacement for or competitor to SillyTavern.** It is a niche client for a niche creative project.
 
-* Discord: cohee, rossascends, wolfsblvt
-* Reddit: [/u/RossAscends](https://www.reddit.com/user/RossAscends/), [/u/sillylossy](https://www.reddit.com/user/sillylossy/), [u/Wolfsblvt](https://www.reddit.com/user/Wolfsblvt/)
-* [Post a GitHub issue](https://github.com/SillyTavern/SillyTavern/issues)
+\---
 
-### I like your project! How do I contribute?
+## Free and paid
 
-1. Send pull requests. Learn how to contribute: [CONTRIBUTING.md](../CONTRIBUTING.md)
-2. Send feature suggestions and issue reports using the provided templates.
-3. Read this entire readme file and check the documentation website first, to avoid sending duplicate issues.
+**The code is free.** This repository is AGPL-3.0. Clone it, fork it, modify it, redistribute it — the license permits all of that, subject to AGPL's source-availability requirements.
 
-## Screenshots
+**The content and service are subscription-based.** Access to the Weyland character library, the API infrastructure that powers them, and official support is provided through the **Paw Patrol** subscription, starting at $10/month on Ko-fi. Without a subscription, Weyland Tavern can be downloaded and run, but there are no characters to load into it — the character files are delivered via the integrated downloader, which authenticates against the subscription API.
 
-<img width="500" alt="image" src="https://github.com/user-attachments/assets/9b5f32f0-c3b3-4102-b3f5-0e9213c0f50f">
-<img width="500" alt="image" src="https://github.com/user-attachments/assets/913fdbaa-7d33-42f1-ae2c-89dca41c53d1">
+This is a deliberate architecture. The engine (fork of SillyTavern) remains free and open. The original creative content (characters, setting, prompts) and the infrastructure to serve it are what the subscription pays for.
+
+\---
 
 ## Installation
 
-For detailed installation instructions, please visit our documentation:
+### For Weyland subscribers
 
-* **[Windows Installation Guide](https://docs.sillytavern.app/installation/windows/)**
-* **[MacOS/Linux Installation Guide](https://docs.sillytavern.app/installation/linuxmacos/)**
-* **[Android (Termux) Installation Guide](https://docs.sillytavern.app/installation/android-(termux)/)**
-* **[Docker Installation Guide](https://docs.sillytavern.app/installation/docker/)**
+If you're here to use Weyland Tavern as a subscriber, **don't install from this repo directly** — the guided installer, setup walkthroughs, API configuration, and troubleshooting all live in the Weyland Discord's `#tavern-guide` channel. Join the Discord, follow the guide, and you'll be running in a few minutes.
 
-## License and credits
+# [**➡️ Weyland Discord**](Discord.gg/Weyland)
 
-**This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.**
+### For developers, the curious, and AGPL-minded folks
 
-* [TavernAI](https://github.com/TavernAI/TavernAI) 1.2.8 by Humi: MIT License
-* Portions of CncAnon's TavernAITurbo mod used with permission
-* Visual Novel Mode inspired by the work of PepperTaco (<https://github.com/peppertaco/Tavern/>)
-* Noto Sans font by Google (OFL license)
-* Icon theme by Font Awesome <https://fontawesome.com> (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
-* Default content by @OtisAlejandro (Seraphina character and lorebook) and @kallmeflocc (10K Discord Users Celebratory Background)
-* Docker guide by [@mrguymiah](https://github.com/mrguymiah) and [@Bronya-Rand](https://github.com/Bronya-Rand)
-* kokoro-js library by [@hexgrad](https://github.com/hexgrad) (Apache-2.0 License)
+If you want to inspect the fork, build from source, or run it outside the subscription flow, here's the manual path. Note that without a subscription you can launch Weyland Tavern, but you won't have any characters to load — the character library is gated behind the Paw Patrol API.
 
-## Top Contributors
+**Prerequisites:**
 
-[![Contributors](https://contrib.rocks/image?repo=SillyTavern/SillyTavern)](https://github.com/SillyTavern/SillyTavern/graphs/contributors)
+* [Node.js](https://nodejs.org/en/download) (v22+)
+* [Git](https://git-scm.com/download)
 
-<!-- LINK GROUP -->
-[cover]: https://github.com/user-attachments/assets/01a6ae9a-16aa-45f2-8bff-32b5dc587e44
-[discord-link]: https://discord.gg/sillytavern
-[discord-shield-badge]: https://img.shields.io/discord/1100685673633153084?color=5865F2&label=discord&labelColor=black&logo=discord&logoColor=white&style=for-the-badge
+**Windows / Mac / Linux:**
+
+```bash
+git clone https://github.com/Shirubaurufu/WeylandTavern -b release
+cd WeylandTavern
+```
+
+Then launch with the script for your platform:
+
+* **Windows:** double-click `Start-WeylandTavernWindows.bat`
+* **macOS / Linux:** `bash Start-WeylandTavernOther.sh` (or `./Start-WeylandTavernOther.sh`)
+
+Weyland Tavern runs on **port 8000** by default. Keep the launched terminal window open — closing it stops the server.
+
+**Android (Termux):** supported via the same `git clone` flow; install `git` and `nodejs` via `pkg install`, run `npm install` inside `WeylandTavern/SillyTavern`, then `bash Start-WeylandTavernOther.sh` from the repo root.
+
+**iOS:** not natively supported. Run on a PC/Mac/Android device and access remotely via Tailscale or a similar overlay network.
+---
+REDISTRIBUTION / DERIVATIVE WORKS:
+The character definitions, personas, and setting content embedded in these files are the proprietary creative property of Lucky Paw. Distribution of this software does not grant any license to reproduce, reuse, or create derivative works from this content outside of Weyland Tavern.
+
+\---
+
+## Community \& Support
+
+# [**➡️ Weyland Discord**](Discord.gg/Weyland)
+
+# [**☕ Paw Patrol Subscription on Ko-fi**](https://ko-fi.com/luckypaw)
+
+For SillyTavern itself — bug reports, feature requests, general ST questions — please direct those to the [upstream project](https://github.com/SillyTavern/SillyTavern). Weyland Tavern's scope is limited to the Weyland setting.

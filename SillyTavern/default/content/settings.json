@@ -177,7 +177,7 @@
         "server_urls": {
             "ooba": "http://127.0.0.1:5000/"
         },
-        "custom_model": "claude-3-7-sonnet-20250219",
+        "custom_model": "claude-sonnet-4.6-rp",
         "bypass_status_check": true,
         "openrouter_allow_fallbacks": true,
         "xtc_threshold": 0.1,
