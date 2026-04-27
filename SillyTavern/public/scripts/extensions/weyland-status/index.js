@@ -12,6 +12,8 @@ const MODULE_NAME = 'Weyland-Status-Tracker';
 
 // --- Logging System ---
 let isDebugEnabled = false;
+/** When true, non-OK service detail rows can show a control to open the last API JSON. */
+let isDebugDataEnabled = false;
 
 // infoLog: Always outputs to console. Used for critical or standard lifecycle events.
 const infoLog = (...msg) => console.log(`[${MODULE_NAME}]`, ...msg);
@@ -116,22 +118,33 @@ function installCustomModelIdTitleSync(modelsById) {
         applyOptionTitlesForCustomModelSelect();
     };
 
-    let raf = 0;
-    const scheduleTryWire = () => {
-        if (raf) return;
-        raf = requestAnimationFrame(() => {
-            raf = 0;
-            tryWire();
-        });
-    };
+    const selectObserver = new MutationObserver(() => {
+        const select = document.getElementById('model_custom_select');
+        selectObserver.disconnect();
+        tryWire();
+        selectObserver.observe(select, { childList: true, subtree: true });
+    });
 
-    tryWire();
-    if (document.body) {
-        const mo = new MutationObserver(() => {
-            scheduleTryWire();
-        });
-        mo.observe(document.body, { childList: true, subtree: true });
-    }
+    const customObserver = new MutationObserver(() => {
+        const custom = document.getElementById('custom_model_id');
+        customObserver.disconnect();
+        tryWire();
+        customObserver.observe(custom, { childList: true, subtree: true });
+    });
+
+    const tryAttach = () => {
+        const select = document.getElementById('model_custom_select');
+        const custom = document.getElementById('custom_model_id');
+        if (select && custom) {
+            selectObserver.observe(select, { childList: true, subtree: true });
+            customObserver.observe(custom, { childList: true, subtree: true });
+        }
+        else {
+            requestAnimationFrame(tryAttach);
+        }
+    };
+    tryAttach();
+
 }
 
 // --- SillyTavern Entry Point ---
@@ -306,9 +319,22 @@ function installCustomModelIdTitleSync(modelsById) {
                 headline: null,
                 incidentUrl: incidentUrlForMonitor(m.id),
                 note: noteByMonitorId.get(m.id) ?? null,
+                rawApiJson: null,
             }));
 
         let lastHealthResults = waitingSnapshot();
+
+        const panelMeta = () => ({ ...healthMeta, showDebugData: isDebugDataEnabled });
+
+        const debugDataCheckbox = document.getElementById('wst-debug-data-checkbox');
+        if (debugDataCheckbox) {
+            debugDataCheckbox.addEventListener('change', () => {
+                isDebugDataEnabled = debugDataCheckbox.checked;
+                if (healthRoot) {
+                    renderServiceHealthPanel(healthRoot, lastHealthResults, panelMeta());
+                }
+            });
+        }
 
         const PIP_DATA_ATTR = 'data-wst-aggregate-pip';
         const RM_API_BANNER_CLASS = 'wst-rm-api-aggregate-status';
@@ -406,20 +432,44 @@ function installCustomModelIdTitleSync(modelsById) {
         }
         updateApiStatusTopPips();
 
+        if (healthRoot) {
+            healthRoot.addEventListener('click', (e) => {
+                const t = e.target;
+                if (!(t instanceof Element)) return;
+                const btn = t.closest('.wst-health-raw-data-btn');
+                if (!btn || !healthRoot.contains(btn)) return;
+                e.preventDefault();
+                const id = btn.getAttribute('data-wst-service');
+                if (!id) return;
+                const r = lastHealthResults.find((x) => x.id === id);
+                if (!r?.rawApiJson) return;
+                const blob = new Blob([r.rawApiJson], { type: 'application/json' });
+                const u = URL.createObjectURL(blob);
+                const w = globalThis.open(u, '_blank', 'noopener,noreferrer');
+                if (w) {
+                    setTimeout(() => {
+                        URL.revokeObjectURL(u);
+                    }, 10_000);
+                } else {
+                    URL.revokeObjectURL(u);
+                }
+            });
+        }
+
         const monitor = createServiceHealthMonitor({
             onUpdate(results) {
                 lastHealthResults = results;
                 healthMeta.lastChecked = new Date();
                 healthMeta.fetchError = null;
                 if (healthRoot) {
-                    renderServiceHealthPanel(healthRoot, results, healthMeta);
+                    renderServiceHealthPanel(healthRoot, results, panelMeta());
                 }
                 updateApiStatusTopPips();
             },
         });
 
         if (healthRoot) {
-            renderServiceHealthPanel(healthRoot, lastHealthResults, healthMeta);
+            renderServiceHealthPanel(healthRoot, lastHealthResults, panelMeta());
         }
 
         monitor.start();
@@ -433,7 +483,7 @@ function installCustomModelIdTitleSync(modelsById) {
                     await monitor.refresh();
                 } catch (e) {
                     healthMeta.fetchError = e instanceof Error ? e.message : String(e);
-                    renderServiceHealthPanel(healthRoot, lastHealthResults, healthMeta);
+                    renderServiceHealthPanel(healthRoot, lastHealthResults, panelMeta());
                     updateApiStatusTopPips();
                     infoLog('Manual service health refresh failed:', e);
                 } finally {

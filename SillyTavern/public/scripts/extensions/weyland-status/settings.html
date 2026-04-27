@@ -19,11 +19,16 @@
                 <div id="wst-service-health-root"></div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; margin-bottom: 10px;">
+            <div class="wst-settings-check-row">
                 <label class="checkbox_label" for="wst-debug-checkbox" title="Debug Weyland Status Tracker"
                     data-i18n="[title]Debug Weyland Status Tracker">
                     <input id="wst-debug-checkbox" type="checkbox">
                     <span data-i18n="Debug">Debug Logging</span>
+                </label>
+                <label class="checkbox_label" for="wst-debug-data-checkbox" title="Show a button to open raw status API JSON in the health details"
+                    data-i18n="[title]Show raw status API responses in the health panel for debugging.">
+                    <input id="wst-debug-data-checkbox" type="checkbox">
+                    <span>Debug Data</span>
                 </label>
             </div>
 
