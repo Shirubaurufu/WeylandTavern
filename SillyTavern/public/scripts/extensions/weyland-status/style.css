@@ -7,6 +7,15 @@
     margin-bottom: 5px;
 }
 
+.wst-settings-check-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 16px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
 .wst-health-panel {
     margin-top: 12px;
     padding-top: 10px;
@@ -49,6 +58,23 @@
 .wst-health-refresh:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+}
+
+.wst-health-raw-data-btn {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 2px;
+    padding: 4px 10px;
+    font-size: 0.88em;
+    border-radius: 6px;
+    border: 1px solid rgba(127, 127, 127, 0.45);
+    background: rgba(127, 127, 127, 0.1);
+    cursor: pointer;
+    color: inherit;
+}
+
+.wst-health-raw-data-btn:hover {
+    background: rgba(127, 127, 127, 0.18);
 }
 
 .wst-health-refresh.wst-health-refresh--busy .fa-rotate-right {

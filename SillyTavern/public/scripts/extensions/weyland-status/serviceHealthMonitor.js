@@ -37,6 +37,7 @@ const GOOGLE_CLOUD_ANTIGRAVITY_RELATED_PRODUCT_IDS = new Set([
  * @property {string | null} headline Short human summary when not ok (or fetch error detail when unknown)
  * @property {string | null} incidentUrl Link to official health / incident context
  * @property {string | null} [note] Optional context copied from the parent health source
+ * @property {string | null} [rawApiJson] Pretty-printed JSON of the last successful source API response (for debug)
  */
 
 /**
@@ -924,6 +925,22 @@ export async function fetchJsonWithProxy(fetchFn, url) {
  * @param {unknown} err
  * @returns {ServiceHealthResult}
  */
+/**
+ * @param {unknown} payload
+ * @returns {string}
+ */
+function stringifyPayloadForDebug(payload) {
+    try {
+        return JSON.stringify(payload, null, 2);
+    } catch {
+        try {
+            return String(payload);
+        } catch {
+            return '[unprintable]';
+        }
+    }
+}
+
 function sourceFetchFailedResult(m, sourceLabel, err) {
     const msg = err instanceof Error ? err.message : String(err);
     let incidentUrl = 'https://www.google.com/appsstatus/dashboard';
@@ -944,9 +961,10 @@ function sourceFetchFailedResult(m, sourceLabel, err) {
 /**
  * @param {HTMLElement} container
  * @param {ServiceHealthResult[]} results
- * @param {{ lastChecked: Date | null, fetchError: string | null }} meta
+ * @param {{ lastChecked: Date | null, fetchError: string | null, showDebugData?: boolean }} meta
  */
 export function renderServiceHealthPanel(container, results, meta) {
+    const showDebug = Boolean(meta.showDebugData);
     const checked = meta.lastChecked ? escapeHtml(meta.lastChecked.toLocaleString()) : '—';
     const rows = results
         .map((r) => {
@@ -995,6 +1013,11 @@ export function renderServiceHealthPanel(container, results, meta) {
                         `<div class="wst-health-line"><a href="${escapeAttr(r.incidentUrl)}" target="_blank" rel="noopener noreferrer">Open Status Dashboard</a></div>`,
                     );
                 }
+            }
+            if (showDebug && r.level !== 'ok' && r.rawApiJson) {
+                detailLines.push(
+                    `<div class="wst-health-line wst-health-line--raw"><button type="button" class="wst-health-raw-data-btn" data-wst-service="${escapeAttr(r.id)}">View Raw API Data</button></div>`,
+                );
             }
             const extra = detailLines.length ? `<div class="wst-health-extra">${detailLines.join('')}</div>` : '';
             const top = `<div class="wst-health-row-top">
@@ -1067,14 +1090,17 @@ export function createServiceHealthMonitor(options) {
             sources.map(async (src) => {
                 try {
                     const payload = await src.fetchPayload(fetchImpl);
+                    const rawJson = stringifyPayloadForDebug(payload);
                     return src.monitors.map((m) => ({
                         ...m.evaluate(payload),
                         note: src.note != null ? String(src.note) : null,
+                        rawApiJson: rawJson,
                     }));
                 } catch (e) {
                     return src.monitors.map((m) => ({
                         ...sourceFetchFailedResult(m, src.label, e),
                         note: src.note != null ? String(src.note) : null,
+                        rawApiJson: null,
                     }));
                 }
             }),
