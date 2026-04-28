@@ -129,7 +129,12 @@
         },
         "2": {
             "uid": 2,
-            "key": [],
+            "key": [
+                "bleacher",
+                "bleachers",
+                "baseball",
+                "cheerleader :}"
+            ],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -140,7 +145,7 @@
             "addMemo": true,
             "order": 5,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
@@ -306,7 +311,7 @@
             "addMemo": true,
             "order": 5,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
