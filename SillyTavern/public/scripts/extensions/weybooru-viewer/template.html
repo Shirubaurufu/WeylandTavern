@@ -17,22 +17,24 @@
       </div>
     </header>
 
-    <!-- SEARCH BAR (full width, below header) -->
-    <div class="wbv-search-bar">
-      <button type="button" class="wbv-search-help-btn" id="wbv-search-help-btn" title="Search Syntax">
-        <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
-      </button>
-      <input id="wbv-search" type="text" />
-      <button id="wbv-char-hint" class="wbv-char-hint" type="button"></button>
-      <select id="wbv-sort" class="wbv-sort-sel">
-        <option value="newest">↓ Newest</option>
-        <option value="score">⭐ Top Rated</option>
-        <option value="favcount">♥ Most Faved</option>
-        <option value="random">🎲 Random</option>
-      </select>
-      <button id="wbv-search-btn" class="wbv-btn-primary">
-        <i class="fa-solid fa-magnifying-glass"></i>Search
-      </button>
+    <!-- SEARCH BAR (full width, below header; wrap collapses when panels hidden / Z) -->
+    <div class="wbv-search-bar-wrap" id="wbv-search-bar-wrap">
+      <div class="wbv-search-bar">
+        <button type="button" class="wbv-search-help-btn" id="wbv-search-help-btn" title="Search Syntax">
+          <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+        </button>
+        <input id="wbv-search" type="text" />
+        <button id="wbv-char-hint" class="wbv-char-hint" type="button"></button>
+        <select id="wbv-sort" class="wbv-sort-sel">
+          <option value="newest">↓ Newest</option>
+          <option value="score">⭐ Top Rated</option>
+          <option value="favcount">♥ Most Faved</option>
+          <option value="random">🎲 Random</option>
+        </select>
+        <button id="wbv-search-btn" class="wbv-btn-primary">
+          <i class="fa-solid fa-magnifying-glass"></i>Search
+        </button>
+      </div>
     </div>
 
     <!-- 3-COLUMN GRID -->
@@ -235,8 +237,8 @@
           <div class="wbv-section-label" style="margin-top:14px">NSFW Filter</div>
           <div class="wbv-pill-col wbv-rating-pills">
             <label class="wbv-pill-check"><input type="checkbox" id="wbv-r-s" checked><span class="wbv-check-face" aria-hidden="true"></span><span class="wbv-pill-check-text">Safe</span></label>
-            <label class="wbv-pill-check"><input type="checkbox" id="wbv-r-q" checked><span class="wbv-check-face" aria-hidden="true"></span><span class="wbv-pill-check-text">Sketchy</span></label>
-            <label class="wbv-pill-check"><input type="checkbox" id="wbv-r-e" checked><span class="wbv-check-face" aria-hidden="true"></span><span class="wbv-pill-check-text">Unsafe</span></label>
+            <label class="wbv-pill-check"><input type="checkbox" id="wbv-r-q"><span class="wbv-check-face" aria-hidden="true"></span><span class="wbv-pill-check-text">Sketchy</span></label>
+            <label class="wbv-pill-check"><input type="checkbox" id="wbv-r-e"><span class="wbv-check-face" aria-hidden="true"></span><span class="wbv-pill-check-text">Unsafe</span></label>
           </div>
 
           <div class="wbv-section-label" style="margin-top:14px">Blacklist</div>

@@ -177,6 +177,10 @@
   border-radius: 4px;
   transition: color 0.15s, background 0.15s;
 }
+#wbv-modal-overlay .wbv-icon-btn i{
+  position:relative;
+  left:0.0px
+}
 #wbv-modal-overlay .wbv-icon-btn:hover {
   color: var(--rb-accent);
   background: var(--rb-bg-hover);
@@ -192,7 +196,21 @@
 }
 #wbv-modal-overlay .wbv-close-btn:hover { color: var(--rb-danger); }
 
-/* Search bar — full width, below header */
+/* Search bar — full width, below header (wrap animates height; bar retracts upward) */
+#wbv-modal-overlay .wbv-search-bar-wrap {
+  /*flex-shrink: 0;
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: height 0.38s cubic-bezier(0.4, 0, 0.2, 1);*/
+}
+#wbv-modal-overlay.wbv-panels-hidden .wbv-search-bar-wrap {
+  /*grid-template-rows: 0fr;*/
+  height: 0;
+}
+#wbv-modal-overlay .wbv-search-bar-wrap .wbv-search-bar {
+  min-height: 0;
+  overflow: hidden;
+}
 #wbv-modal-overlay .wbv-search-bar {
   display: flex;
   align-items: center;
@@ -200,7 +218,6 @@
   padding: 10px 15px;
   background: var(--rb-bg-pane);
   border-bottom: 1px solid var(--rb-border);
-  flex-shrink: 0;
 }
 #wbv-modal-overlay #wbv-search {
   flex: 1;
@@ -700,11 +717,12 @@
 #wbv-modal-overlay #wbv-img-area {
   flex: 1;
   display: flex;
-  align-items: center;
+  /* align-items: center; */
   justify-content: center;
   position: relative;
   overflow: hidden;
   min-height: 0;
+  width: 100%;
 }
 #wbv-modal-overlay #wbv-main-img {
   max-width: 100%;
@@ -1629,8 +1647,20 @@
 
 /* =========================================
    PANELS HIDDEN MODE (Z key / ⛶ button)
-   Desktop only — on mobile it's the slide-overs that handle this.
+   Search retracts (see .wbv-search-bar-wrap). Image chrome hidden at all widths.
    ========================================= */
+#wbv-modal-overlay.wbv-panels-hidden #wbv-ctrl-bar,
+#wbv-modal-overlay.wbv-panels-hidden .wbv-image-tags-float,
+#wbv-modal-overlay.wbv-panels-hidden #wbv-image-uploader-btn,
+#wbv-modal-overlay.wbv-panels-hidden .wbv-load-badge,
+#wbv-modal-overlay.wbv-panels-hidden #wbv-tagvote-root,
+#wbv-modal-overlay.wbv-panels-hidden #wbv-tagvote-toast {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 0.22s ease, visibility 0.22s linear;
+}
+
 @media (min-width: 901px) {
   #wbv-modal-overlay.wbv-panels-hidden .st-grid-container {
     grid-template-columns: 0 1fr 0;
@@ -1716,8 +1746,6 @@
     flex-shrink: 0;
   }
 
-  /* Header: hide expand button on mobile (use bottom nav instead) */
-  #wbv-modal-overlay #wbv-panels-btn { display: none; }
   /* Tighten brand text */
   #wbv-modal-overlay .wbv-brand-text { font-size: 11px; letter-spacing: 1.5px; }
 
@@ -1871,6 +1899,10 @@
     min-width: 0;
     width: auto;
     justify-content: center;
+  }
+  #wbv-modal-overlay .wbv-icon-btn i{
+    left:0.75px;
+    top:0.5px;
   }
 }
 
