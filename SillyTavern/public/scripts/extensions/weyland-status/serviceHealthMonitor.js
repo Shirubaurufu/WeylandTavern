@@ -877,22 +877,10 @@ export function decodeAwsHealthJson(buf, contentType) {
  */
 export async function fetchAwsCurrentEvents(fetchFn) {
     const target = AWS_PUBLIC_HEALTH_EVENTS_URL;
-    const attempts = [
-        () => fetchFn(target, { credentials: 'omit' }),
-        () => fetchFn(`/proxy/${target}`, { credentials: 'include' }),
-    ];
-    let lastErr;
-    for (const run of attempts) {
-        try {
-            const res = await run();
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const json = decodeAwsHealthJson(await res.arrayBuffer(), res.headers.get('content-type') || '');
-            return Array.isArray(json) ? json : [];
-        } catch (e) {
-            lastErr = e;
-        }
-    }
-    throw lastErr;
+    const res = await fetchFn(`/proxy/${target}`, { credentials: 'include' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = decodeAwsHealthJson(await res.arrayBuffer(), res.headers.get('content-type') || '');
+    return Array.isArray(json) ? json : [];
 }
 
 /**
@@ -901,22 +889,10 @@ export async function fetchAwsCurrentEvents(fetchFn) {
  * @param {string} url
  */
 export async function fetchJsonWithProxy(fetchFn, url) {
-    const attempts = [
-        () => fetchFn(url, { credentials: 'omit' }),
-        () => fetchFn(`/proxy/${url}`, { credentials: 'include' }),
-    ];
-    let lastErr;
-    for (const run of attempts) {
-        try {
-            const res = await run();
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const text = new TextDecoder('utf-8').decode(await res.arrayBuffer());
-            return JSON.parse(text);
-        } catch (e) {
-            lastErr = e;
-        }
-    }
-    throw lastErr;
+    const res = await fetchFn(`/proxy/${url}`, { credentials: 'include' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = new TextDecoder('utf-8').decode(await res.arrayBuffer());
+    return JSON.parse(text);
 }
 
 /**
