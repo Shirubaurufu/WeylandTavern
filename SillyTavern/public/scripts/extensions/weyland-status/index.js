@@ -132,16 +132,24 @@ function installCustomModelIdTitleSync(modelsById) {
         customObserver.observe(custom, { childList: true, subtree: true });
     });
 
+    const MAX_ATTACH_RETRIES = 20;
+    const ATTACH_RETRY_MS = 300;
+    let attachRetries = 0;
+
     const tryAttach = () => {
         const select = document.getElementById('model_custom_select');
         const custom = document.getElementById('custom_model_id');
         if (select && custom) {
             selectObserver.observe(select, { childList: true, subtree: true });
             customObserver.observe(custom, { childList: true, subtree: true });
+            return;
         }
-        else {
-            requestAnimationFrame(tryAttach);
+        if (attachRetries >= MAX_ATTACH_RETRIES) {
+            console.warn(`[${MODULE_NAME}] Could not wire custom model tooltip sync controls after retries.`);
+            return;
         }
+        attachRetries += 1;
+        window.setTimeout(tryAttach, ATTACH_RETRY_MS);
     };
     tryAttach();
 
@@ -341,10 +349,7 @@ function installCustomModelIdTitleSync(modelsById) {
         const RM_API_PIP_IN_BANNER_ATTR = 'data-wst-rm-api-aggregate-pip';
 
         const topBarPipTitle = (results, meta) => {
-            if (meta.fetchError) {
-                infoLog(`Tracked services refresh failed (${meta.fetchError})`) ;
-                return 'Unable to refresh up-stream service status.';
-            }
+            if (meta.fetchError) return 'Unable to refresh up-stream service status.';
             const level = aggregateWorstLevel(results);
             const label = healthLevelToStateLabel(level);
             if (level === 'ok') {
@@ -354,11 +359,30 @@ function installCustomModelIdTitleSync(modelsById) {
             return `One or more up-stream services may be ${label}.`;
         };
 
-        let pipRaf = 0;
-        const updateApiStatusTopPips = () => {
+        let pipDebounceTimer = 0;
+        let pipPendingWhileHidden = false;
+        let lastRenderedPipKey = '';
+        const PIP_DEBOUNCE_MS = 350;
+        const PIP_RECONCILE_MS = 15_000;
+
+        const setHealthFetchError = (nextError) => {
+            const next = nextError || null;
+            if (healthMeta.fetchError === next) return;
+            healthMeta.fetchError = next;
+            if (next) {
+                infoLog(`Tracked services refresh failed (${next})`);
+            }
+        };
+
+        const updateApiStatusTopPips = (force = false) => {
             const level = healthMeta.fetchError ? 'unknown' : aggregateWorstLevel(lastHealthResults);
             const suffix = healthLevelToDotClassSuffix(level);
             const title = topBarPipTitle(lastHealthResults, healthMeta);
+            const pipKey = `${suffix}|${title}`;
+            if (!force && pipKey === lastRenderedPipKey) {
+                return;
+            }
+            lastRenderedPipKey = pipKey;
             for (const host of document.querySelectorAll('#API-status-top')) {
                 if (!(host instanceof HTMLElement)) continue;
                 let pip = host.querySelector(`[${PIP_DATA_ATTR}]`);
@@ -416,21 +440,50 @@ function installCustomModelIdTitleSync(modelsById) {
             }
         };
 
-        const scheduleUpdateApiStatusTopPips = () => {
-            if (pipRaf) return;
-            pipRaf = requestAnimationFrame(() => {
-                pipRaf = 0;
-                updateApiStatusTopPips();
-            });
+        const scheduleUpdateApiStatusTopPips = (force = false) => {
+            if (document.hidden) {
+                pipPendingWhileHidden = true;
+                return;
+            }
+            if (pipDebounceTimer) {
+                clearTimeout(pipDebounceTimer);
+            }
+            pipDebounceTimer = window.setTimeout(() => {
+                pipDebounceTimer = 0;
+                updateApiStatusTopPips(force);
+            }, PIP_DEBOUNCE_MS);
         };
 
-        if (document.body) {
-            const pipObserver = new MutationObserver(() => {
-                scheduleUpdateApiStatusTopPips();
-            });
-            pipObserver.observe(document.body, { childList: true, subtree: true });
+        const pipObserver = new MutationObserver(() => {
+            scheduleUpdateApiStatusTopPips(false);
+        });
+        const wirePipObservers = () => {
+            pipObserver.disconnect();
+            for (const host of document.querySelectorAll('#API-status-top, #rm_api_block')) {
+                if (host instanceof HTMLElement) {
+                    pipObserver.observe(host, { childList: true, subtree: true });
+                }
+            }
+        };
+        let pipReconcileTimer = 0;
+        const startPipReconcile = () => {
+            if (pipReconcileTimer) return;
+            pipReconcileTimer = window.setInterval(() => {
+                wirePipObservers();
+                scheduleUpdateApiStatusTopPips(true);
+            }, PIP_RECONCILE_MS);
+        };
+        const stopPipReconcile = () => {
+            if (!pipReconcileTimer) return;
+            clearInterval(pipReconcileTimer);
+            pipReconcileTimer = 0;
+        };
+
+        wirePipObservers();
+        if (!document.hidden) {
+            startPipReconcile();
         }
-        updateApiStatusTopPips();
+        updateApiStatusTopPips(true);
 
         if (healthRoot) {
             healthRoot.addEventListener('click', (e) => {
@@ -460,11 +513,11 @@ function installCustomModelIdTitleSync(modelsById) {
             onUpdate(results) {
                 lastHealthResults = results;
                 healthMeta.lastChecked = new Date();
-                healthMeta.fetchError = null;
+                setHealthFetchError(null);
                 if (healthRoot) {
                     renderServiceHealthPanel(healthRoot, results, panelMeta());
                 }
-                updateApiStatusTopPips();
+                scheduleUpdateApiStatusTopPips(true);
             },
         });
 
@@ -472,7 +525,36 @@ function installCustomModelIdTitleSync(modelsById) {
             renderServiceHealthPanel(healthRoot, lastHealthResults, panelMeta());
         }
 
-        monitor.start();
+        const pauseBackgroundUpdates = () => {
+            monitor.stop();
+            stopPipReconcile();
+            if (pipDebounceTimer) {
+                clearTimeout(pipDebounceTimer);
+                pipDebounceTimer = 0;
+            }
+        };
+
+        const resumeBackgroundUpdates = () => {
+            startPipReconcile();
+            pipPendingWhileHidden = false;
+            wirePipObservers();
+            updateApiStatusTopPips(true);
+            monitor.start();
+        };
+
+        if (document.hidden) {
+            pauseBackgroundUpdates();
+        } else {
+            resumeBackgroundUpdates();
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                pauseBackgroundUpdates();
+                return;
+            }
+            resumeBackgroundUpdates();
+        });
 
         if (healthRoot && healthRefreshBtn) {
             healthRefreshBtn.addEventListener('click', async () => {
@@ -482,9 +564,9 @@ function installCustomModelIdTitleSync(modelsById) {
                 try {
                     await monitor.refresh();
                 } catch (e) {
-                    healthMeta.fetchError = e instanceof Error ? e.message : String(e);
+                    setHealthFetchError(e instanceof Error ? e.message : String(e));
                     renderServiceHealthPanel(healthRoot, lastHealthResults, panelMeta());
-                    updateApiStatusTopPips();
+                    scheduleUpdateApiStatusTopPips(true);
                     infoLog('Manual service health refresh failed:', e);
                 } finally {
                     healthRefreshBtn.disabled = false;
