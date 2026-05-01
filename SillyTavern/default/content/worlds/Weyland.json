@@ -11203,13 +11203,12 @@
             "uid": 146,
             "key": [
                 "/Nara.?s room/",
-                "/Nara.?s dorm/",
-                "(#321)",
-                "321"
+                "/Nara.?s apartment/",
+                "Donofrio"
             ],
             "keysecondary": [],
-            "comment": "Nara Room",
-            "content": "",
+            "comment": "Nara Apartment",
+            "content": "[NARA HOUSING]\n8112 Donofrio Hill, Weyland CA\nNara lives in a small studio home she is renting on Donofrio Hill, a random street of a mashed community of student houses slightly off campus and about a twenty minute walk from Senaka Boulevard.\n\nHer rented home is small - its basically a tiny home that she has made work. Its on a narrow street thats hardly designed for cars and on a hill, with party bros and frat houses up and down the same street.\n\nCountless college students have lived there before her, so the place is very.. loved. But Nara cleaned it thoroughly before moving in and has really decorated and cleaned it up super nicely. \n- The stove is brand new but isnt wired right (the landlord tried to use some adapter  for the plug that smokes when the oven turns on) so Nara has a coleman propane camping stove she pulls out if she wants to cook.\n- Her bed is adorable and cozy. Pink and white comforter and sheets, pristine and clean and cozy. She has her childhood pillowcases - one a 1999 Pikachu and Ash cotton pillowcase and the other a STrawBerry Shortcake Pillowcase. These mean the world to her for no reason.\n- Her fridge is full of ramune and random sodas and leftovers. A small microwave rests atop the fridge: her primary cooking implement.\n- She has a desk that is covered in textbooks and her Macbook Pro, alongside photos of her with random residents\n[END NARA HOUSING]\n",
             "constant": false,
             "vectorized": true,
             "selective": true,
@@ -11217,7 +11216,7 @@
             "addMemo": true,
             "order": 125,
             "position": 1,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": true,
             "delayUntilRecursion": false,
