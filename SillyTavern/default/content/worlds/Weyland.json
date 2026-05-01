@@ -9227,7 +9227,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "121": {
             "key": [],
@@ -11198,7 +11203,9 @@
             "uid": 146,
             "key": [
                 "/Nara.?s room/",
-                "/Nara.?s dorm/"
+                "/Nara.?s dorm/",
+                "(#321)",
+                "321"
             ],
             "keysecondary": [],
             "comment": "Nara Room",
@@ -11261,12 +11268,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "147": {
             "uid": 147,
