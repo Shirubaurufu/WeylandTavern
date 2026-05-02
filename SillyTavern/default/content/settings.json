@@ -440,7 +440,8 @@
         "autoConnect": false,
         "notifyUpdates": false,
         "disabledExtensions": [
-            "third-party/Extension-TypingIndicator"
+            "third-party/Extension-TypingIndicator",
+            "third-party/SillyTavern-CostumeSwitch"
         ],
         "expressionOverrides": [],
         "memory": {
