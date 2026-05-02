@@ -439,7 +439,9 @@
         "apiKey": "",
         "autoConnect": false,
         "notifyUpdates": false,
-        "disabledExtensions": [],
+        "disabledExtensions": [
+            "third-party/Extension-TypingIndicator"
+        ],
         "expressionOverrides": [],
         "memory": {
             "minLongMemory": 16,
@@ -1202,6 +1204,11 @@
                 "SettingC34": "true",
                 "SettingC35": "true",
                 "9$DqA7b~3C": "234Sfv~2I",
+                "oochide1": "<div class=\"mes_instruction\">",
+                "oochide2": "</div>",
+                "commandhide1": "<div class=\"mes_command\">",
+                "commandhide2": "</div>",
+                "oochide5": "true",
                 "SettingC37": "true"
             }
         },

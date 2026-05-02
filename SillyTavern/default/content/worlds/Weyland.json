@@ -11267,7 +11267,12 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": []
+            "triggers": [],
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
+            }
         },
         "147": {
             "uid": 147,
@@ -11771,12 +11776,7 @@
             "matchScenario": false,
             "matchCreatorNotes": false,
             "ignoreBudget": false,
-            "triggers": [],
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "triggers": []
         },
         "154": {
             "key": [
@@ -18601,7 +18601,7 @@
         "247": {
             "uid": 247,
             "key": [
-                "Mama's Den",
+                "/Mama.?s/",
                 "dive bar",
                 "Zora"
             ],
@@ -18666,11 +18666,6 @@
                 "sticky": 2,
                 "cooldown": 0,
                 "delay": 0
-            },
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
             }
         },
         "248": {
