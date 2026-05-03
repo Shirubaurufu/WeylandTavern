@@ -15,7 +15,9 @@ function initWelcomeInfoPanel() {
         if (!welcomePanel) {
             console.log('Welcome panel not found, waiting...');
             // If panel isn't loaded yet, try again shortly
-            setTimeout(setupInfoPanel, 500);
+            if (!document.body.getAttribute('skipped-welcome-screen')) {
+                setTimeout(setupInfoPanel, 500);
+            }
             return;
         }
 
