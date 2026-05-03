@@ -58,6 +58,8 @@ const state = {
   currentIdx: 0,
   currentPage: 0,         // for infinite scroll pagination
   loading: false,
+  /** Bumped on each `doSearch` and on `closeOverlay` so stale fetches never apply. */
+  searchFetchGen: 0,
   loadingMore: false,
   isPlaying: false,       // slideshow play/pause
   timer: null,            // setInterval handle for slideshow
@@ -1049,7 +1051,7 @@ async function openOverlay(initialQuery) {
   const qInit = typeof initialQuery === 'string' ? initialQuery.trim() : '';
   if (qInit) {
     $('#wbv-search').val(qInit);
-    await doSearch(qInit);
+    void doSearch(qInit);
   } else {
     const q = $('#wbv-search').val().trim();
     const name = getActiveCharacterName();
@@ -1057,7 +1059,7 @@ async function openOverlay(initialQuery) {
       const tag = nameToTag(name);
       if (tag) {
         $('#wbv-search').val(tag);
-        await doSearch(tag);
+        void doSearch(tag);
       }
     }
   }
@@ -1074,8 +1076,14 @@ function closeOverlay() {
     clearTimeout(wbvBlacklistSearchTimer);
     wbvBlacklistSearchTimer = null;
   }
+  const wasLoadingList = state.loading;
+  state.searchFetchGen++;
+  state.loading = false;
   $('#wbv-modal-overlay').css('display', 'none');
   state.open = false;
+  if (state.built && wasLoadingList && !getDisplayPosts().length) {
+    showState('empty');
+  }
   resetTagReviewUi();
   if (state.isPlaying) {
     state.isPlaying = false;
@@ -1150,6 +1158,7 @@ function showState(s, msg) {
 }
 
 async function doSearch(qOverride) {
+  const myGen = ++state.searchFetchGen;
   const query = qOverride !== undefined ? qOverride : $('#wbv-search').val().trim();
   const sort = $('#wbv-sort').val() || 'newest';
   state.query = query;
@@ -1173,6 +1182,7 @@ async function doSearch(qOverride) {
   persistFromUI();
   try {
     const posts = await fetchAll(query, 0, sort);
+    if (myGen !== state.searchFetchGen) return;
     state.allPosts = posts;
     if (!posts.length) {
       showState('error', 'No results found. Try different tags.');
@@ -1182,10 +1192,11 @@ async function doSearch(qOverride) {
       updateCharHint();
     }
   } catch (e) {
+    if (myGen !== state.searchFetchGen) return;
     console.error('[Weybooru Viewer]', e);
     showState('error', 'Fetch error: ' + e.message);
   } finally {
-    state.loading = false;
+    if (myGen === state.searchFetchGen) state.loading = false;
   }
 }
 
@@ -1389,6 +1400,75 @@ function renderUploaderOverlay(post) {
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
+/**
+ * Still images: load sample/preview first when distinct from `file_url`, then swap
+ * to full resolution so the main thread is not tied up decoding a huge file before
+ * the rest of the UI can respond.
+ */
+function applyMainStillImage(imgEl, post) {
+  const full = post.file_url;
+  const fast =
+    post.sample && post.sample !== full ? post.sample
+    : post.preview && post.preview !== full ? post.preview
+    : null;
+  const postId = post.id;
+  const stillCurrent = () => getDisplayPosts()[state.currentIdx]?.id === postId;
+
+  const wireFullUrlFallback = () => {
+    imgEl.onerror = () => {
+      if (post.sample && imgEl.src !== post.sample) imgEl.src = post.sample;
+    };
+  };
+
+  if (!fast || fileType(full) === 'gif') {
+    if (imgEl.src !== full) {
+      imgEl.removeAttribute('crossorigin');
+      imgEl.onload = null;
+      imgEl.src = full;
+      wireFullUrlFallback();
+    } else {
+      wireFullUrlFallback();
+    }
+    return;
+  }
+
+  if (imgEl.src === full) {
+    wireFullUrlFallback();
+    return;
+  }
+
+  imgEl.removeAttribute('crossorigin');
+
+  const upgradeToFull = () => {
+    if (!stillCurrent()) return;
+    if (imgEl.src !== fast) return;
+    imgEl.onload = null;
+    imgEl.onerror = null;
+    imgEl.src = full;
+    wireFullUrlFallback();
+  };
+
+  if (imgEl.src === fast) {
+    upgradeToFull();
+    return;
+  }
+
+  imgEl.onload = () => {
+    imgEl.onload = null;
+    if (!stillCurrent()) return;
+    upgradeToFull();
+  };
+  imgEl.onerror = () => {
+    imgEl.onload = null;
+    imgEl.onerror = null;
+    if (!stillCurrent()) return;
+    imgEl.src = full;
+    wireFullUrlFallback();
+  };
+  imgEl.src = fast;
+  if (imgEl.complete && imgEl.src === fast) queueMicrotask(upgradeToFull);
+}
+
 function renderViewer() {
   const posts = getDisplayPosts();
   const post = posts[state.currentIdx];
@@ -1398,6 +1478,9 @@ function renderViewer() {
   const imgEl = document.getElementById('wbv-main-img');
   const vidEl = document.getElementById('wbv-main-vid');
   if (ft === 'video') {
+    imgEl.onload = null;
+    imgEl.onerror = null;
+    imgEl.removeAttribute('src');
     imgEl.classList.add('wbv-hidden');
     vidEl.classList.remove('wbv-hidden');
     vidEl.style.maxWidth = autofit ? '100%' : 'none';
@@ -1409,13 +1492,7 @@ function renderViewer() {
     imgEl.classList.remove('wbv-hidden');
     imgEl.style.maxWidth = autofit ? '100%' : 'none';
     imgEl.style.maxHeight = autofit ? '100%' : 'none';
-    if (imgEl.src !== post.file_url) {
-      imgEl.removeAttribute('crossorigin');
-      imgEl.src = post.file_url;
-      imgEl.onerror = () => {
-        if (post.sample && imgEl.src !== post.sample) imgEl.src = post.sample;
-      };
-    }
+    applyMainStillImage(imgEl, post);
   }
   updateCounter();
   renderPlayBtn();
@@ -1478,7 +1555,7 @@ function renderFilmstrip() {
   const row = $('#wbv-film-row').empty();
   const start = Math.max(0, state.currentIdx - 2);
   posts.slice(start, start + 5).forEach((p, i) => {
-    const img = $('<img>').addClass('wbv-film-thumb');
+    const img = $('<img>').addClass('wbv-film-thumb').attr('decoding', 'async');
     if (start + i === state.currentIdx) img.addClass('wbv-active');
     img.attr('src', p.preview || p.sample || '');
     img.on('error', function() { $(this).css('opacity', '.25'); });
@@ -1580,13 +1657,63 @@ function wbvResetMainMediaSwipeStyle() {
 }
 
 // ── EVENT WIRING ──────────────────────────────────────────────────────────────
+/**
+ * SillyTavern and other hosts often use touch handlers with preventDefault(), which
+ * suppresses the synthesized click on real touch devices. Chrome device emulation
+ * still sends mouse clicks, so the bug only shows on hardware. Touchend is not
+ * suppressed the same way; we run the handler there and swallow duplicate clicks.
+ *
+ * Arm `blockSyntheticClickUntil` on touchstart so a late or reordered synthetic
+ * `click` cannot fire the handler before touchend (which would double-toggle
+ * stateful actions like hide-panels). Touchend uses `changedTouches[0].target`
+ * so the tap is attributed to the correct subtree (e.g. icon inside a button).
+ */
+function wbvBindTouchAwareClick($el, handler) {
+  const el = $el.get(0);
+  if (!el) return;
+  let blockSyntheticClickUntil = 0;
+  const armBlock = () => {
+    blockSyntheticClickUntil = Date.now() + 1000;
+  };
+  el.addEventListener(
+    'touchstart',
+    e => {
+      if (!e.touches || e.touches.length !== 1) return;
+      if (!el.contains(e.target)) return;
+      armBlock();
+    },
+    { passive: true }
+  );
+  el.addEventListener(
+    'touchend',
+    e => {
+      if (e.changedTouches.length !== 1) return;
+      const t = e.changedTouches[0];
+      if (!el.contains(t.target)) return;
+      armBlock();
+      handler(e);
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+    },
+    { passive: false }
+  );
+  $el.on('click', e => {
+    if (Date.now() < blockSyntheticClickUntil) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
+    handler(e);
+  });
+}
+
 function wireEvents() {
-  $('#wbv-close-btn').on('click', closeOverlay);
-  $('#wbv-panels-btn').on('click', togglePanels);
+  wbvBindTouchAwareClick($('#wbv-close-btn'), closeOverlay);
+  wbvBindTouchAwareClick($('#wbv-panels-btn'), togglePanels);
   // Brand header behavior:
   //   - Desktop: opens https://weybooru.com in a new tab (it's a clickable link)
   //   - Mobile:  brings up the settings/menu pane (matches Mika's downloader UX)
-  $('#wbv-brand-header').on('click', () => {
+  wbvBindTouchAwareClick($('#wbv-brand-header'), () => {
     if (window.innerWidth <= 900) {
       window.wbv_setMobileView('menu');
     } else {
