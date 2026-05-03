@@ -155,18 +155,35 @@
   align-items: center;
   cursor: pointer;
   transition: color 0.2s;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 #wbv-brand-header:hover { color: var(--wbv-teal); }
 .wbv-brand-text {
   font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-size: 13px;
   letter-spacing: 2px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wbv-header-actions {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-shrink: 0;
+}
+/* Touches hit the <button>, not the inner <i>, so one gesture → one target (avoids
+   double-toggle when touchend + synthetic click both run on different subtrees). */
+#wbv-modal-overlay .wbv-header-actions .wbv-icon-btn > *,
+#wbv-modal-overlay .wbv-header-actions .wbv-close-btn > * {
+  pointer-events: none;
+}
+#wbv-modal-overlay .wbv-header-actions .wbv-icon-btn,
+#wbv-modal-overlay .wbv-header-actions .wbv-close-btn {
+  touch-action: manipulation;
 }
 #wbv-modal-overlay .wbv-icon-btn {
   background: none;
