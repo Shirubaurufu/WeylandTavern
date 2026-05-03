@@ -129,13 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "drunk",
-                "drink",
-                "drinking",
-                "hiccup",
-                "hic"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -447,6 +441,57 @@
                 ],
                 "tags": [
                     "10f1d467-b270-4811-a939-72e8698c6771"
+                ]
+            }
+        },
+        "8": {
+            "uid": 8,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Ṇ̶̰̼͘a̶͍̅́̒r̵̓̏̉̈́ā̸͒̔̄ Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - Nara's MAIN OUTFIT\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Ṇ̶̰̼͘a̶͍̅́̒r̵̓̏̉̈́ā̸͒̔̄",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 128,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Ṇ̶̰̼͘a̶͍̅́̒r̵̓̏̉̈́ā̸͒̔̄"
+                ],
+                "tags": [
+                    "a62d36f4-dd7f-40cc-b942-cfa380a43ec9"
                 ]
             }
         },
@@ -2000,12 +2045,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 126,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [],
-                "tags": []
-            }
+            "displayIndex": 126
         },
         "45": {
             "uid": 45,
@@ -2306,7 +2346,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 128,
+            "displayIndex": 129,
             "extensions": {
                 "position": 1,
                 "exclude_recursion": false,
@@ -4923,7 +4963,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Cerberus Sisters",
             "role": null,
             "sticky": 0,
             "cooldown": 0,

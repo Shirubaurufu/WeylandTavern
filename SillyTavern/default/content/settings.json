@@ -177,7 +177,7 @@
         "server_urls": {
             "ooba": "http://127.0.0.1:5000/"
         },
-        "custom_model": "claude-3-7-sonnet-20250219",
+        "custom_model": "claude-sonnet-4.6-rp",
         "bypass_status_check": true,
         "openrouter_allow_fallbacks": true,
         "xtc_threshold": 0.1,
@@ -439,7 +439,10 @@
         "apiKey": "",
         "autoConnect": false,
         "notifyUpdates": false,
-        "disabledExtensions": [],
+        "disabledExtensions": [
+            "third-party/Extension-TypingIndicator",
+            "third-party/SillyTavern-CostumeSwitch"
+        ],
         "expressionOverrides": [],
         "memory": {
             "minLongMemory": 16,
@@ -1202,6 +1205,11 @@
                 "SettingC34": "true",
                 "SettingC35": "true",
                 "9$DqA7b~3C": "234Sfv~2I",
+                "oochide1": "<div class=\"mes_instruction\">",
+                "oochide2": "</div>",
+                "commandhide1": "<div class=\"mes_command\">",
+                "commandhide2": "</div>",
+                "oochide5": "true",
                 "SettingC37": "true"
             }
         },
