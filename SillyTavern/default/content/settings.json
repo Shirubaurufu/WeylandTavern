@@ -2664,7 +2664,7 @@
         "zerooneai_model": "yi-large",
         "blockentropy_model": "be-70b-base-llama3.1",
         "deepseek_model": "deepseek-chat",
-        "custom_model": "claude-3-7-sonnet-rp",
+        "custom_model": "claude-sonnet-4.6-rp",
         "custom_url": "https://helixmind.online/v1",
         "custom_include_body": "- stop: \n  - \"<user>\"\n  - \"</user>\"\n  - \"User:\"\n  - \"</assistant>\"\n  - \"{{user}}:\"\n  - \"{user}:\"\n  - \"{{User}}:\"\n  - \"{User}:\"\n  - \"user:\"\n- temperature: 0.9",
         "custom_exclude_body": "",
