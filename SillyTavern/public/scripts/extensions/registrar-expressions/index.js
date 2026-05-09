@@ -273,6 +273,11 @@ function getEmotions() {
  */
 async function getSpeakerEmotion(name) {
 
+    // On mobile, skip deeper analysis for performance
+    if (isMobile()) {
+        return defaultEmotion;
+    }
+    
     // Get the latest assistant message
     const context = SillyTavern.getContext();
     const chat = Array.isArray(context.chat) ? context.chat : [];
@@ -564,11 +569,6 @@ let lateMountObserver = null;
 let leftExpression = null;
 let rightExpression = null;
 function initExtension() {
-
-    if (isMobile()) {
-        console.log(`${LOGGING_PREFIX} Skipping registrar expressions initialization on mobile device.`);
-        return;
-    }
 
     if (DEBUG) {
         console.log(`${LOGGING_PREFIX} Initializing extension.`);
