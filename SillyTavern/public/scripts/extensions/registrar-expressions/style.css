@@ -38,6 +38,13 @@ body.registrar-hide-side-character::after {
     right: unset;
 }
 
+@media (max-width:1000px){
+    .registrar-expression-holder.registrar-expression-left{
+        width: 120vw;
+        left: -10vw;
+    }
+}
+
 .registrar-expression-holder.registrar-expression-right {
     left: unset;
     right: 0;
