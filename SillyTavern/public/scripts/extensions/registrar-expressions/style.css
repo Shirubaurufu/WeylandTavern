@@ -1,0 +1,58 @@
+/* Add class `registrar-hide-side-character` on <body> to hide Side-Character-Loader’s body::after sprite. */
+body.registrar-hide-side-character::after {
+    display: none !important;
+    content: none !important;
+    background-image: none !important;
+}
+
+#expression-holder img#expression-image {
+    display: none !important;
+}
+
+#registrar-expressions-container {
+    display: flex;
+    height: calc(100vh - var(--topBarBlockSize));
+    width: 100vw;
+}
+
+.registrar-expression-holder {
+    min-width: 100px;
+    min-height: 100px;
+    max-height: 90vh;
+    max-width: 90vh;
+    width: calc((100vw - var(--sheldWidth)) / 2);
+    position: absolute;
+    bottom: 0;
+    padding: 0;
+    left: 0;
+    filter: drop-shadow(2px 2px 2px #51515199);
+    z-index: 2;
+    overflow: hidden;
+    resize: both;
+    display: flex;
+    justify-content: center;
+}
+
+.registrar-expression-holder.registrar-expression-left {
+    left: 0;
+    right: unset;
+}
+
+.registrar-expression-holder.registrar-expression-right {
+    left: unset;
+    right: 0;
+    transform: scaleX(-1);
+}
+
+.registrar-expression-img {
+    display:none;
+    min-width: 100px;
+    min-height: 100px;
+    max-height: 90vh;
+    max-width: 90vh;
+    top: 0;
+    bottom: 0;
+    padding: 0;
+    vertical-align: bottom;
+    object-fit: contain;
+}

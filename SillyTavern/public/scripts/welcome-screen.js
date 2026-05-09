@@ -70,6 +70,7 @@ export function getPermanentAssistantAvatar() {
 export async function openWelcomeScreen({ force = false, expand = false } = {}) {
     const currentChatId = getCurrentChatId();
     if (currentChatId !== undefined || (chat.length > 0 && !force)) {
+        document.body.setAttribute('skipped-welcome-screen', 'true');
         return;
     }
 
@@ -77,6 +78,7 @@ export async function openWelcomeScreen({ force = false, expand = false } = {}) 
     const chatAfterFetch = getCurrentChatId();
     if (chatAfterFetch !== currentChatId) {
         console.debug('Chat changed while fetching recent chats.');
+        document.body.setAttribute('skipped-welcome-screen', 'true');
         return;
     }
 

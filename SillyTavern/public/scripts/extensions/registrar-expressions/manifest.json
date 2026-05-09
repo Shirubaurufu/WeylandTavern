@@ -1,0 +1,12 @@
+{
+    "name": "Registrar-Expressions",
+    "display_name": "Registrar Expressions",
+    "description": "Loads remote expression manifests from registrar.weybooru.com when local sprites are missing; extends /sidecharacter; auto-detects line-start __Name:__ / **Name:** side speakers in chat for registrar-only characters.",
+    "version": "1.0.0",
+    "author": "Josh",
+    "loading_order": 5,
+    "js": "index.js",
+    "css": "style.css",
+    "optional": false,
+    "dependencies": ["expressions", "Side-Character-Loader"]
+}
