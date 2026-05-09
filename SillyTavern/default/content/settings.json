@@ -177,7 +177,7 @@
         "server_urls": {
             "ooba": "http://127.0.0.1:5000/"
         },
-        "custom_model": "claude-sonnet-4.6-rp",
+        "custom_model": "claude-sonnet-4.6-rp6",
         "bypass_status_check": true,
         "openrouter_allow_fallbacks": true,
         "xtc_threshold": 0.1,
@@ -533,7 +533,7 @@
                     "api": "custom",
                     "preset": "Default",
                     "api-url": "https://helixmind.online/v1",
-                    "model": "claude-sonnet-4.6-rp",
+                    "model": "claude-sonnet-4.6-rp6",
                     "proxy": "None",
                     "name": "HelixMind (Ratchet's API)"
                 },
@@ -2664,7 +2664,7 @@
         "zerooneai_model": "yi-large",
         "blockentropy_model": "be-70b-base-llama3.1",
         "deepseek_model": "deepseek-chat",
-        "custom_model": "claude-sonnet-4.6-rp",
+        "custom_model": "claude-sonnet-4.6-rp6",
         "custom_url": "https://helixmind.online/v1",
         "custom_include_body": "- stop: \n  - \"<user>\"\n  - \"</user>\"\n  - \"User:\"\n  - \"</assistant>\"\n  - \"{{user}}:\"\n  - \"{user}:\"\n  - \"{{User}}:\"\n  - \"{User}:\"\n  - \"user:\"\n- temperature: 0.9",
         "custom_exclude_body": "",
