@@ -39,9 +39,12 @@ body.registrar-hide-side-character::after {
 }
 
 @media (max-width:1000px){
-    .registrar-expression-holder.registrar-expression-left{
-        width: 120vw;
-        left: -10vw;
+    .registrar-expression-holder{
+        width: 100vw;
+        position:relative;
+    }
+    .registrar-expression-holder:not(:has([style*="display: block"])){
+        display:none;
     }
 }
 
@@ -62,4 +65,10 @@ body.registrar-hide-side-character::after {
     padding: 0;
     vertical-align: bottom;
     object-fit: contain;
+}
+
+#expression-wrapper {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
 }

@@ -11,7 +11,7 @@ const LEFT_EXPRESSION_ID = 'registrar-expression-left';
 const RIGHT_BASE_EXPRESSION_ID = 'side-character-loader-style';
 const RIGHT_BASE_EXPRESSION_HIDE_CLASS = 'registrar-hide-side-character';
 const RIGHT_EXPRESSION_ID = 'registrar-expression-right';
-const DEBOUNCE_MS = 100;
+const DEBOUNCE_MS = 500;
 const OBSERVERS = {
     left: {
         id: LEFT_BASE_EXPRESSION_CONTAINER_ID,
@@ -519,10 +519,16 @@ let debounceTimer = null;
 function scheduleRefresh() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
+        if (DEBUG) {
+            console.log(`${LOGGING_PREFIX} Debounce timer expired, refreshing expressions.`);
+        }
         debounceTimer = null;
         resolveBaseExpressionPaths();
         await setExpressions();
     }, DEBOUNCE_MS);
+    if (DEBUG) {
+        console.log(`${LOGGING_PREFIX} Scheduled refresh in ${DEBOUNCE_MS}ms.`);
+    }
 }
 
 function observeExpression(side) {
@@ -538,7 +544,12 @@ function observeExpression(side) {
     if (!element) {
         return false;
     }
-    OBSERVERS[side].observer = new MutationObserver(scheduleRefresh);
+    OBSERVERS[side].observer = new MutationObserver(() => {
+        if (DEBUG) {
+            console.log(`${LOGGING_PREFIX} ${side} expression mutated, scheduling refresh.`);
+        }
+        scheduleRefresh();
+    });
     OBSERVERS[side].observer.observe(element, OBSERVERS[side].options);
     if (DEBUG) {
         console.log(`${LOGGING_PREFIX} Began observing ${side} expression.`);
