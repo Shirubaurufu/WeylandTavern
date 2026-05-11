@@ -66,3 +66,9 @@ body.registrar-hide-side-character::after {
     vertical-align: bottom;
     object-fit: contain;
 }
+
+#expression-wrapper {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
