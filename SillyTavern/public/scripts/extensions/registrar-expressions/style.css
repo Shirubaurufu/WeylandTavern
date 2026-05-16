@@ -11,8 +11,9 @@ body.registrar-hide-side-character::after {
 
 #registrar-expressions-container {
     display: flex;
-    height: calc(100vh - var(--topBarBlockSize));
+    height: calc(50dvh);
     width: 100vw;
+    justify-content: center;
 }
 
 .registrar-expression-holder {
@@ -28,7 +29,7 @@ body.registrar-hide-side-character::after {
     filter: drop-shadow(2px 2px 2px #51515199);
     z-index: 2;
     overflow: hidden;
-    resize: both;
+    resize: none;
     display: flex;
     justify-content: center;
 }
@@ -39,7 +40,7 @@ body.registrar-hide-side-character::after {
 }
 
 @media (max-width:1000px){
-    .registrar-expression-holder{
+    body.waifuMode .registrar-expression-holder{
         width: 100vw;
         position:relative;
     }
@@ -65,6 +66,9 @@ body.registrar-hide-side-character::after {
     padding: 0;
     vertical-align: bottom;
     object-fit: contain;
+    /* margin-bottom: 122%; */
+    /* transform: translateY(-15%); */
+    margin-top: auto;
 }
 
 #expression-wrapper {
