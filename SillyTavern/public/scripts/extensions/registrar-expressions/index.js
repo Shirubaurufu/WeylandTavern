@@ -205,9 +205,7 @@ function forceSafeOfficialOutfit(outfitName) {
     return raw;
 }
 
-function getActiveOutfit(characterName) {
-    const context = SillyTavern.getContext();
-    const normalizedName = String(characterName || '').trim().toLowerCase();
+function getActiveOutfit() {
 
     // Use the outfit of the left official character if available
     if (leftBasePath) {
@@ -215,7 +213,7 @@ function getActiveOutfit(characterName) {
         const folder = leftImage instanceof HTMLImageElement ? leftImage.getAttribute('data-sprite-folder-name') : '';
         const expressionFolder = String(folder || '').trim();
         const leftOutfit = getOutfitSegmentFromFolder(expressionFolder);
-        if (leftOutfit) {
+        if (leftOutfit && leftOutfit !== "Male" && leftOutfit !== "Female" && leftOutfit !== "Other") {
             if (isHideNsfwEnabled()) {
                 return forceSafeOfficialOutfit(leftOutfit);
             }
@@ -223,23 +221,20 @@ function getActiveOutfit(characterName) {
         }
     }
 
-    // Derive from the expressions override path used by the core extension
-    const chars = Array.isArray(context?.characters) ? context.characters : [];
-    const character = chars.find((c) => String(c?.name || '').trim().toLowerCase() === normalizedName);
-    if (!character) return '';
-
-    const avatarBase = String(character.avatar || '').replace(/\.[^/.]+$/, '');
-    if (!avatarBase) return '';
-
-    let overrides = context?.extensionSettings?.expressionOverrides;
-    overrides = Array.isArray(overrides) ? overrides : [];
-    const override = overrides.find((o) => String(o?.name || '').trim() === avatarBase);
-
-    const resolved = getOutfitSegmentFromFolder(override?.path || '');
-    if (isHideNsfwEnabled()) {
-        return forceSafeOfficialOutfit(resolved);
+    // Try to extract the outfit directly from the message
+    const context = SillyTavern.getContext();
+    const chat = Array.isArray(context.chat) ? context.chat : [];
+    const latestAssistant = [...chat].reverse().find((m) => m && !m.is_user && !m.is_system);
+    if (latestAssistant?.mes && !isHideNsfwEnabled()) {
+        if (latestAssistant.mes.includes("[LG]")) {
+            return 'Lingerie';
+        }
+        if (latestAssistant.mes.includes("[NK]")) {
+            return 'Naked';
+        }
     }
-    return resolved;
+    return 'Regular Outfit';
+
 }
 
 function normalizeOutfit(outfitName) {
