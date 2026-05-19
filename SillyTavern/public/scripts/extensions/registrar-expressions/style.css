@@ -1,9 +1,5 @@
-/* Add class `registrar-hide-side-character` on <body> to hide Side-Character-Loader’s body::after sprite. */
-body.registrar-hide-side-character::after {
-    display: none !important;
-    content: none !important;
-    background-image: none !important;
-}
+
+/* Hide Old Expressions */
 
 #expression-holder img#expression-image {
     display: none !important;
@@ -16,11 +12,21 @@ body.registrar-hide-side-character::after {
     justify-content: center;
 }
 
+#expression-wrapper {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+body.registrar-hide-side-character::after {
+    display: none !important;
+    content: none !important;
+    background-image: none !important;
+}
+
+/* Basic Expression Layout */
+
 .registrar-expression-holder {
-    min-width: 100px;
-    min-height: 100px;
-    max-height: 90vh;
-    max-width: 90vh;
     width: calc((100vw - var(--sheldWidth)) / 2);
     position: absolute;
     bottom: 0;
@@ -39,16 +45,6 @@ body.registrar-hide-side-character::after {
     right: unset;
 }
 
-@media (max-width:1000px){
-    body.waifuMode .registrar-expression-holder{
-        width: 100vw;
-        position:relative;
-    }
-    .registrar-expression-holder:not(:has([style*="display: block"])){
-        display:none;
-    }
-}
-
 .registrar-expression-holder.registrar-expression-right {
     left: unset;
     right: 0;
@@ -57,22 +53,64 @@ body.registrar-hide-side-character::after {
 
 .registrar-expression-img {
     display:none;
-    min-width: 100px;
-    min-height: 100px;
-    max-height: 90vh;
-    max-width: 90vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100%;
     top: 0;
     bottom: 0;
     padding: 0;
     vertical-align: bottom;
     object-fit: contain;
-    /* margin-bottom: 122%; */
-    /* transform: translateY(-15%); */
     margin-top: auto;
 }
 
-#expression-wrapper {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
+/* Mobile Portrait Layout */
+
+@media (max-width:1000px){
+    .registrar-expression-holder{
+        width: 100vw;
+        position:absolute;
+        bottom:unset;
+        padding-top:3em;
+    }
+    .registrar-expression-holder:not(:has([style*="display: block"])){
+        display:none;
+    }
+
+    body[expressions-sides=both] .registrar-expression-holder{
+        width:50vw;
+    }
+    body[expressions-sides=both] .registrar-expression-img{
+        height:53vh;
+    }
+    
+    body[expression-zoom=true] .registrar-expression-holder,
+    body:not(.waifuMode) .registrar-expression-holder{
+        width:unset;
+        height:100vh;
+        position:relative;
+    }
+    body[expression-zoom=true] .registrar-expression-img,
+    body:not(.waifuMode) .registrar-expression-img{
+        max-width:unset;
+        width:unset;
+        height: 100vh;
+    }
+    body[expression-zoom=true][expressions-sides=both] .registrar-expression-holder,
+    body[expressions-sides=both]:not(.waifuMode) .registrar-expression-holder{
+        position:absolute;
+    }
+    body[expression-zoom=true][expressions-sides=both] .registrar-expression-img,
+    body[expressions-sides=both]:not(.waifuMode) .registrar-expression-img{
+        height: 65vh;
+        margin-top:auto;
+    }
+    body[expression-zoom=true][expressions-sides=both] .registrar-expression-right,
+    body[expressions-sides=both]:not(.waifuMode) .registrar-expression-right{
+        transform:translateX(30%);
+    }
+    body[expression-zoom=true][expressions-sides=both] .registrar-expression-left,
+    body[expressions-sides=both]:not(.waifuMode) .registrar-expression-left{
+        transform:translateX(-30%);
+    }
 }
