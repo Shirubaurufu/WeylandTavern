@@ -501,6 +501,19 @@ async function setExpressions(){
     } else {
         rightExpression.removeAttribute('style');
     }
+
+    if (left.path && right.path) {
+        document.body.setAttribute('expressions-sides', 'both');
+    }
+    else if (left.path) {
+        document.body.setAttribute('expressions-sides', 'left');
+    }
+    else if (right.path) {
+        document.body.setAttribute('expressions-sides', 'right');
+    }
+    else {
+        document.body.removeAttribute('expressions-sides');
+    }
 }
 
 function toTitleCase(str) {
