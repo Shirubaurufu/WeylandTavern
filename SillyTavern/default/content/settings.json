@@ -512,7 +512,8 @@
             "multimodal_model": "gpt-4-turbo",
             "prompt": "What's in this image?",
             "template": "[{{user}} sends {{char}} a picture that contains: {{caption}}]",
-            "auto_mode": true
+            "auto_mode": false,
+            "show_in_chat": false
         },
         "expressions": {
             "showDefault": false,
