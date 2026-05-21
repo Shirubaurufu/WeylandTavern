@@ -230,7 +230,7 @@
     "assistant_impersonation": "",
     "claude_use_sysprompt": false,
     "squash_system_messages": false,
-    "image_inlining": false,
+    "image_inlining": true,
     "bypass_status_check": false,
     "continue_prefill": false,
     "continue_postfix": " ",
