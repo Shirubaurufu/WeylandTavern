@@ -1,6 +1,265 @@
 import { converter } from '../script.js';
 
 let timelineLoaded = false;
+let welcomeTrackerCountdownInterval = null;
+let welcomeTrackerExpiryTimeMs = null;
+let welcomeTrackerActivePanel = null;
+
+function stopWelcomeTrackerCountdown() {
+    clearInterval(welcomeTrackerCountdownInterval);
+    welcomeTrackerCountdownInterval = null;
+    welcomeTrackerExpiryTimeMs = null;
+    welcomeTrackerActivePanel = null;
+}
+
+function formatMillisecondsToTime(ms) {
+    if (ms < 0) {
+        ms = 0;
+    }
+
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (num) => String(num).padStart(2, '0');
+
+    if (hours > 0) {
+        return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    return `${pad(minutes)}:${pad(seconds)}`;
+}
+
+async function fetchWelcomeHelixUsageData(apiKey) {
+    const response = await fetch('https://helixmind.online/v1/usage', {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${apiKey}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const parsedResponse = await response.json();
+    const twentyFourHoursAgoMs = Date.now() - (24 * 60 * 60 * 1000);
+    let activeMessages = [];
+
+    if (parsedResponse.data && Array.isArray(parsedResponse.data)) {
+        activeMessages = parsedResponse.data
+            .map(item => ({
+                ...item,
+                timestamp_ms: item.timestamp * 1000,
+            }))
+            .filter(message => message.timestamp_ms >= twentyFourHoursAgoMs)
+            .sort((a, b) => a.timestamp_ms - b.timestamp_ms);
+    }
+
+    let totalLimit = Infinity;
+    if (parsedResponse.limit === '') {
+        totalLimit = Infinity;
+    } else if (parsedResponse.limit && !Number.isNaN(parseInt(parsedResponse.limit, 10))) {
+        totalLimit = parseInt(parsedResponse.limit, 10);
+    }
+
+    return {
+        current_usage_count: activeMessages.length,
+        messages: activeMessages,
+        total_limit: totalLimit,
+    };
+}
+
+function startWelcomeTrackerCountdown(welcomePanel, expiryTimeMs) {
+    stopWelcomeTrackerCountdown();
+    welcomeTrackerExpiryTimeMs = expiryTimeMs;
+    welcomeTrackerActivePanel = welcomePanel;
+
+    const nextMessageTimeText = welcomePanel.querySelector('#hm-next-message-time-text');
+    if (!nextMessageTimeText) {
+        return;
+    }
+
+    const updateTimerDisplay = () => {
+        const panel = welcomeTrackerActivePanel;
+        const timerText = panel?.querySelector('#hm-next-message-time-text');
+        if (!panel || !timerText || welcomeTrackerExpiryTimeMs === null) {
+            return;
+        }
+
+        const remainingMs = welcomeTrackerExpiryTimeMs - Date.now();
+        if (remainingMs <= 0) {
+            stopWelcomeTrackerCountdown();
+            timerText.textContent = 'Refreshing...';
+            void refreshWelcomeTrackerUsage(panel);
+            return;
+        }
+
+        timerText.textContent = `${formatMillisecondsToTime(remainingMs)}`;
+    };
+
+    updateTimerDisplay();
+    welcomeTrackerCountdownInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+async function refreshWelcomeTrackerUsage(welcomePanel) {
+    const ctx = SillyTavern?.getContext?.();
+    const messagesUsedText = welcomePanel.querySelector('#hm-messages-used-text');
+    const nextMessageTimeText = welcomePanel.querySelector('#hm-next-message-time-text');
+    const helixApiKey = ctx?.variables?.global?.get('HMKey') ?? null;
+
+    if (!messagesUsedText || !nextMessageTimeText) {
+        return;
+    }
+
+    if (!helixApiKey || typeof helixApiKey !== 'string' || helixApiKey.trim() === '') {
+        messagesUsedText.textContent = 'Key Error';
+        nextMessageTimeText.textContent = 'Key Error';
+        stopWelcomeTrackerCountdown();
+        return;
+    }
+
+    messagesUsedText.textContent = 'Loading...';
+    nextMessageTimeText.textContent = 'Loading...';
+
+    try {
+        const data = await fetchWelcomeHelixUsageData(helixApiKey);
+
+        if (typeof data.total_limit === 'number' && Number.isFinite(data.total_limit)) {
+            messagesUsedText.textContent = `${data.total_limit -data.current_usage_count} / ${data.total_limit}`;
+        } else {
+            messagesUsedText.textContent = `${data.current_usage_count}`;
+        }
+
+        if (data.current_usage_count === 0 || !data.messages || data.messages.length === 0) {
+            nextMessageTimeText.textContent = 'Ready';
+            document.getElementById('hm-next-message-container').style.display = 'none';
+            stopWelcomeTrackerCountdown();
+            return;
+        }
+        else {
+            document.getElementById('hm-next-message-container').style.display = 'inline';
+        }
+
+        const oldestMessageTimestampMs = data.messages[0].timestamp_ms;
+        const calculatedExpiryTimeMs = oldestMessageTimestampMs + (24 * 60 * 60 * 1000);
+
+        if (calculatedExpiryTimeMs <= Date.now()) {
+            nextMessageTimeText.textContent = 'Next Message In: Slot Open!';
+            stopWelcomeTrackerCountdown();
+            return;
+        }
+
+        startWelcomeTrackerCountdown(welcomePanel, calculatedExpiryTimeMs);
+    } catch (error) {
+        console.error('Welcome tracker: error fetching Helix usage data:', error);
+        messagesUsedText.textContent = 'Messages Used: Error';
+        nextMessageTimeText.textContent = 'Next Message In: Error';
+        stopWelcomeTrackerCountdown();
+    }
+}
+
+async function clearHelixTrackerKey(welcomePanel) {
+    const ctx = SillyTavern?.getContext?.();
+    if (!ctx) {
+        console.error('SillyTavern context not available');
+        return;
+    }
+
+    stopWelcomeTrackerCountdown();
+    await ctx.executeSlashCommandsWithOptions(
+        '/flushglobalvar HMKey | /secret-delete quiet=true key=api_key_custom api_key_custom',
+    );
+    updateTrackerKeyUI(welcomePanel);
+}
+
+function updateTrackerKeyUI(welcomePanel) {
+    const ctx = SillyTavern?.getContext?.();
+    const key = ctx?.variables?.global?.get('HMKey');
+    const unset = welcomePanel.querySelector('#hm-key-unset');
+    const set = welcomePanel.querySelector('#hm-key-set');
+    const hasKey = typeof key === 'string' && key.trim().includes('helix');
+
+    if (hasKey) {
+        if (unset) {
+            unset.style.display = 'none';
+        }
+        if (set) {
+            set.style.display = '';
+        }
+        void refreshWelcomeTrackerUsage(welcomePanel);
+    } else {
+        stopWelcomeTrackerCountdown();
+        if (unset) {
+            unset.style.display = '';
+        }
+        if (set) {
+            set.style.display = 'none';
+        }
+    }
+}
+
+async function setHelixTrackerKeyFromInput(welcomePanel) {
+    const ctx = SillyTavern?.getContext?.();
+    if (!ctx) {
+        console.error('SillyTavern context not available');
+        return;
+    }
+
+    const input = welcomePanel.querySelector('#tracker-key-input');
+    const trimmedKey = input instanceof HTMLInputElement ? input.value.trim() : '';
+
+    if (!trimmedKey) {
+        return;
+    }
+
+    if (!trimmedKey.includes('helix')) {
+        toastr.error('Please copy the entire key, including the \'helix-\' part.');
+        return;
+    }
+
+    await ctx.executeSlashCommandsWithOptions(
+        `/setglobalvar key=HMKey ${trimmedKey} | /secret-write quiet=true label=api_key_custom key=api_key_custom ${trimmedKey}`,
+    );
+
+    if (input instanceof HTMLInputElement) {
+        input.value = '';
+    }
+
+    updateTrackerKeyUI(welcomePanel);
+}
+
+function setupTrackerKeyButton(welcomePanel) {
+    const setButton = welcomePanel.querySelector('#set-tracker-key');
+    const clearButton = welcomePanel.querySelector('#clear-tracker-key');
+    const keyInput = welcomePanel.querySelector('#tracker-key-input');
+
+    if (setButton && setButton.dataset.trackerKeyBound !== 'true') {
+        setButton.dataset.trackerKeyBound = 'true';
+        setButton.addEventListener('click', () => {
+            void setHelixTrackerKeyFromInput(welcomePanel);
+        });
+    }
+
+    if (keyInput && keyInput.dataset.trackerKeyBound !== 'true') {
+        keyInput.dataset.trackerKeyBound = 'true';
+        keyInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                void setHelixTrackerKeyFromInput(welcomePanel);
+            }
+        });
+    }
+
+    if (clearButton && clearButton.dataset.trackerKeyBound !== 'true') {
+        clearButton.dataset.trackerKeyBound = 'true';
+        clearButton.addEventListener('click', () => {
+            void clearHelixTrackerKey(welcomePanel);
+        });
+    }
+
+    updateTrackerKeyUI(welcomePanel);
+}
 
 // This function will be called when the DOM is fully loaded
 function initWelcomeInfoPanel() {
@@ -21,11 +280,13 @@ function initWelcomeInfoPanel() {
             return;
         }
 
-        const infoButtons = welcomePanel.querySelectorAll('.welcomeInfoButtons .info_button');
+        const infoButtons = welcomePanel.querySelectorAll('.welcomeInfoButtons button.info_button');
         const navButtons = welcomePanel.querySelectorAll('.infoNavigation .info_button');
         const infoSections = welcomePanel.querySelectorAll('.infoSection');
 
         console.log('Found buttons:', infoButtons.length, 'nav buttons:', navButtons.length);
+
+        setupTrackerKeyButton(welcomePanel);
 
         // Function to show a specific info section
         function showInfoSection(infoType) {
@@ -62,6 +323,14 @@ function initWelcomeInfoPanel() {
                 document.getElementById('timelineInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="timeline"]').classList.add('active');
                 fetchAndRenderGoogleDoc();
+            } else if (infoType === 'help') {
+                document.getElementById('CommandsInfo').style.display = 'block';
+                welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="help"]').classList.add('active');
+                fetchAndRenderMarkdown("Commands");
+            } else if (infoType === 'version') {
+                document.getElementById('Version_InfoInfo').style.display = 'block';
+                welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="version"]').classList.add('active');
+                fetchAndRenderMarkdown("Version_Info");
             }
         }
 

@@ -1,0 +1,139 @@
+[
+    {
+        "name": "Move attach file button to left of chat input",
+        "target": "#attachFile",
+        "actions": [
+            {
+                "type": "MOVE",
+                "insertionPoint": "#extensionsMenuButton",
+                "position": "before"
+            }
+        ]
+    },
+    {
+        "name": "Move close chat button to top menu bar",
+        "target": "#option_close_chat",
+        "actions": [
+            {
+                "type": "MOVE",
+                "insertionPoint": "#top-settings-holder",
+                "position": "start"
+            },
+            {
+                "type": "REMOVE_CLASS",
+                "class": "displayNone"
+            },
+            {
+                "type": "ADD_CLASS",
+                "class": "home_button"
+            },
+            {
+                "type": "ATTRIBUTE",
+                "attribute": "data-i18n",
+                "value": "[title]Home"
+            },
+            {
+                "type": "ATTRIBUTE",
+                "attribute": "title",
+                "value": "Home"
+            }
+        ]
+    },
+    {
+        "name": "Update settings menu tool tip",
+        "target": "#API-status-top",
+        "actions": [
+            {
+                "type": "ATTRIBUTE",
+                "attribute": "data-i18n",
+                "value": "[title]Settings"
+            },
+            {
+                "type": "ATTRIBUTE",
+                "attribute": "title",
+                "value": "Settings"
+            }
+        ]
+    },
+    {
+        "name": "Merge extensions settings with API settings",
+        "target": "#rm_extensions_block",
+        "actions": [
+            {
+                "type": "MOVE",
+                "insertionPoint": "#openai_api",
+                "position": "after"
+            },
+            {
+                "type": "REMOVE_CLASS",
+                "class": "drawer-content"
+            },
+            {
+                "type": "REMOVE_CLASS",
+                "class": "openDrawer"
+            }
+        ]
+    },
+    {
+        "name": "Merge user settings with API settings",
+        "target": "#user-settings-block",
+        "actions": [
+            {
+                "type": "MOVE",
+                "insertionPoint": "#openai_api",
+                "position": "after"
+            },
+            {
+                "type": "REMOVE_CLASS",
+                "class": "drawer-content"
+            },
+            {
+                "type": "REMOVE_CLASS",
+                "class": "openDrawer"
+            }
+        ]
+    },
+    {
+        "name": "Move character downloader button to top menu bar",
+        "target": "#external_import_button",
+        "actions": [
+            {
+                "type": "MOVE",
+                "insertionPoint": "#persona-management-button",
+                "position": "after"
+            }
+        ]
+    },
+    {
+        "name": "Simplify title of persona button",
+        "target": "#persona-management-button .drawer-icon",
+        "actions": [
+            {
+                "type": "ATTRIBUTE",
+                "attribute": "data-i18n",
+                "value": "[title]User Persona"
+            },
+            {
+                "type": "ATTRIBUTE",
+                "attribute": "title",
+                "value": "User Persona"
+            }
+        ]
+    },
+    {
+        "name": "Simplify title of character button",
+        "target": "#rightNavHolder .drawer-icon",
+        "actions": [
+            {
+                "type": "ATTRIBUTE",
+                "attribute": "data-i18n",
+                "value": "[title]Character List"  
+            },
+            {
+                "type": "ATTRIBUTE",
+                "attribute": "title",
+                "value": "Character List"
+            }
+        ]
+    }
+]

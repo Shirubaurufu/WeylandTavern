@@ -297,7 +297,10 @@ async function sendWelcomePanel(chats, expand = false) {
 
                 if (infoType === 'back') {
                     // Go back to main welcome panel
-            fragment.querySelector('.welcomePanel').classList.remove('infoMode');
+                    const panel = fragment.querySelector('.welcomePanel');
+                    if (panel){
+                     panel.classList.remove('infoMode');                        
+                    }
                 } else {
                     // Show the selected info section
                     showInfoSection(infoType, fragment);
@@ -308,7 +311,10 @@ async function sendWelcomePanel(chats, expand = false) {
         // Function to show a specific info section
         function showInfoSection(infoType, fragment) {
             // Enter info mode
-            fragment.querySelector('.welcomePanel').classList.add('infoMode');
+            const panel = fragment.querySelector('.welcomePanel');
+            if (panel){
+                panel.classList.add('infoMode');
+            }
 
             // Hide all info sections
             fragment.querySelectorAll('.infoSection').forEach(section => {
@@ -322,14 +328,14 @@ async function sendWelcomePanel(chats, expand = false) {
 
             // Show the selected section
             if (infoType === 'character') {
-                fragment.querySelector('#characterInfo').style.display = 'block';
-                fragment.querySelector('.info_button[data-info-type="character"]').classList.add('active');
+                //fragment.querySelector('#characterInfo').style.display = 'block';
+                //fragment.querySelector('.info_button[data-info-type="character"]').classList.add('active');
             } else if (infoType === 'dorm') {
-                fragment.querySelector('#dormInfo').style.display = 'block';
-                fragment.querySelector('.info_button[data-info-type="dorm"]').classList.add('active');
+                //fragment.querySelector('#dormInfo').style.display = 'block';
+                //fragment.querySelector('.info_button[data-info-type="dorm"]').classList.add('active');
             } else if (infoType === 'world') {
-                fragment.querySelector('#worldInfo').style.display = 'block';
-                fragment.querySelector('.info_button[data-info-type="world"]').classList.add('active');
+                //fragment.querySelector('#worldInfo').style.display = 'block';
+                //fragment.querySelector('.info_button[data-info-type="world"]').classList.add('active');
             }
         }
         chatElement.append(fragment.firstChild);

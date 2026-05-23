@@ -1,0 +1,481 @@
+/* Top Button Bar */
+#ai-config-button,
+#advanced-formatting-button,
+#logo_block,
+#user-settings-button,
+#extensions-settings-button
+{
+    display:none !important;
+}
+
+#option_close_chat.home_button
+{
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    flex-flow: row;
+    width: 100%;
+    cursor:pointer;
+    color:var(--SmartThemeBodyColor);
+    transition: all var(--animation-duration-2x);
+    opacity:0.3;
+}
+#option_close_chat.home_button:hover
+{
+    opacity:1.0;
+}
+#option_close_chat.home_button i
+{
+    font-size:180%;
+}
+#option_close_chat.home_button i:before
+{
+    content:"\f015";
+    position:relative;
+    top:-0.6px;
+}
+#option_close_chat.home_button span
+{
+    display:none;
+}
+
+#user-settings-block
+{
+    position:relative;
+}
+#API-status-top:before
+{
+    content:"\f013";
+    position:relative;
+    top:-0.5px;
+}
+
+#wt-char-menu-btn
+{
+    width: 100%;
+    border: none;
+    opacity: 0.3;
+    font-size: 180%;
+}
+#wt-char-menu-btn:hover
+{
+    background:none;
+    opacity:1.0;
+}
+#wt-char-menu-btn:before
+{
+    content:"\f0ed";
+    position:relative;
+    top:0.3px;
+}
+
+#rightNavDrawerIcon:before
+{
+    content: "\f0ca";
+    position:relative;
+    top:-0.5px;
+}
+
+#persona-management-button .drawer-icon:before
+{
+    content: "\f2c2";
+    position:relative;
+    top:-0.7px
+}
+
+#WIDrawerIcon
+{
+    font-size:185%;
+    position:relative;
+    top:-0.65px;
+}
+
+/* API Connections Menu */
+div:has(> div > #connection_profile_spinner),
+#title_api,
+#main-API-selector-block,
+#openai_api > h4:nth-of-type(1),
+#chat_completion_source,
+#custom_form h4:nth-of-type(1),
+#custom_form div:nth-of-type(1),
+#custom_form div:nth-of-type(2),
+h4:has(+ div > #custom_model_id),
+div:has(> #custom_model_id),
+#prompt_post_processing_form,
+div:has(> label > #auto-connect-checkbox),
+#customize_additional_parameters,
+#test_api_button,
+#rm_api_block .wst-rm-api-aggregate-status,
+#custom_form h4 small
+{
+    display:none !important;
+}
+
+/* World Info Menu */
+div:has(> div > div > #wiActivationSettings),
+#WIMultiSelector > .range-block-title,
+#WIMultiSelector .range-block-range .select2-selection--clearable > button:nth-last-of-type(1),
+#WI_panel_pin_div,
+#WorldInfo a.notes-link,
+#world_duplicate,
+#world_backfill_memos,
+#world_popup_entries_list .move_entry_button,
+#world_popup_entries_list .duplicate_entry_button,
+#world_popup_entries_list [name=position],
+div.world_entry_form_control:has([for=depth]),
+#world_popup_entries_list .probabilityContainer,
+#WIEntryHeaderTitlesPC,
+[name=perEntryOverridesBlock] div:nth-of-type(1),
+[name=perEntryOverridesBlock] div:nth-of-type(4),
+[name=perEntryOverridesBlock] div:nth-of-type(5),
+div:has(> div > label > [name=excludeRecursion]),
+.world_entry_form_uid_value,
+.editor_maximize,
+.fa-markdown,
+[name=WIEntryBottomControls],
+[name=WIEntryBottomControls] + div,
+div:has(+ div[name="WIEntryBottomControls"]),
+div:has(+ div + div[name="WIEntryBottomControls"])
+{
+    display:none !important;
+}
+
+
+
+/* User Settings Menu */
+#version_display,
+#power-user-options-block,
+#UI-Customization,
+[name=UserSettingsRowTwo],
+#user-settings-block a.notes-link,
+div:has(> #toastr_position),
+div:has(> #avatar_style),
+h4:has(> #ui_preset_import_file),
+label:has(> #reduced_motion),
+label:has(> #expandMessageActions),
+label:has(> #enableZenSliders),
+label:has(> #enableLabMode),
+label:has(> #messageTimerEnabled),
+label:has(> #messageTimestampsEnabled),
+label:has(> #messageModelIconEnabled),
+label:has(> #mesIDDisplayEnabled),
+label:has(> #hideChatAvatarsEnabled),
+label:has(> #messageTokensEnabled),
+label:has(> #show_swipe_num_all_messages),
+label:has(> #hotswapEnabled),
+label:has(> #zoomed_avatar_magnification),
+label:has(> #bogus_folders),
+label:has(> #click_to_edit)
+{
+    display:none !important;
+}
+
+div:has(> [name=userSettingsRowOne])
+{
+    margin-bottom:0.5em;
+}
+
+/* Extensions Menu */
+label[for=extensions_notify_updates],
+#third_party_extension_button,
+div:has(> div > #extensions_status),
+div:has(> #extensions_url),
+#rm_extensions_block hr,
+#assets_container,
+#typing_indicator_container,
+#expressions_container,
+#sd_container,
+#tts_container,
+#audio_container,
+#qr_container,
+#caption_container,
+#summarize_container,
+#regex_container,
+#vectors_container,
+.weyland_formatter_container,
+.weyland_downloader_container
+{
+    display:none !important;
+}
+
+/* Persona Menu */
+#persona-management-button > div > div > div > div > h3 > a:nth-of-type(1),
+#persona-management-button div.flex-container:has(> div > i.fa-ranking-star),
+#persona_grid_toggle,
+#persona_pagination_container .paginationjs-nav,
+#sync_name_button,
+div:has(> #persona_description_position),
+div:has(+ div > #persona_description_position) h4,
+div:has(> div > label > #persona_show_notifications),
+#persona_connections_list,
+h4:has(+ #persona_description),
+h4:has(+ #persona_connections_buttons)
+{
+    display:none !important;
+}
+
+/* Characters Menu */
+label[for=rm_button_panel_pin],
+#HotSwapWrapper,
+#character_import_button,
+#rm_button_group_chats,
+#charListFixedTop .rm_tag_controls,
+#bulkEditButton,
+#charListGridToggle,
+#rm_print_characters_pagination .paginationjs-nav,
+.character_version,
+#rm_print_characters_block .tags,
+#CharListButtonAndHotSwaps
+{
+    display:none !important;
+}
+
+/* Character Details */
+#result_info,
+#avatar_controls,
+#tags_div,
+#spoiler_free_desc,
+#creators_note_desc_hidden,
+#avatar_div_div,
+#rm_PinAndTabs
+{
+    display:none !important;
+}
+
+/* Quick Reply Section */
+#qr--popoutTrigger
+{
+    display:none !important;
+}
+.qr--button
+{
+    min-width:3em;
+}
+
+/* Chat Messages */
+.extraMesButtons div.sd_message_gen,
+.extraMesButtons div.mes_narrate,
+.extraMesButtons div.mes_hide,
+.extraMesButtons div.mes_embed,
+.extraMesButtons div.mes_copy,
+.extraMesButtons div.mes_create_bookmark 
+{
+    display:none;
+}
+
+/* Chat Menu */
+#option_toggle_CFG,
+#option_toggle_logprobs,
+#option_new_bookmark,
+#option_convert_to_group,
+#option_regenerate
+{
+    display:none !important;
+}
+
+/* Extension Menu */
+#extensionsMenu,
+#extensionsMenuButton,
+#attachFile span
+{
+    display:none !important;
+}
+
+#attachFile
+{
+    order:999;
+}
+
+.fa-paperclip:before {
+    font-size: 140%;
+    position:relative;
+    top:-0.2px;
+}
+
+/* Home Screen */
+div.mes[ch_name=Assistant],
+#chat:has(.welcomePanel) + #form_sheld,
+button.openTemporaryChat,
+span.welcomeShortcutsSeparator,
+a[href="https://docs.sillytavern.app/"],
+div.showRecentChats,
+div.hideRecentChats,
+.welcomeRecent small.fileSize,
+div.mes:has(.fa-plug),
+.welcomeShortcuts
+{
+    display:none !important;
+}
+
+.welcomeRecent .recentChatList .recentChat .chatStats
+{
+    display:inline-block;
+    text-align:center;
+    margin-top:0.25em;
+    margin-right: 2.5em;
+    transform:translateX(50%);
+    width: 5em;
+    min-width: 5em;
+    align-items: center;
+    border: 1px solid #FFFFFF22;
+    border-radius: 5px;
+    padding: 0.3em;
+    background-color: #00000022;
+}
+
+.welcomeRecent .recentChat
+{
+    background-color:#FFFFFF11
+}
+
+.welcomeRecent .recentChatList .recentChat .chatStats .counterBlock
+{
+    display:inline-block;
+}
+
+.welcomeRecent .chatMessage
+{
+    opacity:0.5;
+    margin-bottom:0.75em;
+}
+
+.welcomeRecent small.chatDate{
+    margin-right:auto;
+    margin-left: 0.5em;
+}
+.welcomeRecent small.chatDate::before
+{
+    content:"(";
+}
+.welcomeRecent small.chatDate::after
+{
+    content:")";
+}
+
+.welcomeRecent div.chatActions
+{
+    display: block;
+    width: 4.3em;
+    min-width: 4.3em;
+    margin-left: 0.5em;
+}
+.welcomeRecent div.chatActions button.menu_button
+{
+    display:inline-block;
+}
+
+.welcomeRecent .recentChatList .recentChat .chatStats .counterBlock::after
+{
+    content:none;
+}
+
+#chat:has(.welcomePanel)
+{
+    height: calc(100dvh - var(--topBarBlockSize) - 1px);
+    max-height: calc(100dvh - var(--topBarBlockSize) - 1px);
+}
+
+.welcomeLinks
+{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+    width: 100%;
+    display:none;
+}
+.info_button
+{
+    display:inline-block;
+}
+
+/* Chat */
+#chat
+{
+    padding-top:0.5em;
+}
+
+/* Quick Replies */
+#qr--bar div:has(> .fa-user-plus),
+#qr--bar div:has(> .fa-home-lg)
+{
+    display:none !important;
+}
+
+/* Fantasy Menus */
+body.streamlined-ui .menu_button.wide100p.result-control
+{
+    background:url('/user/images/Weyland/button-center.png') 
+        center / 100% 100% repeat-x !important;
+    border-radius:0;
+    padding-top:10.0px;
+    padding-bottom:10px;
+    min-height:30px;
+}
+body.streamlined-ui .menu_button.wide100p.result-control:hover
+{
+    opacity:0.95;
+    color:#ffBc86;
+}
+body.streamlined-ui .menu_button.wide100p.result-control::before
+{
+    content:"";
+    background-image:url('/user/images/Weyland/button-left.png');
+    background-size:100% 100%;
+    display:inline-block;
+    min-height:30px;
+    height:100%;
+    width:14px;
+    position:absolute;
+    left:-14px;
+    top:0;
+}
+body.streamlined-ui .menu_button.wide100p.result-control::after
+{
+    content:"";
+    background-image:url('/user/images/Weyland/button-right.png');    
+    background-size:100% 100%;
+    display:inline-block;
+    min-height:30px;
+    height:100%;
+    width:14px;
+    position:absolute;
+    right:-14px;
+    top:0;
+}
+body.streamlined-ui .popup-controls
+{
+    margin-bottom:1em;
+}
+
+.mes_text hr
+{
+    margin-bottom:1em
+}
+
+/* Cast Page Embed */
+
+#characterIframeOverlay
+{
+    padding:0.25em 2em 2em 2em;
+    background-color:#000000EE !important;
+}
+@media (max-width:1000px){
+    #characterIframeOverlay
+    {
+        padding:0em;
+    }
+}
+#characterIframeOverlay div
+{
+    background-color: transparent !important;
+}
+#characterIframeOverlay button
+{
+    background-color: #ffffff11 !important;
+}
+#characterIframeOverlay iframe
+{
+    border-radius:0.25em;
+    border:1px solid #ffffff44 !important;
+}
