@@ -88,6 +88,29 @@
         </div>
     </div>
 
+    <hr/>
+
+    <div id="hm-tracker">
+        <div id="hm-key-unset">
+            <p>Provide your API key to enable the message cooldown tracker. Your key begins with "helix-" and that should be included below.</p>
+            <div class="hm-key-input-row">
+                <input id="tracker-key-input" type="text" placeholder="helix-..." autocomplete="off" spellcheck="false">
+                <button id="set-tracker-key" class="info_button">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>Set Tracker Key</span>
+                </button>
+            </div>
+        </div>
+        <div id="hm-key-set" style="display: none;">
+            Messages Available: <span id="hm-messages-used-text">Loading...</span>
+            <span id="hm-next-message-container">
+               (<span class="hm-tracker-label">Next Message: <span id="hm-next-message-time-text">Loading...</span>)
+            </span>
+        </div>
+    </div>
+    
+    <hr/>
+
     <div class="welcomeInfoButtons">
         <button class="info_button" data-info-type="character">
             <i class="fa-solid fa-user"></i>
@@ -103,7 +126,24 @@
         </button>
         <button class="info_button" data-info-type="timeline">
             <i class="fa-solid fa-timeline"></i> Timeline
+        </button>    
+        <button class="info_button" data-info-type="help">
+            <i class="fa-solid fa-terminal"></i> Chat Help
+        </button>    
+        <button class="info_button" data-info-type="version">
+            <i class="fa-solid fa-circle-info"></i> Version Info
         </button>
+        <a class="info_button" target="_blank" href="https://ko-fi.com/luckypaw">
+            <i class="fa fa-coffee"></i>
+            <span data-i18n="Ko-Fi">Ko-Fi</span>
+        </a>
+        <a class="info_button" target="_blank" href="https://discord.gg/weyland">
+            <i class="fa-brands fa-discord"></i>
+            <span data-i18n="Discord">Discord</span>
+        </a>
+    </div>
+    <hr/>
+    <div class="welcomeLinks">
     </div>
 
     <!-- Add your postcard here -->
@@ -195,6 +235,12 @@
                 <i class="fa-solid fa-timeline"></i>
                 <span>Timeline</span>
             </button>
+            <button class="info_button" data-info-type="help">
+                <i class="fa-solid fa-terminal"></i> Chat Help
+            </button>    
+            <button class="info_button" data-info-type="version">
+                <i class="fa-solid fa-circle-info"></i> Version Info
+            </button>    
         </div>
 
         <div class="infoContent">
@@ -215,6 +261,18 @@
             <div class="infoSection" id="timelineInfo">
                 <h2>Weyland Timeline</h2>
                 <div class="infoSection" id="timelineInfo">
+                    <!-- This div will be populated by the script -->
+                </div>
+            </div>
+            <div class="infoSection" id="helpInfo">
+                <h2>Chat Commands</h2>
+                <div class="infoSection" id="helpInfo">
+                    <!-- This div will be populated by the script -->
+                </div>
+            </div>
+            <div class="infoSection" id="versionInfo">
+                <h2>Version Info</h2>
+                <div class="infoSection" id="versionInfo">
                     <!-- This div will be populated by the script -->
                 </div>
             </div>

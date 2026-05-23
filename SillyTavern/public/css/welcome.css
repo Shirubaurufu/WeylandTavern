@@ -487,3 +487,61 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
     justify-content: center;
     gap: 10px;
 }
+
+#hm-tracker .hm-key-input-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#tracker-key-input {
+    flex: 1 1 220px;
+    max-width: 420px;
+    min-width: 180px;
+    padding: 8px 15px;
+    font-size: calc(var(--mainFontSize) * 0.9);
+    border-radius: 5px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+    color: var(--SmartThemeBodyTextColor);
+    box-sizing: border-box;
+}
+
+#tracker-key-input::placeholder {
+    color: var(--SmartThemeBodyTextColor);
+    opacity: 0.6;
+}
+
+#hm-key-unset,
+#hm-key-set
+{
+    text-align:center;
+}
+
+#hm-key-unset p,
+#hm-key-set p
+{
+    color:var(--smartThemeEmColor) !important; 
+    max-width:480px;
+    margin:0 auto
+}
+
+#hm-key-set
+{
+    font-weight:700;
+}
+#hm-key-set span
+{
+    font-weight:300;
+}
+#hm-key-set #hm-next-message-container
+{
+    opacity:0.5;
+    font-size:75%;
+    margin-left:0.5em;
+    position:relative;
+    top:-2px;
+}
