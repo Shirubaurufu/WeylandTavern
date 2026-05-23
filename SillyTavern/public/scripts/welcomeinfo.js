@@ -95,7 +95,7 @@ function startWelcomeTrackerCountdown(welcomePanel, expiryTimeMs) {
             return;
         }
 
-        timerText.textContent = `Next Message: ${formatMillisecondsToTime(remainingMs)}`;
+        timerText.textContent = `${formatMillisecondsToTime(remainingMs)}`;
     };
 
     updateTimerDisplay();
