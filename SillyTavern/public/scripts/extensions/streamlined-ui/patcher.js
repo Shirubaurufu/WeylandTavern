@@ -1,4 +1,5 @@
 const LOG_PREFIX = "[Streamlined UI] ";
+const DEBUG_MODE = false;
 const PATCHER_ACTION_TYPES = {
     MOVE: "MOVE",
     ATTRIBUTE: "ATTRIBUTE",
@@ -109,10 +110,14 @@ function applyPatch(patch) {
                 console.warn(`${LOG_PREFIX} Invalid action type for ${patch.name} (action ${count})`);
                 continue;
         }
-        console.log(`${LOG_PREFIX} Patch ${patch.name} (action ${count}) applied successfully`);
+        if (DEBUG_MODE) {   
+            console.log(`${LOG_PREFIX} Patch ${patch.name} (action ${count}) applied successfully`);
+        }
         count++;
     }
-    console.log(`${LOG_PREFIX} Patch ${patch.name} applied successfully`);
+    if (DEBUG_MODE) {
+        console.log(`${LOG_PREFIX} Patch ${patch.name} applied successfully`);
+    }
 }
 
 function applyPatches() {
