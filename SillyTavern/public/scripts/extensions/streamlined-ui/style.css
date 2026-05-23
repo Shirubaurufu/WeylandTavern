@@ -382,6 +382,7 @@ div.mes:has(.fa-plug),
     gap: 10px;
     margin: 15px 0;
     width: 100%;
+    display:none;
 }
 .info_button
 {
