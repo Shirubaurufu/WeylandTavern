@@ -1,11 +1,15 @@
 /* Top Button Bar */
 #ai-config-button,
 #advanced-formatting-button,
-#logo_block,
+#site_logo,
 #user-settings-button,
 #extensions-settings-button
 {
     display:none !important;
+}
+#logo_block
+{
+    width:0;
 }
 
 #option_close_chat.home_button

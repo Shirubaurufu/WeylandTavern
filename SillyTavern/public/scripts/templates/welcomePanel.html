@@ -90,6 +90,39 @@
 
     <hr/>
 
+    <div id="paw-patrol-login">
+        <div id="pp-key-unset">
+            <p id="pp-prompt-text">Enter your monthly Paw Patrol key to unlock exclusive features and characters. Enroll on <a href="https://ko-fi.com/luckypaw" target="_blank">Ko-Fi</a>, and get your key on <a href="https://discord.gg/weyland" target="_blank">Discord</a>!</p>
+            <div class="pp-key-input-row">
+                <input id="pp-key-input" type="text" placeholder="Monthly key..." autocomplete="off" spellcheck="false">
+                <button id="apply-pp-key" class="info_button">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Verify Key</span>
+                </button>
+            </div>
+        </div>
+        <div id="pp-key-plus" style="display: none;">
+            <p><i class="fa-solid fa-circle-check"></i> Paw Patrol Plus verified for this month.</p>
+            <p>You can upgrade to Platinum with a Platinum-tier key.</p>
+            <div class="pp-key-input-row">
+                <input id="pp-platinum-key-input" type="text" placeholder="Platinum key..." autocomplete="off" spellcheck="false">
+                <button id="apply-pp-platinum-key" class="info_button">
+                    <i class="fa-solid fa-crown"></i>
+                    <span>Unlock Platinum</span>
+                </button>
+            </div>
+        </div>
+        <div id="pp-key-platinum" style="display: none;">
+            <p><i class="fa-solid fa-circle-check"></i> Paw Patrol Platinum verified for this month!</p>
+        </div>
+        <button style="display: none;" id="pp-reset-enrollment" class="info_button pp-reset-button" type="button" title="Temporary: clear enrollment for testing">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Reset Paw Patrol Status</span>
+        </button>
+    </div>
+
+    <hr/>
+
     <div id="hm-tracker">
         <div id="hm-key-unset">
             <p>Provide your API key to enable the message cooldown tracker. Your key begins with "helix-" and that should be included below.</p>

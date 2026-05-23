@@ -229,6 +229,190 @@ async function setHelixTrackerKeyFromInput(welcomePanel) {
     updateTrackerKeyUI(welcomePanel);
 }
 
+const PP_VERIFY_COMMAND = '/if left={{getglobalvar::PP1}} right=true rule=neq {:/if left={{getglobalvar::LuckyAdminKey}} right=true {:/setglobalvar key=PP1 true | /setglobalvar key=PPP1 true :} | /if left={{getvar::answer}} right={{getglobalvar::A7b~3C9$Dq}} rule=eq else={:/if left={{getvar::answer}} right={{getglobalvar::9$DqA7b~3C}} rule=eq else={:/if left={{getvar::answer}} right="" rule=neq {:/if left={{getvar::answer}} right="L^ckyA&minK@yP#w" rule=neq else={:/setglobalvar key=LuckyAdminKey true | /setglobalvar key=PPP1 true | /setglobalvar key=PP1 true :} {:/incglobalvar Incorrect | /if left={{getglobalvar::Incorrect}} right=1000 rule=gte {:/setglobalvar key=69420 true :} :} :} :} {:/setglobalvar key=PP1 true | /setglobalvar key=PPP1 true | /:Weyland.NewEntries :} :} {:/setglobalvar key=PP1 true | /:Weyland.NewEntries :} :}';
+
+const PPP_VERIFY_COMMAND = '/if left={{getglobalvar::PPP1}} right=true rule=neq {:/if left={{getglobalvar::LuckyAdminKey}} right=true {:/setglobalvar key=PP1 true | /setglobalvar key=PPP1 true :} | /if left={{getvar::answer}} right={{getglobalvar::9$DqA7b~3C}} rule=eq else={:/if left={{getvar::answer}} right="" rule=neq {:/if left={{getvar::answer}} right="L^ckyA&minK@yP#w" rule=neq else={:/setglobalvar key=LuckyAdminKey true | /setglobalvar key=PPP1 true | /setglobalvar key=PP1 true :} {:/incglobalvar Incorrect | /if left={{getglobalvar::Incorrect}} right=1000 rule=gte {:/setglobalvar key=69420 true :} :} :} :} {:/setglobalvar key=PP1 true | /setglobalvar key=PPP1 true | /:Weyland.NewEntries :} :}';
+
+function isPawPatrolVarTruthy(value) {
+    return value === true || value === 'true';
+}
+
+function getPawPatrolEnrollmentState(ctx) {
+    return {
+        plus: isPawPatrolVarTruthy(ctx?.variables?.global?.get('PP1')),
+        platinum: isPawPatrolVarTruthy(ctx?.variables?.global?.get('PPP1')),
+    };
+}
+
+function updatePawPatrolLoginUI(welcomePanel) {
+    const ctx = SillyTavern?.getContext?.();
+    const unset = welcomePanel.querySelector('#pp-key-unset');
+    const plus = welcomePanel.querySelector('#pp-key-plus');
+    const platinum = welcomePanel.querySelector('#pp-key-platinum');
+    const { plus: hasPlus, platinum: hasPlatinum } = getPawPatrolEnrollmentState(ctx);
+
+    if (hasPlatinum) {
+        if (unset) {
+            unset.style.display = 'none';
+        }
+        if (plus) {
+            plus.style.display = 'none';
+        }
+        if (platinum) {
+            platinum.style.display = '';
+        }
+        return;
+    }
+
+    if (platinum) {
+        platinum.style.display = 'none';
+    }
+
+    if (hasPlus) {
+        if (unset) {
+            unset.style.display = 'none';
+        }
+        if (plus) {
+            plus.style.display = '';
+        }
+        return;
+    }
+
+    if (unset) {
+        unset.style.display = '';
+    }
+    if (plus) {
+        plus.style.display = 'none';
+    }
+}
+
+async function applyPawPatrolKeyFromInput(welcomePanel, input, mode) {
+    const ctx = SillyTavern?.getContext?.();
+    if (!ctx) {
+        console.error('SillyTavern context not available');
+        return;
+    }
+
+    const trimmedKey = input instanceof HTMLInputElement ? input.value.trim() : '';
+    if (!trimmedKey) {
+        return;
+    }
+
+    const before = getPawPatrolEnrollmentState(ctx);
+    const applyButton = mode === 'platinum'
+        ? welcomePanel.querySelector('#apply-pp-platinum-key')
+        : welcomePanel.querySelector('#apply-pp-key');
+
+    if (applyButton instanceof HTMLButtonElement) {
+        applyButton.disabled = true;
+    }
+
+    try {
+        await ctx.executeSlashCommandsWithOptions('/flushvar answer');
+        ctx.variables.local.set('answer', trimmedKey);
+        await ctx.executeSlashCommandsWithOptions(mode === 'platinum' ? PPP_VERIFY_COMMAND : PP_VERIFY_COMMAND);
+
+        const after = getPawPatrolEnrollmentState(ctx);
+
+        if (input instanceof HTMLInputElement) {
+            input.value = '';
+        }
+
+        if (!before.platinum && after.platinum) {
+            toastr.success('Paw Patrol Platinum Verified!');
+        } else if (!before.plus && after.plus) {
+            toastr.success('Paw Patrol Plus Verified!');
+        } else {
+            toastr.error('Incorrect Paw Patrol Key');
+        }
+
+        updatePawPatrolLoginUI(welcomePanel);
+    } catch (error) {
+        console.error('Paw Patrol login: error verifying key:', error);
+        toastr.error('Verification Failed');
+    } finally {
+        if (applyButton instanceof HTMLButtonElement) {
+            applyButton.disabled = false;
+        }
+    }
+}
+
+async function clearPawPatrolEnrollment(welcomePanel) {
+    const ctx = SillyTavern?.getContext?.();
+    if (!ctx) {
+        console.error('SillyTavern context not available');
+        return;
+    }
+
+    const keyInput = welcomePanel.querySelector('#pp-key-input');
+    const platinumKeyInput = welcomePanel.querySelector('#pp-platinum-key-input');
+
+    await ctx.executeSlashCommandsWithOptions(
+        '/flushglobalvar PP1 | /flushglobalvar PPP1 | /flushglobalvar LuckyAdminKey | /flushvar answer',
+    );
+
+    if (keyInput instanceof HTMLInputElement) {
+        keyInput.value = '';
+    }
+    if (platinumKeyInput instanceof HTMLInputElement) {
+        platinumKeyInput.value = '';
+    }
+
+    toastr.info('Paw Patrol Status Cleared');
+    updatePawPatrolLoginUI(welcomePanel);
+}
+
+function setupPawPatrolLogin(welcomePanel) {
+    const applyButton = welcomePanel.querySelector('#apply-pp-key');
+    const applyPlatinumButton = welcomePanel.querySelector('#apply-pp-platinum-key');
+    const keyInput = welcomePanel.querySelector('#pp-key-input');
+    const platinumKeyInput = welcomePanel.querySelector('#pp-platinum-key-input');
+
+    if (applyButton && applyButton.dataset.ppKeyBound !== 'true') {
+        applyButton.dataset.ppKeyBound = 'true';
+        applyButton.addEventListener('click', () => {
+            void applyPawPatrolKeyFromInput(welcomePanel, keyInput, 'plus');
+        });
+    }
+
+    if (keyInput && keyInput.dataset.ppKeyBound !== 'true') {
+        keyInput.dataset.ppKeyBound = 'true';
+        keyInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                void applyPawPatrolKeyFromInput(welcomePanel, keyInput, 'plus');
+            }
+        });
+    }
+
+    if (applyPlatinumButton && applyPlatinumButton.dataset.ppKeyBound !== 'true') {
+        applyPlatinumButton.dataset.ppKeyBound = 'true';
+        applyPlatinumButton.addEventListener('click', () => {
+            void applyPawPatrolKeyFromInput(welcomePanel, platinumKeyInput, 'platinum');
+        });
+    }
+
+    if (platinumKeyInput && platinumKeyInput.dataset.ppKeyBound !== 'true') {
+        platinumKeyInput.dataset.ppKeyBound = 'true';
+        platinumKeyInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                void applyPawPatrolKeyFromInput(welcomePanel, platinumKeyInput, 'platinum');
+            }
+        });
+    }
+
+    const resetButton = welcomePanel.querySelector('#pp-reset-enrollment');
+    if (resetButton && resetButton.dataset.ppKeyBound !== 'true') {
+        resetButton.dataset.ppKeyBound = 'true';
+        resetButton.addEventListener('click', () => {
+            void clearPawPatrolEnrollment(welcomePanel);
+        });
+    }
+
+    updatePawPatrolLoginUI(welcomePanel);
+}
+
 function setupTrackerKeyButton(welcomePanel) {
     const setButton = welcomePanel.querySelector('#set-tracker-key');
     const clearButton = welcomePanel.querySelector('#clear-tracker-key');
@@ -287,6 +471,7 @@ function initWelcomeInfoPanel() {
         console.log('Found buttons:', infoButtons.length, 'nav buttons:', navButtons.length);
 
         setupTrackerKeyButton(welcomePanel);
+        setupPawPatrolLogin(welcomePanel);
 
         // Function to show a specific info section
         function showInfoSection(infoType) {
