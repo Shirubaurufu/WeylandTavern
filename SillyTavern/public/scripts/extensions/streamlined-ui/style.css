@@ -478,11 +478,3 @@ body.streamlined-ui .popup-controls
     border-radius:0.25em;
     border:1px solid #ffffff44 !important;
 }
-
-/* Info Screens */
-.info_button.active
-{
-    background-color:#ffffff22;
-    border-color:#ffffff44;
-    cursor:auto;
-}

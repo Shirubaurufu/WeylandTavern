@@ -545,3 +545,50 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
     position:relative;
     top:-2px;
 }
+
+/* Info Screens */
+.info_button.active
+{
+    background-color:#ffffff22;
+    border-color:#ffffff44;
+    cursor:auto;
+}
+
+#CommandsInfo hr
+{
+    margin-bottom:1em;
+}
+
+#Version_InfoInfo h1
+{
+    font-size:150%;
+    border-bottom:1px solid #ffffff44;
+}
+
+#Version_InfoInfo p,
+#Version_InfoInfo ul
+{
+    opacity:0.9;
+    color:var(--SmartThemeBodyColor) !important;
+}
+
+#Version_InfoInfo ul
+{
+    opacity:0.5;
+    padding-left: 2em;
+    margin-left: 0;
+}
+#Version_InfoInfo li
+{
+    margin-bottom:0.5em;
+}
+
+#Version_InfoInfo p:has(> strong)
+{
+    opacity:1.0;  
+}
+
+#Version_InfoInfo a
+{
+    color:#4488ff;
+}

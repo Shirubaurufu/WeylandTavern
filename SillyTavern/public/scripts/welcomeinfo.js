@@ -324,13 +324,13 @@ function initWelcomeInfoPanel() {
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="timeline"]').classList.add('active');
                 fetchAndRenderGoogleDoc();
             } else if (infoType === 'help') {
-                document.getElementById('helpInfo').style.display = 'block';
+                document.getElementById('CommandsInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="help"]').classList.add('active');
-                fetchAndRenderMarkdown("help");
+                fetchAndRenderMarkdown("Commands");
             } else if (infoType === 'version') {
-                document.getElementById('versionInfo').style.display = 'block';
+                document.getElementById('Version_InfoInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="version"]').classList.add('active');
-                fetchAndRenderMarkdown("version");
+                fetchAndRenderMarkdown("Version_Info");
             }
         }
 
