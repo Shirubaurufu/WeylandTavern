@@ -87,6 +87,11 @@ function startWelcomeTrackerCountdown(welcomePanel, expiryTimeMs) {
             return;
         }
 
+        if (!welcomePanel || welcomePanel.style.display === 'none' || welcomePanel.hidden) {
+            return;
+        }
+   
+
         const remainingMs = welcomeTrackerExpiryTimeMs - Date.now();
         if (remainingMs <= 0) {
             stopWelcomeTrackerCountdown();
@@ -94,7 +99,6 @@ function startWelcomeTrackerCountdown(welcomePanel, expiryTimeMs) {
             void refreshWelcomeTrackerUsage(panel);
             return;
         }
-
         timerText.textContent = `${formatMillisecondsToTime(remainingMs)}`;
     };
 
