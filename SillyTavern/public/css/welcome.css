@@ -488,6 +488,15 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
     gap: 10px;
 }
 
+#paw-patrol-login,
+#hm-tracker
+{
+    background-color:#ffffff22;
+    padding:1em;
+    border-radius:0.25em;
+    border:1px solid #00000088;
+}
+
 #paw-patrol-login .pp-key-input-row {
     display: flex;
     flex-wrap: wrap;
