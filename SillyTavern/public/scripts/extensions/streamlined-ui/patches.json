@@ -75,6 +75,17 @@
         ]
     },
     {
+        "name": "Move message history settings to first column",
+        "target": "[name=ChatMessageHandlingToggles]",
+        "actions": [
+            {
+                "type": "MOVE",
+                "insertionPoint": "#openai_api",
+                "position": "after"
+            }
+        ]
+    },
+    {
         "name": "Merge user settings with API settings",
         "target": "#user-settings-block",
         "actions": [
