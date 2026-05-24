@@ -231,7 +231,7 @@ div:has(> #extensions_url),
 #rm_extensions_block hr,
 #assets_container,
 #typing_indicator_container,
-#expressions_container,
+/*#expressions_container,*/
 #sd_container,
 #tts_container,
 #audio_container,
@@ -240,7 +240,7 @@ div:has(> #extensions_url),
 #summarize_container,
 #regex_container,
 #vectors_container,
-.weyland_formatter_container,
+/*.weyland_formatter_container,*/
 .weyland_downloader_container
 {
     display:none !important;
