@@ -135,5 +135,27 @@
                 "value": "Character List"
             }
         ]
+    },
+    {
+        "name": "Add advanced options toggle to API settings",
+        "target": "#rm_api_block",
+        "actions": [
+            {
+                "type": "INSERT",
+                "content": "<div id='advanced-options-toggle'><label for='advanced-options-checkbox'><input id='advanced-options-checkbox' type='checkbox' /> <span data-i18n='Advanced Options'>Advanced Options</span></label></div>",
+                "position": "start"
+            }
+        ]
+    },
+    {
+        "name": "Add close button to background selection menu",
+        "target": "#bg-filter",
+        "actions": [
+            {
+                "type": "INSERT",
+                "content": "<div id='bg-filter-close' class='menu_button menu_button_icon' onclick='document.getElementById(\"site_logo\").click();'><i class='fa-solid fa-xmark'></i></div>",
+                "position": "before"
+            }
+        ]
     }
 ]

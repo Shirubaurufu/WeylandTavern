@@ -95,7 +95,6 @@
 }
 
 /* API Connections Menu */
-div:has(> div > #connection_profile_spinner),
 #title_api,
 #main-API-selector-block,
 #openai_api > h4:nth-of-type(1),
@@ -115,6 +114,7 @@ div:has(> label > #auto-connect-checkbox),
     display:none !important;
 }
 
+#advanced-options-toggle
 /* World Info Menu */
 div:has(> div > div > #wiActivationSettings),
 #WIMultiSelector > .range-block-title,
