@@ -181,7 +181,10 @@ div:has(> div > label > [name=excludeRecursion]),
 [name=WIEntryBottomControls],
 [name=WIEntryBottomControls] + div,
 div:has(+ div[name="WIEntryBottomControls"]),
-div:has(+ div + div[name="WIEntryBottomControls"])
+div:has(+ div + div[name="WIEntryBottomControls"]),
+#world_create_button,
+#world_create_button + small,
+#world_popup_new
 {
     display:none !important;
 }
