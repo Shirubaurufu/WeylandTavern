@@ -168,5 +168,16 @@
                 "position": "before"
             }
         ]
+    },
+    {
+        "name": "Add advanced options toggle to Lore Book settings",
+        "target": "#WorldInfo",
+        "actions": [
+            {
+                "type": "INSERT",
+                "content": "<div id='wi-advanced-options-toggle'><label for='wi-advanced-options-checkbox'><input id='wi-advanced-options-checkbox' type='checkbox' /> <span data-i18n='Advanced Options'>Advanced Options</span></label></div>",
+                "position": "start"
+            }
+        ]
     }
 ]
