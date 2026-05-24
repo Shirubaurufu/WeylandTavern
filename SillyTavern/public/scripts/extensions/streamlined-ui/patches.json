@@ -16,8 +16,8 @@
         "actions": [
             {
                 "type": "MOVE",
-                "insertionPoint": "#top-settings-holder",
-                "position": "start"
+                "insertionPoint": "#persona-management-button",
+                "position": "before"
             },
             {
                 "type": "REMOVE_CLASS",
