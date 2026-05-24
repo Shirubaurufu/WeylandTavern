@@ -95,16 +95,6 @@
 }
 
 /* API Connections Menu */
-div:has(> div > #connection_profile_spinner),
-#title_api,
-#main-API-selector-block,
-#openai_api > h4:nth-of-type(1),
-#chat_completion_source,
-#custom_form h4:nth-of-type(1),
-#custom_form div:nth-of-type(1),
-#custom_form div:nth-of-type(2),
-h4:has(+ div > #custom_model_id),
-div:has(> #custom_model_id),
 #prompt_post_processing_form,
 div:has(> label > #auto-connect-checkbox),
 #customize_additional_parameters,
@@ -113,6 +103,58 @@ div:has(> label > #auto-connect-checkbox),
 #custom_form h4 small
 {
     display:none !important;
+}
+
+#advanced-options-toggle
+{
+    position:absolute;
+    right:0.5em;
+    top:0.6em;
+    z-index:9999;
+}
+#advanced-options-toggle:has(#advanced-options-checkbox:checked)
+{
+    top: 0.35em;
+}
+#advanced-options-toggle label
+{
+    cursor:pointer;
+}
+#advanced-options-toggle input
+{
+    display: inline-grid;
+    position:relative;
+    top: 1px;
+}
+#advanced-options-checkbox:checked::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    transform: scale(0);
+    transition: var(--animation-duration) transform ease-in-out;
+    box-shadow: inset 1em 1em var(--SmartThemeCheckboxTickColor);
+    transform-origin: bottom left;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transform: scale(1);
+}
+
+#rm_api_block:not(:has(#advanced-options-checkbox:checked))
+{
+    div:has(> div > #connection_profile_spinner),
+    #title_api,
+    #main-API-selector-block,
+    #openai_api > h4:nth-of-type(1),
+    #chat_completion_source,
+    #custom_form h4:nth-of-type(1),
+    #custom_form div:nth-of-type(1),
+    #view_connection_profile,
+    #reload_connection_profile,
+    #custom_form div:nth-of-type(2),
+    h4:has(+ div > #custom_model_id),
+    div:has(> #custom_model_id)
+    {
+        display:none !important;
+    }    
 }
 
 /* World Info Menu */
@@ -139,7 +181,10 @@ div:has(> div > label > [name=excludeRecursion]),
 [name=WIEntryBottomControls],
 [name=WIEntryBottomControls] + div,
 div:has(+ div[name="WIEntryBottomControls"]),
-div:has(+ div + div[name="WIEntryBottomControls"])
+div:has(+ div + div[name="WIEntryBottomControls"]),
+#world_create_button,
+#world_create_button + small,
+#world_popup_new
 {
     display:none !important;
 }
@@ -154,7 +199,7 @@ div:has(+ div + div[name="WIEntryBottomControls"])
 #user-settings-block a.notes-link,
 div:has(> #toastr_position),
 div:has(> #avatar_style),
-h4:has(> #ui_preset_import_file),
+/*h4:has(> #ui_preset_import_file),*/
 label:has(> #reduced_motion),
 label:has(> #expandMessageActions),
 label:has(> #enableZenSliders),
@@ -169,7 +214,9 @@ label:has(> #show_swipe_num_all_messages),
 label:has(> #hotswapEnabled),
 label:has(> #zoomed_avatar_magnification),
 label:has(> #bogus_folders),
-label:has(> #click_to_edit)
+label:has(> #click_to_edit),
+[name=ChatMessageHandlingToggles] label,
+[name=ChatMessageHandlingToggles] div:not(:has(#chat_truncation))
 {
     display:none !important;
 }
@@ -187,7 +234,7 @@ div:has(> #extensions_url),
 #rm_extensions_block hr,
 #assets_container,
 #typing_indicator_container,
-#expressions_container,
+/*#expressions_container,*/
 #sd_container,
 #tts_container,
 #audio_container,
@@ -196,7 +243,7 @@ div:has(> #extensions_url),
 #summarize_container,
 #regex_container,
 #vectors_container,
-.weyland_formatter_container,
+/*.weyland_formatter_container,*/
 .weyland_downloader_container
 {
     display:none !important;
@@ -253,7 +300,7 @@ label[for=rm_button_panel_pin],
 }
 .qr--button
 {
-    min-width:3em;
+    min-width: 3em;
 }
 
 /* Chat Messages */
@@ -405,6 +452,10 @@ div.mes:has(.fa-plug),
 {
     display:none !important;
 }
+#qr--bar.popoutVisible
+{
+    padding-right:0;
+}
 
 /* Fantasy Menus */
 body.streamlined-ui .menu_button.wide100p.result-control
@@ -482,4 +533,30 @@ body.streamlined-ui .popup-controls
 {
     border-radius:0.25em;
     border:1px solid #ffffff44 !important;
+}
+
+/* Background Selection */
+
+#logo_block h3
+{
+    flex-basis: calc(100% - 2em) !important;
+}
+#bg-filter-close
+{
+    flex-basis:1em;
+    background-color:#ff000088;
+    border-radius:1em;
+    margin-right:0.25em;
+}
+#bg-filter-close:hover{
+    background-color:#ff0000AA;
+}
+#logo_block #Backgrounds > .flex-container > h3:nth-of-type(1),
+#logo_block #Backgrounds > .flex-container > h3:nth-of-type(2)
+{
+    display:none !important;
+}
+#bg_chat_hint
+{
+    display:none;
 }

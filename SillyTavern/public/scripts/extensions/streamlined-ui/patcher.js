@@ -7,6 +7,7 @@ const PATCHER_ACTION_TYPES = {
     REMOVE_CLASS: "REMOVE_CLASS",
     CONTENT: "CONTENT",
     REMOVE: "REMOVE",
+    INSERT: "INSERT",
 }
 
 
@@ -106,6 +107,34 @@ function applyPatch(patch) {
                 target.remove();
                 break;
     
+            case PATCHER_ACTION_TYPES.INSERT:
+
+                if (!action.content) {
+                    console.warn(`${LOG_PREFIX} Content not specified for ${patch.name} (action ${count})`);
+                    continue;
+                }
+
+                let container = document.createElement("div");
+                container.innerHTML = action.content;
+                if (action.position == "start") {
+                    target.insertBefore(container.firstChild, target.firstChild);
+                }
+                else if (action.position == "end") {
+                    target.appendChild(container.firstChild);
+                }
+                else if (action.position == "before") {
+                    target.parentElement.insertBefore(container.firstChild, target);
+                }
+                else if (action.position == "after") {
+                    target.parentElement.after(container.firstChild);
+                }
+                else {
+                    console.warn(`${LOG_PREFIX} Invalid position for ${patch.name} (action ${count})`);
+                    continue;
+                }
+                container.remove();
+                break;
+
             default:
                 console.warn(`${LOG_PREFIX} Invalid action type for ${patch.name} (action ${count})`);
                 continue;
