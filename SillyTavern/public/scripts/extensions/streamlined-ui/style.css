@@ -105,7 +105,8 @@ div:has(> label > #auto-connect-checkbox),
     display:none !important;
 }
 
-#advanced-options-toggle
+#advanced-options-toggle,
+#wi-advanced-options-toggle
 {
     position:absolute;
     right:0.5em;
@@ -120,7 +121,8 @@ div:has(> label > #auto-connect-checkbox),
 {
     cursor:pointer;
 }
-#advanced-options-toggle input
+#advanced-options-toggle input,
+#wi-advanced-options-toggle input
 {
     display: inline-grid;
     position:relative;
@@ -157,38 +159,44 @@ div:has(> label > #auto-connect-checkbox),
     }    
 }
 
-/* World Info Menu */
-div:has(> div > div > #wiActivationSettings),
-#WIMultiSelector > .range-block-title,
-#WIMultiSelector .range-block-range .select2-selection--clearable > button:nth-last-of-type(1),
-#WI_panel_pin_div,
 #WorldInfo a.notes-link,
-#world_duplicate,
-#world_backfill_memos,
-#world_popup_entries_list .move_entry_button,
-#world_popup_entries_list .duplicate_entry_button,
-#world_popup_entries_list [name=position],
-div.world_entry_form_control:has([for=depth]),
-#world_popup_entries_list .probabilityContainer,
-#WIEntryHeaderTitlesPC,
-[name=perEntryOverridesBlock] div:nth-of-type(1),
-[name=perEntryOverridesBlock] div:nth-of-type(4),
-[name=perEntryOverridesBlock] div:nth-of-type(5),
-div:has(> div > label > [name=excludeRecursion]),
-.world_entry_form_uid_value,
-.editor_maximize,
-.fa-markdown,
-[name=WIEntryBottomControls],
-[name=WIEntryBottomControls] + div,
-div:has(+ div[name="WIEntryBottomControls"]),
-div:has(+ div + div[name="WIEntryBottomControls"]),
-#world_create_button,
-#world_create_button + small,
-#world_popup_new
+#WI_panel_pin_div,
+#WIMultiSelector .range-block-range .select2-selection--clearable > button:nth-last-of-type(1),
+#WIMultiSelector > .range-block-title,
+/* World Info Menu */
+div:has(> div > div > #wiActivationSettings)
 {
     display:none !important;
 }
 
+#WorldInfo:not(:has(#wi-advanced-options-checkbox:checked))
+{
+    #world_duplicate,
+    #world_backfill_memos,
+    #world_popup_entries_list .move_entry_button,
+    #world_popup_entries_list .duplicate_entry_button,
+    #world_popup_entries_list [name=position],
+    div.world_entry_form_control:has([for=depth]),
+    #world_popup_entries_list .probabilityContainer,
+    #WIEntryHeaderTitlesPC,
+    [name=perEntryOverridesBlock] div:nth-of-type(1),
+    [name=perEntryOverridesBlock] div:nth-of-type(4),
+    [name=perEntryOverridesBlock] div:nth-of-type(5),
+    div:has(> div > label > [name=excludeRecursion]),
+    .world_entry_form_uid_value,
+    .editor_maximize,
+    .fa-markdown,
+    [name=WIEntryBottomControls],
+    [name=WIEntryBottomControls] + div,
+    div:has(+ div[name="WIEntryBottomControls"]),
+    div:has(+ div + div[name="WIEntryBottomControls"]),
+    #world_create_button,
+    #world_create_button + small,
+    #world_popup_new
+    {
+        display:none !important;
+    }    
+}
 
 
 /* User Settings Menu */
@@ -255,6 +263,7 @@ div:has(> #extensions_url),
 #persona_grid_toggle,
 #persona_pagination_container .paginationjs-nav,
 #sync_name_button,
+#persona_lore_button,
 div:has(> #persona_description_position),
 div:has(+ div > #persona_description_position) h4,
 div:has(> div > label > #persona_show_notifications),
