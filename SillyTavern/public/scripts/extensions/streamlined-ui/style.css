@@ -262,7 +262,6 @@ div:has(> #extensions_url),
 #persona-management-button div.flex-container:has(> div > i.fa-ranking-star),
 #persona_grid_toggle,
 #persona_pagination_container .paginationjs-nav,
-#sync_name_button,
 #persona_lore_button,
 div:has(> #persona_description_position),
 div:has(+ div > #persona_description_position) h4,
@@ -317,7 +316,6 @@ label[for=rm_button_panel_pin],
 .extraMesButtons div.mes_narrate,
 .extraMesButtons div.mes_hide,
 .extraMesButtons div.mes_embed,
-.extraMesButtons div.mes_copy,
 .extraMesButtons div.mes_create_bookmark 
 {
     display:none;
