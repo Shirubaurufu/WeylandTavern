@@ -386,7 +386,10 @@ async function resolveExpression(name){
 
     if (isOfficial) {
         return {
-            path: `/characters/${name}/${outfit}/${emotion}.avif`,
+            path: (await fetch(`/characters/${name}/${outfit}/${emotion}.avif`, { method: 'HEAD' })
+                .then(res => res.ok ? `/characters/${name}/${outfit}/${emotion}.avif` : '')
+                .catch(() => '')
+            ),
             name: name,
             isOfficial: true,
             outfit: outfit,
