@@ -103,3 +103,7 @@ a[href="https://docs.sillytavern.app/usage/update/"] {
 .swipe_right.fa-solid.fa-chevron-right.interactable:before {
   content: "→";
 }
+
+div[name="AutoCompleteToggle"] {
+    display: none !important;
+}
