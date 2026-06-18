@@ -4,7 +4,7 @@
     "disableSend": false,
     "placeBeforeInput": false,
     "injectInput": false,
-    "color": "rgb(0, 0, 0)",
+    "color": "rgba(0, 0, 0, 0)",
     "onlyBorderColor": false,
     "qrList": [
         {
@@ -23,7 +23,6 @@
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
             "executeOnNewChat": false,
-            "executeBeforeGeneration": false,
             "automationId": ""
         },
         {
@@ -41,7 +40,6 @@
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
             "executeOnNewChat": false,
-            "executeBeforeGeneration": false,
             "automationId": ""
         }
     ],
