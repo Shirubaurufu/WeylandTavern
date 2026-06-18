@@ -573,9 +573,14 @@ async function checkEmbeddedRegexScripts() {
 
                 if (!accountStorage.getItem(checkKey)) {
                     accountStorage.setItem(checkKey, 'true');
-                    extension_settings.character_allowed_regex.push(avatar);
-                    saveSettingsDebounced();
-                    await reloadCurrentChat();
+                    const template = await renderExtensionTemplateAsync('regex', 'embeddedScripts', {});
+                    const result = await callGenericPopup(template, POPUP_TYPE.CONFIRM, '', { okButton: 'Yes' });
+
+                    if (result) {
+                        extension_settings.character_allowed_regex.push(avatar);
+                        await reloadCurrentChat();
+                        saveSettingsDebounced();
+                    }
                 }
             }
         }
