@@ -386,7 +386,10 @@ async function resolveExpression(name){
 
     if (isOfficial) {
         return {
-            path: `/characters/${name}/${outfit}/${emotion}.avif`,
+            path: (await fetch(`/characters/${name}/${outfit}/${emotion}.avif`, { method: 'HEAD' })
+                .then(res => res.ok ? `/characters/${name}/${outfit}/${emotion}.avif` : '')
+                .catch(() => '')
+            ),
             name: name,
             isOfficial: true,
             outfit: outfit,
@@ -430,6 +433,14 @@ async function setExpressions(){
         }
     }
 
+    // Determine the default emotion to use
+    defaultEmotion = getDefaultMessageEmotion();
+    left.emotion = defaultEmotion;
+    right.emotion = defaultEmotion;
+    if (DEBUG) {
+        console.log(`${LOGGING_PREFIX} Default emotion: ${defaultEmotion}`);
+    }
+    
     // If there are any open slots, fill them
     if ((sideExpressionsEnabled && (!left.path || !right.path))) {
 
@@ -446,14 +457,6 @@ async function setExpressions(){
         if (DEBUG) {
             console.log(`${LOGGING_PREFIX} Active outfit: ${activeOutfit}`);
             console.log(`${LOGGING_PREFIX} Normalized outfit: ${normalizeOutfit(activeOutfit)}`);
-        }
-
-        // Determine the default emotion to use
-        defaultEmotion = getDefaultMessageEmotion();
-        left.emotion = defaultEmotion;
-        right.emotion = defaultEmotion;
-        if (DEBUG) {
-            console.log(`${LOGGING_PREFIX} Default emotion: ${defaultEmotion}`);
         }
 
         let nameIndex = 0;

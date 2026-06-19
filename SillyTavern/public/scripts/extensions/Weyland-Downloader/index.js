@@ -96,7 +96,7 @@ function initWeylandUI() {
 
                 $newBtn.removeClass('fa-cloud-arrow-down')
                     .addClass('fa-server')
-                    .attr('title', 'Open Weyland Roster')
+                    .attr('title', 'Character Downloader')
                     .css('color', 'var(--rb-accent)')
                     .attr('id', 'wt-char-menu-btn');
             }
