@@ -308,7 +308,11 @@ label[for=rm_button_panel_pin],
 }
 .qr--button
 {
-    min-width: 3em;
+    min-width: 2.5em;
+}
+.qr--button-icon
+{
+    margin:0.05em 0.25em 0em 0.25em !important;
 }
 
 /* Chat Messages */
