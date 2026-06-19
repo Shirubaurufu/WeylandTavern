@@ -433,6 +433,14 @@ async function setExpressions(){
         }
     }
 
+    // Determine the default emotion to use
+    defaultEmotion = getDefaultMessageEmotion();
+    left.emotion = defaultEmotion;
+    right.emotion = defaultEmotion;
+    if (DEBUG) {
+        console.log(`${LOGGING_PREFIX} Default emotion: ${defaultEmotion}`);
+    }
+    
     // If there are any open slots, fill them
     if ((sideExpressionsEnabled && (!left.path || !right.path))) {
 
@@ -449,14 +457,6 @@ async function setExpressions(){
         if (DEBUG) {
             console.log(`${LOGGING_PREFIX} Active outfit: ${activeOutfit}`);
             console.log(`${LOGGING_PREFIX} Normalized outfit: ${normalizeOutfit(activeOutfit)}`);
-        }
-
-        // Determine the default emotion to use
-        defaultEmotion = getDefaultMessageEmotion();
-        left.emotion = defaultEmotion;
-        right.emotion = defaultEmotion;
-        if (DEBUG) {
-            console.log(`${LOGGING_PREFIX} Default emotion: ${defaultEmotion}`);
         }
 
         let nameIndex = 0;
