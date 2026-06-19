@@ -1,0 +1,12 @@
+{
+  "display_name": "Weyland Waiting Tips",
+  "description": "Shows helpful Weyland lore and feature tips while waiting for an AI response.",
+  "loading_order": 12,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "Weyland Tavern",
+  "version": "1.0.0",
+  "auto_update": false
+}
