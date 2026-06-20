@@ -367,6 +367,18 @@
   text-decoration: underline;
 }
 
+#wwt-settings-root .wwt-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+#wwt-settings-root .wwt-settings-row > span {
+  flex: 1 1 auto;
+}
+
 #wwt-settings-root .wwt-settings-hint {
   margin: 8px 0 0;
   font-size: 12px;
