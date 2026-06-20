@@ -217,7 +217,7 @@ label:has(> #messageTimerEnabled),
 label:has(> #messageTimestampsEnabled),
 label:has(> #messageModelIconEnabled),
 label:has(> #mesIDDisplayEnabled),
-label:has(> #hideChatAvatarsEnabled),
+/*label:has(> #hideChatAvatarsEnabled),*/
 label:has(> #messageTokensEnabled),
 label:has(> #show_swipe_num_all_messages),
 label:has(> #hotswapEnabled),
