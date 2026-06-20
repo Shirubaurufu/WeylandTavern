@@ -329,8 +329,7 @@ label[for=rm_button_panel_pin],
 #option_toggle_CFG,
 #option_toggle_logprobs,
 #option_new_bookmark,
-#option_convert_to_group,
-#option_regenerate
+#option_convert_to_group
 {
     display:none !important;
 }
