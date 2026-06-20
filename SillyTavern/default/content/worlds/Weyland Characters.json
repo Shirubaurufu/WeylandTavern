@@ -484,7 +484,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 128,
+            "displayIndex": 129,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -492,6 +492,57 @@
                 ],
                 "tags": [
                     "a62d36f4-dd7f-40cc-b942-cfa380a43ec9"
+                ]
+            }
+        },
+        "9": {
+            "uid": 9,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Sofya Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (white top and black trousers)\n• [LG] - ONLY wearing undergarments (underwear)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - Leather Jacket with crop top band shirt and jeans\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Sofya",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 121,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Sofya"
+                ],
+                "tags": [
+                    "5ee96709-4dac-4e47-84ef-0a0a89d6a555"
                 ]
             }
         },
@@ -2039,13 +2090,13 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Mirror Weyland",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 126
+            "displayIndex": 127
         },
         "45": {
             "uid": 45,
@@ -2125,7 +2176,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Serra",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -2176,7 +2227,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Summer",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -2285,13 +2336,13 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Rosa",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 121,
+            "displayIndex": 122,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3533,12 +3584,12 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Warren",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 122,
+            "displayIndex": 123,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3759,12 +3810,12 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Willow",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 123,
+            "displayIndex": 124,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -4324,7 +4375,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Seth",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -4375,7 +4426,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Rivera",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
@@ -4969,7 +5020,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 125,
+            "displayIndex": 126,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5120,7 +5171,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 127,
+            "displayIndex": 128,
             "ignoreBudget": false,
             "triggers": [],
             "characterFilter": {
@@ -5224,7 +5275,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 124,
+            "displayIndex": 125,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5335,7 +5386,7 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": "",
+            "automationId": "Rein",
             "role": null,
             "sticky": 0,
             "cooldown": 0,
