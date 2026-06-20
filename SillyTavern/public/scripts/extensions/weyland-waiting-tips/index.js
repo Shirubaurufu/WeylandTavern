@@ -4,7 +4,9 @@ import { saveSettingsDebounced } from '../../../script.js';
 const MODULE_NAME = 'weyland-waiting-tips';
 const TIPS_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQIRzOIPpOg_WpRhXi2GixU_VCZD7I98tD_hgfPtFts_Q0J7q6C8CW4l1ZXRXsXOgsmXezVTPSXjo_WCF7fPy4NJk4__jGq29EdMgO-McVPyYW_O-g7AyJzUDAHGDkD3BDFZEKk716zokFp-9f_9ySuOtTf0aCFfeC6PxhAGsrXl8XMGgPyPghoGXgW3tiI--AWyuESWSFLFC7_nGCvyal7fwX2gnik83eJ2WfTGKvxnKtDjS984w0Y3wyiEbenHcOMyFGFoV1vju9hraSkVFHEHjTlBw&lib=MLc3VyvYzeD8UqArkcFgV53Qa-NNQ1Z9i';
 const SEEN_MUST_SEE_KEY = `${MODULE_NAME}_seenMustSee`;
-const AUTO_CYCLE_MS = 45000;
+const DEFAULT_AUTO_ADVANCE_SECONDS = 45;
+const MIN_AUTO_ADVANCE_SECONDS = 5;
+const MAX_AUTO_ADVANCE_SECONDS = 300;
 const TIP_CAROUSEL_MS = 280;
 const SKIP_GENERATION_TYPES = new Set(['quiet', 'impersonate']);
 
@@ -30,9 +32,10 @@ const { extensionSettings, renderExtensionTemplateAsync } = SillyTavern.getConte
 
 const defaults = {
     enabled: true,
+    autoAdvanceSeconds: DEFAULT_AUTO_ADVANCE_SECONDS,
 };
 
-/** @type {{ enabled: boolean }} */
+/** @type {{ enabled: boolean, autoAdvanceSeconds: number }} */
 let settings = defaults;
 
 /** @type {Array<{ Key: string, Rarity: string, Title?: string, Tip: string, Length?: number, Notes?: string }>} */
@@ -51,6 +54,12 @@ let tipCarouselGen = 0;
 /** @type {{ key: string | null, html: string }} */
 let tipDisplayed = { key: null, html: '' };
 
+function clampAutoAdvanceSeconds(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return DEFAULT_AUTO_ADVANCE_SECONDS;
+    return Math.min(MAX_AUTO_ADVANCE_SECONDS, Math.max(MIN_AUTO_ADVANCE_SECONDS, Math.round(n)));
+}
+
 function getSettings() {
     if (!extensionSettings[MODULE_NAME]) {
         extensionSettings[MODULE_NAME] = structuredClone(defaults);
@@ -59,8 +68,22 @@ function getSettings() {
     for (const k of Object.keys(defaults)) {
         if (s[k] === undefined) s[k] = defaults[k];
     }
+    s.autoAdvanceSeconds = clampAutoAdvanceSeconds(s.autoAdvanceSeconds);
     settings = s;
     return s;
+}
+
+function getAutoAdvanceSeconds() {
+    return clampAutoAdvanceSeconds(getSettings().autoAdvanceSeconds);
+}
+
+function getAutoCycleMs() {
+    return getAutoAdvanceSeconds() * 1000;
+}
+
+function applyAutoCycleDuration() {
+    const seconds = getAutoAdvanceSeconds();
+    $('#wwt-overlay').css('--wwt-auto-cycle-s', seconds);
 }
 
 function getSeenMustSeeKeys() {
@@ -402,7 +425,7 @@ function resetAutoTimer() {
     session.autoTimer = setTimeout(() => {
         session.autoTimer = null;
         navigateTip(1, false);
-    }, AUTO_CYCLE_MS);
+    }, getAutoCycleMs());
 }
 
 function playPanelEnterAnimation() {
@@ -570,7 +593,7 @@ function ensureOverlayBuilt() {
 </div>`;
 
     $('body').append(html);
-    $('#wwt-overlay').css('--wwt-auto-cycle-s', AUTO_CYCLE_MS / 1000);
+    applyAutoCycleDuration();
     wireOverlayEvents();
 }
 
@@ -700,6 +723,21 @@ async function addExtensionSettings() {
             hideOverlay(false);
         }
     });
+
+    $('#wwt-auto-advance-seconds')
+        .attr('min', MIN_AUTO_ADVANCE_SECONDS)
+        .attr('max', MAX_AUTO_ADVANCE_SECONDS)
+        .val(s.autoAdvanceSeconds)
+        .on('input', function () {
+            const clamped = clampAutoAdvanceSeconds($(this).val());
+            s.autoAdvanceSeconds = clamped;
+            $(this).val(clamped);
+            applyAutoCycleDuration();
+            if (session.open && session.waiting && session.autoAdvanceEnabled) {
+                resetAutoTimer();
+            }
+            saveSettingsDebounced();
+        });
 }
 
 function onWaitStart(type, dryRun) {
