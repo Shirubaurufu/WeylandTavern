@@ -122,6 +122,7 @@ let settings = undefined;
  * 
  * @property {RegExp} expressionClothingParagraph
  * @property {RegExp} ltmFix
+ * @property {RegExp} roughDraftRemove
  */
 
 /** @type {WeylandFormatterRegex} */
@@ -204,8 +205,8 @@ const weylandRegex = {
     missingStartAsterisk: /(?<=["_\]][\s—]|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=[\s—]["_\[]|$)/g,
     missingStartAsteriskReplace: "*$1*",
 
-    detectPhone: /(?:incom|outgo)ing¦/i,
-    phoneFix: /(Phone¦.*\nTexting¦.*\n)?((?:(?:Incom|Outgo)ing¦.*(?:(?:\n)(?:Incom|Outgo)ing¦.*)*))/i,
+    detectPhone: /(?:incom|outgo)ing[¦\|]/i,
+    phoneFix: /(Phone[¦\|].*\nTexting[¦\|].*\n)?((?:(?:Incom|Outgo)ing[¦\|].*(?:(?:\n)(?:Incom|Outgo)ing[¦\|].*)*))/i,
 
     subbotNameFix: /^(__[^"*_]+:)(?!__).*?(?= )/gm,
     subbotNameFixReplace: "$1__",
@@ -215,7 +216,8 @@ const weylandRegex = {
     spacer2: /^=+$/,
 
     expressionClothingParagraph: /^((?:\[[a-z]+?\]) ?(?:\[[a-z]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*$/i,
-    ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im
+    ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im,
+    roughDraftRemove: /((?<=\n)\n+)? *\[D\] *(\n+(?=\n))?/i,
 };
 
 
@@ -276,6 +278,9 @@ async function formatParagraphs(message) {
 
     //Fix any wrongly formatted subbot names
     message = replaceText(message, weylandRegex.subbotNameFix, weylandRegex.subbotNameFixReplace);
+
+    // Remove the rough draft marker "[D]"
+    message = replaceText(message, weylandRegex.roughDraftRemove, "");
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
     let paragraphCount = paragraphs.length;
@@ -347,7 +352,7 @@ async function formatParagraphs(message) {
                 }
             }
 
-            if (weylandRegex.breakbar.test(paragraph)) {
+            if (weylandRegex.detectPhone.test(paragraph)) {
                 const phoneFix = paragraph.match(weylandRegex.phoneFix);
                 if (phoneFix) {
                     paragraphs[index] = phoneFix[0];
@@ -916,7 +921,7 @@ function phoneMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /<p>((?:Phone¦.*\nTexting¦.*\n)?(?:(?:(?:Incom|Outgo)ing¦.*(?:(?:\n)(?:Incom|Outgo)ing¦.*)*)))<\/p>/ig,
+            regex: /<p>((?:Phone[¦\|].*\nTexting[¦\|].*\n)?(?:(?:(?:Incom|Outgo)ing[¦\|].*(?:(?:\n)(?:Incom|Outgo)ing[¦\|].*)*)))<\/p>/ig,
             replace: function(match, p1) {
                 try {
                     p1 = p1.replace(/<\/?q.*?>/g, ``);
@@ -927,9 +932,9 @@ function phoneMarkdownExt(){
                     let phoneUIHeader = "";
                     let phoneUIFooter = "";
                     let messages = [];
-                    if (/Phone¦/.test(lines[0])) {
-                        const [carrier, _battery] = lines[0].split(`¦`).slice(1);
-                        const contact = lines[1].split(`¦`)[1];
+                    if (/Phone[¦\|]/.test(lines[0])) {
+                        const [carrier, _battery] = lines[0].split(/[¦\|]/).slice(1);
+                        const contact = lines[1].split(/[¦\|]/)[1];
                         let battery = parseInt(_battery.replace(`%`,``),10);
                         if (battery <= 0) {
                             // @ts-ignore
@@ -971,7 +976,7 @@ function phoneMarkdownExt(){
                     }
                     
                     messages.forEach((message, index) => {
-                        const [type, time, name, text] = message.split(`¦`)
+                        const [type, time, name, text] = message.split(/[¦\|]/)
                         if (type.toLowerCase() === "incoming") {
                             messages[index] = `<div style="display: flex; margin-bottom: 12px; justify-content: flex-start;">
 <div style="background-color: #333; border-radius: 12px; padding: 8px 12px; max-width: 70%;">
@@ -1010,14 +1015,14 @@ function lonePhoneMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /<p>((?:Incoming|Outgoing)¦[^\n]*?)<\/p>/ig,
+            regex: /<p>((?:Incoming|Outgoing)[¦\|][^\n]*?)<\/p>/ig,
             replace: function(match, p1) {
                 try {
                     p1 = p1.replace(/<\/?q.*?>/g, ``);
                     p1 = p1.replace(/<\/?u>/g, `__`);
                     p1 = p1.replace(/<\/?em>/g, `*`);
                     p1 = p1.replace(/<\/?strong>/g, `**`);
-                    const [type, time, name, text] = p1.split(`¦`)
+                    const [type, time, name, text] = p1.split(/[¦\|]/)
                     if (type.toLowerCase() === "incoming") {
                         return `<div style="display: flex; margin-bottom: 12px; justify-content: flex-start;">
 <div style="background-color: #333; border-radius: 12px; padding: 8px 12px; max-width: 70%;">
