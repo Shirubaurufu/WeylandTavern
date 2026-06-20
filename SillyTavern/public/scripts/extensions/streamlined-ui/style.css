@@ -60,6 +60,7 @@
     border: none;
     opacity: 0.3;
     font-size: 180%;
+    background: none;
 }
 #wt-char-menu-btn:hover
 {
