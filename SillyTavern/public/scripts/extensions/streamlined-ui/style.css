@@ -260,7 +260,7 @@ div:has(> #extensions_url),
 
 /* Persona Menu */
 #persona-management-button > div > div > div > div > h3 > a:nth-of-type(1),
-#persona-management-button div.flex-container:has(> div > i.fa-ranking-star),
+.user_stats_button,
 #persona_grid_toggle,
 #persona_pagination_container .paginationjs-nav,
 #persona_lore_button,
