@@ -91,17 +91,29 @@ else
                 echo ""
                 git diff --compact-summary | tee -a SillyTavern/WTUpdate.log
                 echo ""
-                read -p "Save your local changes and retry update? (Y/N) [Default: N] " stash
-                stash=${stash:-N}
+                read -p "Reset to latest official version? Your personal files won't be affected. (Y/N) [Default: Y] " do_reset
+                do_reset=${do_reset:-Y}
                 
-                if [[ "$stash" =~ ^[Yy]$ ]]; then
-                    echo "Saving local changes..."
-                    git stash clear
-                    git stash
-                    echo "Retrying update..."
+                if [[ "$do_reset" =~ ^[Yy]$ ]]; then
+                    echo ""
+                    echo "Resetting to latest version..."
                     
-                    if ! git pull > SillyTavern/WTUpdate.log 2>&1; then
-                        echo "[!] Update still failed. Please contact support."
+                    # Abort any stuck merge
+                    git merge --abort > /dev/null 2>&1
+                    
+                    # Clear any remaining conflicts
+                    REMAINING=$(git diff --name-only --diff-filter=U 2>/dev/null)
+                    if [ -n "$REMAINING" ]; then
+                        while IFS= read -r file; do
+                            [ -z "$file" ] && continue
+                            git checkout --theirs "$file" > /dev/null 2>&1
+                            git add "$file" > /dev/null 2>&1
+                        done <<< "$REMAINING"
+                    fi
+                    
+                    # Hard reset to remote - no merge commits left behind
+                    if ! git reset --hard "origin/$CURRENT_BRANCH" > /dev/null 2>&1; then
+                        echo "[!] Reset failed. Please contact support."
                         echo "[!] Log saved to: SillyTavern/WTUpdate.log"
                         read -p "Continue without update? (Y/N) [Default: N] " continue_update
                         continue_update=${continue_update:-N}
@@ -110,13 +122,6 @@ else
                         fi
                     else
                         echo "Update applied successfully!"
-                        read -p "Restore your saved changes? (Y/N) [Default: N] " restore
-                        restore=${restore:-N}
-                        if [[ "$restore" =~ ^[Yy]$ ]]; then
-                            git stash pop
-                        else
-                            git stash clear
-                        fi
                     fi
                 else
                     read -p "Continue without update? (Y/N) [Default: N] " continue_update
