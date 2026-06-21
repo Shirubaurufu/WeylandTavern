@@ -99,7 +99,7 @@
 #prompt_post_processing_form,
 div:has(> label > #auto-connect-checkbox),
 #customize_additional_parameters,
-#test_api_button,
+/*#test_api_button,*/
 #rm_api_block .wst-rm-api-aggregate-status,
 #custom_form h4 small
 {
