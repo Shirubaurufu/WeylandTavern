@@ -161,10 +161,10 @@ const weylandRegex = {
     singleQuoteBetweenAction: /(?<!\*)\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*(?!\*)/g,
     singleQuoteBetweenActionReplace: "—'$1'—",
 
-    actionEmphasisFix: /(?<=[\s—]|^)(?<=\*+.+?)\*+([^*\n]+)\*+(?=.+\*+)/g,
+    actionEmphasisFix: /(?<=[\s—]|^)(?<=\*+[^\n"]+?)\*+([^*\n]+)\*+(?=.+\*+)/g,
     actionEmphasisFixReplace: "***$1***",
 
-    dialogueEmphasisOne: /(?<=[\s—]|^)["_\[](?![\s—])([^"_`]*)["_\]](?<![\s—])(?=[\s—]|$)/g,
+    dialogueEmphasisOne: /(?<=[\s—]|^)["_\[](?![\s—])([^"_`]*\*[^"_`]*)["_\]](?<![\s—])(?=[\s—]|$)/g,
     dialogueEmphasisTwo: /(?<=[\s—]|^)\*+(?![\s—])([^*]*)(?<!hiccup|hic)\*+(?<![\s—])(?=[\s—]|$|[.,?!])/g,
     dialogueEmphasisTwoReplace: "**$1**",
     
