@@ -414,7 +414,7 @@
             "executeOnAi": false,
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
-            "executeOnNewChat": false,
+            "executeOnNewChat": true,
             "executeBeforeGeneration": false,
             "automationId": ""
         },
