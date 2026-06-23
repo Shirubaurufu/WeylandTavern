@@ -35,6 +35,7 @@ let settings = undefined;
  * @property {RegExp} paragraphSplit
  * @property {RegExp} detectHeaderLegacy
  * @property {RegExp} detectHeader
+ * @property {RegExp} badHeader
  * @property {RegExp} detectMuseHeader
  * @property {RegExp} detectActionParagraph
  * @property {RegExp} detectWeybotRelations
@@ -131,6 +132,7 @@ const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
     detectHeaderLegacy: /(?:^|(?<=\\n))(?:\*{1,3})?(([^"*~_`\n\r\\]*)~([^"*_`\n\r]*)[~\]\)])(?:\*{1,3})?(?:$|(?=\\n))/m,
     detectHeader: /^¦+\s?(.+? ?(?:\(\w{4}\) ?)?)¦+$/m,
+    badHeader: /^(.{3,}?)?(¦+\s?(.+? ?(?:\(\w{4}\) ?)?)¦+$)/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -303,8 +305,13 @@ async function formatParagraphs(message) {
                 return;
             }
             
-            if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
+            if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.badHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
                 if (!thinking) {
+                    //Fix bad header
+                    const badHeader = paragraph.match(weylandRegex.badHeader);
+                    if (!settings?.experimental && badHeader && badHeader.length >= 3) {
+                        paragraph = badHeader[2];
+                    }
                     //Format Header
                     const splitParagraph = paragraph.match(/([\w\W]+)(?<=¦ *\n)(.+)/);
                     if (splitParagraph) {
@@ -584,7 +591,7 @@ async function formatMessage(messageId, mes = undefined) {
     }
     chat[messageId].extra.reasoning = reason;
 
-    if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
+    if (weylandRegex.detectHeader.test(originalMessage) || weylandRegex.badHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
         weylandDebug(`Formatting character: ${characterName}`);
         const paragraphs = await formatParagraphs(originalMessage);
