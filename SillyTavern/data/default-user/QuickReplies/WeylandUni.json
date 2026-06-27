@@ -2,7 +2,7 @@
     "version": 2,
     "name": "WeylandUni",
     "disableSend": false,
-    "placeBeforeInput": false,
+    "placeBeforeInput": true,
     "injectInput": false,
     "color": "rgba(0, 0, 0, 0)",
     "onlyBorderColor": false,

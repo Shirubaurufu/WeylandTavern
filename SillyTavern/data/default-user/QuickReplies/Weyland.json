@@ -2,8 +2,8 @@
     "version": 2,
     "name": "Weyland",
     "disableSend": false,
-    "placeBeforeInput": false,
-    "injectInput": true,
+    "placeBeforeInput": true,
+    "injectInput": false,
     "color": "rgba(0, 0, 0, 0)",
     "onlyBorderColor": false,
     "qrList": [
