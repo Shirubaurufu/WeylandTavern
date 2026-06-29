@@ -1,57 +1,80 @@
-/* Styles for Helix Usage Monitor extension */
-#helix-usage-container {
-    padding: 8px 10px; /* Adjusted padding */
-    margin: 10px 0;    /* Consistent vertical margins */
-    border-top: 1px solid var(--border-color, #303030); /* Separator line above */
-    border-bottom: 1px solid var(--border-color, #303030); /* Separator line below */
-    display: none; /* Hidden by default */
+/* WT Helix Usage Monitor — API panel tracker styles.
+   Left-aligned to match the surrounding settings panel. Wraps on narrow
+   viewports (mobile) so the clear button drops to a new line cleanly. */
+
+#hm-api-tracker {
+    padding: 0.5em 0;
+    margin: 0.5em 0;
 }
 
-#helix-usage-container.helix-active {
-    display: block;
-}
-
-#helix-usage-container p {
-    margin: 5px 0; /* Spacing between text lines */
-}
-
-.st-helix-usage-settings .st_helix_usage_block {
-    margin-bottom: 1rem; /* Space below each setting block */
-}
-
-.st-helix-usage-settings .st_helix_usage_block .form-group {
+#hm-api-tracker .hm-key-input-row {
     display: flex;
-    align-items: center; /* Vertically align items in the center */
-}
-
-.st-helix-usage-settings .st_helix_usage_block .form-group input[type="checkbox"] {
-    margin-right: 8px; /* Consistent spacing, can be adjusted */
-    /* The following are often default, but good to be aware of for alignment */
-    vertical-align: middle; /* Helps if flex align-items isn't enough */
-    flex-shrink: 0; /* Prevent checkbox from shrinking if label is long */
-}
-
-#helix-hourly-breakdown-list {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
     margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px dashed var(--border-color, #444); /* Separator from main display */
-    display: none; /* Hidden by default, JS will manage visibility */
-}
-#helix-hourly-breakdown-list p { /* If using p tags for items */
-    font-size: 0.9em;
-    margin: 3px 0;
-    opacity: 0.85;
 }
 
-#helix-hourly-breakdown-list h4 {
-    font-size: 0.95em; /* Slightly larger than item text */
-    font-weight: bold;
-    margin-top: 10px; /* Space above header */
-    margin-bottom: 4px; /* Space between header and first item */
-    opacity: 0.9;
-    color: var(--text_color, #E0E0E0); /* Ensure it's visible */
+#hm-api-tracker-key-input {
+    flex: 1 1 220px;
+    min-width: 180px;
+    max-width: 420px;
+    padding: 6px 12px;
+    font-size: calc(var(--mainFontSize) * 0.9);
+    border-radius: 5px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    background-color: var(--SmartThemeBotMesBlurTintColor);
+    color: var(--SmartThemeBodyTextColor);
+    box-sizing: border-box;
 }
 
-#helix-hourly-breakdown-list h4:first-child {
-    margin-top: 0; /* No top margin for the very first header in the list */
+#hm-api-tracker-key-input::placeholder {
+    color: var(--SmartThemeBodyTextColor);
+    opacity: 0.6;
+}
+
+#hm-api-key-unset,
+#hm-api-key-set {
+    text-align: left;
+}
+
+#hm-api-key-unset p {
+    color: var(--smartThemeEmColor) !important;
+    margin: 0 0 0.25em 0;
+}
+
+/* Single-line status row that wraps to multiple lines on narrow screens */
+#hm-api-key-set {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em 0.75em;
+    font-weight: 700;
+}
+
+#hm-api-key-set span {
+    font-weight: 300;
+}
+
+#hm-api-key-set #hm-api-next-message-container {
+    opacity: 0.6;
+    font-size: 85%;
+}
+
+#hm-api-tracker .hm-api-clear-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    margin: 0;
+    padding: 4px 12px;
+    white-space: nowrap;
+    background-color: rgba(255, 255, 255, 0.05);
+    opacity: 0.75;
+    font-size: calc(var(--mainFontSize) * 0.85);
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+#hm-api-tracker .hm-api-clear-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 1;
 }
