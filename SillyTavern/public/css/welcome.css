@@ -599,9 +599,11 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
 
 #hm-key-set
 {
+    position: relative;
     font-weight:700;
+    padding-right: 2.75em;
 }
-#hm-key-set span
+#hm-key-set .hm-key-set-status span
 {
     font-weight:300;
 }
@@ -612,6 +614,22 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
     margin-left:0.5em;
     position:relative;
     top:-2px;
+}
+
+#hm-tracker .hm-clear-button {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25em;
+    height: 2.25em;
+    padding: 0;
+    margin: 0;
+    opacity: 0.85;
+    font-size: calc(var(--mainFontSize) * 0.9);
 }
 
 /* Info Screens */
