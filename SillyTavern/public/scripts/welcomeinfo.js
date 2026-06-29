@@ -137,12 +137,17 @@ async function refreshWelcomeTrackerUsage(welcomePanel) {
 
         if (data.current_usage_count === 0 || !data.messages || data.messages.length === 0) {
             nextMessageTimeText.textContent = 'Ready';
-            document.getElementById('hm-next-message-container').style.display = 'none';
+            const nextMessageContainer = welcomePanel.querySelector('#hm-next-message-container');
+            if (nextMessageContainer instanceof HTMLElement) {
+                nextMessageContainer.style.display = 'none';
+            }
             stopWelcomeTrackerCountdown();
             return;
         }
-        else {
-            document.getElementById('hm-next-message-container').style.display = 'inline';
+
+        const nextMessageContainer = welcomePanel.querySelector('#hm-next-message-container');
+        if (nextMessageContainer instanceof HTMLElement) {
+            nextMessageContainer.style.display = 'inline';
         }
 
         const oldestMessageTimestampMs = data.messages[0].timestamp_ms;
@@ -174,6 +179,18 @@ async function clearHelixTrackerKey(welcomePanel) {
     await ctx.executeSlashCommandsWithOptions(
         '/flushglobalvar HMKey | /secret-delete quiet=true key=api_key_custom api_key_custom',
     );
+
+    const keyInput = welcomePanel.querySelector('#tracker-key-input');
+    if (keyInput instanceof HTMLInputElement) {
+        keyInput.value = '';
+    }
+
+    const nextMessageContainer = welcomePanel.querySelector('#hm-next-message-container');
+    if (nextMessageContainer instanceof HTMLElement) {
+        nextMessageContainer.style.display = 'inline';
+    }
+
+    toastr.info('HelixMind Key Cleared');
     updateTrackerKeyUI(welcomePanel);
 }
 
