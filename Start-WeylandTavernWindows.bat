@@ -68,7 +68,7 @@ if %ERRORLEVEL% neq 0 (
                 echo [!] Update failed - there may be file conflicts.
                 echo [!] Generating log file: SillyTavern/WTUpdate.log
                 echo.
-                git diff --compact-summary
+                git --no-pager diff --compact-summary
                 echo.
                 set /p do_reset="Reset to latest official version? Your personal files won't be affected. (Y/N) [Default: Y] "
                 if "!do_reset!"=="" set do_reset=Y

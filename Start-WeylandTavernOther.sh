@@ -89,7 +89,7 @@ else
                 echo "[!] Update failed - there may be file conflicts."
                 echo "[!] Generating log file: SillyTavern/WTUpdate.log"
                 echo ""
-                git diff --compact-summary | tee -a SillyTavern/WTUpdate.log
+                git --no-pager diff --compact-summary | tee -a SillyTavern/WTUpdate.log
                 echo ""
                 read -p "Reset to latest official version? Your personal files won't be affected. (Y/N) [Default: Y] " do_reset
                 do_reset=${do_reset:-Y}
