@@ -60,6 +60,7 @@
     border: none;
     opacity: 0.3;
     font-size: 180%;
+    background: none;
 }
 #wt-char-menu-btn:hover
 {
@@ -98,7 +99,7 @@
 #prompt_post_processing_form,
 div:has(> label > #auto-connect-checkbox),
 #customize_additional_parameters,
-#test_api_button,
+/*#test_api_button,*/
 #rm_api_block .wst-rm-api-aggregate-status,
 #custom_form h4 small
 {
@@ -216,7 +217,7 @@ label:has(> #messageTimerEnabled),
 label:has(> #messageTimestampsEnabled),
 label:has(> #messageModelIconEnabled),
 label:has(> #mesIDDisplayEnabled),
-label:has(> #hideChatAvatarsEnabled),
+/*label:has(> #hideChatAvatarsEnabled),*/
 label:has(> #messageTokensEnabled),
 label:has(> #show_swipe_num_all_messages),
 label:has(> #hotswapEnabled),
@@ -259,10 +260,9 @@ div:has(> #extensions_url),
 
 /* Persona Menu */
 #persona-management-button > div > div > div > div > h3 > a:nth-of-type(1),
-#persona-management-button div.flex-container:has(> div > i.fa-ranking-star),
+.user_stats_button,
 #persona_grid_toggle,
 #persona_pagination_container .paginationjs-nav,
-#persona_lore_button,
 div:has(> #persona_description_position),
 div:has(+ div > #persona_description_position) h4,
 div:has(> div > label > #persona_show_notifications),
@@ -274,7 +274,7 @@ h4:has(+ #persona_connections_buttons)
 }
 
 /* Characters Menu */
-label[for=rm_button_panel_pin],
+#rm_button_panel_pin_div,
 #HotSwapWrapper,
 #character_import_button,
 #rm_button_group_chats,
@@ -283,22 +283,45 @@ label[for=rm_button_panel_pin],
 #charListGridToggle,
 #rm_print_characters_pagination .paginationjs-nav,
 .character_version,
-#rm_print_characters_block .tags,
-#CharListButtonAndHotSwaps
+#rm_print_characters_block .tags
 {
     display:none !important;
 }
 
-/* Character Details */
-#result_info,
-#avatar_controls,
-#tags_div,
-#spoiler_free_desc,
-#creators_note_desc_hidden,
-#avatar_div_div,
-#rm_PinAndTabs
+/* Character Details
+   Restored for community access to chat lorebook, character lorebook, tags,
+   connected personas, More... dropdown, token counter, and creator's notes.
+   Prompt lockdown is preserved below by hiding the specific buttons and
+   dropdown options that reveal or modify character prompt data. */
+#creators_note_desc_hidden
 {
     display:none !important;
+}
+
+/* Prompt lockdown — base (non-admin) weytav.
+   Hides every avatar-control button or More... dropdown entry that can
+   leak the character prompt, write back to the card, or save edits. */
+body.streamlined-ui #advanced_div,
+body.streamlined-ui #export_button,
+body.streamlined-ui #dupe_button,
+body.streamlined-ui #create_button_label,
+body.streamlined-ui #char-management-dropdown option#set_chat_scenario,
+body.streamlined-ui #char-management-dropdown option#renameCharButton,
+body.streamlined-ui #char-management-dropdown option#replace_update,
+body.streamlined-ui #char-management-dropdown option#import_character_info
+{
+    display:none !important;
+}
+
+/* Force the back-to-character-list arrow to stay visible in the streamlined
+   character pane. ST's select_selected_character() hides this via inline
+   style (script.js ~7505) on the assumption that users will navigate back
+   via the Characters button in #CharListButtonAndHotSwaps, but streamlined
+   hides that whole block — without this override the user is stuck on the
+   character profile with no way back to the roster. */
+body.streamlined-ui #rm_button_back
+{
+    display:flex !important;
 }
 
 /* Quick Reply Section */
@@ -308,7 +331,11 @@ label[for=rm_button_panel_pin],
 }
 .qr--button
 {
-    min-width: 3em;
+    min-width: 2.5em;
+}
+.qr--button-icon
+{
+    margin:0.05em 0.25em 0em 0.25em !important;
 }
 
 /* Chat Messages */
@@ -325,8 +352,7 @@ label[for=rm_button_panel_pin],
 #option_toggle_CFG,
 #option_toggle_logprobs,
 #option_new_bookmark,
-#option_convert_to_group,
-#option_regenerate
+#option_convert_to_group
 {
     display:none !important;
 }

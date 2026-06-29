@@ -1,7 +1,9 @@
 import applyPatches from "./patcher.js";
 
 /**
- * When Character Management opens, show the character list (same as #rm_button_characters).
+ * When Character Management opens with NO active character, jump straight to
+ * the character list. If a character is already active, let ST's default
+ * behavior show that character's profile pane (matching base ST UX).
  */
 function installAutoOpenCharactersList() {
     const drawerIcon = document.getElementById('rightNavDrawerIcon');
@@ -11,9 +13,17 @@ function installAutoOpenCharactersList() {
     }
 
     drawerIcon.addEventListener('click', () => {
-        if (drawerIcon.classList.contains('closedIcon')) {
-            charactersButton.click();
+        if (!drawerIcon.classList.contains('closedIcon')) {
+            return;
         }
+        const ctx = window.SillyTavern?.getContext?.();
+        const hasActiveCharacter =
+            (ctx?.characterId !== undefined && ctx?.characterId !== null && ctx?.characterId !== '')
+            || (typeof ctx?.groupId === 'string' && ctx.groupId.length > 0);
+        if (hasActiveCharacter) {
+            return;
+        }
+        charactersButton.click();
     });
 }
 
@@ -53,7 +63,10 @@ function init() {
     console.log("[Streamlined UI] Initializing...");
     document.body.classList.add('streamlined-ui');
     installAutoOpenCharactersList();
-    installCloseDrawerOnCharacterSelect();
+    // Auto-close on character select disabled — keeps the right pane open after
+    // selecting a character so users can access chat lorebook, character lorebook,
+    // tags, connected personas, and the More... dropdown.
+    // installCloseDrawerOnCharacterSelect();
     applyPatches();
     console.log("[Streamlined UI] Initialized successfully.");
 }
