@@ -1585,6 +1585,12 @@ jQuery(async () => {
     injectModal();
     injectToolbarButton();
 
+    // Streamlined-UI-aware secondary launcher.
+    // The primary button lives inside the connection-profile row, which streamlined
+    // collapses unless Advanced Options is checked. This adds a second labeled
+    // launcher after #openai_api that stays visible regardless of that toggle.
+    injectStreamlinedLauncher();
+
     eventSource.on(event_types.GENERATION_STARTED, onGenerationStarted);
     eventSource.on(event_types.GENERATION_ENDED, onGenerationEnded);
     eventSource.on(event_types.MESSAGE_RECEIVED, onMessageReceivedForRouter);
@@ -1599,3 +1605,34 @@ jQuery(async () => {
 
     routerLog("Init complete");
 });
+
+function injectStreamlinedLauncher() {
+    const SECONDARY_ID = 'wtr-toolbar-btn-streamlined';
+    let attempts = 0;
+    const interval = setInterval(() => {
+        attempts++;
+        if (attempts >= 60) {
+            clearInterval(interval);
+            return;
+        }
+        if (!document.body.classList.contains('streamlined-ui')) return;
+        if (document.getElementById(SECONDARY_ID)) {
+            clearInterval(interval);
+            return;
+        }
+        const openaiApi = document.getElementById('openai_api');
+        if (!openaiApi) return;
+
+        clearInterval(interval);
+        const btn = document.createElement('div');
+        btn.id = SECONDARY_ID;
+        btn.className = 'menu_button';
+        btn.title = 'Open Weyland Router';
+        btn.style.cssText = 'display:inline-flex;align-items:center;gap:0.5em;margin:0.5em 0;padding:0.35em 0.9em;white-space:nowrap;color:var(--rb-accent,#b4263a);background-color:rgba(255,255,255,0.05);cursor:pointer;transition:background-color 0.15s ease;';
+        btn.innerHTML = '<i class="fa-solid fa-shuffle"></i><span>Open Weyland Router</span>';
+        btn.addEventListener('mouseenter', () => { btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; });
+        btn.addEventListener('mouseleave', () => { btn.style.backgroundColor = 'rgba(255,255,255,0.05)'; });
+        btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openModal(); });
+        openaiApi.after(btn);
+    }, 500);
+}
