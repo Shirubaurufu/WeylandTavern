@@ -40,7 +40,7 @@ const defaultSettings = {
     debug: false,
     routingMode: 'random',
     pool: [],
-    timeoutMs: 60000,
+    timeoutMs: 180000,                        // 3 min — reasoning models, streaming off
     cooldownMs: 5 * 60 * 1000,                // 5 min
     extendedCooldownMs: 3 * 60 * 60 * 1000,   // 3 hours
     failureWindowMs: 30 * 60 * 1000,          // 30 min rolling window
@@ -168,7 +168,10 @@ function getSettings() {
         }
     }
     settings = extensionSettings[WT_ROUTER_MODULE_NAME];
+    // Migrate prior default values to the new defaults. Users who set explicit
+    // non-default values keep their setting.
     if (settings.timeoutMs === 30000) settings.timeoutMs = defaultSettings.timeoutMs;
+    if (settings.timeoutMs === 60000) settings.timeoutMs = defaultSettings.timeoutMs;
     // Migrate the old 10-minute default down to the new 5-minute default.
     // Users who set an explicit non-default value keep their setting.
     if (settings.cooldownMs === 10 * 60 * 1000) settings.cooldownMs = defaultSettings.cooldownMs;
@@ -394,7 +397,27 @@ async function applyRouterConnectionProfile(model) {
 async function applyModel(model) {
     const ctx = SillyTavern.getContext();
     if (originalCustomModel === null) originalCustomModel = ctx.chatCompletionSettings.custom_model;
+    // Defense in depth: if we're attempting on a message slot tagged by a previous
+    // router gen (e.g. swipe/regenerate on a prior router-tagged message), clear
+    // the stale tag now. The new model owns this slot until success/failure decides.
+    const lastForApply = ctx.chat[ctx.chat.length - 1];
+    if (lastForApply && !lastForApply.is_user && lastForApply.extra?.weyland_router_model) {
+        delete lastForApply.extra.weyland_router_model;
+        delete lastForApply.extra.weyland_router_profile;
+    }
     currentAttemptSnapshot = captureGenerationSnapshot(ctx);
+    if (settings?.debug) {
+        const s = currentAttemptSnapshot;
+        console.debug(`[${WT_ROUTER_MODULE_NAME}] SNAPSHOT for ${getModelLabel(model)} -`,
+            `chatLength=${s.chatLength}`,
+            `lastIndex=${s.lastIndex}`,
+            `lastMessageIsUser=${s.lastMessage?.is_user}`,
+            `lastMesLen=${s.lastMes.length}`,
+            `lastReasoningLen=${s.lastReasoning.length}`,
+            `lastSwipeCount=${s.lastSwipeCount}`,
+            `lastTaggedBy=${s.lastMessage?.extra?.weyland_router_model || '(none)'}`,
+            { snapshot: s });
+    }
     await applyRouterConnectionProfile(model);
     const source = oai_settings?.chat_completion_source;
     const modelField = getModelFieldForSource(source);
@@ -749,10 +772,14 @@ async function triggerRetry() {
             return;
         }
 
-        // Remove the empty ghost message left by the failed generation before retrying
+        // Remove the ghost message left by the failed generation before retrying.
+        // We treat "", "...", and "…" as ghosts — same placeholder definition used
+        // by the failure detector. This also catches the "reasoning-only" case
+        // where a model produced a thought-block but no visible message, so the
+        // dangling reasoning blob doesn't stay in chat above the successful retry.
         const lastMsg = ctx.chat[ctx.chat.length - 1];
-        if (lastMsg && !lastMsg.is_user && (lastMsg.mes || '').trim() === '') {
-            routerLog('Removing empty ghost message before retry');
+        if (lastMsg && !lastMsg.is_user && isPlaceholderOutput(lastMsg.mes)) {
+            routerLog('Removing ghost message before retry');
             ctx.chat.pop();
             // Also remove from DOM if present
             const msgBlocks = document.querySelectorAll('.mes');
@@ -788,6 +815,15 @@ function onGenerationStarted(type, options, dryRun) {
 
 function onGenerationEnded(messageId) {
     if (!settings?.enabled) return;
+    // Premature-finalize guard: if ST still says generation is in progress, this is
+    // an early event (e.g. MESSAGE_RECEIVED firing on the FIRST streamed token of a
+    // reasoning model, before any visible body tokens land). Reading msg.mes here
+    // would see an empty/placeholder string and falsely strike the model. Bail and
+    // let the real GENERATION_ENDED (or our own timeout) handle it.
+    if (currentlySelectedModel && isGenerationLocked()) {
+        routerLog('Skipping premature finalize - generation still in progress');
+        return;
+    }
     clearGenerationTimeout();
     if (!currentlySelectedModel) return;
 
@@ -817,27 +853,53 @@ function onGenerationEnded(messageId) {
 
     if (rawContent === null) {
         const failed = currentlySelectedModel;
+        if (settings?.debug) {
+            const s = currentAttemptSnapshot;
+            console.warn(`[${WT_ROUTER_MODULE_NAME}] STALE-OUTPUT DIAGNOSTIC for ${getModelLabel(failed)}:`, {
+                snapshot_chatLength: s?.chatLength,
+                snapshot_lastIndex: s?.lastIndex,
+                snapshot_lastMesLen: s?.lastMes?.length,
+                snapshot_lastReasoningLen: s?.lastReasoning?.length,
+                snapshot_lastSwipeCount: s?.lastSwipeCount,
+                snapshot_lastTaggedBy: s?.lastMessage?.extra?.weyland_router_model,
+                current_chatLength: ctx.chat.length,
+                current_lastIdx: lastIdx,
+                current_mesLen: String(msg.mes || '').length,
+                current_mesPreview: String(msg.mes || '').slice(0, 80),
+                current_reasoningLen: getReasoningText(msg).length,
+                current_swipeCount: Array.isArray(msg.swipes) ? msg.swipes.length : 0,
+                current_taggedBy: msg.extra?.weyland_router_model,
+                sameMessageRef: msg === s?.lastMessage,
+                mesChanged: String(msg.mes || '') !== s?.lastMes,
+                reasoningChanged: getReasoningText(msg) !== s?.lastReasoning,
+                msg, snapshot: s
+            });
+        }
         routerLog(`Stale output detected for ${failed.id}; last message did not change after this roll`);
         failCurrentAttempt(failed, 'stale-output');
         return;
     }
 
-    // KEY FIX: if this message was already tagged by a previous successful generation,
-    // we are looking at stale content from before our retry. Don't count it as our success.
-    if (msg.extra?.weyland_router_model && (msg.extra.weyland_router_model !== currentlySelectedModel.id || (msg.extra.weyland_router_profile || '') !== (currentlySelectedModel.profileName || ''))) {
-        const failed = currentlySelectedModel;
-        routerLog(`Stale message detected (tagged by ${msg.extra.weyland_router_model} / ${msg.extra.weyland_router_profile || 'current'}, we are ${getModelLabel(currentlySelectedModel)}) - ignoring`);
-        failCurrentAttempt(failed, 'stale-output');
-        return;
-    }
+    // (Previous "stale-tag" check removed — it falsely struck models on swipe/regenerate
+    // where ST keeps the same message slot but the prior generation's tag lingered.
+    // The snapshot-content comparison above already handles the case where a retry
+    // produced nothing — if no content changed, getAttemptContent returns null and
+    // we strike correctly. We no longer need to second-guess via the stale tag.)
 
     if (isPlaceholderOutput(content)) {
-        const failed = currentlySelectedModel;
-        if (String(msg.extra?.reasoning || '').trim()) {
-            routerEvent(`${failed.id} produced reasoning but no visible output`, 'warn');
+        // Output is output — if the model produced substantive reasoning content
+        // (e.g. a reasoning model that accidentally stuffed the full reply inside
+        // its <think> block), don't strike it as blank. The visible body looks empty
+        // here but downstream regex will move the content into the right slot.
+        const reasoningText = String(msg.extra?.reasoning || msg.extra?.reasoning_content || '').trim();
+        if (reasoningText.length > 0 && !isPlaceholderOutput(reasoningText)) {
+            routerEvent(`${currentlySelectedModel.id} produced output inside the reasoning block — counting as success`, 'info');
+            // fall through to the Success path below
+        } else {
+            const failed = currentlySelectedModel;
+            failCurrentAttempt(failed, 'blank');
+            return;
         }
-        failCurrentAttempt(failed, 'blank');
-        return;
     }
 
     // Success
@@ -1097,7 +1159,7 @@ function buildModalHtml() {
       <div style="color:#e0445c;font-size:16px;letter-spacing:2px;font-weight:900;">WEYLAND ROUTER</div>
       <div style="flex:1;"></div>
       <div id="wtr-status-pill" class="wtr-status-pill wtr-pill-off">DISABLED</div>
-      <button id="wtr-help-btn" class="wtr-btn-sm" title="What is Weyland Router?" style="padding:2px 8px;cursor:pointer;">?</button>
+      <button id="wtr-help-btn" class="wtr-btn-sm" title="What is Weyland Router?" style="padding:2px 8px;cursor:pointer;">What is this?</button>
       <button id="wtr-toggle-log" class="wtr-btn-sm" title="Show the routing activity log" style="padding:2px 10px;cursor:pointer;">Show Log</button>
       <button id="wtr-close-btn" class="wtr-btn-sm" title="Close Weyland Router" style="padding:2px 10px;cursor:pointer;">x</button>
     </div>
@@ -1117,8 +1179,8 @@ function buildModalHtml() {
         </div>
 
         <div class="wtr-timing-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <label title="Default wait time before Router decides a model is stuck. Individual routes can override this in the pool." style="color:#888;font-size:11px;display:flex;align-items:center;gap:5px;">
-            Timeout <input id="wtr-timeout" title="Seconds to wait before failing over to another model." type="number" min="1" max="300" value="${settings.timeoutMs/1000}" class="wtr-num-input"> s
+          <label title="Seconds Router waits before deciding a model is stuck. Default 180s suits reasoning models with streaming off — anything still working at 3 minutes has lost the plot. Individual routes can override this in the pool." style="color:#888;font-size:11px;display:flex;align-items:center;gap:5px;">
+            Timeout <input id="wtr-timeout" title="Seconds before Router gives up on a route. Individual routes can override." type="number" min="1" max="900" value="${settings.timeoutMs/1000}" class="wtr-num-input"> s
           </label>
           <label title="How long a failed model is skipped before Router allows it to be rolled again." style="color:#888;font-size:11px;display:flex;align-items:center;gap:5px;">
             Cooldown <input id="wtr-cooldown" title="Minutes a failed model stays out of rotation." type="number" min="0.1" max="60" step="0.1" value="${(settings.cooldownMs/60000).toFixed(1)}" class="wtr-num-input"> min
@@ -1195,7 +1257,12 @@ function buildModalHtml() {
               <li><b>↻</b> clears a route's cooldown. <b>✕</b> removes it.</li>
             </ul>
             <div class="wtr-help-section">When things go sideways</div>
-            <p>If a route errors, blanks, stalls, or times out, Router cools it down for the <b>Cooldown</b> duration and rolls the next eligible route. Open <b>Show Log</b> to watch it work in real time — copy the log if you need to show Lucky what happened.</p>
+            <p>If a route errors, blanks, stalls, or times out, Router cools it down for the <b>Cooldown</b> duration and rolls the next eligible route. The default Timeout is 3 minutes — long enough for reasoning models, short enough that nobody's stuck waiting forever.</p>
+            <p>Open <b>Show Log</b> to watch it work in real time — copy the log if you need to show Lucky what happened.</p>
+            <div class="wtr-help-section" style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(180,38,58,0.15);">Weyland Tavern</div>
+            <p>Made by <b>Kressa</b> and <b>Lucky</b> of the Weyland Tavern Project.</p>
+            <p>We are a diverse community based around Weyland University — a grounded AI roleplay environment dripping with lore, deeply detailed characters and tons of unique features!</p>
+            <p><a href="#" id="wtr-weyland-link" style="color:#e0445c;text-decoration:underline;cursor:pointer;">linktr.ee/weylanduniversity</a></p>
           </div>
         </div>
       </div>
@@ -1364,6 +1431,7 @@ function injectModal() {
     document.getElementById('wtr-close-btn').addEventListener('click', closeModal);
     document.getElementById('wtr-help-btn').addEventListener('click', showRouterHelp);
     document.getElementById('wtr-help-close').addEventListener('click', hideRouterHelp);
+    document.getElementById('wtr-weyland-link').addEventListener('click', e => { e.preventDefault(); window.open('https://linktr.ee/weylanduniversity', '_blank'); });
     document.getElementById('wtr-help-overlay').addEventListener('click', e => {
         // close when the user clicks the dim backdrop, not the card itself
         if (e.target === e.currentTarget) hideRouterHelp();
@@ -1560,6 +1628,43 @@ function injectToolbarButton() {
         }
     }, 500);
     setTimeout(() => clearInterval(uiCheckInterval), 10000);
+
+    // Streamlined-UI-aware secondary launcher.
+    // The primary button lives inside the connection-profile row, which streamlined
+    // collapses unless Advanced Options is checked. This adds a second labeled
+    // launcher after #openai_api that stays visible regardless of that toggle.
+    injectStreamlinedLauncher();
+}
+
+function injectStreamlinedLauncher() {
+    const SECONDARY_ID = 'wtr-toolbar-btn-streamlined';
+    let attempts = 0;
+    const interval = setInterval(() => {
+        attempts++;
+        if (attempts >= 60) {
+            clearInterval(interval);
+            return;
+        }
+        if (!document.body.classList.contains('streamlined-ui')) return;
+        if (document.getElementById(SECONDARY_ID)) {
+            clearInterval(interval);
+            return;
+        }
+        const openaiApi = document.getElementById('openai_api');
+        if (!openaiApi) return;
+
+        clearInterval(interval);
+        const btn = document.createElement('div');
+        btn.id = SECONDARY_ID;
+        btn.className = 'menu_button';
+        btn.title = 'Open Weyland Router';
+        btn.style.cssText = 'display:inline-flex;align-items:center;gap:0.5em;margin:0.5em 0;padding:0.35em 0.9em;white-space:nowrap;color:var(--rb-accent,#b4263a);background-color:rgba(255,255,255,0.05);cursor:pointer;transition:background-color 0.15s ease;';
+        btn.innerHTML = '<i class="fa-solid fa-shuffle"></i><span>Open Weyland Router</span>';
+        btn.addEventListener('mouseenter', () => { btn.style.backgroundColor = 'rgba(255,255,255,0.1)'; });
+        btn.addEventListener('mouseleave', () => { btn.style.backgroundColor = 'rgba(255,255,255,0.05)'; });
+        btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openModal(); });
+        openaiApi.after(btn);
+    }, 500);
 }
 
 // Cooldown refresh — ticks the displayed countdown for both regular and extended.
