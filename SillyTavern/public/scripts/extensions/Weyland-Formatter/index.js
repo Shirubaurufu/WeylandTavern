@@ -35,6 +35,7 @@ let settings = undefined;
  * @property {RegExp} paragraphSplit
  * @property {RegExp} detectHeaderLegacy
  * @property {RegExp} detectHeader
+ * @property {RegExp} badHeader
  * @property {RegExp} detectMuseHeader
  * @property {RegExp} detectActionParagraph
  * @property {RegExp} detectWeybotRelations
@@ -119,6 +120,7 @@ let settings = undefined;
  * @property {RegExp} breakbar
  * @property {RegExp} spacer
  * @property {RegExp} spacer2
+ * @property {RegExp} verticalBar
  * 
  * @property {RegExp} expressionClothingParagraph
  * @property {RegExp} ltmFix
@@ -130,6 +132,7 @@ const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
     detectHeaderLegacy: /(?:^|(?<=\\n))(?:\*{1,3})?(([^"*~_`\n\r\\]*)~([^"*_`\n\r]*)[~\]\)])(?:\*{1,3})?(?:$|(?=\\n))/m,
     detectHeader: /^¦+\s?(.+? ?(?:\(\w{4}\) ?)?)¦+$/m,
+    badHeader: /^[^\n¦]+(¦+\s?(.+? ?(?:\(\w{4}\) ?)?)¦+$)/m,
     detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
@@ -161,10 +164,10 @@ const weylandRegex = {
     singleQuoteBetweenAction: /(?<!\*)\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*(?!\*)/g,
     singleQuoteBetweenActionReplace: "—'$1'—",
 
-    actionEmphasisFix: /(?<=[\s—]|^)(?<=\*+.+?)\*+([^*\n]+)\*+(?=.+\*+)/g,
+    actionEmphasisFix: /(?<=[\s—]|^)(?<=\*+[^\n"]+?)\*+([^*\n]+)\*+(?=.+\*+)/g,
     actionEmphasisFixReplace: "***$1***",
 
-    dialogueEmphasisOne: /(?<=[\s—]|^)["_\[](?![\s—])([^"_`]*)["_\]](?<![\s—])(?=[\s—]|$)/g,
+    dialogueEmphasisOne: /(?<=[\s—]|^)["_\[](?![\s—])([^"_`]*\*[^"_`]*)["_\]](?<![\s—])(?=[\s—]|$)/g,
     dialogueEmphasisTwo: /(?<=[\s—]|^)\*+(?![\s—])([^*]*)(?<!hiccup|hic)\*+(?<![\s—])(?=[\s—]|$|[.,?!])/g,
     dialogueEmphasisTwoReplace: "**$1**",
     
@@ -205,8 +208,8 @@ const weylandRegex = {
     missingStartAsterisk: /(?<=["_\]][\s—]|^)(?!\*)([^"_\[\]]+)(?<!\*)\*+(?=[\s—]["_\[]|$)/g,
     missingStartAsteriskReplace: "*$1*",
 
-    detectPhone: /(?:incom|outgo)ing[¦\|]/i,
-    phoneFix: /(Phone[¦\|].*\nTexting[¦\|].*\n)?((?:(?:Incom|Outgo)ing[¦\|].*(?:(?:\n)(?:Incom|Outgo)ing[¦\|].*)*))/i,
+    detectPhone: /(?:incom|outgo)ing[¦\|│]+/i,
+    phoneFix: /(Phone[¦\|│]+.*\nTexting[¦\|│]+.*\n)?((?:(?:Incom|Outgo)ing[¦\|│]+.*(?:(?:\n)(?:Incom|Outgo)ing[¦\|│]+.*)*))/i,
 
     subbotNameFix: /^(__[^"*_]+:)(?!__).*?(?= )/gm,
     subbotNameFixReplace: "$1__",
@@ -214,6 +217,7 @@ const weylandRegex = {
     breakbar: /¦/,
     spacer: /^---$/,
     spacer2: /^=+$/,
+    verticalBar: /[\|│¦]/,
 
     expressionClothingParagraph: /^((?:\[[a-z]+?\]) ?(?:\[[a-z]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*$/i,
     ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im,
@@ -301,8 +305,13 @@ async function formatParagraphs(message) {
                 return;
             }
             
-            if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
+            if (weylandRegex.detectHeader.test(paragraph) || weylandRegex.badHeader.test(paragraph) || weylandRegex.detectMuseHeader.test(paragraph)) {
                 if (!thinking) {
+                    //Fix bad header
+                    const badHeader = paragraph.match(weylandRegex.badHeader);
+                    if (!settings?.experimental && badHeader && badHeader.length >= 3) {
+                        paragraph = badHeader[2];
+                    }
                     //Format Header
                     const splitParagraph = paragraph.match(/([\w\W]+)(?<=¦ *\n)(.+)/);
                     if (splitParagraph) {
@@ -582,7 +591,7 @@ async function formatMessage(messageId, mes = undefined) {
     }
     chat[messageId].extra.reasoning = reason;
 
-    if (weylandRegex.detectHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
+    if (weylandRegex.detectHeader.test(originalMessage) || weylandRegex.badHeader.test(originalMessage) || (characterName === `Muse` && weylandRegex.detectMuseHeader.test(originalMessage))) {
         weylandDebug(`Formatting message with ID: '${messageId}'`);
         weylandDebug(`Formatting character: ${characterName}`);
         const paragraphs = await formatParagraphs(originalMessage);
@@ -921,7 +930,7 @@ function phoneMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /<p>((?:Phone[¦\|].*\nTexting[¦\|].*\n)?(?:(?:(?:Incom|Outgo)ing[¦\|].*(?:(?:\n)(?:Incom|Outgo)ing[¦\|].*)*)))<\/p>/ig,
+            regex: /<p>((?:Phone[¦\|│]+.*\nTexting[¦\|│]+.*\n)?(?:(?:(?:Incom|Outgo)ing[¦\|│]+.*(?:(?:\n)(?:Incom|Outgo)ing[¦\|│]+.*)*)))<\/p>/ig,
             replace: function(match, p1) {
                 try {
                     p1 = p1.replace(/<\/?q.*?>/g, ``);
@@ -932,9 +941,9 @@ function phoneMarkdownExt(){
                     let phoneUIHeader = "";
                     let phoneUIFooter = "";
                     let messages = [];
-                    if (/Phone[¦\|]/.test(lines[0])) {
-                        const [carrier, _battery] = lines[0].split(/[¦\|]/).slice(1);
-                        const contact = lines[1].split(/[¦\|]/)[1];
+                    if (/Phone[¦\|│]+/.test(lines[0])) {
+                        const [carrier, _battery] = lines[0].split(/[¦\|│]+/).slice(1);
+                        const contact = lines[1].split(/[¦\|│]+/)[1];
                         let battery = parseInt(_battery.replace(`%`,``),10);
                         if (battery <= 0) {
                             // @ts-ignore
@@ -976,7 +985,7 @@ function phoneMarkdownExt(){
                     }
                     
                     messages.forEach((message, index) => {
-                        const [type, time, name, text] = message.split(/[¦\|]/)
+                        const [type, time, name, text] = message.split(/[¦\|│]+/)
                         if (type.toLowerCase() === "incoming") {
                             messages[index] = `<div style="display: flex; margin-bottom: 12px; justify-content: flex-start;">
 <div style="background-color: #333; border-radius: 12px; padding: 8px 12px; max-width: 70%;">
@@ -1015,14 +1024,14 @@ function lonePhoneMarkdownExt(){
     try {
         return [{
             type: 'output',
-            regex: /<p>((?:Incoming|Outgoing)[¦\|][^\n]*?)<\/p>/ig,
+            regex: /<p>((?:Incoming|Outgoing)[¦\|│]+[^\n]*?)<\/p>/ig,
             replace: function(match, p1) {
                 try {
                     p1 = p1.replace(/<\/?q.*?>/g, ``);
                     p1 = p1.replace(/<\/?u>/g, `__`);
                     p1 = p1.replace(/<\/?em>/g, `*`);
                     p1 = p1.replace(/<\/?strong>/g, `**`);
-                    const [type, time, name, text] = p1.split(/[¦\|]/)
+                    const [type, time, name, text] = p1.split(/[¦\|│]+/)
                     if (type.toLowerCase() === "incoming") {
                         return `<div style="display: flex; margin-bottom: 12px; justify-content: flex-start;">
 <div style="background-color: #333; border-radius: 12px; padding: 8px 12px; max-width: 70%;">

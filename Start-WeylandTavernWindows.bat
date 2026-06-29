@@ -70,29 +70,33 @@ if %ERRORLEVEL% neq 0 (
                 echo.
                 git diff --compact-summary
                 echo.
-                set /p stash="Save your local changes and retry update? (Y/N) [Default: N] "
+                set /p do_reset="Reset to latest official version? Your personal files won't be affected. (Y/N) [Default: Y] "
+                if "!do_reset!"=="" set do_reset=Y
                 
-                if /i "!stash!"=="Y" (
-                    echo Saving local changes...
-                    git stash clear
-                    git stash
-                    echo Retrying update...
-                    git pull > SillyTavern/WTUpdate.log 2>&1
+                if /i "!do_reset!"=="Y" (
+                    echo.
+                    echo Resetting to latest version...
+                    
+                    REM Abort any stuck merge
+                    git merge --abort >nul 2>&1
+                    
+                    REM Clear any remaining conflicts
+                    for /f "tokens=*" %%f in ('git diff --name-only --diff-filter^=U 2^>nul') do (
+                        git checkout --theirs "%%f" >nul 2>&1
+                        git add "%%f" >nul 2>&1
+                    )
+                    
+                    REM Hard reset to remote - no merge commits left behind
+                    git reset --hard origin/!CURRENT_BRANCH! >nul 2>&1
                     
                     if errorlevel 1 (
-                        echo [!] Update still failed. Please contact support.
+                        echo [!] Reset failed. Please contact support.
                         echo [!] Log saved to: SillyTavern/WTUpdate.log
                         set /p continue="Continue without update? (Y/N) [Default: N] "
                         if /i "!continue!"=="" set continue=N
                         if /i "!continue!"=="N" exit /b 0
                     ) else (
                         echo Update applied successfully!
-                        set /p restore="Restore your saved changes? (Y/N) [Default: N] "
-                        if /i "!restore!"=="Y" (
-                            git stash pop
-                        ) else (
-                            git stash clear
-                        )
                     )
                 ) else (
                     set /p continue="Continue without update? (Y/N) [Default: N] "
