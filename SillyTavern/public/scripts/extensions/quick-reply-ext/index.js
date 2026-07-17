@@ -820,7 +820,7 @@ Base Willow<br>
 - Red, unnerving dotted eyes. Eyes do not change shape.<br><br>
 Expressive Willow <br>
 - Red eyes that change shape depending on Willow's mood.`);
-                        setLocalVariable("WeepingWillow", result ? "true" : "false");
+                        setLocalVariable("WeepingWillow", result === "1" ? "true" : "false");
                     }
                     break;
                 }
@@ -828,7 +828,7 @@ Expressive Willow <br>
                     const result = await doPopup({result: true, okButton: "Hard Mode", cancelButton: "Standard"}, `Standard Kris and Hard Mode Kris contain functionally the same bot.
 However, Hard Mode Kris essentially has a voice in his head demanding he not hold back, and be more of an asshole.<br><br>
 This is our sort of rough approach of forcing down the LLM Niceness barrier with the current generation of models.`);
-                    setLocalVariable("Krisrav", result ? strings.krirav : getLocalVariable("postrav"));
+                    setLocalVariable("Krisrav", result === "1" ? strings.krirav : getLocalVariable("postrav"));
                     break;
                 }
             }
@@ -2366,7 +2366,7 @@ async function XXX(charName) {
             default:
                 setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
                 setLocalVariable("ravteg", rav.teg);
-                setLocalVariable("postrav", rav.post.replace("{{pipe}}", `${getLocalVariable("ExpAltShow") === "true" ? `${rav.expaltshow}` : "{{getglobalvar::RPFocus}}"}\n${getGlobalVariable("HTML!") === "Enabled" ? rav.whtml : "====="}`));
+                setLocalVariable("postrav", rav.post.replace("{{pipe}}", `${getLocalVariable("ExpAltShow") === "true" ? `${rav.expaltshow}` : "{{getglobalvar::RPFocus}}"}\n${getGlobalVariable("HTML!") === "Enabled" ? strings.whtml : "====="}`));
                 break;
             case "Old Prompt 2025":
                 let replace = [];
