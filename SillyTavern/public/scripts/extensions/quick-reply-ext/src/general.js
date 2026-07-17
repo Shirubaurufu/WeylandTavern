@@ -595,9 +595,8 @@ export async function setCostume(folder) {
  * @param {string} [characterName]
  */
 async function ExpressionOverride(characterName) {
-    characterName = characterName || getCurrentCharacterName();
-    if (!characterName) return;
-    const avatarFileName = getCharaFilename(getCharacterID(characterName));
+    characterName = characterName ?? getCurrentCharacterName();
+    const avatarFileName = characterName?.length ? getCharaFilename(getCharacterID(characterName)) : getLocalVariable("CostmSave");
     console.log(`[WQR] avatarFileName: ${avatarFileName}`);
 
     // If the avatar name couldn't be found, abort.
@@ -612,6 +611,10 @@ async function ExpressionOverride(characterName) {
         // @ts-ignore
         e.name == avatarFileName,
     );
+
+    console.log(`[WQR] overridePath: '${overridePath}'`);
+    console.log(`[WQR] existingOverrideIndex: `, existingOverrideIndex);
+    console.log(`[WQR] extension_settings.expressionOverrides: `, extension_settings.expressionOverrides);
 
     // If the path is empty, delete the entry from overrides
     if (overridePath === undefined || overridePath.length === 0) {

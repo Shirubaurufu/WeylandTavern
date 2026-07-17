@@ -35,7 +35,8 @@ const OBSERVERS = {
         },
     },
 }
-const SPEAKER_NAME_PATTERN = /(__|\*\*)(.+?):?\1/gi; // `__Name__` / `__Name:__` / `**Name**` / `**Name:**`
+// Adjusted SPEAKER_NAME_PATTERN to avoid matching **Name**, due to catching too many false-positives
+const SPEAKER_NAME_PATTERN = /__(.+?):?__|\*\*(.+?):\*\*/gi; // `__Name__` / `__Name:__` / `**Name:**`
 const PATH_CHARACTER_PATTERN = /characters\/(.+?)\//i; // `/characters/{name}/`
 const EXCLUDED_SPEAKERS = new Set(['weybot','mirror weyland','{{user}}','{{char}}']);
 const MAX_NAME_LENGTH = 32;
@@ -129,7 +130,7 @@ function getSpeakerNames() {
             console.log(`${LOGGING_PREFIX} Speaker name matches:`, matches);
         }
         for (const match of matches) {
-            const name = match[2].trim();
+            const name = (match[1] ?? match[2]).trim(); // SPEAKER_NAME_PATTERN could match group 1 or 2
             if (name) {
                 pushUnique(name);
             }
@@ -165,22 +166,29 @@ function resolveBaseExpressionPaths() {
     }
 }
 
-let officialCharacterSet = new Set();
-function isOfficialCharacter(name) {
-
-    // Init the character set if it's not already done
-    if (!officialCharacterSet.size) {
+let officialCharacterMap = new Map(); // lowercase name to folder-cased name
+function ensureOfficialCharacterMap() {
+    if (!officialCharacterMap.size) {
         const context = SillyTavern.getContext();
         const chars = Array.isArray(context?.characters) ? context.characters : [];
         for (const c of chars) {
-            const n = String(c?.name || '').trim().toLowerCase();
-            if (n) officialCharacterSet.add(n);
+            const n = String(c?.name || '').trim();
+            if (n) officialCharacterMap.set(n.toLowerCase(), n);
         }
     }
+}
 
+function isOfficialCharacter(name) {
+    ensureOfficialCharacterMap();
     const normalized = String(name || '').trim().toLowerCase();
     if (!normalized) return false;
-    return officialCharacterSet.has(normalized);
+    return officialCharacterMap.has(normalized);
+}
+
+function getCanonicalCharacterName(name) {
+    ensureOfficialCharacterMap();
+    const normalized = String(name || '').trim().toLowerCase();
+    return officialCharacterMap.get(normalized) || name;
 }
 
 function getOutfitSegmentFromFolder(folderPath) {
@@ -285,7 +293,7 @@ async function getSpeakerEmotion(name) {
     let snippet = String(latestAssistant.mes).trim();
     const matches = latestAssistant.mes.matchAll(SPEAKER_NAME_PATTERN);
     for (const match of matches) {
-        let nameTag = match[2].trim();
+        let nameTag = (match[1] ?? match[2]).trim(); // SPEAKER_NAME_PATTERN could match group 1 or 2
         if (nameTag) {
             nameTag = String(nameTag || '').trim().toLowerCase();
             if (nameTag !== name) continue;
@@ -294,7 +302,7 @@ async function getSpeakerEmotion(name) {
 
             // Capture the text from the name to the next line break
             let quote = latestAssistant.mes.slice(match.index + match[0].length);
-            const endMatch = quote.match(/[\r\n$]+/);
+            const endMatch = quote.match(/[\r\n]+/);
             if (endMatch) {
                 quote = quote.slice(0, endMatch.index);
             }
@@ -305,6 +313,8 @@ async function getSpeakerEmotion(name) {
 
     if (snippet.length >= 8) {
         try {
+            // `0` is EXPRESSION_API.local (local BERT classify)
+            // Without the local classifier the call fails; fall back to defaultEmotion.
             const label = await getExpressionLabel(snippet, 0);
             if (label && String(label).trim()) {
                 if (DEBUG) {
@@ -385,9 +395,12 @@ async function resolveExpression(name){
     const emotion = await getSpeakerEmotion(name);
 
     if (isOfficial) {
+        // Character folders are canonically cased
+        const canonicalName = getCanonicalCharacterName(name);
+        const url = `/characters/${canonicalName}/${outfit}/${emotion}.avif`;
         return {
-            path: (await fetch(`/characters/${name}/${outfit}/${emotion}.avif`, { method: 'HEAD' })
-                .then(res => res.ok ? `/characters/${name}/${outfit}/${emotion}.avif` : '')
+            path: (await fetch(url, { method: 'HEAD' })
+                .then(res => res.ok ? url : '')
                 .catch(() => '')
             ),
             name: name,
@@ -408,6 +421,14 @@ async function resolveExpression(name){
 let activeOutfit = null;
 let defaultEmotion = null;
 async function setExpressions(){
+    // Overlay elements may not be mounted yet (late-mount path re-schedules a refresh after insertion)
+    if (!leftExpression || !rightExpression) {
+        if (DEBUG) {
+            console.log(`${LOGGING_PREFIX} Expression elements not mounted yet, skipping refresh.`);
+        }
+        return;
+    }
+
     const sideExpressionsEnabled = isSideCharacterExpressionsEnabled();
 
     let left = { 

@@ -22,7 +22,7 @@ import { charPer, specialChar } from "./src/charper.js";
 import { ravs } from "./src/rav.js";
 import { detector } from "./src/similarity.js";
 
-const debug = false;
+const debug = true;
 
 /**
  * Debug Logs
@@ -313,7 +313,7 @@ async function OnSwipe(messageID) {
         const charMessage = chat[messageID];
 
         const charName = charMessage?.name;
-        const newSwipe = charMessage?.swipe_id === undefined || !charMessage?.swipes?.length === undefined ? true : charMessage.swipe_id >= charMessage.swipes.length
+        const newSwipe = charMessage?.swipe_id === undefined || !Array.isArray(charMessage?.swipes) ? true : charMessage.swipe_id >= charMessage.swipes.length
 
         if (charName && !newSwipe) {
             if (charName === "Cerberus Sisters" && messageID === 0 && charMessage.swipe_id < 4) {
@@ -671,11 +671,7 @@ async function SideCharacters(charName, charMessage) {
         const availableCharacters = foundCharacters.filter(name => !excluded.has(name));
 
         if (!availableCharacters.length) {
-            DebugLog("SideCharacters: No valid side-character found.");
-            return;
-        }
-        if (!foundCharacters?.length) {
-            DebugLog(`SideCharacters: No side-characters found.`);
+            DebugLog(`SideCharacters: No valid side-character found.`);
             if (getLocalVariable("CostmSaveSide") !== "") {
                 setLocalVariable("CostmSaveSide", "");
                 updateSideCharacter({clear: 'true'});
@@ -684,9 +680,9 @@ async function SideCharacters(charName, charMessage) {
             return;
         }
 
-        DebugLog(`SideCharacters: Discovered: ${foundCharacters.length}`);
+        DebugLog(`SideCharacters: Discovered: ${availableCharacters.length}`);
 
-        const pickedChar = foundCharacters.length > 1 ? foundCharacters[Math.floor(Math.random() * foundCharacters.length)] : foundCharacters[0];
+        const pickedChar = availableCharacters.length > 1 ? availableCharacters[Math.floor(Math.random() * availableCharacters.length)] : availableCharacters[0];
         const costume = getCharacterCostumeFromText(charMessage.mes, pickedChar, false);
         const spriteFolder = `${pickedChar}/${costume}`;
 
@@ -1984,12 +1980,12 @@ async function OpenWorldCostumes(charName, charMessage) {
         if (!foundCharacters?.length) {
             DebugLog(`OpenWorldCostumes: No characters found.`);
             // TODO: Add Weybot Male/Female/Other costumes here
-            await setCostume("")
+            await setExpression('#reset');
             updateSideCharacter({clear: 'true'});
             return;
         }
 
-        DebugLog(`OpenWorldCostumes: Discovered: ${foundCharacters.length}`);
+        DebugLog(`OpenWorldCostumes: Discovered: ${foundCharacters.length}`, foundCharacters);
         
         const { pickedCharMain, pickedCharSide } = (() => {
             let firstPick = 0;

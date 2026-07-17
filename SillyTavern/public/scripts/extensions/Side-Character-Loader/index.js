@@ -14,7 +14,7 @@ const CONSOLE_PREFIX = '[SCL]';
  */
 function getExpressionImageData(sprite) {
     const filePath = sprite.path.split('?')[0].slice(1);
-    const fileName = filePath.split('/')[0];
+    const fileName = filePath.split('/').pop();
     const fileNameWithoutExtension = fileName.replace(/\.[^/.]+$/, '');
     return {
         expression: sprite.label,
@@ -23,7 +23,7 @@ function getExpressionImageData(sprite) {
         title: fileNameWithoutExtension,
         imageSrc: sprite.path,
         type: 'success',
-        isCustom: extension_settings.expressions.custom?.includes(sprite.label),
+        isCustom: extension_settings.expressions?.custom?.includes(sprite.label) ?? false,
     };
 }
 
