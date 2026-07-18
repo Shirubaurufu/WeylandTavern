@@ -1980,6 +1980,8 @@ async function OpenWorldCostumes(charName, charMessage) {
         if (!foundCharacters?.length) {
             DebugLog(`OpenWorldCostumes: No characters found.`);
             // TODO: Add Weybot Male/Female/Other costumes here
+            setLocalVariable("CostmSave", "");
+            setLocalVariable("CostmSaveSide", "");
             await setExpression('#reset');
             updateSideCharacter({clear: 'true'});
             return;
