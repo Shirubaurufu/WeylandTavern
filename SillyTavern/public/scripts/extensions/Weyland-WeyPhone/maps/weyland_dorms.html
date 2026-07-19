@@ -205,6 +205,7 @@ body.altFont .rs{font-family:'Open Sans',sans-serif;font-weight:600}
 .map-tools{position:absolute;z-index:70;top:8px;right:8px;display:flex;gap:4px;padding:4px;border-radius:8px;background:rgba(42,36,26,.86);box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .map-tools button{width:34px;height:34px;border:1px solid #6b5d3a;border-radius:5px;background:#efe4c6;color:#3a2f1a;font:700 17px 'Open Sans',sans-serif;cursor:pointer}
 .map-tools button:last-child{width:auto;padding:0 9px;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.map-gesture-hint{display:none;margin:7px 0 0;text-align:center;color:#c8b890;font:600 11px 'Open Sans',sans-serif;letter-spacing:.02em}
 .legend-overlay{
   position:absolute;
   top:4%;
@@ -716,8 +717,9 @@ body:not(.altFont) .act.alt:hover{
 }
 @media (pointer:coarse){
   .ftab,.registrarToggle{min-height:40px;touch-action:manipulation}
-  .map-viewport{max-height:68dvh}
-  .map-tools button{min-width:42px;min-height:42px}
+  .map-viewport{max-height:68dvh;touch-action:none}
+  .map-tools{display:none}
+  .map-gesture-hint{display:block}
 }
 </style>
 </head>
@@ -777,6 +779,7 @@ body:not(.altFont) .act.alt:hover{
       </div>
     </div>
   </div>
+  <div class="map-gesture-hint">Pinch to zoom · drag to pan</div>
 
   <!-- Tooltip lives inside .wrap so it can dock below the map on mobile (where
        it falls back to position:static via the @media block). On desktop the
@@ -1929,13 +1932,29 @@ document.getElementById('mapZoomIn').addEventListener('click', () => setMapZoom(
 document.getElementById('mapZoomOut').addEventListener('click', () => setMapZoom(mapZoom - .25));
 document.getElementById('mapZoomReset').addEventListener('click', () => setMapZoom(1, { resetScroll:true }));
 
-// Drag the enlarged floor plan directly. Pointer events cover mouse, pen, and touch while the
-// movement threshold preserves ordinary room taps/clicks.
+// Drag the enlarged floor plan directly. On coarse-touch devices two pointers also drive a
+// native-feeling pinch gesture, replacing the desktop buttons that would cover the map.
 const mapViewport = document.getElementById('mapViewport');
 let mapPan = null;
+let mapPinch = null;
 let suppressMapClick = false;
+const mapPointers = new Map();
+function pointerDistance(points){
+  const [a,b] = points;
+  return Math.hypot(a.x-b.x,a.y-b.y);
+}
 mapViewport.addEventListener('pointerdown', event => {
-  if(mapZoom <= 1 || !event.isPrimary || event.button !== 0) return;
+  if(event.pointerType === 'mouse' && event.button !== 0) return;
+  mapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  mapViewport.setPointerCapture(event.pointerId);
+  if(mapPointers.size === 2){
+    const points = [...mapPointers.values()];
+    mapPinch = {distance:Math.max(1,pointerDistance(points)),zoom:mapZoom};
+    mapPan = null;
+    mapViewport.classList.add('is-panning');
+    return;
+  }
+  if(mapZoom <= 1) return;
   mapPan = {
     id:event.pointerId,
     x:event.clientX,
@@ -1944,9 +1963,16 @@ mapViewport.addEventListener('pointerdown', event => {
     top:mapViewport.scrollTop,
     moved:false,
   };
-  mapViewport.setPointerCapture(event.pointerId);
 });
 mapViewport.addEventListener('pointermove', event => {
+  if(mapPointers.has(event.pointerId)) mapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  if(mapPinch && mapPointers.size >= 2){
+    const distance = pointerDistance([...mapPointers.values()].slice(0,2));
+    setMapZoom(mapPinch.zoom * distance / mapPinch.distance);
+    suppressMapClick = true;
+    event.preventDefault();
+    return;
+  }
   if(!mapPan || event.pointerId !== mapPan.id) return;
   const dx = event.clientX - mapPan.x;
   const dy = event.clientY - mapPan.y;
@@ -1958,10 +1984,16 @@ mapViewport.addEventListener('pointermove', event => {
   event.preventDefault();
 });
 function finishMapPan(event){
-  if(!mapPan || event.pointerId !== mapPan.id) return;
-  suppressMapClick = mapPan.moved;
-  mapPan = null;
-  mapViewport.classList.remove('is-panning');
+  mapPointers.delete(event.pointerId);
+  if(mapPinch && mapPointers.size < 2){
+    mapPinch = null;
+    suppressMapClick = true;
+  }
+  if(mapPan && event.pointerId === mapPan.id){
+    suppressMapClick = suppressMapClick || mapPan.moved;
+    mapPan = null;
+  }
+  if(!mapPinch && !mapPan) mapViewport.classList.remove('is-panning');
   if(mapViewport.hasPointerCapture(event.pointerId)) mapViewport.releasePointerCapture(event.pointerId);
 }
 mapViewport.addEventListener('pointerup', finishMapPan);

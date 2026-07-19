@@ -8,7 +8,7 @@ export const ONBOARDING_PAGES = [
     {
         icon: 'fa-solid fa-heart',
         title: 'Thank you, Aero!',
-        body: 'WeyPhone V2.0 is based on the original WeyPhone project made by @aerosplat.\n\nWeyPhone V1 walked so we could run.',
+        body: 'WeyPhone V2.1 is based on the original WeyPhone project made by @aerosplat.\n\nWeyPhone V1 walked so we could run.',
         emphasis: 'Thank you Aero!! I hope you like the new look!~',
     },
     {

@@ -1,4 +1,5 @@
 import { ASSET_BASE_URL } from './assetPaths.js';
+import { placeholderPortraitUrl } from './placeholderPortraits.js';
 
 const WEYBOORU_PORTRAIT_BASE_URL = 'https://cast.weybooru.com/images/portraits';
 
@@ -16,25 +17,22 @@ const WEYBOORU_PORTRAIT_BASE_URL = 'https://cast.weybooru.com/images/portraits';
  * match before even trying weybooru was a real bug: several real roster names never got a portrait
  * attempted at all, even though the weybooru image genuinely existed and loaded fine on its own.
  *
- * `fallbackUrl` (the LOCAL SillyTavern avatar, used only if the weybooru image itself fails to
- * load) still requires a real local character match, since it has to reference a real local avatar
- * file — when no local match exists, `fallbackUrl` is simply `null`, and lib/panel.js's
- * `avatarMarkup` degrades to a broken-image icon only in the rare case where weybooru ALSO fails
- * for a name with no local install to fall back to.
+ * `fallbackUrl` is the LOCAL SillyTavern avatar and `placeholderUrl` is one of WeyPhone's bundled
+ * anonymous demi-human portraits. Rendering therefore degrades from cast CDN -> installed card ->
+ * bundled placeholder, without ever exposing a broken-image square.
  *
  * Weybooru is a real third-party external CDN outside this codebase's control — callers must
- * render `primaryUrl` with a graceful fallback to `fallbackUrl` on load failure (see
- * lib/panel.js's avatarMarkup), never assume it resolves.
+ * preserve this fallback chain on load failure (see lib/panel.js's avatarMarkup).
  * @param {Array<{name: string, avatar: string}>} characters SillyTavern's context.characters
  * @param {string[]} charNames
  * @param {(type: string, file: string) => string} getThumbnailUrl SillyTavern's context.getThumbnailUrl
- * @returns {Record<string, {primaryUrl: string|null, fallbackUrl: string|null, initial: string|null}>}
+ * @returns {Record<string, {primaryUrl: string|null, fallbackUrl: string|null, placeholderUrl: string|null, initial: string|null}>}
  */
 export function buildPortraitMap(characters, charNames, getThumbnailUrl) {
     const map = {};
     for (const charName of new Set(charNames)) {
         if (!charName) {
-            map[charName] = { primaryUrl: null, fallbackUrl: null, initial: '' };
+            map[charName] = { primaryUrl: null, fallbackUrl: null, placeholderUrl: null, initial: '' };
             continue;
         }
         const character = characters.find(c => c.name === charName);
@@ -42,7 +40,8 @@ export function buildPortraitMap(characters, charNames, getThumbnailUrl) {
         map[charName] = {
             primaryUrl: `${WEYBOORU_PORTRAIT_BASE_URL}/${firstName}.jpg`,
             fallbackUrl: character ? getThumbnailUrl('avatar', character.avatar) : null,
-            initial: character ? null : charName.charAt(0).toUpperCase(),
+            placeholderUrl: placeholderPortraitUrl(charName),
+            initial: null,
         };
     }
     return map;
@@ -57,7 +56,7 @@ export function buildPortraitMap(characters, charNames, getThumbnailUrl) {
  * character portraits derive from a first name would collide here (e.g. "Weyland Alert" and
  * "Weyland Research Center" would both slug to "weyland").
  * @param {Array<{name: string, portraitKey: string}>} psaAccounts
- * @returns {Record<string, {primaryUrl: string, fallbackUrl: string|null, initial: string|null}>}
+ * @returns {Record<string, {primaryUrl: string, fallbackUrl: string|null, placeholderUrl: string|null, initial: string|null}>}
  */
 export function buildPsaPortraitMap(psaAccounts) {
     const map = {};
@@ -65,6 +64,7 @@ export function buildPsaPortraitMap(psaAccounts) {
         map[account.name] = {
             primaryUrl: `${ASSET_BASE_URL}/profiles/profile_${account.portraitKey}.webp`,
             fallbackUrl: null,
+            placeholderUrl: placeholderPortraitUrl(account.name),
             initial: account.name.charAt(0).toUpperCase(),
         };
     }

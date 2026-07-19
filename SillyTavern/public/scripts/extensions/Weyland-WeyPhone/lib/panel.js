@@ -22,7 +22,6 @@ export function createPanelMarkup() {
         <div id="wp-wallpaper"></div>
         ${createStatusBarMarkup()}
         <div id="wp-panel-header">
-            <button type="button" id="wp-home-button" class="wp-header-btn" title="Home" aria-label="Home"><i class="fa-solid fa-house"></i></button>
             <button type="button" id="wp-back-button" class="wp-header-btn" title="Back" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></button>
             <div id="wp-panel-avatar"></div>
             <div id="wp-panel-title">Messages</div>
@@ -73,7 +72,7 @@ function escapeHtml(value) {
  * attacker-controlled URL inside a JS string literal that's itself inside an HTML attribute,
  * because browsers HTML-decode attribute values (e.g. `&#39;` back to `'`) before handing the
  * string to the JS parser.
- * @param {{primaryUrl: string|null, fallbackUrl: string|null, initial: string|null}} [portrait]
+ * @param {{primaryUrl: string|null, fallbackUrl: string|null, placeholderUrl?: string|null, initial: string|null}} [portrait]
  */
 function avatarMarkup(portrait) {
     if (portrait?.group) {
@@ -83,7 +82,13 @@ function avatarMarkup(portrait) {
         const fallbackAttr = portrait.fallbackUrl
             ? ` data-fallback-url="${escapeHtml(portrait.fallbackUrl)}"`
             : '';
-        return `<img class="wp-avatar" src="${escapeHtml(portrait.primaryUrl)}" alt="" loading="lazy" decoding="async"${fallbackAttr} />`;
+        const placeholderAttr = portrait.placeholderUrl
+            ? ` data-placeholder-url="${escapeHtml(portrait.placeholderUrl)}"`
+            : '';
+        return `<img class="wp-avatar" src="${escapeHtml(portrait.primaryUrl)}" alt="" loading="lazy" decoding="async"${fallbackAttr}${placeholderAttr} />`;
+    }
+    if (portrait?.placeholderUrl) {
+        return `<img class="wp-avatar" src="${escapeHtml(portrait.placeholderUrl)}" alt="" loading="lazy" decoding="async" />`;
     }
     const initial = portrait && portrait.initial ? portrait.initial : '?';
     return `<div class="wp-avatar wp-avatar-fallback">${escapeHtml(initial)}</div>`;
@@ -96,7 +101,7 @@ function typingDotsMarkup() {
 /**
  * Sets (or clears) the panel header's avatar.
  * @param {HTMLElement} container #wp-panel-avatar
- * @param {{primaryUrl: string|null, fallbackUrl: string|null, initial: string|null}} [portrait] pass null/undefined to clear
+ * @param {{primaryUrl: string|null, fallbackUrl: string|null, placeholderUrl?: string|null, initial: string|null}} [portrait] pass null/undefined to clear
  */
 export function renderPanelAvatar(container, portrait) {
     container.innerHTML = portrait ? avatarMarkup(portrait) : '';
@@ -238,7 +243,7 @@ function discorgiHeaderMarkup(activeChannelNames = []) {
     return `
 <div class="wp-discorgi-header">
     <div class="wp-discorgi-topline">
-        <span class="wp-discorgi-brand"><i class="fa-solid fa-dog"></i> Weyland University Discord</span>
+        <span class="wp-discorgi-brand"><i class="fa-solid fa-dog"></i> Weyland University Discorgi</span>
         <span class="wp-discorgi-server-name"></span>
         ${inlineHelpButton('chat')}
     </div>
@@ -770,7 +775,7 @@ export function populateConnectionProfileOptions(selectEl, profiles, selectedId)
  * @param {{active?: boolean, selectedIndices?: Set<number>}} [selectState] bulk-delete select mode — when active,
  *   every bubble (both roles) renders a checkbox instead of any edit control, and inline-edit mode is suppressed.
  */
-export function renderMessages(container, messages, editingIndex = -1, isTyping = false, selectState = {}) {
+export function renderMessages(container, messages, editingIndex = -1, isTyping = false, selectState = {}, showSpeakers = false) {
     const { active: selectActive = false, selectedIndices = new Set() } = selectState;
     container.innerHTML = '';
     messages.forEach((message, index) => {
@@ -804,7 +809,7 @@ export function renderMessages(container, messages, editingIndex = -1, isTyping 
     <button class="wp-message-edit-cancel" title="Cancel"><i class="fa-solid fa-xmark"></i></button>
 </div>`;
         } else {
-            if (message.role !== 'user' && message.speaker) {
+            if (showSpeakers && message.role !== 'user' && message.speaker) {
                 speakerLabel = document.createElement('span');
                 speakerLabel.className = 'wp-message-speaker';
                 speakerLabel.textContent = firstNameForSpeaker(message.speaker);

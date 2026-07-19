@@ -1,3 +1,5 @@
+import { limitPhoneRequestMessages } from './requestBudget.js';
+
 /**
  * Drops non-string / empty / whitespace-only sections and joins the rest with `sep`. The single
  * canonical home for the filter-then-join idiom every WeyPhone prompt-assembly site shares
@@ -22,7 +24,7 @@ export function buildSystemPrompt({ systemPrompt, worldInfoBefore, descriptionTe
     return joinNonEmptySections([systemPrompt, worldInfoBefore, descriptionText, personalityText, scenarioText, worldInfoAfter]);
 }
 
-export function buildGroupSystemPrompt({ participants, worldInfo = '', textingInstructions = '' }) {
+export function buildGroupSystemPrompt({ participants, worldInfo = '', textingInstructions = '', relationshipContext = '', finalInstructions = '' }) {
     const profiles = participants.map(participant => `## ${participant.name}\n${participant.personalityText}`).join('\n\n');
     const names = participants.map(participant => participant.name).join(', ');
     return joinNonEmptySections([
@@ -33,6 +35,8 @@ export function buildGroupSystemPrompt({ participants, worldInfo = '', textingIn
         profiles,
         worldInfo,
         textingInstructions,
+        relationshipContext,
+        finalInstructions,
     ]);
 }
 
@@ -155,5 +159,5 @@ export async function sendMessage({ sendRequest, profileId, messages }) {
     if (!profileId) {
         throw new Error('No Connection Profile available (none selected in WeyPhone settings and none active in SillyTavern)');
     }
-    return sendRequest(profileId, messages);
+    return sendRequest(profileId, limitPhoneRequestMessages(messages));
 }

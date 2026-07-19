@@ -184,6 +184,9 @@
 }
 
 #wp-help-button.wp-help-visible { display: flex; }
+.wp-header-contact-link { cursor: pointer; }
+.wp-header-contact-link:hover { filter: brightness(1.14); }
+.wp-header-contact-link:focus-visible { outline: 2px solid var(--wp-app-accent); outline-offset: 3px; border-radius: 6px; }
 
 #wp-app-help[hidden] { display: none; }
 #wp-app-help {
@@ -241,25 +244,21 @@
 .wp-app-help-card p { margin: 16px 0 12px; line-height: 1.5; }
 .wp-app-help-card ul { margin: 0; padding-left: 20px; }
 .wp-app-help-card li { margin: 8px 0; line-height: 1.45; }
+.wp-app-help-section { margin-top: 18px; }
+.wp-app-help-section h3 {
+    margin: 0 0 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid color-mix(in srgb, var(--wp-app-accent) 42%, transparent);
+    color: color-mix(in srgb, var(--wp-app-accent) 76%, white);
+    font-size: 14px;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
 
 /* Each header button only makes sense on specific screens — driven by #wp-panel's data-view
    attribute (set by index.js on every navigation) rather than scattering visibility toggling
    through JS. */
-#wp-panel[data-view="conversation"] #wp-home-button,
-#wp-panel[data-view="contacts"] #wp-home-button,
-#wp-panel[data-view="messages"] #wp-home-button,
-#wp-panel[data-view="phone-app"] #wp-home-button,
-#wp-panel[data-view="twitter-feed"] #wp-home-button,
-#wp-panel[data-view="twitter-following"] #wp-home-button,
-#wp-panel[data-view="twitter-profile"] #wp-home-button,
-#wp-panel[data-view="threads"] #wp-home-button {
-    display: flex;
-}
-
-#wp-panel[data-view="memory"] #wp-home-button {
-    display: flex;
-}
-
 #wp-panel[data-view="memory"] #wp-back-button,
 #wp-panel[data-view="app-names"] #wp-back-button,
 #wp-panel[data-view="twitter-following"] #wp-back-button,
@@ -685,10 +684,15 @@
 
 .wp-twitter-post-stats {
     display: flex;
+    align-items: center;
     gap: 16px;
 }
 
 .wp-twitter-stat {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    line-height: 1;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
     color: var(--SmartThemeEmColor, #aaa);
@@ -2788,6 +2792,7 @@
     align-items: center;
 }
 .wp-settings-hint { font-size: 11px; color: var(--wp-text-dim); margin-bottom: 8px; line-height: 1.4; }
+.wp-battery-mode-status { margin: 7px 10px 0; padding: 8px 10px; border-left: 2px solid var(--wp-app-accent, var(--wp-accent)); background: color-mix(in srgb, var(--wp-surface) 82%, transparent); border-radius: 0 8px 8px 0; }
 .wp-settings-field {
     display: flex;
     justify-content: space-between;
@@ -3148,6 +3153,26 @@
 #wp-panel[data-app="kressa"] .wp-kressa-settings .wp-btn-sm { background: color-mix(in srgb, var(--kr-bg) 72%, var(--kr-accent) 28%); color: var(--kr-accent); }
 #wp-panel[data-app="kressa"] .wp-kressa-settings .wp-settings-recommend-label,
 #wp-panel[data-app="kressa"] .wp-kressa-settings .wp-settings-recommend-disclaimer { color: var(--kr-muted); }
+#wp-panel[data-app="kressa"] .wp-kressa-settings .wp-settings-toggle-row {
+    color: var(--kr-text);
+    background: color-mix(in srgb, var(--kr-bg) 84%, var(--kr-accent) 16%);
+    border: 1px solid color-mix(in srgb, var(--kr-accent) 24%, transparent);
+}
+#wp-panel[data-app="kressa"] .wp-kressa-settings .wp-settings-toggle-label { color: var(--kr-text); }
+#wp-panel[data-app="kressa"] .wp-kressa-settings .wp-settings-sub,
+#wp-panel[data-app="kressa"] .wp-kressa-settings .wp-settings-hint { color: var(--kr-muted); }
+#wp-panel[data-app="kressa"] .wp-kressa-settings .wp-toggle-track {
+    background: color-mix(in srgb, var(--kr-bg) 68%, var(--kr-muted) 32%);
+}
+#wp-panel[data-app="kressa"] .wp-kressa-settings .wp-toggle-thumb {
+    background: color-mix(in srgb, #fff 86%, var(--kr-bg));
+}
+#wp-panel[data-app="kressa"] .wp-kressa-settings .wp-toggle-input:checked ~ .wp-toggle-track {
+    background: linear-gradient(135deg, var(--kr-accent), var(--kr-accent-2));
+}
+#wp-panel[data-app="kressa"] .wp-kressa-settings .wp-toggle-input:focus-visible ~ .wp-toggle-track {
+    outline-color: var(--kr-accent);
+}
 
 /* Keep Switch Threads inside Kressa's visual world instead of falling back to Messages red. */
 #wp-panel[data-app="kressa"][data-view="threads"] #wp-screen-body { padding: 10px; gap: 8px; }
@@ -3438,6 +3463,10 @@
 .wp-pawxai-referral-copy b { color: var(--px-purple); letter-spacing: .04em; }
 .wp-pawxai-referral-card > i { color: var(--px-muted); font-size: 10px; }
 .wp-pawxai-settings textarea { resize: vertical; min-height: 66px; padding: 9px; line-height: 1.45; }
+.wp-pawxai-suffix-presets { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 10px; }
+.wp-pawxai-suffix-button { min-height: 29px; padding: 5px 8px; border: 1px solid color-mix(in srgb, var(--px-text) 14%, transparent); border-radius: 999px; background: var(--px-bg); color: var(--px-muted); font: inherit; font-size: 9px; line-height: 1.2; cursor: pointer; }
+.wp-pawxai-suffix-button:hover { border-color: var(--px-purple); color: var(--px-text); }
+.wp-pawxai-suffix-button.wp-selected { border-color: var(--px-purple); background: var(--px-purple); color: var(--px-bg); font-weight: 800; }
 .wp-pawxai-settings input[type="number"],
 .wp-pawxai-settings select { max-width: 130px; padding: 6px 8px; }
 .wp-pawxai-settings input[type="checkbox"] { width: auto; accent-color: var(--px-purple); }

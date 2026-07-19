@@ -1,6 +1,7 @@
 // lib/ui/apps/contacts.js
 
 import { castPortraitUrl } from '../../castDirectory.js';
+import { placeholderPortraitUrl } from '../../placeholderPortraits.js';
 
 function escapeHtml(value) {
     return String(value)
@@ -12,9 +13,15 @@ function escapeHtml(value) {
 }
 
 function portraitMarkup(entry, size) {
-    const url = castPortraitUrl(entry);
-    if (url) return `<img class="wp-contact-portrait ${size}" src="${escapeHtml(url)}" alt="" loading="lazy" />`;
-    return `<div class="wp-contact-portrait ${size} wp-contact-portrait-fallback">${escapeHtml(entry.name[0] ?? '?')}</div>`;
+    const castUrl = castPortraitUrl(entry);
+    const localUrl = entry.localPortraitUrl || null;
+    const placeholder = placeholderPortraitUrl(entry.name);
+    if (castUrl) {
+        const localFallback = localUrl ? ` data-fallback-url="${escapeHtml(localUrl)}"` : '';
+        return `<img class="wp-contact-portrait ${size}" src="${escapeHtml(castUrl)}"${localFallback} data-placeholder-url="${escapeHtml(placeholder)}" alt="" loading="lazy" decoding="async" />`;
+    }
+    if (localUrl) return `<img class="wp-contact-portrait ${size}" src="${escapeHtml(localUrl)}" data-placeholder-url="${escapeHtml(placeholder)}" alt="" loading="lazy" decoding="async" />`;
+    return `<img class="wp-contact-portrait ${size}" src="${escapeHtml(placeholder)}" alt="" loading="lazy" decoding="async" />`;
 }
 
 /**

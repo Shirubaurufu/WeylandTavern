@@ -59,6 +59,20 @@ export function findLorebookCharacterEntry(book, charName) {
         const aliases = aliasesFor(entry);
         return nameParts.some(part => aliases.includes(part));
     });
+    if (partMatches.length > 1) {
+        // Weyland subbot entries conventionally carry an explicit !Name trigger. Ordinary lore
+        // may also mention a character as a scan keyword (for example Mama's Den is keyed to
+        // "Zora"), so prefer one unique explicit subbot trigger before declaring the name
+        // ambiguous.
+        const explicitSubbotMatches = partMatches.filter(entry => {
+            const keys = Array.isArray(entry.key) ? entry.key : [entry.key];
+            return keys.some(key => {
+                const raw = String(key ?? '').trim();
+                return raw.startsWith('!') && nameParts.includes(normalizeCharacterIdentity(raw));
+            });
+        });
+        if (explicitSubbotMatches.length === 1) return explicitSubbotMatches[0];
+    }
     return partMatches.length === 1 ? partMatches[0] : null;
 }
 
@@ -113,7 +127,12 @@ export async function resolveWorldInfoTethered({ getWorldInfoPrompt, history, ma
     const timedWorldInfoSnapshot = hadTimedWorldInfo ? structuredClone(chatMetadata.timedWorldInfo) : null;
 
     try {
-        const result = await getWorldInfoPrompt(chatForWI, maxContext, false, {});
+        // Weyland's World Info scanner honors this optional, backwards-compatible flag only for
+        // the overflow *toast*. Entries are still budgeted and truncated exactly as usual. This
+        // keeps a synthetic phone scan from frightening users with a warning about their real RP.
+        const result = await getWorldInfoPrompt(chatForWI, maxContext, false, {
+            suppressWeyPhoneOverflowAlert: true,
+        });
         return {
             worldInfoBefore: result.worldInfoBefore ?? '',
             worldInfoAfter: result.worldInfoAfter ?? '',

@@ -17,7 +17,43 @@ const APP_HELP = {
     },
     messages: {
         intro: 'Private text conversations with available Weyland contacts.',
-        bullets: ['The arrow queues as many messages as you want.', 'Unlinked is isolated; Observe can read the active roleplay; Linked sends your texts through the main roleplay model.', 'In a Linked DM, Scrub messages stops injecting the current chatlog without deleting its bubbles; later texts form a new batch.', 'In Unlinked and Observe, refresh sends the queued burst through WeyPhone’s texting model.', 'Downloaded characters use their full card; otherwise WeyPhone uses an available lorebook subbot.'],
+        sections: [
+            {
+                heading: 'General',
+                bullets: [
+                    'The arrow adds your message to the thread without calling a model. Queue as many separate texts as you want.',
+                    'In Unlinked and Observe, the refresh button sends the queued burst through WeyPhone’s texting model.',
+                    'Downloaded characters use their full card in one-person chats. Otherwise WeyPhone uses an available lorebook subbot. Group chats always use subbots.',
+                ],
+            },
+            {
+                heading: 'Unlinked',
+                bullets: [
+                    'The thread is completely isolated from the active roleplay.',
+                    'It cannot read roleplay context and cannot add anything to the roleplay prompt.',
+                    'Replies come from WeyPhone’s texting model when you tap refresh.',
+                ],
+            },
+            {
+                heading: 'Observe',
+                bullets: [
+                    'The contact can read the active roleplay as background context.',
+                    'The thread cannot write its textlog back into the roleplay.',
+                    'Replies still come from WeyPhone’s texting model when you tap refresh. This is useful when Kressa or another contact is commenting on a separate scene.',
+                ],
+            },
+            {
+                heading: 'Linked',
+                bullets: [
+                    'Linked connects the thread to its matching active roleplay. Compatible texts generated inside the roleplay are imported into WeyPhone automatically.',
+                    'Queue your reply in WeyPhone, then continue roleplaying normally. Your next ordinary roleplay request receives the updated textlog invisibly in the background. Nothing extra appears in your visible roleplay history.',
+                    'The main roleplay model writes the character’s response. Compatible phone output is imported back into the thread.',
+                    'The latest eligible text batch remains hidden background context on each roleplay generation, even when no new text was added. This does not create a second model request or spend another message.',
+                    'Scrub messages stops sending the current batch without deleting its WeyPhone bubbles. Texts added afterward begin a new batch.',
+                    'Only the people in the text conversation know its contents unless somebody reveals them during the roleplay.',
+                ],
+            },
+        ],
     },
     contacts: {
         intro: 'A directory of official Weyland cast members and imported Registrar characters.',
@@ -41,7 +77,7 @@ const APP_HELP = {
     },
     pawxai: {
         intro: 'An SDXL-style prompt writer based on the latest roleplay scene.',
-        bullets: ['Uses the latest three messages for context and depicts the final character message.', 'Generated prompts can be copied, deleted, or saved by character.', 'It writes prompts only; image generation happens in the service of your choice.'],
+        bullets: ['Uses the latest three messages for context and depicts the final character message.', 'Generated prompts can be copied, deleted, or saved by character.', 'It writes prompts only. Image generation happens in the service of your choice.'],
     },
     mien: {
         intro: 'A pocket expression gallery for the character in your active chat.',
@@ -66,7 +102,14 @@ function escapeHtml(value) {
 
 export function getAppHelp(appKey) {
     const help = APP_HELP[appKey];
-    return help ? { ...help, bullets: [...(help.bullets ?? []), MESSAGE_BUDGET_BULLET] } : null;
+    if (!help) return null;
+    if (help.sections?.length) {
+        const sections = help.sections.map(section => ({ ...section, bullets: [...(section.bullets ?? [])] }));
+        const general = sections.find(section => section.heading === 'General') ?? sections[0];
+        general.bullets.push(MESSAGE_BUDGET_BULLET);
+        return { ...help, sections };
+    }
+    return { ...help, bullets: [...(help.bullets ?? []), MESSAGE_BUDGET_BULLET] };
 }
 
 export function renderNoticeDialog(container, { kicker = 'WeyPhone', title, body, bullets = [] }) {
@@ -93,6 +136,13 @@ export function renderAppHelpDialog(container, { appKey, appLabel }) {
         container.innerHTML = '';
         return;
     }
+    const details = help.sections?.length
+        ? help.sections.map(section => `
+            <section class="wp-app-help-section">
+                <h3>${escapeHtml(section.heading)}</h3>
+                ${section.bullets?.length ? `<ul>${section.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
+            </section>`).join('')
+        : (help.bullets?.length ? `<ul>${help.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : '');
     container.innerHTML = `
 <div class="wp-app-help-backdrop" data-help-close></div>
 <section class="wp-app-help-card" role="dialog" aria-modal="true" aria-labelledby="wp-app-help-title">
@@ -104,7 +154,7 @@ export function renderAppHelpDialog(container, { appKey, appLabel }) {
         <button type="button" class="wp-app-help-close" data-help-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <p>${escapeHtml(help.intro)}</p>
-    ${help.bullets?.length ? `<ul>${help.bullets.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
+    ${details}
 </section>`;
     container.hidden = false;
 }

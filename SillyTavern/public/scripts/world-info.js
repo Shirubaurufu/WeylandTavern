@@ -4656,7 +4656,7 @@ export async function checkWorldInfo(chat, maxContext, isDryRun, globalScanData 
             if (!entry.ignoreBudget && (textToScanTokens + (await getTokenCountAsync(newContent))) >= budget) {
                 if (!token_budget_overflowed) {
                     console.debug('[WI] --- BUDGET OVERFLOW CHECK ---');
-                    if (world_info_overflow_alert) {
+                    if (world_info_overflow_alert && !globalScanData?.suppressWeyPhoneOverflowAlert) {
                         console.warn(`[WI] budget of ${budget} reached, stopping after ${allActivatedEntries.size} entries`);
                         toastr.warning(`World info budget reached after ${allActivatedEntries.size} entries.`, 'World Info');
                     } else {

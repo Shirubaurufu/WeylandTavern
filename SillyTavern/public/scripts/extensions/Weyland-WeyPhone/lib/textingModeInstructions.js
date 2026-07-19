@@ -24,3 +24,6 @@ HOW TO TEXT:
 - Infer this character's texting voice from their personality and description elsewhere in this prompt: how they'd punctuate, whether they use slang or proper grammar, how long their messages tend to run, when they'd send a burst versus a single line. Don't default to a generic, uniform texting style — make it theirs.
 
 [END WEYPHONE TEXTING MODE]`;
+
+export const TEXTING_THOUGHTS_DISABLED = `[THOUGHTS: ALWAYS DISABLED IN TEXTS]
+Never output a [THOUGHTS] block, private reasoning, internal monologue, or hidden-thought footer in a WeyPhone reply.`;

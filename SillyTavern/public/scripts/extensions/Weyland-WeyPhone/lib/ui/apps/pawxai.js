@@ -1,6 +1,6 @@
 // lib/ui/apps/pawxai.js
 
-import { PAWXAI_MAX_PROMPTS, PAWXAI_PALETTES, groupSavedPawXaiPrompts } from '../../pawxai.js';
+import { PAWXAI_MAX_PROMPTS, PAWXAI_PALETTES, PAWXAI_SUFFIX_PRESETS, groupSavedPawXaiPrompts, pawXaiSuffixEnabled } from '../../pawxai.js';
 import { ASSET_BASE_URL } from '../../assetPaths.js';
 import { RECOMMENDED_PHONE_MODEL, ALTERNATE_PHONE_MODELS } from './settings.js';
 
@@ -140,7 +140,13 @@ function renderSettings(settings, currentLiveModel) {
         <div class="wp-settings-section">
             <div class="wp-settings-section-title">Prompt Ingredients</div>
             <label class="wp-settings-field wp-settings-field-column"><span>Always work these in</span><textarea id="wp-pawxai-custom" rows="4" placeholder="camera tags, LoRA triggers, artist-free style tags…">${escapeHtml(settings.customFragments)}</textarea></label>
-            <label class="wp-settings-field wp-settings-field-column"><span>Quality suffix</span><textarea id="wp-pawxai-quality" rows="3">${escapeHtml(settings.qualityTags)}</textarea></label>
+            <label class="wp-settings-field wp-settings-field-column"><span>POV and Quality Suffix</span><textarea id="wp-pawxai-quality" rows="3">${escapeHtml(settings.qualityTags)}</textarea></label>
+            <div class="wp-pawxai-suffix-presets" aria-label="POV and quality suffix presets">
+                ${PAWXAI_SUFFIX_PRESETS.map(preset => {
+                    const selected = pawXaiSuffixEnabled(settings.qualityTags, preset.value);
+                    return `<button type="button" class="wp-pawxai-suffix-button${selected ? ' wp-selected' : ''}" data-pawxai-suffix="${escapeHtml(preset.value)}" aria-pressed="${selected}" title="${escapeHtml(preset.value)}">${escapeHtml(preset.label)}</button>`;
+                }).join('')}
+            </div>
             <div class="wp-settings-hint">Character prompts receive <strong>broad shoulders</strong>. Adult-only explicit scenes are preserved when they are present in the source.</div>
         </div>
         <div class="wp-settings-section wp-pawxai-feedback-block">

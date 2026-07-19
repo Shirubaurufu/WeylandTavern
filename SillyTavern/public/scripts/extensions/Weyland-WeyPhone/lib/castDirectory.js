@@ -30,6 +30,37 @@ function splitList(value) {
 }
 
 /**
+ * Converts cast-site wiki links to their visible labels.
+ * `[[Weyland:Weyland University]]` becomes `Weyland University`, while
+ * `[[Sakurai Cafe]]` becomes `Sakurai Cafe`.
+ */
+export function cleanCastWikiMarkup(value) {
+    return String(value ?? '').replace(/\[\[([^\[\]]+)\]\]/g, (_match, body) => {
+        const parts = String(body).split(/[|:]/);
+        return parts[parts.length - 1]?.trim() ?? '';
+    });
+}
+
+function normalizeCastEntry(c) {
+    return {
+        name: cleanCastWikiMarkup(c.name),
+        gender: cleanCastWikiMarkup(c.gender),
+        age: c.age ?? '',
+        birthday: cleanCastWikiMarkup(c.birthday),
+        height: cleanCastWikiMarkup(c.height),
+        species: cleanCastWikiMarkup(c.species),
+        summary: cleanCastWikiMarkup(c.summary),
+        occupation: cleanCastWikiMarkup(c.occupation),
+        home: cleanCastWikiMarkup(c.home),
+        association: cleanCastWikiMarkup(c.association),
+        handle: String(c.handle ?? ''),
+        tag: Array.isArray(c.tag) ? c.tag : splitList(c.tag),
+        description: cleanCastWikiMarkup(c.description),
+        image: String(c.image ?? ''),
+    };
+}
+
+/**
  * Normalizes cast.weybooru.com's data.json payload ({values: [[key, payload], ...]} with the
  * "character" row holding a name-keyed object of raw entries) into a flat CastEntry[].
  * Tolerant of shape drift: a payload that isn't recognizable yields [] rather than throwing.
@@ -47,22 +78,7 @@ export function parseCastData(json) {
         // Aethel is canonically not a real person (she exists inside a phone game) — she has no
         // business in a contacts directory, even though the public cast site lists her.
         .filter(c => c.name !== 'Aethel')
-        .map(c => ({
-            name: String(c.name),
-            gender: c.gender ?? '',
-            age: c.age ?? '',
-            birthday: c.birthday ?? '',
-            height: c.height ?? '',
-            species: c.species ?? '',
-            summary: c.summary ?? '',
-            occupation: c.occupation ?? '',
-            home: String(c.home ?? '').replace(/\[\[|\]\]/g, ''), // strip wiki-link brackets
-            association: c.association ?? '',
-            handle: c.handle ?? '',
-            tag: Array.isArray(c.tag) ? c.tag : splitList(c.tag),
-            description: c.description ?? '',
-            image: c.image ?? '',
-        }));
+        .map(normalizeCastEntry);
 }
 
 /** @param {CastEntry} entry @returns {string|null} */
@@ -87,8 +103,8 @@ export function getCastEntries(settings, { fetchImpl = fetch, now = Date.now(), 
             if (updated) onRefreshed?.();
         });
     }
-    if (cache && Array.isArray(cache.entries) && cache.entries.length > 0) return cache.entries;
-    return CAST_SNAPSHOT;
+    if (cache && Array.isArray(cache.entries) && cache.entries.length > 0) return cache.entries.map(normalizeCastEntry);
+    return CAST_SNAPSHOT.map(normalizeCastEntry);
 }
 
 // Deduped in-flight refresh — repeated Contacts opens while a fetch is pending share one request.

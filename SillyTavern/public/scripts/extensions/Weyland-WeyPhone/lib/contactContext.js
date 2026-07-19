@@ -20,12 +20,14 @@ export function resolveContactContext(contexts, contactName) {
 export function buildContactContextBlock(contactName, contextText) {
     const text = String(contextText ?? '').trim();
     if (!text) return '';
-    return `[USER-PROVIDED RELATIONSHIP CONTEXT: ${contactName}]
+    return `[HIGH-PRIORITY USER-PROVIDED RELATIONSHIP CONTEXT: ${contactName}]
 The following describes the established relationship and history between {{user}} and ${contactName}.
-Treat it as true background that should naturally influence tone, familiarity, affection, hostility,
-boundaries, and assumptions. Do not quote or explicitly summarize this note unless it would arise naturally.
+Treat this as true and immediately relevant. It must influence the character's tone, familiarity,
+affection, hostility, boundaries, and assumptions throughout the exchange. It overrides generic
+relationship assumptions elsewhere in the prompt. Do not quote or summarize the note unless it
+would arise naturally in the conversation.
 ${text}
-[END USER-PROVIDED RELATIONSHIP CONTEXT]`;
+[END HIGH-PRIORITY USER-PROVIDED RELATIONSHIP CONTEXT]`;
 }
 
 /**

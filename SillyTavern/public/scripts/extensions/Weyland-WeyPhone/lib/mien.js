@@ -1,8 +1,18 @@
+import { canonicalCharacterName, displayCharacterName } from './characterIdentity.js';
+
 const REGISTRAR_MANIFEST_BASE = 'https://registrar.weybooru.com/expressions/';
 const REGISTRAR_OUTFITS = [
     { id: 'clothed', label: 'Clothed' },
     { id: 'underwear', label: 'Underwear' },
     { id: 'nude', label: 'Nude' },
+];
+const COMMON_LOCAL_OUTFIT_FOLDERS = [
+    'Regular Outfit',
+    'Lingerie',
+    'Naked',
+    'CommunityRegular Outfit',
+    'CommunityLingerie',
+    'CommunityNaked',
 ];
 
 function truthy(value) {
@@ -63,13 +73,21 @@ function visibleSpriteFolder(characterName, documentRef) {
 export function mienFolderCandidates(context, character, documentRef = globalThis.document) {
     const outfit = currentOutfitBucket(context);
     const avatarBase = avatarBaseName(character.avatar);
+    const aliases = [...new Set([
+        character.name,
+        displayCharacterName(character.name),
+        avatarBase,
+        displayCharacterName(avatarBase),
+    ].map(value => String(value ?? '').trim()).filter(Boolean))];
+    const aliasKeys = new Set(aliases.map(canonicalCharacterName));
     const override = (context.extensionSettings?.expressionOverrides ?? [])
-        .find(entry => entry?.name === avatarBase)?.path ?? '';
+        .find(entry => aliasKeys.has(canonicalCharacterName(entry?.name)))?.path ?? '';
     const candidates = [
         visibleSpriteFolder(character.name, documentRef),
         override,
-        `${character.name}/${outfit.local}`,
-        character.name,
+        ...aliases.map(name => `${name}/${outfit.local}`),
+        ...aliases.flatMap(name => COMMON_LOCAL_OUTFIT_FOLDERS.map(folder => `${name}/${folder}`)),
+        ...aliases,
     ];
     return [...new Set(candidates.map(value => String(value ?? '').trim()).filter(Boolean))];
 }
@@ -164,7 +182,14 @@ async function findLocalOutfits(context, character, fetchImpl, documentRef) {
             expressions,
         });
     }));
-    return outfits.filter(Boolean);
+    const seenLabels = new Set();
+    return outfits.filter(outfit => {
+        if (!outfit) return false;
+        const key = outfit.label.toLocaleLowerCase();
+        if (seenLabels.has(key)) return false;
+        seenLabels.add(key);
+        return true;
+    });
 }
 
 async function findRegistrarOutfits(character, fetchImpl) {

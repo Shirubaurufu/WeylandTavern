@@ -110,6 +110,13 @@ const APPEARANCES = Object.freeze({
     Luna: {
         tags: 'medium hair, lavender hair, (messy hair:.2), deep blush, wolf tail, lavender eyes, medium breasts, wolf ears, long bangs, crossed bangs, smile, wide hips, black t-shirt, black shorts, white hoodie, open hoodie, jacket',
     },
+    Loona: {
+        tags: 'loona (/helluva_boss/), loona_(helluva_boss), hellhound, wolf, silver hair, white fur, hair swept to side, long snout, off-the-shoulder crop-top, red sclera, digitigrade legs, paws',
+        variants: [{
+            label: 'adult NSFW anatomy; use only when visibly exposed in the shot',
+            tags: 'grey nipples, grey pussy',
+        }],
+    },
     Lurkle: {
         tags: '(hood up:1.5), hood, hooded, silver hair, (red inner hair:1.3), red wolf ears, red streaked hair, red hoodie, animal ear hoodie, animal ear fluff, red eyes, :3, light smile, red animal hood, graphic hoodie, white heart, small breasts, black shorts, crossed bangs',
     },
@@ -187,6 +194,11 @@ const APPEARANCES = Object.freeze({
     },
     Warren: {
         tags: 'kemonomimi mode, white wolf ears, pink inner ears, wolf tail, two-toned hair, white hair, pink inner hair, white animal ear fluff, (hair over one eye:1.1), long hair, pink eyes, light smile, half closed eyes, pale skin, light blush, medium breasts, wide hips, white button up shirt, black pants, short pants',
+    },
+    'Yue-Lin': {
+        aliases: ['Yue'],
+        tags: 'protogen, protogenv2, protogen visor, protogen shoulders, maroon_red_fur, white_fur_highlights, maroon fur, red wolf tail, white under tail, robotic thighs, grey thigh armor, white inner ears, armor under clothes, grey chest_plate, white ruff, no pupils, digitigrade legs, paws',
+        note: 'These identity tags are especially important because generic protogen descriptions do not reproduce Yue-Lin reliably.',
     },
 });
 

@@ -58,6 +58,7 @@ export function createConversation(settings, charName, options = {}) {
             : [charName],
         displayName: options.displayName ?? null,
         userNickname: options.userNickname ?? null,
+        roleplayWireMode: options.roleplayWireMode ?? null,
         roleplayChatId: options.roleplayChatId ?? null,
         roleplayTether: options.roleplayTether === true,
         // Callers pass the knownContacts-derived default; storage itself stays policy-free.

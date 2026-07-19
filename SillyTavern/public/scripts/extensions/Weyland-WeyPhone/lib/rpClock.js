@@ -7,8 +7,9 @@
 // falls back to real time — a partial match must never produce garbage in the status bar.
 
 // Tolerant of: optional comma after the weekday, spacing drift, case, a missing location or
-// speaker tag, and both "9:28 AM" and "9:28AM". The two ¦¦ fences anchor everything.
-const HEADER_RE = /¦¦\s*([A-Za-z]+),?\s+([A-Za-z]+\.?\s*\d{1,2}(?:st|nd|rd|th)?)\s*~\s*(\d{1,2}:\d{2})\s*([AaPp])\.?[Mm]\.?\s*~?([^¦]*)¦¦/;
+// speaker tag, optional calendar years, Weyland's parenthetical academic marker (for example
+// "March 9th (Sophomore)"), and both "9:28 AM" and "9:28AM". The two ¦¦ fences anchor everything.
+const HEADER_RE = /¦¦\s*([A-Za-z]+),?\s+([A-Za-z]+\.?\s*\d{1,2}(?:st|nd|rd|th)?(?:,?\s*\d{4})?)(?:\s*\([^)]*\))*\s*~\s*(\d{1,2}:\d{2})\s*([AaPp])\.?[Mm]\.?\s*~?([^¦]*)¦¦/;
 
 /**
  * @param {string} text one message's content

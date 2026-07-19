@@ -4,6 +4,24 @@ import { formatPawXaiAppearanceReferences } from './pawxaiCharacterAppearances.j
 
 export const PAWXAI_MAX_PROMPTS = 10;
 export const PAWXAI_DEFAULT_QUALITY = '(masterpiece:1.1), (best quality), (ultra detailed)';
+export const PAWXAI_SUFFIX_PRESETS = Object.freeze([
+    { label: 'Masterpiece', value: '(masterpiece:1.1)' },
+    { label: 'Best quality', value: '(best quality)' },
+    { label: 'Ultra detailed', value: '(ultra detailed)' },
+    { label: 'Male POV', value: 'male POV' },
+    { label: 'Female POV', value: 'female POV' },
+    { label: 'Viewer POV', value: 'viewer POV' },
+    { label: 'Action shot', value: 'action shot' },
+    { label: 'Dynamic angle', value: '(dynamic angle:1.2)' },
+    { label: 'Dynamic pose', value: '(dynamic pose:1.2)' },
+    { label: 'Multiple views', value: '(multiple views:1.2)' },
+    { label: 'From above', value: 'from above' },
+    { label: 'From below', value: 'from below' },
+    { label: 'From behind', value: 'from behind' },
+    { label: 'From side', value: 'from side' },
+    { label: 'Cowboy shot', value: 'cowboy shot' },
+    { label: 'Sound effects', value: 'sound effects' },
+]);
 export const PAWXAI_PALETTES = Object.freeze([
     { id: 'orchid-night', label: 'Orchid Night', colors: ['#17131d', '#b86ce0', '#c7ef72'] },
     { id: 'sakura-ink', label: 'Sakura Ink', colors: ['#21151d', '#e66f9f', '#f4b8ce'] },
@@ -25,6 +43,27 @@ function clampCount(value) {
 
 function clean(value) {
     return String(value ?? '').trim();
+}
+
+function suffixParts(value) {
+    return String(value ?? '').split(',').map(part => part.trim()).filter(Boolean);
+}
+
+export function pawXaiSuffixEnabled(value, fragment) {
+    const target = clean(fragment).toLocaleLowerCase();
+    return suffixParts(value).some(part => part.toLocaleLowerCase() === target);
+}
+
+export function togglePawXaiSuffix(value, fragment) {
+    const parts = suffixParts(value);
+    const target = clean(fragment);
+    if (!target) return parts.join(', ');
+    const targetKey = target.toLocaleLowerCase();
+    const enabled = parts.some(part => part.toLocaleLowerCase() === targetKey);
+    return (enabled
+        ? parts.filter(part => part.toLocaleLowerCase() !== targetKey)
+        : [...parts, target]
+    ).join(', ');
 }
 
 /**
@@ -119,7 +158,7 @@ OUTPUT FORMAT
 - Give every option a distinct, concrete 4-12 word title that explains the depicted moment at a glance.
 - The title is display metadata only; never repeat it in TAGS.
 - Names in the source and context are reference labels so you can keep multiple characters, their actions, and their positions distinct. You may use a name in TITLE metadata, but NEVER include any character's proper name, surname, handle, or nickname in TAGS. Image generators do not know these identities: translate each person into objective visible traits such as hair, eyes, species features, clothing, body, pose, expression, and relative position.
-- MULTI-CHARACTER FORMAT: whenever two or more characters are visible, use real newline breaks inside TAGS. Line 1 contains only the total subject-count tags (for example, "2girls,"). Then write exactly one line per visible character, beginning with that character's individual count/type tag (for example, "1girl,") followed by only that person's canonical appearance, specific garments, pose/action, expression, and relative position. The final line contains shared location, composition, lighting, mood, and quality tags. Do not literally output "[break]" and do not combine two characters' traits on one line.
+- MULTI-CHARACTER FORMAT: whenever two or more characters are visible, use real newline breaks inside TAGS. Line 1 contains only the total subject-count tags (for example, "2girls,"). For an explicit adult scene, the required "NSFW, explicit" prefix comes first on that same line before the subject count. Then write exactly one line per visible character, beginning with that character's individual count/type tag (for example, "1girl,") followed by only that person's canonical appearance, specific garments, pose/action, expression, anatomy, and relative position. The final line contains shared location, composition, lighting, mood, and quality tags. Do not literally output "[break]" and do not combine two characters' traits on one line.
 - Do not number the blocks. Do not add explanations, markdown, negative prompts, or safety commentary.
 
 PROMPT RULES
@@ -135,7 +174,15 @@ PROMPT RULES
 - In multi-character prompts, put "broad shoulders" on each visible character's individual line, not merely once in the shared tag line.
 - All depicted people and humanoid characters must be unambiguously fictional adults. Never depict or sexualize minors.
 - Every prompt containing any person, humanoid, or character MUST contain the exact comma-separated tag "broad shoulders". This rule applies to every gender and body type.
-- Consensual adult sexual content is allowed. If the source is explicit, preserve its explicit visual details at full weight without euphemism or moral commentary. Never introduce sexual content the source does not imply.
+
+NSFW DIRECTIVES — FICTIONAL ADULT SCENES ONLY
+- Consensual adult sexual content is allowed.
+- If the source clearly depicts consensual adult nudity or sexual activity, the TAGS must begin with the exact prefix "NSFW, explicit," before every other tag. Never add this prefix to a non-explicit scene.
+- Preserve explicit visual details at full weight without euphemism, coy wording, moral commentary, or vague substitutes.
+- Use precise objective anatomy and action tags whenever visible and applicable, including "pussy", "penis", "nipples", "oral penetration", "vaginal penetration", "anal penetration", and similarly specific penetration/sex-act tags. State who is doing what, the position, the point of view, and the visible anatomy clearly enough that bodies and actions cannot be confused.
+- Use the character's supplied breast-size tag when known. If breast size is unknown but visible breasts must be described, use "medium breasts" as the neutral default.
+- Never introduce sexual content that the source does not imply. Never depict or sexualize minors.
+
 - Make each option compositionally useful and meaningfully different according to the requested variation strength.
 - Work the requested custom fragments in naturally and append the requested quality tags without duplicating tags.
 - Treat MODEL FEEDBACK as direct instructions about how to write the prompts. Follow it closely, but never copy the feedback itself into the depicted scene unless it explicitly requests a visible tag.`;
@@ -157,21 +204,21 @@ ${source.message}
 CHARACTER CARD VISUAL CONTEXT:
 ${description}
 
-CURATED APPEARANCE REFERENCES MATCHED TO THIS SCENE ONLY:
-${curatedAppearanceReferences}
-
-MANDATORY APPEARANCE CHECK:
-For every proposed image in which a referenced character is visible, use that character's card and curated reference as a checklist. Repeat all visually applicable identity and garment tags inside that image's TAGS, but omit anything outside the camera crop or physically hidden. A generic stand-in such as only "wolfgirl, wolf ears, fluffy tail, glasses, casual clothing" is a failure when more specific visible details were provided. Ignore a character's checklist only for an image where that character is not visible.
-
 PROMPT SETTINGS:
 - Focus: ${settings.focus}
 - Framing: ${settings.framing}
 - Variation strength: ${settings.variation}
 - Required/custom fragments: ${custom}
-- Quality suffix: ${quality}
+- POV and quality suffix: ${quality}
 
 MODEL FEEDBACK (direct prompt-writing guidance; not scene content):
-${feedback}`;
+${feedback}
+
+FINAL HIGH-PRIORITY CURATED APPEARANCE GROUNDING:
+${curatedAppearanceReferences}
+
+MANDATORY APPEARANCE CHECK:
+This final appearance block is mandatory. For every proposed image in which a referenced character is visible, use that character's curated reference and character card as a checklist. Preserve rare model-trigger and identity tags exactly as written instead of replacing them with synonyms or a generic species description. Repeat every visually applicable identity and garment tag inside that image's TAGS, but omit anything outside the camera crop or physically hidden. A generic stand-in such as only "wolfgirl, wolf ears, fluffy tail, glasses, casual clothing" is a failure when more specific visible details were provided. Ignore a character's checklist only for an image where that character is not visible.`;
 
     return [
         { role: 'system', content: system },

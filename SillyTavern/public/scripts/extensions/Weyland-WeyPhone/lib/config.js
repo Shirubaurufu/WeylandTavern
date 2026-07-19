@@ -28,6 +28,10 @@ export const defaultSettings = Object.freeze({
     // migrated to their prior modelOverride below so this split does not silently change DMs.
     textingModelOverride: 'minimax-m3',
     kressaModel: '', // '' = live main-chat model (default per Lucky)
+    // Weyland's global Hard Mode is deliberately isolated from WeyPhone. These independent
+    // opt-ins only take effect while the global HardToggle is actually On.
+    phoneHardModeEnabled: false,
+    kressaHardModeEnabled: false,
     kressaPalette: 'twilight',
     calculatorPalette: 'graphite',
     pawxai: {
@@ -46,7 +50,7 @@ export const defaultSettings = Object.freeze({
     },
     // Display-name overrides for contacts/threads: { 'Rivera': 'Riv <3' }. Real names stay the
     // storage/generation keys; renames are presentation-only.
-    contactRenames: {},
+    contactRenames: { Loona: '[REDACTED]' },
     // Housing map: also show community characters from registrar.weybooru.com (?registrar=true).
     housingRegistrarEnabled: false,
     // Experimental round-trip roleplay texting. Both switches default off so updating never
@@ -154,6 +158,12 @@ export function getSettings(extensionSettings) {
         if (!(key in settings.pawxai)) settings.pawxai[key] = structuredClone(value);
     }
     if (needsPawXaiFivePromptMigration) settings.pawxai.promptCount = 5;
+    if (!settings.contactRenames || typeof settings.contactRenames !== 'object' || Array.isArray(settings.contactRenames)) {
+        settings.contactRenames = {};
+    }
+    for (const [key, value] of Object.entries(defaultSettings.contactRenames)) {
+        if (!(key in settings.contactRenames)) settings.contactRenames[key] = value;
+    }
     migrateLegacyConversations(settings);
     migrateMemoryFields(settings);
     migrateTetheredFields(settings);

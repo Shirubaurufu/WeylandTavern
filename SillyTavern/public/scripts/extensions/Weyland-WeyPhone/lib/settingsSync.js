@@ -87,6 +87,16 @@ export function mergeWeyPhoneSettings(base, local, remote) {
     return applySettingsPatch(remote, createSettingsPatch(base, local));
 }
 
+/**
+ * A settings refresh reads the server asynchronously. The response is unsafe to apply if this
+ * tab changed locally while that read was in flight, or if a save completed and advanced the
+ * baseline before the older response returned.
+ */
+export function settingsChangedDuringRefresh(baselineAtStart, currentBaseline, live) {
+    return createSettingsPatch(baselineAtStart, currentBaseline).length > 0
+        || createSettingsPatch(currentBaseline, live).length > 0;
+}
+
 /** Keeps the live object identity held by existing UI code while replacing its contents. */
 export function replaceSettingsInPlace(target, source) {
     if (!isPlainObject(target) || !isPlainObject(source)) return source;

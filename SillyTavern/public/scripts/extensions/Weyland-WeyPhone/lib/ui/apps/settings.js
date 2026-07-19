@@ -165,9 +165,10 @@ export function renderCharacterWallpapersScreen(container, { settings }) {
  *   currentLiveModel: string,
  *   logLines: Array<{timestamp: number, message: string}>,
  *   formatClockTime: (ts: number) => string,
+ *   batteryStatus?: string,
  * }} state
  */
-export function renderSettingsScreen(container, { settings, currentLiveModel, logLines, formatClockTime }) {
+export function renderSettingsScreen(container, { settings, currentLiveModel, logLines, formatClockTime, batteryStatus = '' }) {
     const wallpaperValue = settings.ui?.wallpaper ?? 'default';
     const isCustomWallpaper = !(wallpaperValue in WALLPAPER_PRESETS);
     const wallpaperX = clampPercent(settings.ui?.wallpaperPositionX, 50);
@@ -240,18 +241,13 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
         sub: 'Battery % shows your remaining daily messages',
         checked: Boolean(settings.ui?.batteryTracker),
     })}
+    <div class="wp-settings-hint wp-battery-mode-status">${escapeHtml(batteryStatus)}</div>
 </div>`;
 
     const tetherSection = `
 <div class="wp-settings-section">
     <div class="wp-settings-section-title">Roleplay Text Tethering <small>Experimental</small></div>
-    <div class="wp-settings-hint">Phone blocks are copied into chat-scoped Linked threads while remaining visible in the roleplay. Only Linked DMs can write back; Observe is read-only and Unlinked is isolated.</div>
-    ${toggleRowMarkup({
-        id: 'wp-settings-bidirectional-tether',
-        label: 'Bidirectional roleplay texting',
-        sub: 'Allow Linked WeyPhone threads to round-trip through the main roleplay model',
-        checked: Boolean(settings.bidirectionalTetheringEnabled),
-    })}
+    <div class="wp-settings-hint">Choose Unlinked, Observe, or Linked inside each DM. Linked conversations round-trip through the main roleplay model; Observe is read-only and Unlinked is isolated.</div>
     ${toggleRowMarkup({
         id: 'wp-settings-capture-roleplay-texts',
         label: 'Capture generated phone blocks',
@@ -261,11 +257,11 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     <div class="wp-settings-field wp-transfer-card wp-tether-import-card">
         <div class="wp-transfer-copy">
             <span>Existing roleplay texts</span>
-            <small>Use these tools after enabling tethering to capture a missed reply or backfill the active scenario.</small>
+            <small>Manually capture a missed reply or backfill the active scenario, even when automatic capture is off.</small>
         </div>
         <div class="wp-transfer-actions">
-            <button type="button" id="wp-capture-last-roleplay" class="wp-btn-sm"${settings.bidirectionalTetheringEnabled ? '' : ' disabled'}>Capture last reply</button>
-            <button type="button" id="wp-import-roleplay-texts" class="wp-btn-sm"${settings.bidirectionalTetheringEnabled ? '' : ' disabled'}>Scan current roleplay</button>
+            <button type="button" id="wp-capture-last-roleplay" class="wp-btn-sm">Capture last reply</button>
+            <button type="button" id="wp-import-roleplay-texts" class="wp-btn-sm">Scan current roleplay</button>
         </div>
     </div>
     <div class="wp-settings-hint">Unrecognized or ambiguous speakers are left untouched in the roleplay. Captured threads are visible only while their original roleplay is active.</div>
@@ -291,6 +287,18 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
         ${modelQuickfills('wp-settings-texting-model')}
         <small class="wp-settings-recommend-disclaimer"><strong>Lucky strongly recommends Minimax M3 or DeepSeek V4</strong> for WeyPhone generation. He asks that users avoid Sonnet here so Sonnet capacity stays available to the wider community.</small>
     </label>
+</div>`;
+
+    const behaviorSection = `
+<div class="wp-settings-section">
+    <div class="wp-settings-section-title">Generation Behavior</div>
+    ${toggleRowMarkup({
+        id: 'wp-settings-hard-mode',
+        label: 'Allow Hard Mode in WeyPhone',
+        sub: 'Apply Weyland Hard Mode to supported phone requests while the global Hard Mode toggle is on',
+        checked: Boolean(settings.phoneHardModeEnabled),
+    })}
+    <div class="wp-settings-hint">Off by default. The global storytelling toggle cannot affect WeyPhone unless you enable this. Kressa has her own independent setting.</div>
 </div>`;
 
     const formatSection = `
@@ -330,6 +338,7 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     ${batterySection}
     ${tetherSection}
     ${modelSection}
+    ${behaviorSection}
     ${labelsSection}
     ${transferSection}
     ${logSection}

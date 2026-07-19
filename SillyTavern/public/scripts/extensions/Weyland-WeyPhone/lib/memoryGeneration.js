@@ -1,4 +1,5 @@
 import { reconstructHistoryAsPhoneFormat, joinNonEmptySections } from './generation.js';
+import { limitPhoneRequestMessages } from './requestBudget.js';
 
 /**
  * Builds the request messages for a background memory-summarization call: a system message
@@ -67,10 +68,11 @@ export async function sendMemoryRequest({ sendRequest, profileId, messages, prim
     if (!primaryModel) {
         throw new Error('No primary model configured for memory generation.');
     }
+    const boundedMessages = limitPhoneRequestMessages(messages);
     try {
-        return await sendRequest(profileId, messages, primaryModel);
+        return await sendRequest(profileId, boundedMessages, primaryModel);
     } catch (primaryError) {
         if (!backupModel) throw primaryError;
-        return await sendRequest(profileId, messages, backupModel);
+        return await sendRequest(profileId, boundedMessages, backupModel);
     }
 }

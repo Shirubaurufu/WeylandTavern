@@ -8,8 +8,10 @@ import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderCon
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
 import { withTypingState } from './lib/generationTracking.js';
 import { buildPortraitMap, buildPsaPortraitMap } from './lib/portraits.js';
+import { mergeInstalledContacts } from './lib/installedContacts.js';
+import { displayCharacterName, findInstalledCharacterName } from './lib/characterIdentity.js';
 import { parseReply, parseGroupReply } from './lib/messageParsing.js';
-import { TEXTING_MODE_INSTRUCTIONS } from './lib/textingModeInstructions.js';
+import { TEXTING_MODE_INSTRUCTIONS, TEXTING_THOUGHTS_DISABLED } from './lib/textingModeInstructions.js';
 import { FIRST_CONTACT_BLOCK } from './lib/firstContact.js';
 import { isKnownByDefault } from './lib/knownContacts.js';
 import { buildMemoryGenerationMessages, joinMemoriesForInjection, sendMemoryRequest } from './lib/memoryGeneration.js';
@@ -25,8 +27,9 @@ import { parseUnifiedRefresh } from './lib/unifiedParsing.js';
 import { APP_REGISTRY, getApp, getSyncApps, resolveAppLabel, emptyStateCopy } from './lib/appRegistry.js';
 import { recordSyncNotifications, recordMessageNotification, getNotifications, getUnreadCounts, markNotificationRead, markAppNotificationsRead, clearNotifications } from './lib/notifications.js';
 import { copyTextToClipboard } from './lib/clipboard.js';
-import { initialBatteryLevel, batteryLevel, trackerBatteryLevel } from './lib/battery.js';
-import { refreshRemainingMessages, getCachedRemaining } from './lib/helixQuota.js';
+import { initialBatteryLevel, batteryLevel, trackerBatteryLevel, describeBatteryMode } from './lib/battery.js';
+import { refreshRemainingMessages, getQuotaSnapshot } from './lib/helixQuota.js';
+import { PHONE_REQUEST_MAX_INPUT_TOKENS, limitPhoneRequestMessages } from './lib/requestBudget.js';
 import { renderStatusBar } from './lib/ui/statusBar.js';
 import { renderLockScreen } from './lib/ui/lockScreen.js';
 import { renderShade } from './lib/ui/shade.js';
@@ -44,7 +47,7 @@ import { findMostRecentRpTime } from './lib/rpClock.js';
 import { getTier, appVisibleForTier } from './lib/tier.js';
 import { KRESSA_PALETTES, renderKressaSettingsScreen } from './lib/ui/apps/kressaSettings.js';
 import { renderPawXaiScreen } from './lib/ui/apps/pawxai.js';
-import { PAWXAI_PALETTES, buildPawXaiMessages, deletePawXaiPrompt, findPawXaiSceneContext, normalizePawXaiSettings, parsePawXaiResponse, savePawXaiPrompt } from './lib/pawxai.js';
+import { PAWXAI_PALETTES, buildPawXaiMessages, deletePawXaiPrompt, findPawXaiSceneContext, normalizePawXaiSettings, parsePawXaiResponse, pawXaiSuffixEnabled, savePawXaiPrompt, togglePawXaiSuffix } from './lib/pawxai.js';
 import { renderOnboarding, clampOnboardingPage, ONBOARDING_PAGES } from './lib/ui/onboarding.js';
 import { renderAppHelpDialog, renderNoticeDialog } from './lib/ui/appHelp.js';
 import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster } from './lib/registrarLorebook.js';
@@ -53,13 +56,15 @@ import { buildShareBlock, buildShareTitle } from './lib/shareContext.js';
 import { saveShareAsLtmEntry } from './lib/ltmShare.js';
 import { applyMienExpression, loadMienGallery, resolveMienCharacter, selectMienOutfit } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
-import { buildTetherInjectionPlan, dedupeCapturedMessages, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants } from './lib/roleplayTether.js';
+import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, dedupeCapturedMessages, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants } from './lib/roleplayTether.js';
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './lib/roleplayMode.js';
 import { buildContactContextBlock, buildGroupContactContextBlock, buildPersonaContextBlock, resolveContactContext } from './lib/contactContext.js';
-import { applySettingsPatch, createSettingsPatch, mergeWeyPhoneSettings, replaceSettingsInPlace } from './lib/settingsSync.js';
+import { applySettingsPatch, createSettingsPatch, mergeWeyPhoneSettings, replaceSettingsInPlace, settingsChangedDuringRefresh } from './lib/settingsSync.js';
 import { ravs } from '../quick-reply-ext/src/rav.js';
 import { charPer } from '../quick-reply-ext/src/charper.js';
 import { world_names } from '../../world-info.js';
+import { applyPhoneHardModePolicy } from './lib/phonePromptPolicy.js';
+import { isGeneralMessagingContact } from './lib/contactVisibility.js';
 
 // One of the 10 data-view values showScreen() sets on #wp-panel:
 // 'home' | 'contacts' | 'conversation' | 'memory' | 'messages' | 'threads' | 'phone-app' |
@@ -230,6 +235,7 @@ async function refreshWeyPhoneSettings(context = SillyTavern.getContext()) {
     settingsRefreshInFlight = (async () => {
         const live = getSettings(context.extensionSettings);
         if (!settingsSyncBaseline) initializeSettingsSync(live);
+        const baselineAtRequestStart = structuredClone(settingsSyncBaseline);
         // Never pull over unsaved local work. Its merge-safe flush will read the same newest copy.
         if (createSettingsPatch(settingsSyncBaseline, live).length) {
             queueWeyPhoneSave(context, { delay: 0 });
@@ -239,6 +245,16 @@ async function refreshWeyPhoneSettings(context = SillyTavern.getContext()) {
             const serverSettings = await readServerSettings();
             const remote = serverSettings.extension_settings?.[MODULE_NAME];
             if (!remote || typeof remote !== 'object' || Array.isArray(remote)) return false;
+            // Lucy can finish generating, a mode can change, or a queued save can complete while
+            // readServerSettings is awaiting the network. Applying the response captured before
+            // that event would erase the reply and snap the mode back. Discard that stale read;
+            // the normal merge-safe writer will reconcile the newer local state instead.
+            if (settingsChangedDuringRefresh(baselineAtRequestStart, settingsSyncBaseline, live)) {
+                if (createSettingsPatch(settingsSyncBaseline, live).length) {
+                    queueWeyPhoneSave(context, { delay: 0 });
+                }
+                return false;
+            }
             const changed = createSettingsPatch(live, remote).length > 0;
             if (!changed) return false;
             replaceSettingsInPlace(live, remote);
@@ -351,7 +367,24 @@ function log(...args) {
  * @param {string} charName
  */
 function resolveContactName(settings, charName) {
-    return settings.contactRenames?.[charName] || charName;
+    return settings.contactRenames?.[charName] || displayCharacterName(charName);
+}
+
+function setHeaderContactTarget(panel, contactName = '') {
+    panel.dataset.headerContact = contactName;
+    for (const element of [document.getElementById('wp-panel-avatar'), document.getElementById('wp-panel-title')]) {
+        if (!element) continue;
+        element.classList.toggle('wp-header-contact-link', Boolean(contactName));
+        if (contactName) {
+            element.setAttribute('role', 'button');
+            element.setAttribute('tabindex', '0');
+            element.setAttribute('title', 'Open contact');
+        } else {
+            element.removeAttribute('role');
+            element.removeAttribute('tabindex');
+            element.removeAttribute('title');
+        }
+    }
 }
 
 function resolveKressaPaletteId(settings) {
@@ -467,11 +500,11 @@ async function buildTetheredContext(context, conversation) {
 async function resolveWorldInfoTetheredForMainChat(context, extraScanText) {
     try {
         const mainHistory = convertMainChatToMessages(context.chat);
-        const scanHistory = buildScanHistoryWithExtraText(mainHistory, extraScanText);
+        const scanHistory = limitPhoneRequestMessages(buildScanHistoryWithExtraText(mainHistory, extraScanText));
         const result = await resolveWorldInfoTethered({
             getWorldInfoPrompt: context.getWorldInfoPrompt,
             history: scanHistory,
-            maxContext: context.maxContext ?? 4096,
+            maxContext: Math.min(context.maxContext ?? PHONE_REQUEST_MAX_INPUT_TOKENS, PHONE_REQUEST_MAX_INPUT_TOKENS),
             chatMetadata: context.chatMetadata,
         });
         return [result.worldInfoBefore, result.worldInfoAfter].filter(Boolean).join('\n\n');
@@ -531,7 +564,7 @@ function rerenderConversationMessages() {
     const conversation = getConversation(settings, currentConversationId);
     if (!conversation) return;
     const isTyping = generatingConversationIds.has(currentConversationId);
-    renderMessages(document.getElementById('wp-messages'), conversation.messages, editingMessageIndex, isTyping, getSelectState());
+    renderMessages(document.getElementById('wp-messages'), conversation.messages, editingMessageIndex, isTyping, getSelectState(), (conversation.participants?.length ?? 1) > 1);
     updateRegenerateEnabled(conversation);
 }
 
@@ -545,11 +578,15 @@ function rerenderIfStillViewing(conversationId, messages) {
     const messagesEl = document.getElementById('wp-messages');
     if (!messagesEl) return;
     const isTyping = generatingConversationIds.has(conversationId);
-    renderMessages(messagesEl, messages, editingMessageIndex, isTyping, getSelectState());
     const context = SillyTavern.getContext();
     const settings = getSettings(context.extensionSettings);
     const conversation = getConversation(settings, conversationId);
+    renderMessages(messagesEl, messages, editingMessageIndex, isTyping, getSelectState(), (conversation?.participants?.length ?? 1) > 1);
     if (conversation) updateRegenerateEnabled(conversation);
+}
+
+function isGlobalHardModeEnabled(context) {
+    return String(context.variables.global.get('HardToggle') ?? '').trim().toLowerCase() === 'on';
 }
 
 function recordIncomingDmNotification(context, settings, conversationId, conversation, incomingMessages) {
@@ -676,7 +713,10 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
         const mainHistory = convertMainChatToMessages(context.chat);
 
         const systemPromptText = buildSystemPrompt({
-            systemPrompt: resolved.systemPrompt,
+            systemPrompt: applyPhoneHardModePolicy(resolved.systemPrompt, {
+                allowHardMode: Boolean(settings.phoneHardModeEnabled),
+                hardModeEnabled: isGlobalHardModeEnabled(context),
+            }),
             worldInfoBefore: '',
             descriptionText: resolved.descriptionText,
             personalityText: resolved.personalityText,
@@ -1108,10 +1148,11 @@ async function generateGroupReply(conversationId, conversation, context, setting
                 worldInfo.worldInfoBefore,
                 worldInfo.worldInfoAfter,
                 personaContext,
-                buildGroupContactContextBlock(participants, settings.contactContexts),
                 joinMemoriesForInjection(getPinnedMemories(settings, conversationId)),
             ]),
             textingInstructions: TEXTING_MODE_INSTRUCTIONS,
+            relationshipContext: buildGroupContactContextBlock(participants, settings.contactContexts),
+            finalInstructions: TEXTING_THOUGHTS_DISABLED,
         });
         const substituted = applyMacroSubstitution({ substituteParams: context.substituteParams, content: systemPrompt, userName, charName: participants.join(', ') });
         const wire = message => {
@@ -1216,7 +1257,10 @@ async function generateReply(conversationId, conversation, context, settings) {
         const tetheredBlock = await buildTetheredContext(context, conversation);
         const worldInfoAfterWithMemory = joinNonEmptySections([worldInfo.worldInfoAfter, memoryBlock, tetheredBlock]);
         const systemPromptText = buildSystemPrompt({
-            systemPrompt: resolved.systemPrompt,
+            systemPrompt: applyPhoneHardModePolicy(resolved.systemPrompt, {
+                allowHardMode: Boolean(isKressa ? settings.kressaHardModeEnabled : settings.phoneHardModeEnabled),
+                hardModeEnabled: isGlobalHardModeEnabled(context),
+            }),
             worldInfoBefore: worldInfo.worldInfoBefore,
             descriptionText: resolved.descriptionText,
             personalityText: resolved.personalityText,
@@ -1234,7 +1278,15 @@ async function generateReply(conversationId, conversation, context, settings) {
         );
         const userName = context.name1 || 'User';
         const personaContext = buildPersonaContextBlock(userName, context.powerUserSettings?.persona_description);
-        const fullSystemPromptText = joinNonEmptySections([systemPromptText, resolved.postHistory, personaContext, relationshipContext, firstContactBlock, TEXTING_MODE_INSTRUCTIONS]);
+        const fullSystemPromptText = joinNonEmptySections([
+            systemPromptText,
+            resolved.postHistory,
+            personaContext,
+            firstContactBlock,
+            TEXTING_MODE_INSTRUCTIONS,
+            relationshipContext,
+            TEXTING_THOUGHTS_DISABLED,
+        ]);
 
         // Resolves every macro in the fully-assembled prompt — {{user}}, {{char}}, {{time}},
         // {{date}}, dice rolls, etc. — via SillyTavern's own real macro engine. This covers the
@@ -1318,9 +1370,13 @@ function handleQueueMessage() {
     if (!conversation) return;
 
     input.value = '';
+    const linkedToCurrentRoleplay = isConversationLinkedToChat(conversation, context.chatId);
     appendMessage(settings, conversationId, {
         role: 'user', content: userMessage, timestamp: genTimestamp(),
-        mainChatAnchor: isConversationLinkedToChat(conversation, context.chatId) ? context.chat.length : undefined,
+        // Store the scene clock at authorship time. This keeps several queued texts at the time
+        // the user actually sent them even if the roleplay header advances before injection.
+        displayTime: linkedToCurrentRoleplay ? resolveRpTime()?.time : undefined,
+        mainChatAnchor: linkedToCurrentRoleplay ? context.chat.length : undefined,
     });
     queueWeyPhoneSave(context);
     editingMessageIndex = -1;
@@ -1570,23 +1626,25 @@ function handleDeleteMemory(memoryId) {
  * @returns {string|null}
  */
 function resolveInstalledCharacterName(context, castName) {
-    const lower = castName.toLowerCase();
-    const exact = context.characters.find(c => c.name.toLowerCase() === lower);
-    if (exact) return exact.name;
-    const first = lower.split(/\s+/)[0];
-    const firstMatches = context.characters.filter(c => c.name.toLowerCase().split(/\s+/)[0] === first);
-    return firstMatches.length === 1 ? firstMatches[0].name : null;
+    return findInstalledCharacterName(context.characters, castName);
 }
 
 function getCombinedContactEntries(settings, refreshOptions = {}) {
+    const context = SillyTavern.getContext();
     const official = getCastEntries(settings, refreshOptions);
     const seen = new Set(official.map(entry => entry.name.toLowerCase()));
-    return [...official, ...contactLorebookState.registrarContacts.filter(entry => {
+    const directoryEntries = [...official, ...contactLorebookState.registrarContacts.filter(entry => {
         const key = entry.name.toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
     })];
+    return mergeInstalledContacts(
+        directoryEntries,
+        context.characters,
+        context.getThumbnailUrl,
+        castName => resolveInstalledCharacterName(context, castName),
+    );
 }
 
 function resolveContactCapability(context, entry) {
@@ -1859,6 +1917,7 @@ function resolveSubbotBook(entry) {
 
 function getGroupContacts(settings) {
     return getCombinedContactEntries(settings)
+        .filter(isGeneralMessagingContact)
         .map(entry => ({ name: entry.name, bookName: resolveSubbotBook(entry) }))
         .filter(entry => entry.bookName)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -2639,12 +2698,6 @@ function handleScreenBodyClick(event) {
             ? context.chatId
             : (conversation.roleplayTether ? conversation.roleplayChatId : null);
         setTetheredSettings(settings, conversation.id, { roleplayMode: mode, roleplayChatId });
-        if (mode === ROLEPLAY_MODES.LINKED) {
-            // Selecting Linked is itself an explicit opt-in to both halves of the round trip.
-            // Leaving either global experimental switch off would make this three-way control lie.
-            settings.bidirectionalTetheringEnabled = true;
-            settings.captureRoleplayTextsEnabled = true;
-        }
         queueWeyPhoneSave(context);
         updateRoleplayModeAvailability();
         updateRegenerateEnabled(conversation);
@@ -2673,6 +2726,22 @@ function handleScreenBodyClick(event) {
         queueWeyPhoneSave(context);
         applyPawXaiPalette(document.getElementById('wp-panel'), settings);
         renderPawXaiScreenNow();
+        return;
+    }
+    const pawxaiSuffixBtn = event.target.closest('.wp-pawxai-suffix-button');
+    if (pawxaiSuffixBtn) {
+        const fragment = pawxaiSuffixBtn.dataset.pawxaiSuffix;
+        if (!fragment) return;
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        settings.pawxai = normalizePawXaiSettings(settings.pawxai);
+        settings.pawxai.qualityTags = togglePawXaiSuffix(settings.pawxai.qualityTags, fragment);
+        const textarea = document.getElementById('wp-pawxai-quality');
+        if (textarea) textarea.value = settings.pawxai.qualityTags;
+        const selected = pawXaiSuffixEnabled(settings.pawxai.qualityTags, fragment);
+        pawxaiSuffixBtn.classList.toggle('wp-selected', selected);
+        pawxaiSuffixBtn.setAttribute('aria-pressed', String(selected));
+        queueWeyPhoneSave(context);
         return;
     }
     const formatButton = event.target.closest('#wp-format-button');
@@ -2891,34 +2960,13 @@ function handleScreenBodyChange(event) {
         // Re-render immediately (theatrical value or cached quota); the quota refresh this
         // kicks off inside resolveBatteryPercent re-renders again when the real number lands.
         renderStatusBarNow();
-        return;
-    }
-    if (event.target.id === 'wp-settings-bidirectional-tether') {
-        const context = SillyTavern.getContext();
-        const settings = getSettings(context.extensionSettings);
-        settings.bidirectionalTetheringEnabled = event.target.checked;
-        if (!event.target.checked) {
-            settings.captureRoleplayTextsEnabled = false;
-            // Avoid leaving a DM visually "Linked" while the global round-trip engine is off.
-            // The explicit master-off action disconnects writable threads; Observe threads remain
-            // untouched because their read-only context path does not use this interceptor.
-            for (const conversation of Object.values(settings.conversations)) {
-                if (getRoleplayMode(conversation) !== ROLEPLAY_MODES.LINKED) continue;
-                setTetheredSettings(settings, conversation.id, {
-                    roleplayMode: ROLEPLAY_MODES.UNLINKED,
-                    roleplayChatId: conversation.roleplayTether ? conversation.roleplayChatId : null,
-                });
-            }
-        }
-        queueWeyPhoneSave(context);
-        showScreen('settings-app');
+        if (currentView === 'settings-app') showScreen('settings-app');
         return;
     }
     if (event.target.id === 'wp-settings-capture-roleplay-texts') {
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
         settings.captureRoleplayTextsEnabled = event.target.checked;
-        if (event.target.checked) settings.bidirectionalTetheringEnabled = true;
         queueWeyPhoneSave(context);
         showScreen('settings-app');
         return;
@@ -2937,10 +2985,24 @@ function handleScreenBodyChange(event) {
         queueWeyPhoneSave(context);
         return;
     }
+    if (event.target.id === 'wp-settings-hard-mode') {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        settings.phoneHardModeEnabled = event.target.checked;
+        queueWeyPhoneSave(context);
+        return;
+    }
     if (event.target.id === 'wp-kressa-model') {
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
         settings.kressaModel = event.target.value.trim();
+        queueWeyPhoneSave(context);
+        return;
+    }
+    if (event.target.id === 'wp-kressa-hard-mode') {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        settings.kressaHardModeEnabled = event.target.checked;
         queueWeyPhoneSave(context);
         return;
     }
@@ -3025,6 +3087,7 @@ function showScreen(view) {
     const helpDialog = document.getElementById('wp-app-help');
     helpDialog.hidden = true;
     helpDialog.innerHTML = '';
+    setHeaderContactTarget(panel);
 
     // Per-app accent theming: the visible app's registry accent drives --wp-app-accent for the
     // whole screen (section titles, pills, links). Falls back to the Weyland red.
@@ -3155,11 +3218,16 @@ function showScreen(view) {
     if (view === 'settings-app') {
         title.textContent = resolveAppLabel(settings, 'settings');
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        if (settings.ui?.batteryTracker) refreshRemainingMessages(context, handleBatteryQuotaUpdate);
         renderSettingsScreen(screenBody, {
             settings,
             currentLiveModel: context.getChatCompletionModel?.() ?? '',
             logLines: getLogLines(),
             formatClockTime,
+            batteryStatus: describeBatteryMode({
+                enabled: Boolean(settings.ui?.batteryTracker),
+                ...getQuotaSnapshot(context),
+            }),
         });
         return;
     }
@@ -3271,7 +3339,7 @@ function showScreen(view) {
                 queueWeyPhoneSave(context);
                 if (currentView === 'contacts-app') showScreen('contacts-app');
             },
-        });
+        }).filter(isGeneralMessagingContact);
         const displayEntries = searchCast(entries, contactsQuery).map(entry => {
             const installedName = resolveInstalledCharacterName(context, entry.name);
             const custom = settings.contactRenames?.[installedName ?? entry.name];
@@ -3324,13 +3392,13 @@ function showScreen(view) {
             });
         }
         const characters = getCombinedContactEntries(settings)
+            .filter(isGeneralMessagingContact)
             .filter(entry => resolveContactCapability(context, entry).messageable)
             .map(entry => ({ name: entry.name }));
         const portraitMap = buildPortraitMap(context.characters, characters.map(c => c.name), context.getThumbnailUrl);
         renderContactsScreen(screenBody, characters, portraitMap);
         return;
     }
-
     if (view === 'group-compose') {
         title.textContent = 'New Group';
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
@@ -3400,10 +3468,15 @@ function showScreen(view) {
         document.getElementById('wp-panel-avatar'),
         conversation.isDedicatedApp === 'kressa' ? null : (isGroup ? { group: true } : portraitMap[conversation.charName]),
     );
+    if (!isGroup && conversation.isDedicatedApp !== 'kressa') {
+        const contactEntry = getCombinedContactEntries(settings).find(entry =>
+            entry.name === conversation.charName || resolveInstalledCharacterName(context, entry.name) === conversation.charName);
+        if (contactEntry) setHeaderContactTarget(panel, contactEntry.name);
+    }
     renderConversationScreen(screenBody, { appKey: conversation.isDedicatedApp ?? null });
     editingMessageIndex = -1;
     const isTyping = generatingConversationIds.has(currentConversationId);
-    renderMessages(document.getElementById('wp-messages'), conversation.messages, editingMessageIndex, isTyping, getSelectState());
+    renderMessages(document.getElementById('wp-messages'), conversation.messages, editingMessageIndex, isTyping, getSelectState(), (conversation.participants?.length ?? 1) > 1);
     updateRegenerateEnabled(conversation);
     // Route the tethered checkbox's checked AND disabled state (plus the mode-toggle visibility)
     // through the shared helper, so entering the conversation view freshly re-verifies the disabled
@@ -3743,14 +3816,24 @@ function resolveRpTime() {
     return findMostRecentRpTime(context.chat);
 }
 
+function formatTetherClockTime(timestamp) {
+    return resolveRpTime()?.time ?? formatClockTime(timestamp);
+}
+
 // Meta battery mode: percent = remaining daily messages (Settings toggle). The quota lookup
 // is throttled inside helixQuota.js, so calling this from every 30s render tick is fine; when
 // a fresh value lands, the onUpdate re-render paints it. Falls back to the theatrical drain
 // whenever the real number is unknowable (toggle off, no key, fetch failed, unlimited plan).
+function handleBatteryQuotaUpdate() {
+    renderStatusBarNow();
+    if (currentView === 'settings-app') showScreen('settings-app');
+}
+
 function resolveBatteryPercent(settings) {
     if (settings.ui?.batteryTracker) {
-        refreshRemainingMessages(SillyTavern.getContext(), renderStatusBarNow);
-        const tracked = trackerBatteryLevel(getCachedRemaining());
+        refreshRemainingMessages(SillyTavern.getContext(), handleBatteryQuotaUpdate);
+        const quota = getQuotaSnapshot(SillyTavern.getContext());
+        const tracked = trackerBatteryLevel(quota.remaining, quota.limit);
         if (tracked !== null) return tracked;
     }
     return batteryLevel(phoneState.batteryStart, Date.now() - phoneState.sessionStart);
@@ -3975,7 +4058,7 @@ function handleRoleplayPhoneCapture(messageId, options = {}) {
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
         const manual = options && typeof options === 'object' && options.manual === true;
-        if (!settings.bidirectionalTetheringEnabled || (!manual && !settings.captureRoleplayTextsEnabled) || !context.chatId) return 0;
+        if ((!manual && !settings.captureRoleplayTextsEnabled) || !context.chatId) return 0;
         const message = context.chat?.[Number(messageId)];
         if (!message || message.is_user || typeof message.mes !== 'string') return 0;
         const scopes = locatePhoneScopes(message.mes);
@@ -3996,18 +4079,20 @@ function handleRoleplayPhoneCapture(messageId, options = {}) {
             // Unlinked and Observe are intentionally one-way/non-participating. If a previously
             // captured thread was disconnected, do not silently reconnect it merely because the
             // model printed another phone block; the user can select Linked and manually rescan.
-            if (conversation && !isConversationLinkedToChat(conversation, context.chatId)) continue;
+            if (conversation && !canCapturePhoneScopeIntoConversation(conversation, routed.mode, context.chatId)) continue;
             if (!conversation) {
                 const soloName = routed.participants[0];
                 const label = routed.title || routed.participants.join(', ');
                 const installed = resolveInstalledCharacterName(context, soloName);
                 const rosterEntry = getCombinedContactEntries(settings).find(entry => routed.participants.some(name => name === entry.name));
+                const initialRoleplayMode = initialRoleplayModeForPhoneScope(routed.mode);
                 conversation = createConversation(settings, routed.participants.length === 1 ? soloName : label, {
                     participants: routed.participants,
                     displayName: routed.title,
+                    roleplayWireMode: routed.mode || null,
                     roleplayChatId: context.chatId,
                     roleplayTether: true,
-                    roleplayMode: ROLEPLAY_MODES.LINKED,
+                    roleplayMode: initialRoleplayMode,
                     lorebookContact: routed.participants.length > 1 || !installed,
                     lorebookName: rosterEntry?.lorebookName || 'Weyland',
                     hasHistory: true,
@@ -4019,13 +4104,21 @@ function handleRoleplayPhoneCapture(messageId, options = {}) {
                     }));
                 }
                 setTetheredSettings(settings, conversation.id, {
-                    roleplayMode: ROLEPLAY_MODES.LINKED,
+                    roleplayMode: initialRoleplayMode,
                     roleplayChatId: context.chatId,
                     roleplayTether: true,
                 });
             } else if (!conversation.displayName && routed.title) {
                 conversation.displayName = routed.title;
             }
+            // Repair a legacy solo capture that used the character's saved name for the user as
+            // the local thread title (for example, Rivera's thread appearing as "Nova"). Do not
+            // touch unrelated custom thread names.
+            if (routed.mode === 'solo' && routed.userNickname
+                && conversation.displayName === routed.userNickname) {
+                conversation.displayName = routed.title;
+            }
+            if (routed.mode) conversation.roleplayWireMode = routed.mode;
             if (!conversation.userNickname && routed.userNickname) conversation.userNickname = routed.userNickname;
             const newMessages = dedupeCapturedMessages(routed.messages, conversation.messages);
             const addedMessages = [];
@@ -4087,19 +4180,22 @@ async function weyPhoneMainChatInterceptor() {
     try {
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
-        const active = settings.bidirectionalTetheringEnabled && Boolean(context.chatId);
+        // Linked is a per-conversation decision. Automatic capture is independently controlled
+        // by captureRoleplayTextsEnabled and does not change a thread's selected mode.
+        const active = Boolean(context.chatId);
         const plan = active
             ? buildTetherInjectionPlan({
                 conversations: Object.values(settings.conversations),
                 chatId: context.chatId,
                 chatLength: context.chat?.length ?? 0,
+                chat: context.chat,
                 userName: context.name1 || 'User',
-                formatClockTime,
+                formatClockTime: formatTetherClockTime,
             })
             : { caution: null, groups: [] };
         const reconciled = reconcileTetherPrompts(plan, tetherPromptKeys);
         for (const op of reconciled.ops) {
-            context.setExtensionPrompt(op.key, op.content, op.position, op.depth, false, op.role);
+            context.setExtensionPrompt(op.key, op.content, op.position, op.depth, op.scan ?? false, op.role);
         }
         tetherPromptKeys = reconciled.nextKeys;
     } catch (error) {
@@ -4130,9 +4226,22 @@ function initPanel() {
     panel.dataset.mobilePlatform = /Android/i.test(navigator.userAgent)
         ? 'android'
         : /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'ios' : 'other';
+    const openHeaderContact = () => {
+        const contactName = panel.dataset.headerContact;
+        if (!contactName) return;
+        currentContactName = contactName;
+        showScreen('contact-detail');
+    };
+    for (const element of [document.getElementById('wp-panel-avatar'), document.getElementById('wp-panel-title')]) {
+        element.addEventListener('click', openHeaderContact);
+        element.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            openHeaderContact();
+        });
+    }
     const closeButton = document.getElementById('wp-panel-close');
     const sleepButton = document.getElementById('wp-status-sleep');
-    const homeButton = document.getElementById('wp-home-button');
     const backButton = document.getElementById('wp-back-button');
     const composeButton = document.getElementById('wp-compose-button');
     const groupComposeButton = document.getElementById('wp-group-compose-button');
@@ -4206,7 +4315,6 @@ function initPanel() {
         event.stopPropagation();
         if (phoneState.locked) setDimmed(true);
     });
-    homeButton.addEventListener('click', () => showScreen('home'));
     const goBack = () => {
         if (currentView === 'twitter-following') {
             showScreen('twitter-feed');
@@ -4298,17 +4406,23 @@ function initPanel() {
     setInterval(renderStatusBarNow, 30_000);
     applyWallpaper();
 
-    // Delegated fallback-swap for '.wp-avatar' images (see avatarMarkup in lib/panel.js) — 'error'
+    // Delegated fallback-swap for portrait images — 'error'
     // events don't bubble, so this must be attached with `capture: true` to still catch it via
     // delegation on the whole panel (avatars render both inside #wp-screen-body, which is
     // replaced wholesale on navigation, and in the persistent #wp-panel-avatar header slot).
     panel.addEventListener('error', (event) => {
         const img = event.target;
-        if (!(img instanceof HTMLImageElement) || !img.classList.contains('wp-avatar')) return;
+        if (!(img instanceof HTMLImageElement)) return;
         const fallbackUrl = img.dataset.fallbackUrl;
-        if (!fallbackUrl) return;
-        delete img.dataset.fallbackUrl;
-        img.src = fallbackUrl;
+        if (fallbackUrl) {
+            delete img.dataset.fallbackUrl;
+            img.src = fallbackUrl;
+            return;
+        }
+        const placeholderUrl = img.dataset.placeholderUrl;
+        if (!placeholderUrl) return;
+        delete img.dataset.placeholderUrl;
+        img.src = placeholderUrl;
     }, true);
 
     updateRoleplayModeAvailability();

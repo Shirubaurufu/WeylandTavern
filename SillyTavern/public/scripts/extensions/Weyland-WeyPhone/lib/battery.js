@@ -5,7 +5,7 @@
 // Pure functions of (startLevel, elapsedMs) so the whole model is trivially unit-testable.
 
 export const BATTERY_DRAIN_PER_HOUR = 6; // percent
-export const BATTERY_FLOOR = 12; // never below — the phone never actually dies on the user
+export const BATTERY_FLOOR = 12; // the phone never actually dies on the user
 
 /**
  * A plausible session-start battery level derived from the real clock: fuller in the morning,
@@ -32,14 +32,32 @@ export function batteryLevel(startLevel, elapsedMs) {
 }
 
 /**
- * Meta battery mode (Settings → "Messages-left battery"): the battery percent IS the user's
- * remaining daily message count — 15 messages left reads as 15%. Capped at 100; no floor,
- * because unlike the theatrical model an empty budget is real information worth showing.
- * @param {unknown} remaining remaining daily messages, from the HelixMind quota endpoint
+ * Meta battery mode (Settings -> "Messages-left battery"): the displayed charge is the percentage
+ * of the user's available message allowance that remains. For example, 367 of 500 reads as 73%.
+ * There is no floor because an empty allowance is real information worth showing.
+ * @param {unknown} remaining remaining messages, from the HelixMind quota endpoint
+ * @param {unknown} limit total messages in the current allowance window
  * @returns {number|null} integer percent 0-100, or null when the value is unusable
- *   (no key, fetch failed, unlimited plan) — callers fall back to the theatrical model.
+ *   (no key, fetch failed, unlimited plan); callers fall back to the theatrical model.
  */
-export function trackerBatteryLevel(remaining) {
+export function trackerBatteryLevel(remaining, limit) {
     if (typeof remaining !== 'number' || !Number.isFinite(remaining)) return null;
-    return Math.max(0, Math.min(100, Math.round(remaining)));
+    if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 0) return null;
+    return Math.max(0, Math.min(100, Math.round((remaining / limit) * 100)));
+}
+
+export function describeBatteryMode({ enabled = false, status = 'idle', remaining = null, limit = null } = {}) {
+    if (!enabled) {
+        return 'Current mode: Theatrical. It starts at a plausible charge, drains 6% per hour, and never falls below 12%.';
+    }
+    if (status === 'no-key') {
+        return 'Current mode: Messages-left requested, but no HelixMind tracker key was found. Showing the theatrical battery instead.';
+    }
+    if (status === 'ready' && typeof remaining === 'number' && typeof limit === 'number') {
+        return `Current mode: Messages-left. ${remaining} of ${limit} messages available, shown as ${trackerBatteryLevel(remaining, limit)}%.`;
+    }
+    if (status === 'unavailable') {
+        return 'Current mode: Messages-left, but usage could not be read. Showing the theatrical battery until the tracker is available.';
+    }
+    return 'Current mode: Messages-left. Checking HelixMind usage now; the theatrical battery is shown until it loads.';
 }
