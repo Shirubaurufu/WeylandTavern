@@ -1,0 +1,13 @@
+{
+    "display_name": "WeyPhone",
+    "loading_order": 150,
+    "requires": [],
+    "optional": ["connection-manager", "expressions", "registrar-expressions"],
+    "js": "index.js",
+    "css": "style.css",
+    "generate_interceptor": "weyPhoneMainChatInterceptor",
+    "author": "Weyland Tavern",
+    "version": "2.0.0",
+    "homePage": "https://github.com/Shirubaurufu/WeylandTavern",
+    "auto_update": false
+}

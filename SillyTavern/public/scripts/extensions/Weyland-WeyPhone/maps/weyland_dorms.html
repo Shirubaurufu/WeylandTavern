@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, viewport-fit=cover, initial-scale=1.0, interactive-widget=resizes-content">
+<title>Sterling Hall — Weyland University</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mynerve&family=Open+Sans:wght@400;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Cast-site palette */
+  --bg:#444444;
+  --ink:#222222;
+  --ink2:#333333;
+  --mut:#555555;
+  --mut2:#777777;
+  --line:#484848;
+  --gold:#FFCC66;
+  --gold2:#EEBB66;
+  --gold3:#DDBB77;
+  --tan:#AA7755;
+  --blue:#6688AA;
+  --blue2:#446688;
+  --pale:#EEEEEE;
+  --paper:#e9dfc6;        /* parchment */
+  --paper2:#d8c89f;       /* parchment edge */
+  --paperShadow:#8c7a4d;
+  /* Floor-plan colours (architectural) */
+  --pl-bg:#cfc6ad;        /* map background */
+  --pl-wall:#2a2418;      /* map outer boundary */
+  --pl-wall2:#4a3f28;     /* map inner boundary */
+  --pl-room:#f3ead2;      /* unoccupied room */
+  --pl-room-occ:#a3d9a5;  /* occupied room */
+  --pl-bath:#c69bd4;      /* bathroom */
+  --pl-laundry:#7fcfe3;   /* laundry */
+  --pl-staff:#ffe066;     /* RA/staff */
+  --pl-public:#cfc6ad;    /* public spaces */
+}
+html,body{
+  background:#3a3328;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,204,102,.05), transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(102,136,170,.05), transparent 60%);
+  background-color:var(--bg);
+  color:var(--ink);
+  font-family:'Open Sans',sans-serif;
+  min-height:100vh;
+  min-height:100dvh;
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+
+/* ===== Header ===== */
+/* Design matches cast.weybooru.com */
+header{
+  box-sizing:content-box;
+  font-family:'Rajdhani',sans-serif;
+  font-weight:500;
+  color:white;
+  height:3em;
+  padding:calc(.5em + env(safe-area-inset-top, 0px)) calc(1em + env(safe-area-inset-right, 0px)) .5em calc(1em + env(safe-area-inset-left, 0px));
+  background-color:#551111;
+  border-bottom:solid black 1px;
+  position:sticky;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;
+  font-size:16px;
+}
+header .logo{
+  display:inline-block;
+  height:3em;
+  width:auto;
+}
+header .headline{
+  display:inline-flex;align-items:baseline;
+  text-decoration:none;
+  color:white;
+  font-size:1.3em;
+  margin-left:.4em;
+  font-weight:600;
+  letter-spacing:.5px;
+  white-space:nowrap;
+}
+header .headline .sub{
+  display:inline-block;
+  margin-left:.6em;
+  color:#e6c8a0;
+  font-weight:400;
+  font-size:.75em;
+  letter-spacing:.3px;
+}
+
+/* Header controls */
+.hctrls{margin-left:auto;display:flex;align-items:center;gap:.5em}
+.ftabs{display:flex;gap:.3em}
+.btabs.hidden{display:none}
+
+/* Toggle for enabling registrar.weybooru.com characters */
+.registrarToggle{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:600;font-size:.9em;letter-spacing:1px;
+  padding:.35em 1em;border-radius:3px;cursor:pointer;
+  background:rgba(0,0,0,.25);color:rgba(255,255,255,.75);
+  border:1px dashed rgba(255,255,255,.35);
+  /* Scope the hover/active transitions to the visual properties only — using
+     `transition: all` causes browser to interpolate the discrete `order`
+     property (toggled by the responsive @media block) and freeze the layout
+     mid-transition, which prevents the mobile row reflow from taking effect. */
+  transition:background-color .15s,color .15s,border-color .15s;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.registrarToggle:hover{color:#fff;border-color:rgba(255,255,255,.7);background:rgba(0,0,0,.5)}
+.registrarToggle.on{
+  background:#dfead4;color:#3a4a22;
+  border:1px solid #b8c98a;font-weight:700;
+}
+.ftab{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:600;font-size:.9em;letter-spacing:1px;
+  padding:.35em 1em;border-radius:3px;cursor:pointer;
+  background:rgba(0,0,0,.35);color:rgba(255,255,255,.75);
+  border:1px solid rgba(255,255,255,.18);
+  /* Same reason as .registrarToggle — exclude `order` from `transition: all`. */
+  transition:background-color .15s,color .15s,border-color .15s;
+  text-transform:uppercase;
+}
+.ftab:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(0,0,0,.5)}
+.ftab.on{
+  background:#fff;color:#551111;
+  border-color:#fff;font-weight:700;
+}
+
+/* Font style toggle */
+.switch{
+  position:relative;
+  width:2.5em;
+  height:1.5em;
+  display:flex;
+  margin-left:2.5em;   /* leave room for the cursive/printed icon to its left */
+}
+.switch input{opacity:0;width:0;height:0}
+.switch .icon{
+  background-image:url('https://cast.weybooru.com/images/icons/cursive.png');
+  background-size:cover;
+  width:1.5em;height:1.5em;
+  position:absolute;left:-2em;top:0;
+}
+body.altFont .switch .icon{
+  background-image:url('https://cast.weybooru.com/images/icons/printed.png');
+}
+.slider{
+  position:absolute;cursor:pointer;
+  top:0;left:0;right:0;bottom:0;
+  background-color:#444;
+  transition:.4s;
+  border-radius:1em;
+  border:.1em solid #666;
+}
+.slider:before{
+  position:absolute;content:"";
+  height:1em;width:1em;
+  left:.25em;bottom:.18em;
+  background-color:#888;
+  transition:.4s;
+  border-radius:50%;
+}
+.switch input:checked + .slider{background-color:#555}
+.switch input:checked + .slider:before{transform:translateX(.88em)}
+
+/* Tooltip typography switches with altFont; room labels stay Rajdhani. */
+body.altFont .rnm{font-family:'Rajdhani',sans-serif;font-weight:600}
+body.altFont .rn2{font-family:'Open Sans',sans-serif;font-weight:800}
+body.altFont .rs{font-family:'Open Sans',sans-serif;font-weight:600}
+.wrap{padding:22px 16px 60px;display:flex;flex-direction:column;align-items:center;gap:16px}
+
+/* ===== Map Container ===== */
+
+/* Parchment panel shell */
+.panel{
+  width:100%;max-width:1180px;
+  background:
+    linear-gradient(180deg, rgba(255,250,235,.0), rgba(0,0,0,.05) 100%),
+    var(--paper);
+  border:1px solid #6b5d3a;
+  border-radius:10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.5),
+    inset 0 0 60px rgba(170,119,85,.15),
+    0 6px 20px rgba(0,0,0,.5);
+  padding:14px 16px;
+}
+.leg{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink2);font-family:'Open Sans',sans-serif;font-weight:600}
+.li{display:flex;align-items:center;gap:6px}
+.ls{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--pl-wall2);flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.sw{width:100%;max-width:none;transform-origin:top left;transition:transform .16s ease;will-change:transform}
+/* Keep corner radii in SVG units so rounded edges stay aligned at all scales. */
+.sw svg{width:100%;height:auto;display:block}
+
+/* Overlay legend sits inside the map courtyard to use open space. */
+.map-stage{position:relative;width:100%;max-width:1180px;display:flex;flex-direction:column;align-items:stretch}
+.map-viewport{width:100%;max-height:78dvh;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;scrollbar-width:thin;border-radius:8px}
+.map-viewport.is-zoomed{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.map-viewport.is-panning{cursor:grabbing}
+.map-tools{position:absolute;z-index:70;top:8px;right:8px;display:flex;gap:4px;padding:4px;border-radius:8px;background:rgba(42,36,26,.86);box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.map-tools button{width:34px;height:34px;border:1px solid #6b5d3a;border-radius:5px;background:#efe4c6;color:#3a2f1a;font:700 17px 'Open Sans',sans-serif;cursor:pointer}
+.map-tools button:last-child{width:auto;padding:0 9px;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.legend-overlay{
+  position:absolute;
+  top:4%;
+  left:25%;
+  right:25%;
+  width:auto;
+  max-width:none;
+  margin:0;
+  padding:0;
+  z-index:50;
+  /* Remove panel chrome and render plain floating text. */
+  background:none;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  /* Two-column legend with aligned swatches. */
+  display:grid;
+  grid-template-columns:repeat(2, max-content);
+  justify-content:center;
+  column-gap:32px;
+  row-gap:6px;
+  align-items:center;
+  text-align:left;
+}
+.legend-overlay .stat{
+  grid-column:1 / -1;
+  text-align:center;
+  margin:0;
+}
+/* Building tabs keep a dedicated row so legend items do not reflow. */
+.legend-overlay #btabs{
+  grid-column:1 / -1;
+  justify-content:center;
+  align-items:center;
+  margin-top:6px;
+  gap:.4em;
+}
+/* Match tab size to header controls. */
+.legend-overlay #btabs .ftab{
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:1px;
+  padding:.35em 1em;
+}
+
+/* SVG room states (applies to <rect class="rb"> and <path class="rb">) */
+.room{cursor:pointer}
+.room .rb{transition:fill .12s,stroke .12s}
+.room.e .rb{fill:var(--pl-room);stroke:var(--pl-wall2);stroke-width:1.2}
+.room.o .rb{fill:var(--pl-room-occ);stroke:#2e6a30;stroke-width:2}
+/* Over-capacity rooms are red for quick scan. */
+.room.w .rb{fill:#f5c5bd;stroke:#a8332a;stroke-width:1.6}
+.room.e:hover .rb{fill:#fff8e0;stroke:var(--pl-wall)}
+.room.o:hover .rb{fill:#c2ebc4;stroke:#1f4e21;stroke-width:2.5}
+.room.w:hover .rb{fill:#fbd6cf;stroke:#7a1a14;stroke-width:2}
+/* Pinned room highlight: stronger stroke, no glow bleed. */
+.room.stuck .rb{stroke:#143812 !important;stroke-width:3 !important}
+/* Shared bath overlay */
+.pb{fill:var(--pl-bath);stroke:#7a4a8a;stroke-width:1;pointer-events:none}
+.rn{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;text-anchor:middle;dominant-baseline:middle;pointer-events:none;fill:#3a2f1a}
+.rnm{font-family:'Mynerve',cursive;font-size:11px;text-anchor:middle;dominant-baseline:middle;pointer-events:none;fill:#5a3a1a}
+/* Mobile-only large room number, drawn in the bath-free half of the room.
+   Hidden on desktop where the small `.rn` in the narrow strip applies. */
+.rn-mobile{display:none}
+
+/* Special spaces */
+.sp rect{pointer-events:none}
+.sp.ra rect{fill:var(--pl-staff);stroke:#a08a20;stroke-width:1.4}
+.sp.lau rect{fill:var(--pl-laundry);stroke:#3a8aa2;stroke-width:1.4}
+.sp.bath rect{fill:var(--pl-bath);stroke:#7a4a8a;stroke-width:1.4}
+.sp.com rect{fill:var(--pl-public);stroke:var(--pl-wall2);stroke-width:1.2;stroke-dasharray:none}
+.sp.stair rect{fill:#b8ad8c;stroke:var(--pl-wall);stroke-width:1.4}
+.sp text{font-family:'Rajdhani',sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:middle;pointer-events:none;letter-spacing:.5px}
+.sp.ra text{fill:#5a4500;font-size:11px}
+.sp.lau text{fill:#0a4a5a;font-size:10px}
+.sp.com text{fill:#3a2f1a;font-size:10px}
+.sp.bath text{fill:#5a2a6a;font-size:8.5px}
+.sp.stair text{fill:#3a2f1a;font-size:10px}
+
+/* Corridor — light, slightly textured floor */
+.corridor{fill:#e6dcbd;stroke:#e6dcbd;stroke-width:.6;stroke-dasharray:0}
+.exterior{fill:#9c8a5c;stroke:#3a2f1a;stroke-width:1.4}  /* outdoor / non-floor */
+
+/* ===== Tooltip ===== */
+
+/* Tooltip — parchment styled */
+#tip{position:fixed;pointer-events:none;z-index:300;opacity:0;transition:opacity .12s;max-width:320px;min-width:240px}
+#tip.on{opacity:1;pointer-events:auto}
+/* Empty mobile tooltip placeholder. */
+#tip .ti-empty{display:none}
+.ti{
+  background:var(--paper);
+  background-image:
+    linear-gradient(180deg, rgba(255,255,235,.4) 0%, rgba(140,122,77,.12) 100%);
+  border:2px solid #6b5d3a;
+  border-radius:3px;
+  overflow:hidden;
+  box-shadow:0 14px 38px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.5);
+}
+.th{
+  background:#2a241a;
+  color:var(--gold);
+  padding:8px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #6b5d3a;
+}
+/* Over-capacity warning above the resident list. */
+.tip-warn{
+  background:#f5d6cf;
+  color:#7a1a14;
+  border-bottom:1px solid #c8665a;
+  font-family:'Open Sans',sans-serif;
+  font-size:11px;font-weight:700;
+  letter-spacing:.3px;
+  padding:6px 14px;
+  display:flex;align-items:center;gap:6px;
+}
+.tip-warn[hidden]{display:none}
+/* Tighten spacing to the first row when warning is visible. */
+.tip-warn:not([hidden]) + #tipBody{padding-top:0}
+.tip-warn:not([hidden]) + #tipBody .rc:first-child{padding-top:4px}
+/* In handwritten mode, warning is plain text only. */
+body:not(.altFont) .tip-warn{
+  background:transparent;
+  color:#7a1a14;
+  border:none;
+  border-bottom:none;
+  font-family:'Mynerve',cursive;
+  font-size:14px;font-weight:400;
+  letter-spacing:0;
+  padding:6px 20px;
+}
+/* Resident list scrolls internally for long occupancy. */
+#tipBody{
+  max-height:300px;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(140,122,77,.55) transparent;
+}
+#tipBody::-webkit-scrollbar{width:7px}
+#tipBody::-webkit-scrollbar-track{background:transparent}
+#tipBody::-webkit-scrollbar-thumb{background:rgba(140,122,77,.55);border-radius:3px}
+#tipBody::-webkit-scrollbar-thumb:hover{background:rgba(140,122,77,.8)}
+/* Tooltip "Room ###" title — always Rajdhani, matching the room-number labels on the map (NOT affected by the font toggle). */
+.trn{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:.5px}
+.tct{font-family:'Open Sans',sans-serif;font-size:11px;color:#c8b890;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.rc{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 12px;
+  border-bottom:1px solid rgba(140,122,77,.4);
+  text-decoration:none;color:inherit;
+}
+.rc:last-child{border-bottom:none}
+/* No hover highlight — the Profile / Images chips already act as the links. */
+.rav{
+  width:48px;height:48px;border-radius:50%;
+  object-fit:cover;object-position:top;flex-shrink:0;
+  background:#cfc6ad;
+  border:2px solid #8c7a4d;
+  box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
+.rfb{
+  width:48px;height:48px;border-radius:50%;
+  background:#cfc6ad;border:2px solid #8c7a4d;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Mynerve',cursive;font-size:22px;font-weight:400;color:#5a4500;
+  flex-shrink:0;
+}
+.ri{flex:1;min-width:0}
+/* Character name & summary in the tooltip — handwritten Mynerve by default,
+   switched to printed Open Sans when the font toggle is on. */
+.rn2{font-family:'Mynerve',cursive;font-weight:400;font-size:18px;color:var(--ink);line-height:1.5;display:flex;align-items:center;gap:6px;min-width:0}
+.rn2 .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Inline duplicate badge for same-person multi-entries. */
+.dup-warn{
+  flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;
+  border-radius:50%;
+  background:#f5d6cf;color:#7a1a14;
+  border:1px solid #c8665a;
+  font-family:'Open Sans',sans-serif;font-size:11px;font-weight:700;line-height:1;
+  text-decoration:none;
+  cursor:help;
+  transition:all .12s;
+}
+.dup-warn:hover{background:#c8665a;color:#fff;border-color:#7a1a14}
+body:not(.altFont) .dup-warn{
+  background:rgba(245,200,190,.65);
+  border:1px dashed rgba(120,40,30,.5);
+  color:#7a1a14;
+  font-family:'Mynerve',cursive;
+  font-size:13px;
+}
+body:not(.altFont) .dup-warn:hover{
+  background:rgba(200,102,90,.7);
+  color:#fff;
+  border-style:solid;
+  border-color:#7a1a14;
+}
+.rs{font-family:'Mynerve',cursive;font-weight:400;font-size:14px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;margin-top:3px}
+.rs::before{content:"• ";color:var(--mut2)}
+.rd{font-family:'Open Sans',sans-serif;font-size:11px;color:var(--mut2);margin-top:1px}
+.actions{display:flex;gap:6px;margin-top:5px}
+.act{
+  font-family:'Open Sans',sans-serif;font-weight:700;font-size:10px;
+  text-decoration:none;text-transform:uppercase;letter-spacing:.4px;
+  padding:3px 8px;border-radius:3px;
+  background:#2a241a;color:var(--gold2);border:1px solid #6b5d3a;
+  display:inline-flex;align-items:center;gap:3px;
+  transition:all .12s;
+}
+.act:hover{background:var(--gold);color:#2a1f0a;border-color:#a07a2a}
+.act.alt{background:transparent;color:var(--blue2);border-color:var(--blue2)}
+.act.alt:hover{background:var(--blue);color:#fff;border-color:var(--blue2)}
+/* Credit chip for community characters — links to the registrar's
+   ?filter=owner:<name> page so clicking it lists every character that owner
+   has contributed. Inherits the same look as .act.alt; no separate cursor or
+   hover override needed now that it's a real <a>. */
+
+/* ── Tooltip — HANDWRITTEN NOTE-CARD MODE (font toggle OFF) ─────────────
+   Mirrors the cast.weybooru.com character cards: parchment background image
+   from the cast site (card.png), softer dashed dividers, warmer parchment
+   tones throughout, larger handwritten name, sticky-note-style action chips.
+   When the toggle is ON these overrides drop out and the base "clean box"
+   styles above take over. */
+body:not(.altFont) #tip{max-width:340px;min-width:260px}
+body:not(.altFont) .ti{
+  /* Cast-site card.png at a FIXED size sized for the worst case (2 residents).
+     Single-resident tooltips end up shorter and the card image gets cropped
+     naturally from the bottom. The bg is also slightly oversized horizontally
+     and vertically and pushed by a small negative offset, which crops the
+     card.png's transparent edge so the drop-shadow doesn't reveal a halo
+     around the card. Rounded corners + overflow:hidden hide any remaining
+     transparent corner pixels. */
+  background-image:url('https://cast.weybooru.com/images/backgrounds/card.png');
+  /* Tall enough to cover the worst case: header + 2 polaroid resident rows +
+     #tipBody top padding + the 24 px bottom padding on the last .rc.  Single-
+     resident cards stay shorter than this and naturally crop the bottom of
+     the background image. */
+  background-size:108% 400px;
+  background-position:center -8px;
+  background-repeat:no-repeat;
+  background-color:transparent;
+  border:none;
+  border-radius:0px;
+  overflow:hidden;
+  box-shadow:0 12px 32px rgba(0,0,0,.55), 0 2px 4px rgba(0,0,0,.3);
+}
+body:not(.altFont) .th{
+  /* Sit ABOVE the card's red rule line (near the top of the bg image). */
+  background:transparent;
+  border:none;
+  padding:12px 20px 2px;
+}
+/* Everything on the note card is handwritten Mynerve EXCEPT the action chips. */
+body:not(.altFont) .trn{font-family:'Mynerve',cursive;font-size:18px;font-weight:400;letter-spacing:0;color:#5a3a1a}
+body:not(.altFont) .tct{font-family:'Mynerve',cursive;font-size:14px;font-weight:400;letter-spacing:0;text-transform:none;color:#7a6a4a}
+/* Push the resident rows below the red rule line. */
+body:not(.altFont) #tipBody{padding-top:14px}
+body:not(.altFont) .rc{
+  border:none;
+  padding:8px 20px 10px;
+}
+/* Add breathing room at the very bottom of the card. */
+body:not(.altFont) .rc:last-child{padding-bottom:24px}
+/* (no row-hover highlight in note-card mode either) */
+/* Polaroid-style portrait: rectangular white frame with thicker bottom edge,
+   subtle drop shadow, no border-radius. Replaces the round avatar look. */
+body:not(.altFont) .rav,
+body:not(.altFont) .rfb{
+  width:54px;
+  height:68px;
+  border-radius:0;
+  border:4px solid #fafafa;
+  border-bottom-width:14px;
+  background:#fafafa;
+  box-shadow:0 3px 6px rgba(0,0,0,.4);
+  box-sizing:border-box;
+  object-fit:cover;
+  object-position:top;
+}
+body:not(.altFont) .rfb{
+  font-family:'Mynerve',cursive;
+  font-size:26px;
+  font-weight:400;
+  color:#5a4500;
+  display:flex;align-items:center;justify-content:center;
+  background:#cfc6ad;
+  /* Polaroid frame around the fallback letter */
+  box-shadow:0 3px 6px rgba(0,0,0,.4), inset 0 0 0 4px #fafafa, inset 0 -14px 0 #fafafa;
+  border:none;
+}
+body:not(.altFont) .rn2{
+  font-size:24px;
+  color:#2a1a0a;
+  /* Mynerve descenders (g, y, p, q, j) extend ~0.35em below baseline. With
+     line-height:1.0 they crash into the .rs summary line below. 1.4 leaves
+     ~3 px of clearance at 24 px and stays visually tight. */
+  line-height:1.4;
+}
+body:not(.altFont) .rs{
+  font-size:16px;
+  color:#5a4030;
+  margin-top:2px;
+}
+body:not(.altFont) .rs::before{color:#8c7a4d}
+body:not(.altFont) .rd{
+  font-family:'Mynerve',cursive;
+  font-size:14px;
+  font-weight:400;
+  color:#7a6a4a;
+  margin-top:3px;
+  /* Same Mynerve-descender consideration as .rn2 — `line-height: normal`
+     (~1.2) leaves the y/g/p tails kissing the action chips below. */
+  line-height:1.4;
+}
+body:not(.altFont) .actions{margin-top:7px;gap:5px}
+body:not(.altFont) .act{
+  background:rgba(255,255,235,.55);
+  color:#5a3a1a;
+  border:1px dashed rgba(140,122,77,.7);
+  font-family:'Open Sans',sans-serif;
+  font-weight:600;
+  text-transform:none;
+  letter-spacing:0;
+  font-size:11px;
+  padding:4px 10px;
+  border-radius:3px;
+}
+body:not(.altFont) .act:hover{
+  background:rgba(255,204,102,.45);
+  color:#2a1f0a;
+  border-color:#5a3a1a;
+  border-style:solid;
+}
+body:not(.altFont) .act.alt{
+  background:rgba(230,240,250,.5);
+  color:#2a4a6a;
+  border-color:rgba(107,140,170,.7);
+}
+body:not(.altFont) .act.alt:hover{
+  background:rgba(107,140,170,.25);
+  color:#1a3a5a;
+  border-color:#4a6a8a;
+}
+
+/* Photo overlay — full-image lightbox over a blurred dark backdrop, mirrors
+   cast.weybooru.com's #photo / #info backdrop. Click the backdrop or press
+   Esc to close. */
+#photoOverlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.85);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;justify-content:center;
+  cursor:zoom-out;
+}
+#photoOverlay.on{display:flex}
+#photoOverlay img{
+  max-width:90vw;max-height:90vh;
+  background:#444;
+  border:14px solid #fff;
+  box-shadow:.2em 1em 1em rgba(0,0,0,.8);
+  cursor:default;
+  display:block;
+}
+.rav{cursor:zoom-in}
+
+/* Loading + error states */
+.status{
+  font-family:'Mynerve',cursive;font-size:22px;color:var(--pale);
+  text-align:center;padding:40px;text-shadow:0 2px 4px rgba(0,0,0,.5);
+}
+.status.err{color:#ffaaaa}
+
+/* Stats footer */
+.stats{
+  display:flex;gap:18px;flex-wrap:wrap;justify-content:center;
+  font-family:'Open Sans',sans-serif;font-size:12px;font-weight:600;color:#c8b890;
+  padding:10px 0;
+}
+.stat b{color:var(--gold);font-weight:800}
+
+/* ===== Responsive ===== */
+/* Mobile header: title row + controls row. */
+@media (max-width:760px){
+  header{
+    height:auto;
+    min-height:3em;
+    flex-wrap:wrap;
+    row-gap:.4em;
+  }
+  /* Logo: never let it shrink — its 3em width is the budget for row 1's left
+     side and the title gets whatever's left. */
+  header .logo{flex-shrink:0}
+  /* Title: flex-basis:0 (instead of `auto`) means the headline doesn't claim
+     its intrinsic max-content width during the wrap calculation, so the logo
+     and headline stay together on row 1 even when the headline content is
+     wider than the remaining space. The headline then grows back up to fill
+     the available room and its inner contents wrap. font-size scales down
+     on narrower viewports via clamp() so the sub-line still fits without
+     overrunning. */
+  header .headline{
+    flex:1 1 0;
+    min-width:0;
+    flex-wrap:wrap;
+    white-space:normal;
+    font-size:clamp(.95em, 4.5vw, 1.3em);
+  }
+  header .headline .sub{
+    margin-left:0;
+    flex-basis:100%;          /* force sub onto a new sub-line under "Sterling Hall" */
+    font-size:clamp(.6em, 2vw, .75em);
+  }
+  .hctrls{
+    margin-left:0;
+    width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-end;
+    row-gap:.35em;
+    column-gap:.5em;
+  }
+  .ftabs{flex-wrap:wrap}
+  /* Tighten the cursive-icon room on phones; the icon sits at left:-2em on the
+     switch, so 2em of left margin keeps it from overlapping its neighbours. */
+  header .switch{margin-left:1.7em}
+  /* The Registrar toggle padding stays a touch tighter on mobile so the
+     three header groups (floor tabs, +Registrar, font toggle) fit on one
+     row at 390 px. Floor labels are now "F1/F2/F3" everywhere — no
+     pseudo-element abbreviation hack needed. */
+  .registrarToggle{padding:.35em .7em}
+
+  /* Legend overlay on phones: keep the desktop two-column layout but shrink
+     the font and tighten the column gap so both columns fit inside the
+     ~50%-width overlay even on a 390 px viewport. Single column was a
+     stale fallback that fired for any narrow-desktop or laptop-with-sidebar
+     viewport ≤760 px and made the legend look like a list instead of the
+     intended grid. */
+  .legend-overlay{
+    top:3%;
+    font-size:11px;
+    column-gap:14px;
+    row-gap:4px;
+  }
+  .legend-overlay .li{gap:4px}
+  .legend-overlay .ls{width:11px;height:11px;border-width:1px}
+  /* Stat line ("X residents · Y rooms") stays visible on mobile too — it's
+     small enough to fit and reflects current community-on/off state. */
+  .legend-overlay .stat{font-size:10px;padding-top:2px}
+  /* Keep building-tab sizing aligned with header controls. */
+
+  /* Mobile map labels: hide dense labels, show larger room number. */
+  .sw .rn{display:none}
+  .sw .rnm{display:none}
+  .sw .rn-mobile{
+    display:inline;
+    font-family:'Rajdhani',sans-serif;font-weight:700;
+    font-size:22px;text-anchor:middle;dominant-baseline:middle;
+    pointer-events:none;fill:#3a2f1a;
+  }
+  /* Common-space labels are two-line and must fit inside the smallest commons
+     box (UCOMMONS at 50 SVG units tall). Two-line text bbox ≈ 2.4× font-size
+     (1.1em line spacing + ascender + descender), so 20 px × 2.4 ≈ 48 fits in
+     50 with a 1-unit margin top and bottom. */
+  .sw .sp.com text{font-size:20px}
+  .sw .sp.stair text{display:none}
+
+  /* Dock tooltip below map on mobile and keep it in normal flow. */
+  body:not(.altFont) #tip,
+  body.altFont #tip{
+    position:static;
+    opacity:1;
+    pointer-events:auto;
+    width:100%;
+    max-width:none;
+    min-width:0;
+    margin-top:18px;
+  }
+  #tip .ti-empty{
+    display:block;
+    text-align:center;
+    padding:20px 16px;
+    color:var(--ink2);
+    font-family:'Open Sans',sans-serif;
+    font-style:italic;
+    font-size:14px;
+    border:2px dashed rgba(107,93,58,.4);
+    border-radius:3px;
+    background:rgba(255,252,240,.5);
+  }
+  #tip.on .ti-empty{display:none}
+  #tip:not(.on) .ti{display:none}
+  /* Mobile resident-list cap: desktop's 220 px fits ~2 polaroid rows when the
+     card.png-backed altFont-OFF style takes effect, but on mobile each resident
+     row renders ~135 px tall (no compression) so 220 clips the second resident
+     in a 2-bed room. 300 px fits two full rows with breathing room and still
+     triggers the internal scroll for 3+ residents. */
+  #tipBody{max-height:300px}
+}
+
+@media (max-width:600px){
+  header h1{font-size:24px}
+  header .sub{font-size:12px}
+  .ftab{padding:6px 12px;font-size:12px}
+}
+@media (pointer:coarse){
+  .ftab,.registrarToggle{min-height:40px;touch-action:manipulation}
+  .map-viewport{max-height:68dvh}
+  .map-tools button{min-width:42px;min-height:42px}
+}
+</style>
+</head>
+<body>
+<header>
+  <img class="logo" src="https://cast.weybooru.com/images/icons/weyland-logo.png" alt="Weyland"/>
+  <a class="headline" href=""><span id="bldgName">Sterling Hall</span><span class="sub">Weyland University · Residence Directory</span></a>
+  <div class="hctrls">
+    <div class="ftabs" id="ftabs">
+      <button class="ftab" data-floor="1">F1</button>
+      <button class="ftab on" data-floor="2">F2</button>
+      <button class="ftab" data-floor="3">F3</button>
+    </div>
+    <button class="registrarToggle" id="commToggle"
+            title="Show community-contributed characters from registrar.weybooru.com">+ Registrar</button>
+    <label class="switch" title="Toggle between hand-written and simplified font styles for character names and descriptions">
+      <span class="icon"></span>
+      <input id="fontToggle" type="checkbox"/>
+      <span class="slider"></span>
+    </label>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- The legend (and the Sterling/O'See building selector that only appears
+       with the community layer turned on) sits as an overlay inside the empty
+       courtyard at the top-centre of the floor map, instead of as a separate
+       panel above it. .map-stage is the positioning context for the overlay. -->
+  <div class="map-stage">
+    <div class="map-viewport" id="mapViewport">
+      <div class="sw" id="svgWrap">
+        <div class="status" id="statusMsg">Loading residents from cast.weybooru.com…</div>
+      </div>
+    </div>
+    <div class="map-tools" aria-label="Map zoom controls">
+      <button type="button" id="mapZoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+      <button type="button" id="mapZoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+      <button type="button" id="mapZoomReset" title="Reset map view">Reset</button>
+    </div>
+    <div class="panel leg legend-overlay">
+      <div class="li"><div class="ls" style="background:var(--pl-room-occ)"></div>Occupied</div>
+      <div class="li"><div class="ls" style="background:var(--pl-room)"></div>Vacant</div>
+      <div class="li"><div class="ls" style="background:var(--pl-staff)"></div>RA / Staff</div>
+      <div class="li"><div class="ls" style="background:var(--pl-laundry)"></div>Laundry</div>
+      <div class="li"><div class="ls" style="background:var(--pl-bath)"></div>Bathroom</div>
+      <div class="li"><div class="ls" style="background:var(--pl-public)"></div>Public</div>
+      <div class="stat">
+        <span id="statLine">Loading roster…</span>
+      </div>
+      <!-- Building tabs — only visible while community-characters layer is on,
+           since the canonical cast lives entirely in Sterling Hall. Sits on its
+           own row at the bottom so toggling community on/off doesn't reflow
+           the legend rows above. -->
+      <div class="ftabs btabs hidden" id="btabs">
+        <button class="ftab on" data-bldg="sterling">Sterling</button>
+        <button class="ftab" data-bldg="osee">O&rsquo;See</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tooltip lives inside .wrap so it can dock below the map on mobile (where
+       it falls back to position:static via the @media block). On desktop the
+       fixed positioning still anchors it relative to the viewport, and the
+       in-flow position has no visual effect. -->
+  <div id="tip">
+    <!-- Empty-state placeholder, only visible on mobile when no room is pinned. -->
+    <div class="ti-empty">Tap a room to see residents.</div>
+    <div class="ti">
+      <div class="th"><span class="trn" id="tipRN"></span><span class="tct" id="tipCT"></span></div>
+      <div id="tipWarn" class="tip-warn" hidden></div>
+      <div id="tipBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Photo overlay (full-image lightbox). Mirrors cast.weybooru.com #photo. -->
+<div id="photoOverlay"><img id="photoOverlayImg" alt=""/></div>
+
+<script>
+// ── DATA LOADING ─────────────────────────────────────────────
+// All resident data is pulled live from the cast and registrar sites so
+// updates propagate without any static snapshot. Two data sources:
+//   • cast.weybooru.com  → canonical Lucky Paw characters (Sterling Hall only).
+//   • registrar.weybooru.com → community-contributed characters (Sterling + O'See).
+const CAST_DATA_URL = 'https://cast.weybooru.com/data/data.json';
+const CAST_PORTRAIT = name => `https://cast.weybooru.com/images/portraits/${name}.jpg`;
+// Cast site anchors profiles by lowercased first name (e.g. /#nathan), not by
+// the full character key. Lowercase + URI-encode for safety.
+const CAST_PROFILE  = firstName => `https://cast.weybooru.com/#${encodeURIComponent(String(firstName || '').toLowerCase())}`;
+const BOORU_SEARCH  = name => `https://weybooru.com/posts/query=${encodeURIComponent(name)}`;
+const REGISTRAR_DATA_URL = 'https://registrar.weybooru.com/data/list';
+const REGISTRAR_PROFILE  = id   => `https://registrar.weybooru.com/character/${encodeURIComponent(id)}`;
+// Lists every character contributed by a given owner — used for the credit
+// chip on community-character tooltips.
+const REGISTRAR_OWNER_SEARCH = name => `https://registrar.weybooru.com/?filter=owner%3A${encodeURIComponent(name)}`;
+// Bed count per dorm room. Sterling and O'See rooms are 2-person — anything
+// above this is an over-capacity warning.
+const ROOM_CAPACITY = 2;
+// Used both for the page header logo and as the fallback portrait for community
+// characters who haven't uploaded one.
+const WEYLAND_LOGO = 'https://cast.weybooru.com/images/icons/weyland-logo.png';
+
+// Active resident map (room id → [residents]). Rebuilt by buildR() whenever the
+// community / building toggles change. Components below only read from R, so
+// the SVG renderer doesn't need to know which sources are active.
+let R = {};
+// Per-source resident maps. Loaded once each, then merged into R on demand.
+let R_CAST           = {};   // cast residents (Sterling only)
+let R_EXTRA_STERLING = {};   // community residents in Sterling Hall
+let R_EXTRA_OSEE     = {};   // community residents in O'See Hall
+let CHARACTERS = {};         // raw cast data, keyed by name
+let LOADED = false;
+let registrarLoaded = false;
+let registrarLoading = null;  // in-flight Promise, so concurrent toggles share the same fetch
+
+// View state — driven by the header toggles.
+let showCommunity = false;
+let currentBldg   = 'sterling';   // 'sterling' | 'osee'
+
+// Building name patterns. Lenient on whitespace, apostrophe form, missing
+// "Hall" suffix. "Sterling", "STERLING", "sterling hall", "O'See", "O'See",
+// "OSee", "O See", "o'see hall" all match.
+const BLDG_RE = {
+  sterling: /sterling/i,
+  osee:     /o\s*['’]?\s*see/i,
+};
+
+// Valid room IDs match the rooms actually rendered by layout(): for each
+// floor 1–3, suf ∈ [02..29] ∪ [68..94]. Any digit run in a home string that
+// doesn't land inside this set is rejected, so "Room 200" or "apt 999" don't
+// silently misassign someone to a non-existent room.
+const VALID_ROOMS = (() => {
+  const s = new Set();
+  for (let f = 1; f <= 3; f++) {
+    for (let n = 2;  n <= 29; n++) s.add(String(f) + String(n).padStart(2, '0'));
+    for (let n = 68; n <= 94; n++) s.add(String(f) + String(n).padStart(2, '0'));
+  }
+  return s;
+})();
+
+// Looser home/dwelling parser: find a building name and the first 3-digit
+// number that lands in a valid room. Handles "Sterling Hall - Room 103",
+// "O'See Hall, Dorm room number 317", "O'See, Room 282", "OSee 305", etc.
+// Returns {building, room} or null.
+function parseDwelling(dwelling){
+  if(!dwelling) return null;
+  const s = String(dwelling);
+  let building = null;
+  if (BLDG_RE.sterling.test(s)) building = 'sterling';
+  else if (BLDG_RE.osee.test(s)) building = 'osee';
+  if(!building) return null;
+  const matches = s.match(/\d{3}/g) || [];
+  for (const m of matches) {
+    if (VALID_ROOMS.has(m)) return { building, room: m };
+  }
+  return null;
+}
+
+// Cast residents are always in Sterling. Same parser, but reject any match
+// that resolves to O'See — guarantees a stray "O'See" mention in a cast
+// `home` blurb can't accidentally hide a Sterling resident.
+function parseRoom(home){
+  const parsed = parseDwelling(home);
+  return (parsed && parsed.building === 'sterling') ? parsed.room : null;
+}
+
+function parseFirstName(name){
+  const originalName = String(name || '').trim();
+  if(!originalName) return { firstName:'', nickName:'', formattedName:'' };
+
+  let firstName = originalName;
+  let nickName = "";
+
+  // Prefer explicit quoted nicknames: John "Johnny" or John 'Johnny'.
+  // Requires a matched quote pair so apostrophes in names (O'Neil) are safe.
+  const quoteMatch = originalName.match(/(["'])([^"']+)\1/);
+  if(quoteMatch){
+    nickName = (quoteMatch[2] || '').trim();
+    firstName = originalName
+      .replace(quoteMatch[0], ' ')
+      .replace(/,/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim() || originalName;
+  } else if (originalName.includes(',')) {
+    // Comma-separated form: pick the shortest component as nickname.
+    const parts = originalName.split(',').map(p => p.trim()).filter(Boolean);
+    if(parts.length > 1){
+      nickName = parts.reduce((a, b) => (b.length < a.length ? b : a));
+      const idx = parts.findIndex(p => p === nickName);
+      if(idx >= 0) parts.splice(idx, 1);
+      firstName = parts.join(' ').replace(/\s+/g, ' ').trim() || originalName;
+    }
+  }
+  firstName = firstName.replaceAll(',', '');
+
+  const formattedName = nickName ? `${firstName} "${nickName}"` : firstName;
+  return { firstName, nickName, formattedName };
+}
+
+async function loadCastData(){
+  const res = await fetch(CAST_DATA_URL, {cache:'no-cache'});
+  if(!res.ok) throw new Error(`Cast site returned ${res.status}`);
+  const j = await res.json();
+  const data = {};
+  for(const [k,v] of j.values){
+    if(k === 'meta') continue;
+    data[k] = v;
+  }
+  CHARACTERS = data.character || {};
+
+  R_CAST = {};
+  for(const key in CHARACTERS){
+    const c = CHARACTERS[key];
+    const room = parseRoom(c.home);
+    if(!room) continue;
+    if(!R_CAST[room]) R_CAST[room] = [];
+    R_CAST[room].push({
+      source:'cast',
+      key,
+      name:c.name || key,
+      summary:c.summary || '',
+      image:c.image || '',
+      gender:c.gender || '',
+      species:c.species || '',
+      age:(c.age===''||c.age==null) ? 'N/A' : c.age,
+      firstName:(c.name||key).split(/[\s(]/)[0],
+      tags: parseTags(c.tag)   // cast uses singular `tag`, comma-separated string
+    });
+  }
+  LOADED = true;
+}
+
+// CORS-proxy fallbacks. Tried in order if the direct registrar fetch fails (it
+// will, until the registrar starts sending Access-Control-Allow-Origin). Once
+// CORS is enabled on the registrar these proxies stop being touched — direct
+// fetch wins on the first try and we cache success. The set is intentionally
+// small and well-known; each is a "raw passthrough" proxy that returns the
+// registrar's response body unchanged.
+//   • api.codetabs.com   → fastest in our tests, no rate caveats hit so far.
+//   • api.allorigins.win → slower, occasionally returns wrapped responses.
+//   • corsproxy.io       → 413s on the 2 MB registrar payload, but kept as a
+//     last resort in case the others go down and the dataset shrinks.
+const CORS_PROXIES = [
+  url => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+];
+// Which path actually delivered the registrar payload — null until first load,
+// then 'direct' or the proxy URL that worked. Used for the console.warn diagnostic
+// when a CORS-proxy fallback is in play.
+let registrarSource = null;
+
+// Try direct fetch, then each CORS proxy in order. Returns the parsed JSON +
+// the source label that worked. Throws only if everything fails.
+async function fetchRegistrarList(){
+  const direct = REGISTRAR_DATA_URL;
+  const errors = [];
+  // 1) Direct (will succeed once CORS is enabled on the registrar)
+  try {
+    const r = await fetch(direct, {cache:'no-cache'});
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    if(!Array.isArray(j)) throw new Error('Direct response was not a JSON array');
+    return { list: j, source: 'direct' };
+  } catch(e){ errors.push(`direct: ${e.message}`); }
+  // 2) CORS-proxy fallbacks
+  for(const mk of CORS_PROXIES){
+    const proxyUrl = mk(direct);
+    try {
+      const r = await fetch(proxyUrl, {cache:'no-cache'});
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      if(!Array.isArray(j)) throw new Error('Proxy returned non-array body');
+      return { list: j, source: proxyUrl };
+    } catch(e){ errors.push(`${new URL(proxyUrl).host}: ${e.message}`); }
+  }
+  throw new Error('All sources failed — ' + errors.join(' | '));
+}
+
+async function loadRegistrarData(){
+  // Concurrent toggles share the same in-flight request; subsequent toggles
+  // hit the cached result.
+  if(registrarLoaded) return;
+  if(registrarLoading) return registrarLoading;
+  registrarLoading = (async () => {
+    const { list, source } = await fetchRegistrarList();
+    registrarSource = source;
+    if(source !== 'direct'){
+      console.warn(`[registrar] direct fetch blocked by CORS — using proxy ${source}`);
+    }
+    R_EXTRA_STERLING = {};
+    R_EXTRA_OSEE = {};
+    for(const c of list){
+      // Drop only deleted entries. WIP/draft statuses still surface — players
+      // who fill in a valid building+room expect to see their character on the
+      // map regardless of the registrar's lifecycle stage.
+      if(c.deletedAt) continue;
+      const parsed = parseDwelling(c.dwelling);
+      if(!parsed) continue;
+      const { firstName, nickName, formattedName } = parseFirstName(c.name);
+      const fullName = [formattedName, c.surname].filter(Boolean).join(' ').trim() || c.name || '?';
+      const resident = {
+        source:'community',
+        key:String(c.characterId),
+        characterId:c.characterId,
+        name: fullName,
+        summary: c.summary || '',
+        image: c.portrait || '',     // direct URL or '' (we'll fall back to the logo)
+        gender: c.gender || '',
+        species: c.species || '',
+        age: (c.baseAge===''||c.baseAge==null) ? 'N/A' : c.baseAge,
+        firstName: nickName || firstName || '?',
+        ownerName: c.ownerName || '',
+        tags: parseTags(c.tags)   // registrar serializes tags as a JSON-encoded string
+      };
+      const bucket = parsed.building === 'sterling' ? R_EXTRA_STERLING : R_EXTRA_OSEE;
+      if(!bucket[parsed.room]) bucket[parsed.room] = [];
+      bucket[parsed.room].push(resident);
+    }
+    registrarLoaded = true;
+  })();
+  try { await registrarLoading; }
+  finally { registrarLoading = null; }
+}
+
+// ── DUPLICATE DETECTION ──────────────────────────────────────
+// Same person listed twice in a room — most often a cast canonical character
+// whose owner also re-submitted them via the registrar, occasionally two
+// registrar entries for the same person. Group by normalized name and keep the
+// "richest" entry (portrait beats no-portrait, then summary/demographics, with
+// cast winning ties since it's the canonical source). Losing entries are
+// stashed on the winner as `.duplicates` so the tooltip can flag + link to
+// them.
+function nameKey(name){
+  return String(name || '')
+    .toLowerCase()
+    .replace(/\([^)]*\)/g,'')        // drop parentheticals like "Alex (the new one)"
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim();
+}
+function infoScore(p){
+  let s = 0;
+  if(p.image)   s += 3;              // portrait is the strongest quality signal
+  if(p.summary) s += 1;
+  if(p.gender)  s += 1;
+  if(p.species) s += 1;
+  if(p.age && p.age !== 'N/A') s += 1;
+  return s;
+}
+// Anthropomorphic / furry / kemono alt-forms of the same character are an
+// intentional pairing — not a data-entry mistake — and should be silenced in
+// the duplicate-warning UI. Match case-insensitively across whatever case
+// the registrar/cast happens to use ("Anthro", "anthro", "FURRY", etc).
+const ALT_FORM_TAG_RE = /^(anthro|furry|kemono)$/i;
+// Both data sources serialize tags as STRINGS, not arrays. Cast uses
+// `c.tag` (singular, comma-separated: "Townie, Family, Artist"). Registrar
+// uses `c.tags` (plural, JSON-encoded array: `["anthro","furry"]`). Normalize
+// both into a plain string[] so downstream code can treat them uniformly.
+function parseTags(raw){
+  if (Array.isArray(raw)) return raw;
+  if (raw == null) return [];
+  const s = String(raw).trim();
+  if (!s) return [];
+  if (s.startsWith('[')) {
+    try { const j = JSON.parse(s); if (Array.isArray(j)) return j; } catch {}
+  }
+  return s.split(/[,;]+/).map(x => x.trim()).filter(Boolean);
+}
+function hasAltFormTag(p){
+  return Array.isArray(p.tags) && p.tags.some(t => ALT_FORM_TAG_RE.test(String(t)));
+}
+function dedupeRoom(residents){
+  // Always clear stale state — buildR() reuses the same source objects across
+  // toggles, so a community-on pass leaves .duplicates / .altForm on the cast
+  // object that a later community-off pass would otherwise carry over.
+  for(const p of residents) { delete p.duplicates; delete p.altForm; }
+  if(residents.length < 2) return residents;
+  const groups = new Map();
+  const out = [];
+  for(const p of residents){
+    const k = nameKey(p.name);
+    if(!k){ out.push(p); continue; }   // unnamed → can't dedupe, leave alone
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(p);
+  }
+  const sortByScore = (a,b) => {
+    const ds = infoScore(b) - infoScore(a);
+    if(ds) return ds;
+    if(a.source === 'cast' && b.source !== 'cast') return -1;
+    if(b.source === 'cast' && a.source !== 'cast') return 1;
+    return 0;
+  };
+  for(const arr of groups.values()){
+    if(arr.length === 1){ out.push(arr[0]); continue; }
+    // Asymmetric alt-form pairing: at least one entry has anthro/furry/kemono
+    // and at least one doesn't → the un-tagged "regular" version always wins,
+    // info-score is bypassed, and the winner is flagged altForm so fillTip()
+    // suppresses the duplicate-warning ⚠ chip. Symmetric cases (all tagged or
+    // none tagged) fall through to the existing info-score sort.
+    const tagged = arr.filter(hasAltFormTag);
+    const untagged = arr.filter(p => !hasAltFormTag(p));
+    let winner, losers;
+    if(tagged.length && untagged.length){
+      untagged.sort(sortByScore);
+      tagged.sort(sortByScore);
+      winner = untagged[0];
+      losers = [...untagged.slice(1), ...tagged];
+      winner.altForm = true;
+    } else {
+      arr.sort(sortByScore);
+      winner = arr[0];
+      losers = arr.slice(1);
+    }
+    winner.duplicates = losers;
+    out.push(winner);
+  }
+  return out;
+}
+
+// Assemble the active R map from the per-source stores. Rules:
+//   • Community OFF                  → cast Sterling only (original behavior).
+//   • Community ON + Sterling        → cast Sterling + community Sterling, merged per room.
+//   • Community ON + O'See           → community O'See only (no canonical lives there).
+function buildR(){
+  R = {};
+  if(!showCommunity){
+    for(const id in R_CAST) R[id] = R_CAST[id].slice();
+  } else if(currentBldg === 'sterling'){
+    for(const id in R_CAST) R[id] = R_CAST[id].slice();
+    for(const id in R_EXTRA_STERLING){
+      if(R[id]) R[id].push(...R_EXTRA_STERLING[id]);
+      else      R[id] = R_EXTRA_STERLING[id].slice();
+    }
+  } else {
+    for(const id in R_EXTRA_OSEE) R[id] = R_EXTRA_OSEE[id].slice();
+  }
+  // Per-room dedupe runs unconditionally so a community-off pass also clears
+  // any .duplicates left on cast objects from a prior community-on pass.
+  // After dedup, sort each room: cast members above registrar entries, then
+  // alphabetically by firstName within each source group. firstName is the
+  // visible label in the desktop room boxes; the tooltip body inherits the
+  // same order so both render sites stay consistent.
+  for(const id in R){
+    R[id] = dedupeRoom(R[id]).sort((a, b) => {
+      const aCast = a.source === 'cast', bCast = b.source === 'cast';
+      if(aCast !== bCast) return aCast ? -1 : 1;
+      return String(a.firstName||'').toLowerCase()
+        .localeCompare(String(b.firstName||'').toLowerCase());
+    });
+  }
+}
+
+// ── LAYOUT CONSTANTS ────────────────────────────────────────
+// Building shape: two north wings tied by a south east-west corridor.
+
+// Canvas
+const W = 1180;
+const H = 760;
+
+// Core room modules
+const WROOM = 70;   // room depth from hallway
+const HROOM = 50;   // room width along hallway
+const BATH_DEPTH = 40;
+const BATH_SPAN  = 32;
+
+// Hallways and row spacing
+const NHALL = 20;
+const EHALL = 20;
+const VG    = 0;
+
+// Shared spaces
+const LCOMMONS_W = 2 * HROOM;
+const UCOMMONS_W = (2 * WROOM) + NHALL;
+const UCOMMONS_H = HROOM;
+const LOBBY_W = 2 * WROOM;
+const LOBBY_H = LOBBY_W;
+const KITCHEN_H = WROOM + 40;
+const STAIRS_W = NHALL * 2;
+const STAIRS_H = NHALL * 3;
+
+// Global placement offsets
+const TOTAL_W = (8 * HROOM) + (2 * LCOMMONS_W) + LOBBY_W + (4 * WROOM) + (2 * NHALL);
+const TOTAL_H = STAIRS_W + (8 * HROOM) + UCOMMONS_H + EHALL + KITCHEN_H;
+const MX = (W - TOTAL_W) / 2;
+const MY = (H - TOTAL_H) / 2;
+const TY = MY + STAIRS_W;
+
+// Wing columns
+const LW_OUT_X  = MX;
+const LW_HALL_X = LW_OUT_X + WROOM;
+const LW_IN_X   = LW_HALL_X + NHALL;
+const LW_END_X  = LW_IN_X + WROOM;
+
+const RW_END_X  = W - MX;
+const RW_OUT_X  = RW_END_X - WROOM;
+const RW_HALL_X = RW_OUT_X - NHALL;
+const RW_IN_X   = RW_HALL_X - WROOM;
+
+const pid = (floor, suf) => `${floor}${String(suf).padStart(2,'0')}`;
+
+// Horizontal room pair with a shared bath that cuts into both rooms.
+// Horizontal pair: two rooms side-by-side, flush against each other (no strip).
+// The shared bath sits ON the partition wall and protrudes w_bath/2 INTO each
+// room, creating an L-shape per room. `side` flushes the bath against the
+// hallway side: 'top' = bath at the top edge, 'bottom' = bath at the bottom.
+function lShapePair(x, y, w_room, h_room, w_bath, h_bath, side){
+  const xL = x;
+  const xR = x + 2 * w_room;
+  const yT = y;
+  const yB = y + h_room;
+  const partX = x + w_room;
+  const bX1 = partX - w_bath / 2;
+  const bX2 = partX + w_bath / 2;
+  const bY1 = (side === 'top') ? yT          : yB - h_bath;
+  const bY2 = (side === 'top') ? yT + h_bath : yB;
+  let leftPath, rightPath;
+  if (side === 'top') {
+    leftPath  = `M ${xL} ${yT} L ${bX1} ${yT} L ${bX1} ${bY2} L ${partX} ${bY2} L ${partX} ${yB} L ${xL} ${yB} Z`;
+    rightPath = `M ${partX} ${bY2} L ${bX2} ${bY2} L ${bX2} ${yT} L ${xR} ${yT} L ${xR} ${yB} L ${partX} ${yB} Z`;
+  } else {
+    leftPath  = `M ${xL} ${yT} L ${partX} ${yT} L ${partX} ${bY1} L ${bX1} ${bY1} L ${bX1} ${yB} L ${xL} ${yB} Z`;
+    rightPath = `M ${partX} ${yT} L ${xR} ${yT} L ${xR} ${yB} L ${bX2} ${yB} L ${bX2} ${bY1} L ${partX} ${bY1} Z`;
+  }
+  return {
+    left:  {path: leftPath,  x: xL,    y: yT, w: w_room, h: h_room, cx: xL + w_room/2,    cy: yT + h_room/2},
+    right: {path: rightPath, x: partX, y: yT, w: w_room, h: h_room, cx: partX + w_room/2, cy: yT + h_room/2},
+    bath:  {x: bX1, y: bY1, w: bX2 - bX1, h: bY2 - bY1}
+  };
+}
+
+// Vertical pair: two rooms stacked top/bottom, flush (no strip). The shared
+// bath sits on the horizontal partition between them and protrudes h_bath/2
+// INTO each room. `side` flushes the bath against the hallway side: 'left' or
+// 'right' relative to the column.
+function vShapePair(x, y, w_room, h_room, w_bath, h_bath, side){
+  const xL = x;
+  const xR = x + w_room;
+  const yT = y;
+  const yB = y + 2 * h_room;
+  const partY = y + h_room;
+  const bY1 = partY - h_bath / 2;
+  const bY2 = partY + h_bath / 2;
+  const bX1 = (side === 'left') ? xL : xR - w_bath;
+  const bX2 = (side === 'left') ? xL + w_bath : xR;
+  let topPath, botPath;
+  if (side === 'right') {
+    topPath = `M ${xL} ${yT} L ${xR} ${yT} L ${xR} ${bY1} L ${bX1} ${bY1} L ${bX1} ${partY} L ${xL} ${partY} Z`;
+    botPath = `M ${xL} ${partY} L ${bX1} ${partY} L ${bX1} ${bY2} L ${xR} ${bY2} L ${xR} ${yB} L ${xL} ${yB} Z`;
+  } else {
+    topPath = `M ${xL} ${yT} L ${xR} ${yT} L ${xR} ${partY} L ${bX2} ${partY} L ${bX2} ${bY1} L ${xL} ${bY1} Z`;
+    botPath = `M ${xL} ${bY2} L ${bX2} ${bY2} L ${bX2} ${partY} L ${xR} ${partY} L ${xR} ${yB} L ${xL} ${yB} Z`;
+  }
+  return {
+    top:    {path: topPath, x: xL, y: yT,    w: w_room, h: h_room, cx: xL + w_room/2, cy: yT + h_room/2},
+    bottom: {path: botPath, x: xL, y: partY, w: w_room, h: h_room, cx: xL + w_room/2, cy: partY + h_room/2},
+    bath:   {x: bX1, y: bY1, w: bX2 - bX1, h: bY2 - bY1}
+  };
+}
+
+function layout(floor){
+  const items = [];
+  const addSp   = (lbl, x, y, w, h, c) => items.push({k:'s', lbl, x, y, w, h, c});
+  const addBath = (x, y, w, h)         => items.push({k:'b', x, y, w, h});
+  const addCorr = (x, y, w, h)         => items.unshift({k:'c', x, y, w, h});
+
+  // Vertical pair (wing) — rooms flush; bath flush against the hallway side.
+  const vPair = (idTop, idBot, x, y, side) => {
+    const p = vShapePair(x, y, WROOM, HROOM, BATH_DEPTH, BATH_SPAN, side);
+    // Bath in each room is BATH_DEPTH wide × HALF_SPAN tall, in a corner:
+    //   side='right' → top room: BR ; bottom room: TR
+    //   side='left'  → top room: BL ; bottom room: TL
+    const topCorner = (side === 'right') ? 'br' : 'bl';
+    const botCorner = (side === 'right') ? 'tr' : 'tl';
+    addRoomPathL(idTop, p.top.path,    p.top.x,    p.top.y,    p.top.w,    p.top.h,    topCorner, BATH_DEPTH, HALF_SPAN);
+    addRoomPathL(idBot, p.bottom.path, p.bottom.x, p.bottom.y, p.bottom.w, p.bottom.h, botCorner, BATH_DEPTH, HALF_SPAN);
+    addBath(p.bath.x, p.bath.y, p.bath.w, p.bath.h);
+  };
+  // Horizontal pair (E-W rooms) — rooms flush; bath flush against hallway side.
+  const hPair = (idL, idR, x, y, w_room, h_room, side) => {
+    const p = lShapePair(x, y, w_room, h_room, BATH_SPAN, BATH_DEPTH, side);
+    // Bath in each room is HALF_SPAN wide × BATH_DEPTH tall, in a corner:
+    //   side='top'    → left: TR ; right: TL
+    //   side='bottom' → left: BR ; right: BL
+    const lCorner = (side === 'top') ? 'tr' : 'br';
+    const rCorner = (side === 'top') ? 'tl' : 'bl';
+    addRoomPathL(idL, p.left.path,  p.left.x,  p.left.y,  p.left.w,  p.left.h,  lCorner, HALF_SPAN, BATH_DEPTH);
+    addRoomPathL(idR, p.right.path, p.right.x, p.right.y, p.right.w, p.right.h, rCorner, HALF_SPAN, BATH_DEPTH);
+    addBath(p.bath.x, p.bath.y, p.bath.w, p.bath.h);
+  };
+  // Enclosed PVT — same DEPTH as a shared bath (BATH_DEPTH) but HALF the SPAN.
+  // Sits flush against the hallway wall and pinned to one side of the room.
+  // Top corners ('tl'/'tr') are wing-style rooms whose hallway is the LEFT or
+  // RIGHT side wall — depth runs along x, half-span along y.
+  // Bottom corners ('bl'/'br') are E-W-row rooms whose hallway is the BOTTOM
+  // wall — depth runs along y, half-span along x.
+  const HALF_SPAN = BATH_SPAN / 2;
+  const enclosedPvt = (x, y, w, h, corner) => {
+    let bx, by, bw, bh;
+    if      (corner === 'tl') { bx = x;                    by = y;                    bw = BATH_DEPTH; bh = HALF_SPAN;  }
+    else if (corner === 'tr') { bx = x + w - BATH_DEPTH;   by = y;                    bw = BATH_DEPTH; bh = HALF_SPAN;  }
+    else if (corner === 'bl') { bx = x;                    by = y + h - BATH_DEPTH;   bw = HALF_SPAN;  bh = BATH_DEPTH; }
+    else                      { bx = x + w - HALF_SPAN;    by = y + h - BATH_DEPTH;   bw = HALF_SPAN;  bh = BATH_DEPTH; }
+    addBath(bx, by, bw, bh);
+  };
+  // Compute TWO independent label anchors for a room based on its bath corner:
+  //   • Number anchor — sits in the narrow strip next to the bathroom.
+  //       For wing rooms (wider than tall, face N-S hall): centred in the strip
+  //       between the room's exterior wall and the bathroom's short wall, at the
+  //       room's vertical centre.
+  //       For E-W rooms (taller than wide, face E-W hall): centred in the strip
+  //       between the bathroom and the opposite side wall, near the door wall.
+  //   • Resident anchor — sits in the bath-free half of the room.
+  //       Wing rooms: in the quadrant horizontally on the bath side but in the
+  //       opposite vertical half (so it doesn't fight the number strip).
+  //       E-W rooms: full-width bath-free half (top or bottom).
+  const computeAnchors = (x, y, w, h, bathCorner, bathW, bathH) => {
+    const bathOnLeft = (bathCorner === 'tl' || bathCorner === 'bl');
+    const bathOnTop  = (bathCorner === 'tl' || bathCorner === 'tr');
+    const isWing = h <= w;        // wider than tall → wing room
+    const wallOff = 8;            // distance from a wall to a label's visual centre
+    let numCx, numCy, resCx, resCy;
+    if (isWing) {
+      // Number: in the strip opposite the bath horizontally, FLUSH against the
+      // wall ON THE BATH SIDE (= the partition with the paired room). This
+      // pushes the number out of the centre and frees the rest of the strip
+      // for the residents.
+      numCx = bathOnLeft ? x + (bathW + w) / 2 : x + (w - bathW) / 2;
+      numCy = bathOnTop ? y + wallOff : y + h - wallOff;
+      // Residents: full room width, centred in the bath-free vertical half.
+      resCx = x + w / 2;
+      resCy = bathOnTop ? y + (h + bathH) / 2 : y + (h - bathH) / 2;
+    } else {
+      // Number: in the strip opposite the bath horizontally, near the door
+      // wall (= the bath side, since bath is flush with the hallway wall).
+      numCx = bathOnLeft ? x + (bathW + w) / 2 : x + (w - bathW) / 2;
+      numCy = bathOnTop ? y + wallOff : y + h - wallOff;
+      // Residents: full room width, centred in the bath-free vertical half.
+      resCx = x + w / 2;
+      resCy = bathOnTop ? y + (bathH + h) / 2 : y + (h - bathH) / 2;
+    }
+    return { numCx, numCy, resCx, resCy };
+  };
+
+  // Bath dimensions (within a single room) for each kind of bath:
+  //   - Shared bath in vertical pair (wings): BATH_DEPTH wide × HALF_SPAN tall
+  //     (the bath protrudes BATH_DEPTH deep horizontally into the room and
+  //     HALF_SPAN of its full BATH_SPAN protrudes vertically).
+  //   - Shared bath in horizontal pair (E-W): HALF_SPAN wide × BATH_DEPTH tall.
+  //   - Enclosed PVT in wing-style RA ('tl'/'tr'): same as wing-pair bath.
+  //   - Enclosed PVT in E-W-style RA/83/18 ('bl'/'br'): same as E-W-pair bath.
+  const bathDimsForCorner = corner =>
+    (corner === 'tl' || corner === 'tr')
+      ? { bathW: BATH_DEPTH, bathH: HALF_SPAN }   // wing-style — wide × short
+      : { bathW: HALF_SPAN,  bathH: BATH_DEPTH }; // E-W-style  — narrow × tall
+
+  // Room helpers — store BOTH anchors on the item.
+  const addRoomRectL = (sfx, x, y, w, h, bathCorner, bathW, bathH) => {
+    const a = computeAnchors(x, y, w, h, bathCorner, bathW, bathH);
+    items.push({k:'r', id:pid(floor,sfx), x, y, w, h, ...a});
+  };
+  const addRoomPathL = (sfx, path, x, y, w, h, bathCorner, bathW, bathH) => {
+    const a = computeAnchors(x, y, w, h, bathCorner, bathW, bathH);
+    items.push({k:'r', id:pid(floor,sfx), path, x, y, w, h, ...a});
+  };
+  // RA cell — colour-coded only; the legend already spells out "RA / Staff" so
+  // we don't repeat the label inside the rectangle on the map.
+  const addRA = (x, y, w, h, corner='br') => {
+    const d = bathDimsForCorner(corner);
+    const a = computeAnchors(x, y, w, h, corner, d.bathW, d.bathH);
+    items.push({k:'s', lbl:'', x, y, w, h, c:'ra', labelCx:a.resCx, labelCy:a.resCy});
+    enclosedPvt(x, y, w, h, corner);
+  };
+  // Single-occupancy student room with enclosed PVT (rooms 83 / 18)
+  const addStudentRoomPvt = (sfx, x, y, w, h, corner='br') => {
+    const d = bathDimsForCorner(corner);
+    addRoomRectL(sfx, x, y, w, h, corner, d.bathW, d.bathH);
+    enclosedPvt(x, y, w, h, corner);
+  };
+
+  const PAIR_H  = 2 * HROOM;            // vertical pair total height (rooms flush)
+  const DCH     = UCOMMONS_H;           // dorm-commons height
+  // ── STAIRWELLS at the north end of each wing ────────────────
+  addSp('STAIRS', MX + WROOM, MY, STAIRS_H, STAIRS_W, 'stair');
+  addSp('STAIRS', W - MX - WROOM - STAIRS_H, MY, STAIRS_H, STAIRS_W, 'stair');
+
+  // ── LEFT WING ───────────────────────────────────────────────
+  // Outer (west) column = even rooms — bath flush against EAST (hallway side).
+  // Inner (east) column = odd  rooms — bath flush against WEST (hallway side).
+  let y = TY;
+  vPair(68, 70, LW_OUT_X, y, 'right');
+  vPair(67, 69, LW_IN_X,  y, 'left');
+  y += PAIR_H + VG;
+  vPair(72, 74, LW_OUT_X, y, 'right');
+  vPair(71, 73, LW_IN_X,  y, 'left');
+  y += PAIR_H + VG;
+  // Bump 16 west — that's the available margin between the wing's outer wall
+  // and the building's outer wall (so the bump fits without escaping the building).
+  addSp('DORM\nCOMMONS', LW_OUT_X, y, UCOMMONS_W, DCH, 'com');
+  y += DCH + VG;
+  vPair(76, 78, LW_OUT_X, y, 'right');
+  vPair(75, 77, LW_IN_X,  y, 'left');
+  y += PAIR_H + VG;
+  // Block 4: outer = (180,182) paired ; inner = RA (top, with enclosed PVT) + LAUNDRY (bottom).
+  // LAUNDRY's south wall sits on the E-W hall's north wall — door opens south.
+  vPair(80, 82, LW_OUT_X, y, 'right');
+  addRA(LW_IN_X, y, WROOM, HROOM, 'tl');                  // PVT in NW corner (toward N-S hall)
+  addSp('', LW_IN_X, y + HROOM, WROOM, HROOM, 'lau');
+  y += PAIR_H + VG;
+
+  const LW_BOTTOM = y - VG;
+  addCorr(LW_HALL_X, TY, NHALL, LW_BOTTOM - TY);
+
+  // ── RIGHT WING (mirrored) ───────────────────────────────────
+  // Inner (west) column = even 102..116 — bath flush against EAST (hallway side).
+  // Outer (east) column = odd 103..117 — bath flush against WEST (hallway side).
+  let y2 = TY;
+  vPair(2, 4, RW_IN_X,  y2, 'right');
+  vPair(3, 5, RW_OUT_X, y2, 'left');
+  y2 += PAIR_H + VG;
+  vPair(6, 8, RW_IN_X,  y2, 'right');
+  vPair(7, 9, RW_OUT_X, y2, 'left');
+  y2 += PAIR_H + VG;
+  addSp('DORM\nCOMMONS', RW_IN_X, y2, UCOMMONS_W, DCH, 'com');
+  y2 += DCH + VG;
+  vPair(10, 12, RW_IN_X,  y2, 'right');
+  vPair(11, 13, RW_OUT_X, y2, 'left');
+  y2 += PAIR_H + VG;
+  // Block 4 mirror: inner = RA + LAUNDRY ; outer = (115,117) paired
+  addRA(RW_IN_X, y2, WROOM, HROOM, 'tr');                  // PVT in NE corner (toward N-S hall)
+  addSp('', RW_IN_X, y2 + HROOM, WROOM, HROOM, 'lau');
+  vPair(15, 17, RW_OUT_X, y2, 'left');
+  y2 += PAIR_H + VG;
+
+  const RW_BOTTOM = y2 - VG;
+  addCorr(RW_HALL_X, TY, NHALL, RW_BOTTOM - TY);
+
+  const WING_BOTTOM = Math.max(LW_BOTTOM, RW_BOTTOM);
+
+  // ── ONE E-W HALL (joins both N-S halls) ─────────────────────
+  const ECY = WING_BOTTOM;
+  addCorr(LW_HALL_X, ECY, RW_HALL_X + NHALL - LW_HALL_X, EHALL);
+
+  const SCY = ECY + EHALL;
+
+  // E-W rooms are wing rooms ROTATED 90°: HROOM × WROOM (50 × 70).
+  const ECELL_W = HROOM;        // 50 — width along E-W hall
+  const ECELL_H = WROOM;        // 70 — depth from E-W hall
+  const NCH = ECELL_H;
+  const SCH = ECELL_H;
+  const NCY = ECY - NCH;
+
+  // Main staircase is a SQUARE — same height as a south-face room, width also =
+  // SCH (so it's square). It centres horizontally in the building, and the rows
+  // on either side (south face + central row) shift inward to meet it. Kitchens
+  // also slide inward and sit FLUSH against the outermost south-face room.
+  const PAIR_W     = 2 * ECELL_W;        // 100 — width of one paired cell
+  const SF_HALF    = 3 * PAIR_W;         // 300 — three flush pairs per side
+  const CENTER_X   = W / 2;              // building horizontal centre
+  const LOBBY_X1   = CENTER_X - LOBBY_W / 2;
+  const LOBBY_X2   = LOBBY_X1 + LOBBY_W;
+  const MSTAIRS_W  = STAIRS_W * 2;
+  const MSTAIRS_H  = ECELL_H;
+  const MSTAIRS_X1 = CENTER_X - MSTAIRS_W / 2;
+  const MSTAIRS_X2 = MSTAIRS_X1 + MSTAIRS_W;
+  const UHALF_X1   = LOBBY_X1 - SF_HALF;
+  const UHALF_X2   = LOBBY_X2 + SF_HALF;
+  const LHALF_X1   = MSTAIRS_X1 - SF_HALF;  // x where the left half starts
+  const LHALF_X2    = MSTAIRS_X2 + SF_HALF;  // x where the right half ends
+  // DC width chosen so the central left half (pair + DC + RA + 83) = SF_HALF.
+  // SF_HALF = 2·ECELL_W (pair) + DCW + ECELL_W (RA) + ECELL_W (83)  →  DCW = 100.
+  const DCW = SF_HALF - 4 * ECELL_W;     // 100
+
+  // ── CENTRAL ROOMS NORTH of E-W hall (face SOUTH into hall) ──
+  // Rooms flush — no inter-cell gap.
+  let cx = UHALF_X1;
+  hPair(79, 81, cx, NCY, ECELL_W, NCH, 'bottom');
+  cx += 2 * ECELL_W;
+  addSp('DORM\nCOMMONS', cx, NCY, DCW, NCH, 'com');
+  cx += DCW;
+  addRA(cx, NCY, ECELL_W, NCH, 'br');                       // PVT in SE corner
+  cx += ECELL_W;
+  addStudentRoomPvt(83, cx, NCY, ECELL_W, NCH, 'br');
+
+  // Right half (E → W mirror): pair (16,14), DC, RA, 18
+  let rx = UHALF_X2 - 2 * ECELL_W;
+  hPair(16, 14, rx, NCY, ECELL_W, NCH, 'bottom');
+  rx -= DCW;
+  addSp('DORM\nCOMMONS', rx, NCY, DCW, NCH, 'com');
+  rx -= ECELL_W;
+  addRA(rx, NCY, ECELL_W, NCH, 'bl');                       // PVT in SW corner
+  rx -= ECELL_W;
+  addStudentRoomPvt(18, rx, NCY, ECELL_W, NCH, 'bl');
+
+  // ── MAIN LOBBY between rooms 83 and 18 (across hall from stairs) ─
+  addSp('MAIN\nLOBBY', LOBBY_X1, NCY - LOBBY_H / 2, LOBBY_W, LOBBY_H, 'com');
+
+  // ── SOUTH-FACE row + MAIN STAIRCASE ─────────────────────────
+  // Pairs flush from LHALF_X1; main staircase in the middle; pairs flush again
+  // from MSTAIRS_X2 to LHALF_X2.
+  [[84,86],[88,90],[92,94]].forEach(([a,b], i) => {
+    hPair(a, b, LHALF_X1 + i * PAIR_W, SCY, ECELL_W, SCH, 'top');
+  });
+  addSp('MAIN\nSTAIRCASE', MSTAIRS_X1, SCY, MSTAIRS_W, MSTAIRS_H, 'stair');
+  [[29,27],[25,23],[21,19]].forEach(([a,b], i) => {
+    hPair(a, b, MSTAIRS_X2 + i * PAIR_W, SCY, ECELL_W, SCH, 'top');
+  });
+
+  // ── KITCHENS — equal-size, flush against the outermost south-face rooms ─
+  // Left kitchen: from the building's outer wall (x=6) up to room 84 (LHALF_X1).
+  // Right kitchen mirrors. Both end up the same width.
+  const BLDG_INNER_L = MX + WROOM;
+  const KW = LHALF_X1 - BLDG_INNER_L;
+  addSp('SHARED\nKITCHEN', BLDG_INNER_L, SCY, KW, KITCHEN_H, 'com');
+  addSp('SHARED\nKITCHEN', LHALF_X2,     SCY, KW, KITCHEN_H, 'com');
+
+  addSp('STAIRS', MX + WROOM - STAIRS_W, SCY - EHALL, STAIRS_W, STAIRS_H, 'stair');
+  addSp('STAIRS', W - MX - WROOM, SCY - EHALL, STAIRS_W, STAIRS_H, 'stair');
+
+  return items;
+}
+
+// ── SVG BUILDER ──────────────────────────────────────────────
+// Room states the SVG cares about:
+//   • 'e' — empty
+//   • 'o' — occupied within capacity
+//   • 'w' — over capacity (more residents than ROOM_CAPACITY); rendered red.
+function status(id){
+  const res = R[id];
+  if(!res || !res.length) return 'e';
+  if(res.length > ROOM_CAPACITY) return 'w';
+  return 'o';
+}
+
+function svg(floor){
+  const items = layout(floor);
+  const parts = [];
+
+  // Outdoor / non-floor backdrop
+  parts.push(`<rect x="0" y="0" width="${W}" height="${H}" rx="6" fill="#7d6f48"/>`);
+  // Building footprint — heavy outer wall
+  parts.push(`<rect x="6" y="6" width="${W-12}" height="${H-12}" rx="6" fill="var(--pl-bg)" stroke="var(--pl-wall)" stroke-width="3"/>`);
+  parts.push(`<rect x="10" y="10" width="${W-20}" height="${H-20}" rx="6" fill="none" stroke="rgba(74,63,40,.25)" stroke-width="1"/>`);
+
+  // Corridors first (drawn beneath rooms)
+  for(const it of items){
+    if(it.k === 'c'){
+      parts.push(`<rect class="corridor" x="${it.x}" y="${it.y}" width="${it.w}" height="${it.h}" rx="2"/>`);
+    }
+  }
+
+  // Rooms first (rects + L-shaped paths), then specials, then baths on top.
+  // Label positions: number ABOVE (cx,cy), resident name BELOW, dot BELOW resident.
+  // This way, setting (cx,cy) to a label-safe quadrant of the room moves all
+  // three labels together — important for L-shaped rooms whose bath corner
+  // would otherwise cover the labels.
+  for(const it of items){
+    if(it.k !== 'r') continue;
+    const st = status(it.id);
+    const res = R[it.id] || [];
+    const shape = it.path
+      ? `<path class="rb" d="${it.path}"/>`
+      : `<rect class="rb" x="${it.x}" y="${it.y}" width="${it.w}" height="${it.h}"/>`;
+    // Two independent label anchors:
+    //   numCx/numCy → room number (next to the bathroom, in its own narrow strip).
+    //   resCx/resCy → resident name(s), in the bath-free half of the room.
+    // Desktop: small room number tucked in the narrow strip beside the bath
+    //           (numCx/numCy), with resident name(s) in the bath-free half.
+    // Mobile : a SECOND, larger room number anchored in the bath-free half
+    //           (resCx/resCy). CSS hides whichever doesn't apply for the
+    //           current viewport, and resident names are hidden outright on
+    //           mobile (tap a room to inspect residents in the tooltip).
+    let inner =
+        `<text class="rn" x="${it.numCx}" y="${it.numCy}">${it.id}</text>` +
+        `<text class="rn-mobile" x="${it.resCx}" y="${it.resCy}">${it.id}</text>`;
+    if(res.length === 1){
+      inner += `<text class="rnm" x="${it.resCx}" y="${it.resCy}">${res[0].firstName}</text>`;
+    } else if(res.length === 2){
+      inner += `<text class="rnm" x="${it.resCx}" y="${it.resCy - 7}">${res[0].firstName}</text>`;
+      inner += `<text class="rnm" x="${it.resCx}" y="${it.resCy + 7}">${res[1].firstName}</text>`;
+    } else if(res.length > 2){
+      // Fallback for 3+: stack first two and a "+N more" hint.
+      inner += `<text class="rnm" x="${it.resCx}" y="${it.resCy - 7}">${res[0].firstName}</text>`;
+      inner += `<text class="rnm" x="${it.resCx}" y="${it.resCy + 7}">+${res.length-1} more</text>`;
+    }
+    parts.push(`<g class="room ${st}" data-id="${it.id}">${shape}${inner}</g>`);
+  }
+
+  for(const it of items){
+    if(it.k !== 's') continue;
+    // Specials may set labelCx/labelCy to override the default centred label
+    // (used by RA so its "RA" text doesn't sit on top of its enclosed PVT).
+    const cx = it.labelCx ?? (it.x + it.w/2);
+    const cy = it.labelCy ?? (it.y + it.h/2);
+    const lines = (it.lbl || '').split('\n');
+    let txt = '';
+    if(lines.length === 1 && lines[0]){
+      txt = `<text x="${cx}" y="${cy}">${lines[0]}</text>`;
+    } else if(lines.length === 2){
+      // Two-line label: stack via <tspan> with em-relative dy so the line
+      // spacing scales with font-size. Rajdhani's ascender (~0.65em) is taller
+      // than its descender (~0.6em), so symmetric dy around cy leaves the bbox
+      // visibly above center. dy="-0.475em"/"1.0em" puts the first baseline
+      // 0.475em above cy and the second 0.525em below — asymmetric on purpose,
+      // so the bbox top (baseline1 - ascender) and bbox bottom (baseline2 +
+      // descender) end up equidistant from cy.
+      txt = `<text x="${cx}" y="${cy}"><tspan x="${cx}" dy="-0.475em">${lines[0]}</tspan><tspan x="${cx}" dy="1em">${lines[1]}</tspan></text>`;
+    }
+    parts.push(`<g class="sp ${it.c}"><rect x="${it.x}" y="${it.y}" width="${it.w}" height="${it.h}"/>${txt}</g>`);
+  }
+
+  // Shared baths drawn on top, straddling the partition wall between paired rooms
+  for(const it of items){
+    if(it.k !== 'b') continue;
+    parts.push(`<rect class="pb" x="${it.x}" y="${it.y}" width="${it.w}" height="${it.h}"/>`);
+  }
+
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${parts.join('')}</svg>`;
+}
+
+// ── TOOLTIP ──────────────────────────────────────────────────
+const tip = document.getElementById('tip');
+let mx=0, my=0, hideTimer=null;
+let stuck = false;          // tooltip is "pinned" by a click
+let stuckId = null;         // which room is currently stuck
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; if(!stuck) pos(); });
+
+function pos(){
+  if(!tip.classList.contains('on')) return;
+  const tw = tip.offsetWidth || 320, th = tip.offsetHeight || 240;
+  let l = mx + 18, t = my - 22;
+  if(l + tw > window.innerWidth - 8) l = mx - tw - 18;
+  if(t + th > window.innerHeight - 8) t = window.innerHeight - th - 8;
+  if(t < 70) t = 70;
+  tip.style.left = l + 'px'; tip.style.top = t + 'px';
+}
+
+// Escape dynamic text before injecting it into innerHTML.
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fillTip(id){
+  const res = R[id] || [];
+  if(!res.length) return false;
+  document.getElementById('tipRN').textContent = 'Room ' + id;
+  document.getElementById('tipCT').textContent = res.length === 1 ? '1 Resident' : res.length + ' Residents';
+  // Over-capacity warning row — sticky banner above the (scrollable) resident
+  // list. Sterling/O'See rooms are 2-bed; anything more means players have
+  // double-booked a room in the registrar.
+  const warn = document.getElementById('tipWarn');
+  if(res.length > ROOM_CAPACITY){
+    warn.textContent = `⚠ Over capacity — ${res.length} listed in a ${ROOM_CAPACITY}-bed room`;
+    warn.hidden = false;
+  } else {
+    warn.hidden = true;
+    warn.textContent = '';
+  }
+  const body = document.getElementById('tipBody');
+  // Reset scroll on every refill so a previously scrolled tooltip doesn't
+  // open the next room halfway down.
+  body.scrollTop = 0;
+  body.innerHTML = '';
+  res.forEach(p => {
+    const c = document.createElement('div');
+    c.className = 'rc';
+    const isComm = p.source === 'community';
+
+    // Portrait source:
+    //   • Cast → cast portrait endpoint by name; fall back to a Mynerve initial
+    //     letter card if the file 404s (existing behavior).
+    //   • Community → uploaded portrait URL; fall back to the Weyland logo if
+    //     the upload is missing OR the URL fails to load.
+    const initial = (p.name || '?')[0];
+    const imgKey  = p.image || (isComm ? '' : p.firstName.toLowerCase());
+    const imgSrc  = isComm
+      ? (p.image || WEYLAND_LOGO)
+      : CAST_PORTRAIT(imgKey);
+    const imgErr  = isComm
+      ? `this.onerror=null;this.src='${WEYLAND_LOGO}'`
+      : `this.outerHTML='<div class=&quot;rfb&quot;>${esc(initial)}</div>'`;
+
+    const profileHref = isComm ? REGISTRAR_PROFILE(p.characterId) : CAST_PROFILE(p.firstName);
+    // Cast characters get a "Images ↗" booru search; community characters
+    // aren't on the booru, so swap that chip for a "by @owner" credit link
+    // pointing back to the registrar profile (community characters' true
+    // attribution lives there).
+    const secondAction = isComm
+      ? (p.ownerName
+          ? `<a class="act alt cred" href="${esc(REGISTRAR_OWNER_SEARCH(p.ownerName))}" target="_blank" rel="noopener" title="See all characters by @${esc(p.ownerName)}">by @${esc(p.ownerName)}</a>`
+          : '')
+      : `<a class="act alt" href="${BOORU_SEARCH(p.firstName)}" target="_blank" rel="noopener">Images ↗</a>`;
+
+    // Duplicate badge — only present when dedupeRoom() found other entries
+    // for the same person in this room. Title lists each loser (source +
+    // owner + missing-fields hint); click opens the first loser's profile so
+    // the player can see the duplicate side-by-side.
+    // Skip the badge when the pairing is an intentional anthro/furry/kemono
+    // alt-form (winner.altForm set by dedupeRoom) — that's a feature, not a bug.
+    let dupBadge = '';
+    if(p.duplicates && p.duplicates.length && !p.altForm){
+      const first = p.duplicates[0];
+      const dupHref = first.source === 'cast' ? CAST_PROFILE(first.firstName) : REGISTRAR_PROFILE(first.characterId);
+      const lines = p.duplicates.map(d => {
+        const src = d.source === 'cast'
+          ? `cast canonical entry "${d.key}"`
+          : (d.ownerName ? `community entry by @${d.ownerName}` : 'community entry');
+        const missing = [];
+        if(!d.image)   missing.push('no portrait');
+        if(!d.summary) missing.push('no bio');
+        return '• ' + src + (missing.length ? ` (${missing.join(', ')})` : '');
+      });
+      const tail = p.duplicates.length > 1
+        ? `\n\nClick to open the first duplicate's profile.`
+        : `\n\nClick to open the duplicate's profile.`;
+      const title = `Also listed in this room as:\n${lines.join('\n')}${tail}`;
+      dupBadge = ` <a class="dup-warn" href="${esc(dupHref)}" target="_blank" rel="noopener" title="${esc(title)}">⚠</a>`;
+    }
+
+    c.innerHTML = `
+      <img class="rav" data-photo="${esc(imgKey)}" src="${esc(imgSrc)}" alt="${esc(p.name)}"
+        title="Click to view full photo"
+        onerror="${imgErr}"/>
+      <div class="ri">
+        <div class="rn2"><span class="nm">${esc(p.name)}</span>${dupBadge}</div>
+        ${p.summary ? `<div class="rs">${esc(p.summary)}</div>` : ''}
+        <div class="rd">${[p.species, p.gender, 'Age ' + p.age].filter(Boolean).map(esc).join(' · ')}</div>
+        <div class="actions">
+          <a class="act" href="${esc(profileHref)}" target="_blank" rel="noopener">Profile →</a>
+          ${secondAction}
+        </div>
+      </div>`;
+    // Click portrait → open the full image in the lightbox. For cast residents
+    // that's /photos/{key}.webp; for community residents it's the same uploaded
+    // portrait URL we just rendered (no separate "photo" version exists).
+    const rav = c.querySelector('.rav');
+    if(rav){
+      if(isComm){
+        if(p.image){
+          rav.style.cursor = 'zoom-in';
+          rav.addEventListener('click', e => { e.stopPropagation(); openPhotoUrl(p.image); });
+        } else {
+          rav.style.cursor = 'default';
+          rav.removeAttribute('title');
+        }
+      } else {
+        rav.addEventListener('click', e => { e.stopPropagation(); openPhoto(imgKey); });
+      }
+    }
+    body.appendChild(c);
+  });
+  return true;
+}
+
+// ── PHOTO OVERLAY (full-image lightbox) ─────────────────────
+const CAST_PHOTO = name => `https://cast.weybooru.com/images/photos/${name}.webp`;
+const photoOverlay = document.getElementById('photoOverlay');
+const photoOverlayImg = document.getElementById('photoOverlayImg');
+function openPhoto(key){
+  if(!key) return;
+  photoOverlayImg.src = CAST_PHOTO(key);
+  photoOverlay.classList.add('on');
+}
+// Community characters supply a direct portrait URL (upcdn.io etc.), so the
+// lightbox just opens that URL — there's no separate cast-style "photos/"
+// variant to construct.
+function openPhotoUrl(url){
+  if(!url) return;
+  photoOverlayImg.src = url;
+  photoOverlay.classList.add('on');
+}
+function closePhoto(){
+  photoOverlay.classList.remove('on');
+  photoOverlayImg.src = '';
+}
+photoOverlay.addEventListener('click', closePhoto);
+photoOverlayImg.addEventListener('click', e => e.stopPropagation());
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && photoOverlay.classList.contains('on')) closePhoto();
+});
+
+function showTip(id){
+  if(stuck) return;          // hover does nothing while a tooltip is pinned
+  if(!fillTip(id)) return;
+  clearTimeout(hideTimer);
+  tip.classList.add('on');
+  pos();
+}
+
+function pinTip(id){
+  if(!fillTip(id)) return;
+  stuck = true;
+  stuckId = id;
+  clearTimeout(hideTimer);
+  tip.classList.add('on');
+  // Mark the stuck room visually
+  document.querySelectorAll('.room.stuck').forEach(el=>el.classList.remove('stuck'));
+  const el = document.querySelector(`.room[data-id="${id}"]`);
+  if(el){
+    el.classList.add('stuck');
+    // Anchor the tooltip near the room so it stays put
+    const rect = el.getBoundingClientRect();
+    mx = rect.right;
+    my = rect.top + rect.height/2;
+  }
+  pos();
+}
+
+function unpin(){
+  stuck = false;
+  stuckId = null;
+  document.querySelectorAll('.room.stuck').forEach(el=>el.classList.remove('stuck'));
+  tip.classList.remove('on');
+}
+
+function scheduleHide(){
+  if(stuck) return;
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(()=>tip.classList.remove('on'), 220);
+}
+function cancelHide(){ clearTimeout(hideTimer); }
+
+tip.addEventListener('mouseenter', cancelHide);
+tip.addEventListener('mouseleave', scheduleHide);
+
+// Click outside the tooltip / outside any populated room dismisses the pin
+document.addEventListener('mousedown', e => {
+  if(!stuck) return;
+  if(tip.contains(e.target)) return;
+  const room = e.target.closest && e.target.closest('.room');
+  if(room && (R[room.dataset.id] || []).length) return;  // handled by room click
+  unpin();
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && stuck) unpin(); });
+
+// ── RENDER ───────────────────────────────────────────────────
+// Multi-line SVG <text> with em-relative dy never centers perfectly via
+// hand-picked dy values: the rendered bbox depends on the active font's
+// ascender/descender ratio, which differs across font-sizes and platforms.
+// After each render, measure each special-space label's bbox and shift its y
+// attribute so the bbox center lines up with its rect center (within ~0.1 px).
+function recenterMultilineLabels(svgRoot){
+  svgRoot.querySelectorAll('.sp text').forEach(text => {
+    if (text.querySelectorAll('tspan').length < 2) return;   // single-line already centered
+    const rect = text.parentNode.querySelector('rect');
+    if (!rect) return;
+    const r = rect.getBBox();
+    const t = text.getBBox();
+    const delta = (r.y + r.height/2) - (t.y + t.height/2);
+    if (Math.abs(delta) < 0.1) return;
+    const curY = parseFloat(text.getAttribute('y')) || 0;
+    text.setAttribute('y', curY + delta);
+  });
+}
+
+function render(floor){
+  const wrap = document.getElementById('svgWrap');
+  wrap.innerHTML = svg(floor);
+  recenterMultilineLabels(wrap);
+  wrap.querySelectorAll('.room').forEach(el => {
+    el.addEventListener('mouseenter', function(){ showTip(this.dataset.id); });
+    el.addEventListener('mouseleave', scheduleHide);
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      const id = this.dataset.id;
+      if(!(R[id] || []).length) { unpin(); return; }
+      if(stuck && stuckId === id) { unpin(); return; }   // toggle off
+      pinTip(id);
+    });
+  });
+  updateStats();
+}
+
+function updateStats(){
+  const totalRooms = Object.keys(R).length;
+  const totalRes = Object.values(R).reduce((a,b)=>a+b.length, 0);
+  document.getElementById('statLine').innerHTML =
+    `<b style="color:#a07a2a">${totalRes}</b> residents in <b style="color:#a07a2a">${totalRooms}</b> rooms`;
+}
+
+// Currently displayed floor — needed when re-rendering after a community /
+// building toggle without changing floors.
+let currentFloor = 2;
+let mapZoom = 1;
+
+function setMapZoom(nextZoom, { resetScroll = false } = {}){
+  const viewport = document.getElementById('mapViewport');
+  const wrap = document.getElementById('svgWrap');
+  const previous = mapZoom;
+  mapZoom = Math.max(1, Math.min(3, Math.round(nextZoom * 4) / 4));
+  viewport.classList.toggle('is-zoomed', mapZoom > 1);
+  if(mapZoom === 1) viewport.classList.remove('is-panning');
+  const centerX = viewport.scrollLeft + viewport.clientWidth / 2;
+  const centerY = viewport.scrollTop + viewport.clientHeight / 2;
+  // A transform magnifies the floor plan's scrollable overflow without changing its layout
+  // dimensions, so zoom cannot grow the viewport and push the directory UI off-screen.
+  wrap.style.transform = `scale(${mapZoom})`;
+  if(resetScroll){ viewport.scrollTo({ left:0, top:0, behavior:'smooth' }); return; }
+  requestAnimationFrame(() => {
+    const ratio = mapZoom / previous;
+    viewport.scrollLeft = centerX * ratio - viewport.clientWidth / 2;
+    viewport.scrollTop = centerY * ratio - viewport.clientHeight / 2;
+  });
+}
+
+document.getElementById('mapZoomIn').addEventListener('click', () => setMapZoom(mapZoom + .25));
+document.getElementById('mapZoomOut').addEventListener('click', () => setMapZoom(mapZoom - .25));
+document.getElementById('mapZoomReset').addEventListener('click', () => setMapZoom(1, { resetScroll:true }));
+
+// Drag the enlarged floor plan directly. Pointer events cover mouse, pen, and touch while the
+// movement threshold preserves ordinary room taps/clicks.
+const mapViewport = document.getElementById('mapViewport');
+let mapPan = null;
+let suppressMapClick = false;
+mapViewport.addEventListener('pointerdown', event => {
+  if(mapZoom <= 1 || !event.isPrimary || event.button !== 0) return;
+  mapPan = {
+    id:event.pointerId,
+    x:event.clientX,
+    y:event.clientY,
+    left:mapViewport.scrollLeft,
+    top:mapViewport.scrollTop,
+    moved:false,
+  };
+  mapViewport.setPointerCapture(event.pointerId);
+});
+mapViewport.addEventListener('pointermove', event => {
+  if(!mapPan || event.pointerId !== mapPan.id) return;
+  const dx = event.clientX - mapPan.x;
+  const dy = event.clientY - mapPan.y;
+  if(!mapPan.moved && Math.hypot(dx, dy) < 4) return;
+  mapPan.moved = true;
+  mapViewport.classList.add('is-panning');
+  mapViewport.scrollLeft = mapPan.left - dx;
+  mapViewport.scrollTop = mapPan.top - dy;
+  event.preventDefault();
+});
+function finishMapPan(event){
+  if(!mapPan || event.pointerId !== mapPan.id) return;
+  suppressMapClick = mapPan.moved;
+  mapPan = null;
+  mapViewport.classList.remove('is-panning');
+  if(mapViewport.hasPointerCapture(event.pointerId)) mapViewport.releasePointerCapture(event.pointerId);
+}
+mapViewport.addEventListener('pointerup', finishMapPan);
+mapViewport.addEventListener('pointercancel', finishMapPan);
+mapViewport.addEventListener('click', event => {
+  if(!suppressMapClick) return;
+  suppressMapClick = false;
+  event.preventDefault();
+  event.stopPropagation();
+}, true);
+
+function setFloor(f){
+  currentFloor = f;
+  // Scoped to #ftabs so the Sterling/O'See building tabs (which also use the
+  // .ftab class) aren't accidentally cleared.
+  document.querySelectorAll('#ftabs .ftab').forEach(t => t.classList.toggle('on', +t.dataset.floor === f));
+  unpin();
+  render(f);
+  setMapZoom(1, { resetScroll:true });
+}
+
+document.querySelectorAll('#ftabs .ftab').forEach(t => {
+  t.addEventListener('click', () => setFloor(+t.dataset.floor));
+});
+
+// ── BUILDING TABS (Sterling / O'See) ────────────────────────
+// Visible only while the community layer is active. Switching buildings
+// rebuilds the active R from the cached per-source stores and re-renders.
+function setBuilding(b){
+  if(b !== 'sterling' && b !== 'osee') return;
+  if(currentBldg === b) return;
+  currentBldg = b;
+  document.querySelectorAll('#btabs .ftab').forEach(t => t.classList.toggle('on', t.dataset.bldg === b));
+  document.getElementById('bldgName').textContent = b === 'osee' ? 'O’See Hall' : 'Sterling Hall';
+  unpin();
+  buildR();
+  render(currentFloor);
+}
+document.querySelectorAll('#btabs .ftab').forEach(t => {
+  t.addEventListener('click', () => setBuilding(t.dataset.bldg));
+});
+
+// ── COMMUNITY TOGGLE ────────────────────────────────────────
+// Lazily fetches the registrar list the first time it's flipped on. Toggling
+// off only hides the building tabs and rebuilds the active R; the cached
+// registrar data is kept around so flipping it back on is instant.
+const commToggle = document.getElementById('commToggle');
+const btabs = document.getElementById('btabs');
+// Feature gate: registrar UI is enabled only when the URL explicitly opts in.
+// Example: sterling-hall-map-v2.html?registrar=true
+const REGISTRAR_FEATURE_ENABLED = (() => {
+  const raw = new URLSearchParams(window.location.search).get('registrar') || '';
+  return /^(1|true|yes|on)$/i.test(raw);
+})();
+
+if(!REGISTRAR_FEATURE_ENABLED){
+  commToggle.style.display = 'none';
+  btabs.classList.add('hidden');
+}
+
+async function setCommunity(on){
+  if(!REGISTRAR_FEATURE_ENABLED) return;
+  if(showCommunity === on) return;
+  if(on){
+    try {
+      commToggle.classList.add('loading');
+      commToggle.textContent = 'Loading…';
+      await loadRegistrarData();
+    } catch(err){
+      console.error(err);
+      commToggle.classList.remove('loading');
+      commToggle.textContent = '+ Registrar';
+      // Reaching this catch means the direct fetch AND every CORS-proxy
+      // fallback failed. The error message already lists each attempt
+      // (see fetchRegistrarList), so just surface it verbatim with a hint
+      // about the underlying CORS gap that started us down this path.
+      alert(
+        `Couldn't load community characters from registrar.weybooru.com.\n\n${err.message}\n\n` +
+        `The registrar isn't serving Access-Control-Allow-Origin, so direct ` +
+        `fetch is blocked. The page tried three public CORS proxies as a ` +
+        `fallback and they all failed too. Try again in a minute, or enable ` +
+        `CORS on the registrar to remove the dependency on proxies entirely.`
+      );
+      return;
+    }
+    commToggle.classList.remove('loading');
+  }
+  showCommunity = on;
+  commToggle.classList.toggle('on', on);
+  commToggle.textContent = on ? '✓ Registrar' : '+ Registrar';
+  btabs.classList.toggle('hidden', !on);
+  // When community turns off, snap the displayed building back to Sterling
+  // (only place the canonical cast lives) without a flicker.
+  if(!on && currentBldg !== 'sterling'){
+    currentBldg = 'sterling';
+    document.querySelectorAll('#btabs .ftab').forEach(t => t.classList.toggle('on', t.dataset.bldg === 'sterling'));
+  }
+  document.getElementById('bldgName').textContent =
+    (on && currentBldg === 'osee') ? 'O’See Hall' : 'Sterling Hall';
+  unpin();
+  buildR();
+  render(currentFloor);
+  localStorage.setItem('commToggle', on);
+}
+if(REGISTRAR_FEATURE_ENABLED){
+  commToggle.addEventListener('click', () => setCommunity(!showCommunity));
+}
+
+// ── FONT TOGGLE (matches cast.weybooru.com behaviour + localStorage) ──
+const fontToggle = document.getElementById('fontToggle');
+if (localStorage.getItem('fontToggle') === 'true') {
+  fontToggle.checked = true;
+  document.body.classList.add('altFont');
+}
+fontToggle.addEventListener('change', () => {
+  document.body.classList.toggle('altFont', fontToggle.checked);
+  localStorage.setItem('fontToggle', fontToggle.checked);
+});
+
+// ── BOOT ─────────────────────────────────────────────────────
+(async function init(){
+  const status = document.getElementById('statusMsg');
+  try {
+    await loadCastData();
+    buildR();
+    render(2);
+    // With ?registrar=true, default to ON unless explicitly persisted OFF.
+    // setCommunity handles fetch + re-render.
+    if(REGISTRAR_FEATURE_ENABLED && localStorage.getItem('commToggle') !== 'false'){
+      setCommunity(true);
+    }
+  } catch(err){
+    console.error(err);
+    if(status){
+      status.classList.add('err');
+      status.textContent = `Couldn't reach the cast site (${err.message}). Check your connection and reload.`;
+    }
+  }
+})();
+</script>
+</body>
+</html>
