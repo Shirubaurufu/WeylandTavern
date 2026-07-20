@@ -29,9 +29,9 @@ const SHARED_FRAMING = `${SHARED_FRAMING_PREAMBLE}
  * Weyland Dining Services) — every other account either has a real World Info entry that the
  * existing tethered WI scan (index.js's resolveWorldInfoTetheredForMainChat) picks up automatically
  * once the account's own name/handle appears in the prompt text, or is grounded well enough by its
- * name alone. Explicitly excludes Red Lantern, Black Barrel, and Mama's Den — not businesses that
- * would have an online presence, per the operator's own direction.
- * @type {Array<{name: string, handle: string, portraitKey: string, context?: string}>}
+ * name alone. Red Lantern and Black Barrel remain excluded. Mama's Den is deliberately present:
+ * Zora runs it herself, badly, and its account should sound as crude and improvised as she does.
+ * @type {Array<{name: string, handle: string, portraitKey: string, portraitUrl?: string, context?: string}>}
  */
 export const PSA_ACCOUNTS = [
     { name: 'Weyland Alert', handle: '@WeylandAlert', portraitKey: 'alert' },
@@ -50,6 +50,13 @@ export const PSA_ACCOUNTS = [
     },
     { name: 'Weyland Research Center', handle: '@WeylandResearch', portraitKey: 'research' },
     { name: 'Weyland Tavern', handle: '@WeylandTavern', portraitKey: 'tavern' },
+    {
+        name: "Mama's Den",
+        handle: '@MamasDen',
+        portraitKey: 'mamas-den',
+        portraitUrl: 'https://cast.weybooru.com/images/portraits/zora.jpg',
+        context: "Zora Adeyemi's barely managed dive bar; Zora writes its crude, profane, chaotic posts herself and is terrible at social media",
+    },
 ];
 
 // Embeds an account's optional `context` grounding sentence right into its own list entry so the

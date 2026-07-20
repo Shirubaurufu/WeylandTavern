@@ -184,6 +184,16 @@
 }
 
 #wp-help-button.wp-help-visible { display: flex; }
+#wp-lore-warning-button.wp-lore-warning-visible {
+    display: flex;
+    color: #e8c547;
+    animation: wp-lore-warning-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes wp-lore-warning-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
 #wp-header-rate-counter { display: none; }
 #wp-header-rate-counter.wp-visible { display: inline-flex; }
 .wp-generation-rate-counter,

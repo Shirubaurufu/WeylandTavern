@@ -1,4 +1,5 @@
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './roleplayMode.js';
+import { characterNamesEquivalent } from './characterIdentity.js';
 
 const DELIMITER = '[¦|│]';
 const PHONE_LINE_RE = new RegExp(`^(Incoming|Outgoing)${DELIMITER}([^¦|│]*)${DELIMITER}([^¦|│]*)${DELIMITER}(.*)$`);
@@ -110,6 +111,11 @@ function resolveKnownName(rawName, knownNames) {
     if (!target) return null;
     const exact = knownNames.find(name => normalizeName(name) === target);
     if (exact) return exact;
+    const aliases = knownNames.filter(name => characterNamesEquivalent(name, rawName));
+    // More than one visible label can describe the same person (for example the installed
+    // "Professor Akiyama" card and the cast-directory "Sayori Akiyama" contact). The caller
+    // orders its preferred local label first, so equivalent aliases are not an ambiguity.
+    if (aliases.length > 0) return aliases[0];
     const matches = knownNames.filter(name => {
         const candidate = normalizeName(name);
         return candidate.includes(target) || target.includes(candidate);
@@ -226,9 +232,10 @@ export function canCapturePhoneScopeIntoConversation(conversation, wireMode, cha
 }
 
 export function sameParticipants(left, right) {
-    const a = [...new Set(left.map(normalizeName))].sort();
-    const b = [...new Set(right.map(normalizeName))].sort();
-    return a.length === b.length && a.every((name, index) => name === b[index]);
+    const a = [...new Set(left.map(normalizeName))];
+    const b = [...new Set(right.map(normalizeName))];
+    return a.length === b.length
+        && a.every(name => b.some(other => characterNamesEquivalent(name, other)));
 }
 
 function normalizeCapturedContent(value) {

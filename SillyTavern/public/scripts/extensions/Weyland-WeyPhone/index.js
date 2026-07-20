@@ -9,13 +9,13 @@ import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
 import { withTypingState } from './lib/generationTracking.js';
 import { buildPortraitMap, buildPsaPortraitMap } from './lib/portraits.js';
 import { mergeInstalledContacts } from './lib/installedContacts.js';
-import { displayCharacterName, findInstalledCharacterName } from './lib/characterIdentity.js';
+import { characterNamesEquivalent, displayCharacterName, findInstalledCharacterName } from './lib/characterIdentity.js';
 import { parseReply, parseGroupReply } from './lib/messageParsing.js';
 import { TEXTING_MODE_INSTRUCTIONS, TEXTING_THOUGHTS_DISABLED } from './lib/textingModeInstructions.js';
 import { FIRST_CONTACT_BLOCK } from './lib/firstContact.js';
 import { isKnownByDefault } from './lib/knownContacts.js';
 import { buildMemoryGenerationMessages, joinMemoriesForInjection, sendMemoryRequest } from './lib/memoryGeneration.js';
-import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText } from './lib/tetheredContext.js';
+import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText, KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS } from './lib/tetheredContext.js';
 import { getPhoneAppContent, setPhoneAppContent } from './lib/phoneApps.js';
 import { toggleLike } from './lib/twitterLikes.js';
 import { parseTwitterPosts } from './lib/twitterParsing.js';
@@ -368,7 +368,8 @@ const DEFAULT_MEMORY_MAX_TOKENS = 256;
  * @returns {{name: string, avatar: string|null} | undefined}
  */
 function resolveConversationCharacter(context, charName) {
-    return context.characters.find(c => c.name === charName);
+    const installedName = findInstalledCharacterName(context.characters, charName);
+    return installedName ? context.characters.find(character => character.name === installedName) : undefined;
 }
 
 function log(...args) {
@@ -464,13 +465,15 @@ async function resolveCharacterPrompt(context, character, { lorebookContact = fa
     };
 }
 
-async function resolveWorldInfo(context, history, additionalBookNames = []) {
+async function resolveWorldInfo(context, history, additionalBookNames = [], characterNames = [], characterContext = '') {
     const personaLorebookName = context.powerUserSettings?.persona_description_lorebook || '';
     return resolveWorldInfoUntethered({
         loadWorldInfo: context.loadWorldInfo,
         history,
         personaLorebookName,
         additionalBookNames,
+        characterNames,
+        characterContext,
     });
 }
 
@@ -1186,7 +1189,19 @@ async function generateGroupReply(conversationId, conversation, context, setting
             if (!profile) throw new Error(`No subbot profile was found for ${name}. Group chats never fall back to full character cards.`);
             profiles.push({ name, personalityText: profile.personalityText });
         }
-        const worldInfo = await resolveWorldInfo(context, buildPhoneWorldInfoScanHistory(conversation.messages), Object.values(conversation.participantBooks ?? {}).filter(name => name !== 'Weyland'));
+        const groupProfileContext = profiles.map(profile => applyMacroSubstitution({
+            substituteParams: context.substituteParams,
+            content: profile.personalityText,
+            userName: context.name1 || 'User',
+            charName: profile.name,
+        })).join('\n');
+        const worldInfo = await resolveWorldInfo(
+            context,
+            buildPhoneWorldInfoScanHistory(conversation.messages),
+            Object.values(conversation.participantBooks ?? {}).filter(name => name !== 'Weyland'),
+            participants,
+            groupProfileContext,
+        );
         const userName = context.name1 || 'User';
         const personaContext = buildPersonaContextBlock(userName, context.powerUserSettings?.persona_description);
         const systemPrompt = buildGroupSystemPrompt({
@@ -1292,9 +1307,18 @@ async function generateReply(conversationId, conversation, context, settings) {
             isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId });
         const worldInfo = effectivelyTethered
             ? { worldInfoBefore: '', worldInfoAfter: '' }
-            : await resolveWorldInfo(context, worldInfoScanHistory, conversation.lorebookName && conversation.lorebookName !== 'Weyland'
-                ? [conversation.lorebookName]
-                : []);
+            : await resolveWorldInfo(
+                context,
+                worldInfoScanHistory,
+                conversation.lorebookName && conversation.lorebookName !== 'Weyland' ? [conversation.lorebookName] : [],
+                [character.name],
+                applyMacroSubstitution({
+                    substituteParams: context.substituteParams,
+                    content: joinNonEmptySections([resolved.descriptionText, resolved.personalityText]),
+                    userName: context.name1 || 'User',
+                    charName: character.name,
+                }),
+            );
         const pinnedMemories = getPinnedMemories(settings, conversationId);
         const memoryBlock = joinMemoriesForInjection(pinnedMemories);
         // Kressa keeps her normal fixed-Weyland retrieval, but Observe must still append the
@@ -1302,6 +1326,9 @@ async function generateReply(conversationId, conversation, context, settings) {
         // roleplay" use case. Other observing DMs swap their own scan for the active roleplay's
         // scan above; Kressa's assistant identity/lore remains additive and intact.
         const tetheredBlock = await buildTetheredContext(context, conversation);
+        const kressaObserverInstructions = isKressa && tetheredBlock
+            ? KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS
+            : '';
         const worldInfoAfterWithMemory = joinNonEmptySections([worldInfo.worldInfoAfter, memoryBlock, tetheredBlock]);
         const systemPromptText = buildSystemPrompt({
             systemPrompt: applyPhoneHardModePolicy(resolved.systemPrompt, {
@@ -1332,6 +1359,7 @@ async function generateReply(conversationId, conversation, context, settings) {
             firstContactBlock,
             TEXTING_MODE_INSTRUCTIONS,
             relationshipContext,
+            kressaObserverInstructions,
             TEXTING_THOUGHTS_DISABLED,
         ]);
 
@@ -1882,7 +1910,9 @@ async function runPawXaiGeneration() {
     }
     const context = SillyTavern.getContext();
     const settings = getSettings(context.extensionSettings);
-    updateHeaderGenerationCounter(context, settings, appKey === 'chronicle');
+    // PawXai owns its in-app allowance display; the shared header counter belongs to Chronicle.
+    // Keep this explicit so a copied app-local variable cannot crash before the generation try.
+    updateHeaderGenerationCounter(context, settings, false);
     settings.pawxai = normalizePawXaiSettings(settings.pawxai);
     let allowance = currentGenerationAllowance(context, settings);
     if (!allowance.allowed) {
@@ -3145,6 +3175,12 @@ function showScreen(view) {
     helpButton.classList.toggle('wp-help-visible', Boolean(helpAppKey));
     helpButton.dataset.appKey = helpAppKey ?? '';
     helpButton.dataset.appLabel = helpAppKey ? resolveAppLabel(settings, helpAppKey) : '';
+    // The obfuscated Weyland/Registrar lorebooks resolve through {{getvar}} shortcodes that only
+    // populate while a chat is open (context.chatId is undefined otherwise) — texting from that
+    // state silently gets hollow, contact-less replies with no error. Surface it instead of
+    // letting it fail invisibly. (CHAT_CHANGED keeps this live without needing to leave the
+    // screen; this call just covers the initial render / direct navigation into the view.)
+    updateLoreWarningAvailability();
     updateHeaderGenerationCounter(context, settings, view === 'phone-app' && currentPhoneApp === 'chronicle');
     const helpDialog = document.getElementById('wp-app-help');
     helpDialog.hidden = true;
@@ -3862,6 +3898,17 @@ function updateRoleplayModeAvailability() {
     });
 }
 
+// CHAT_CHANGED fires the instant a chat opens OR closes (context.chatId flips to a value or back
+// to undefined) — reacting here means the header icon drops the moment lore actually becomes
+// available, instead of waiting for the user to leave and re-enter the conversation screen for
+// showScreen's own check to rerun.
+function updateLoreWarningAvailability() {
+    const loreWarningButton = document.getElementById('wp-lore-warning-button');
+    if (!loreWarningButton) return;
+    const context = SillyTavern.getContext();
+    loreWarningButton.classList.toggle('wp-lore-warning-visible', currentView === 'conversation' && !context.chatId);
+}
+
 // Re-renders the Home app grid (recomputing which flavor tiles should be enabled/disabled) if
 // it's currently the visible screen — called on the same CHAT_CHANGED event as
 // updateTetheredToggleAvailability, so activating/deactivating a main roleplay chat updates the
@@ -4099,13 +4146,20 @@ function initLockScreenGesture(lockScreen) {
 }
 
 function captureKnownNames(context, settings) {
-    const names = new Set([
-        ...context.characters.map(character => character.name),
-        ...WEYLAND_ROSTER.map(character => character.name),
+    // Directory labels are WeyPhone's canonical display identities. Installed cards and roster
+    // entries are appended only when they do not describe somebody already present, preventing
+    // "Sayori Akiyama" and "Professor Akiyama" from becoming two competing capture targets.
+    const candidates = [
         ...getCastEntries(settings).map(entry => entry.name),
         ...contactLorebookState.registrarContacts.map(entry => entry.name),
-    ].filter(Boolean));
-    return [...names];
+        ...context.characters.map(character => character.name),
+        ...WEYLAND_ROSTER.map(character => character.name),
+    ].filter(Boolean);
+    const names = [];
+    for (const candidate of candidates) {
+        if (!names.some(name => characterNamesEquivalent(name, candidate))) names.push(candidate);
+    }
+    return names;
 }
 
 function findCapturedThread(settings, participants, chatId) {
@@ -4438,6 +4492,14 @@ function initPanel() {
             appLabel: helpButton.dataset.appLabel,
         });
     });
+    document.getElementById('wp-lore-warning-button').addEventListener('click', () => {
+        renderNoticeDialog(helpDialog, {
+            kicker: 'Heads up',
+            title: 'Lore isn’t fully loaded yet',
+            body: 'Weyland’s character and location lore only stays loaded while a chat is open — it doesn’t matter which one. Until then, replies here may be missing details they\'d normally know.',
+            bullets: ['Open any character or chat in WeylandTavern.', 'Continue on your phone. Since a chat is loaded, WeyPhone now has access to all of Weyland’s lorebook.', 'This warning comes back if you close out of every chat.'],
+        });
+    });
     helpDialog.addEventListener('click', event => {
         if (!event.target.closest('[data-help-close]')) return;
         helpDialog.hidden = true;
@@ -4500,6 +4562,7 @@ function initPanel() {
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, handleRoleplayPhoneCapture);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateRoleplayModeAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, refreshHomeScreenAvailability);
+    context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateLoreWarningAvailability);
     const refreshAfterResume = () => {
         if (document.visibilityState === 'hidden') return;
         void refreshWeyPhoneSettings(SillyTavern.getContext()).then(changed => {

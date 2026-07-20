@@ -1,12 +1,45 @@
+import { characterNamesEquivalent } from './characterIdentity.js';
+
+function filteredTraitTerms(entry) {
+    return String(entry?.comment ?? '')
+        .replace(/\s+Trait(?:\s+-.*)?$/i, '')
+        .split('/')
+        .map(term => term.trim().toLowerCase())
+        .filter(term => term.length >= 3);
+}
+
+function entryMatchesPhoneCharacters(entry, characterNames = [], characterContext = '') {
+    const filter = entry?.characterFilter;
+    if (!filter || typeof filter !== 'object') return true;
+
+    const names = Array.isArray(filter.names) ? filter.names.filter(Boolean) : [];
+    const tags = Array.isArray(filter.tags) ? filter.tags.filter(Boolean) : [];
+    if (names.length === 0 && tags.length === 0) return true;
+
+    const requestedNames = (Array.isArray(characterNames) ? characterNames : [characterNames]).filter(Boolean);
+    const nameMatches = names.some(filterName => requestedNames.some(name => characterNamesEquivalent(filterName, name)));
+
+    // WeyPhone can identify the contact, but it does not own SillyTavern's character-tag map.
+    // For positive tag-only constants, use the resolved profile only to identify a named trait
+    // ("Haienamimi Trait" -> "haienamimi"). The profile is deliberately not put into ordinary
+    // keyword scanning, while user text may still activate general lore for mentioned species.
+    const normalizedContext = String(characterContext ?? '').toLowerCase();
+    const traitMatches = tags.length > 0
+        && filteredTraitTerms(entry).some(term => normalizedContext.includes(term));
+    const included = nameMatches || traitMatches;
+    return filter.isExclude === true ? !included : included;
+}
+
 /**
  * @param {Array<{key?: string[], content?: string, disable?: boolean, constant?: boolean}>} entries
  * @param {Array<{role: string, content: string}>} history
+ * @param {{characterNames?: string[], characterContext?: string}} [options]
  */
-export function scanEntries(entries, history) {
+export function scanEntries(entries, history, { characterNames = [], characterContext = '' } = {}) {
     const text = history.map(m => m.content ?? '').join('\n').toLowerCase();
     const matched = entries.filter(entry => {
         if (entry.disable) return false;
-        if (entry.constant) return true;
+        if (entry.constant) return entryMatchesPhoneCharacters(entry, characterNames, characterContext);
         const keys = entry.key ?? [];
         return keys.some(key => typeof key === 'string' && key.length > 0 && text.includes(key.toLowerCase()));
     });
@@ -154,7 +187,7 @@ export async function resolveWorldInfoTethered({ getWorldInfoPrompt, history, ma
  * World Info the main chat has selected.
  * @param {{loadWorldInfo: Function, history: Array<{role: string, content: string}>, personaLorebookName?: string, additionalBookNames?: string[]}} options
  */
-export async function resolveWorldInfoUntethered({ loadWorldInfo, history, personaLorebookName, additionalBookNames = [] }) {
+export async function resolveWorldInfoUntethered({ loadWorldInfo, history, personaLorebookName, additionalBookNames = [], characterNames = [], characterContext = '' }) {
     const bookNames = [...new Set([
         'Weyland',
         ...(personaLorebookName ? [personaLorebookName] : []),
@@ -165,7 +198,7 @@ export async function resolveWorldInfoUntethered({ loadWorldInfo, history, perso
         const data = await loadWorldInfo(name);
         if (!data || !data.entries) continue;
         const entries = Object.values(data.entries);
-        const scanned = scanEntries(entries, history);
+        const scanned = scanEntries(entries, history, { characterNames, characterContext });
         if (scanned) texts.push(scanned);
     }
     return { worldInfoBefore: texts.join('\n'), worldInfoAfter: '' };

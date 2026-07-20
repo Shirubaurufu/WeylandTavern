@@ -55,14 +55,14 @@ export function buildPortraitMap(characters, charNames, getThumbnailUrl) {
  * field (lib/twitterPrompts.js's PSA_ACCOUNTS) rather than a derived slug — deriving one the way
  * character portraits derive from a first name would collide here (e.g. "Weyland Alert" and
  * "Weyland Research Center" would both slug to "weyland").
- * @param {Array<{name: string, portraitKey: string}>} psaAccounts
+ * @param {Array<{name: string, portraitKey: string, portraitUrl?: string}>} psaAccounts
  * @returns {Record<string, {primaryUrl: string, fallbackUrl: string|null, placeholderUrl: string|null, initial: string|null}>}
  */
 export function buildPsaPortraitMap(psaAccounts) {
     const map = {};
     for (const account of psaAccounts) {
         map[account.name] = {
-            primaryUrl: `${ASSET_BASE_URL}/profiles/profile_${account.portraitKey}.webp`,
+            primaryUrl: account.portraitUrl || `${ASSET_BASE_URL}/profiles/profile_${account.portraitKey}.webp`,
             fallbackUrl: null,
             placeholderUrl: placeholderPortraitUrl(account.name),
             initial: account.name.charAt(0).toUpperCase(),

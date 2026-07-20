@@ -26,6 +26,7 @@ export function createPanelMarkup() {
             <div id="wp-panel-avatar"></div>
             <div id="wp-panel-title">Messages</div>
             <span id="wp-header-rate-counter" aria-label="Generation requests remaining"></span>
+            <button type="button" id="wp-lore-warning-button" class="wp-header-btn wp-lore-warning-button" title="Lore not fully loaded" aria-label="Lore not fully loaded"><i class="fa-solid fa-triangle-exclamation"></i></button>
             <button id="wp-help-button" class="wp-header-btn" title="What is this?" aria-label="What is this?"><i class="fa-solid fa-circle-question"></i></button>
             <label id="wp-registrar-toggle-label" class="wp-toggle-label" title="Also show community characters from the registrar on the map">
                 <span class="wp-toggle-switch">

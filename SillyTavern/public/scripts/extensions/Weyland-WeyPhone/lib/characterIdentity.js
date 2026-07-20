@@ -20,7 +20,7 @@ export function displayCharacterName(value) {
 // card's real name untouched; these keys only answer whether two labels identify the same person.
 const CHARACTER_ALIAS_GROUPS = [
     ['dash', 'dakota ash', 'dakota ash (dash)'],
-    ['akiyama', 'professor akiyama', 'sayori akiyama'],
+    ['akiyama', 'prof akiyama', 'prof. akiyama', 'professor akiyama', 'sayori akiyama'],
 ];
 
 const SHARED_PERSONALITY_CARD_FALLBACKS = new Map([
