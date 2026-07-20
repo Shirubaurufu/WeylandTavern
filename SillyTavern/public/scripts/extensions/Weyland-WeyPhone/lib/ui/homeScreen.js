@@ -48,7 +48,7 @@ function tileMarkup(app, { disabled, tierLocked = false, badge }) {
  *   airplane: boolean,
  * }} state
  */
-export function renderHomeScreen(container, { apps, badges, flavorAppsEnabled, syncing, airplane }) {
+export function renderHomeScreen(container, { apps, badges, flavorAppsEnabled, syncing, airplane, generationAllowance, formatCooldown = value => String(value) }) {
     const gridApps = apps
         .filter(a => !['messages', 'contacts'].includes(a.key))
         .sort((a, b) => (HOME_GRID_RANK.get(a.key) ?? Number.MAX_SAFE_INTEGER)
@@ -68,6 +68,9 @@ export function renderHomeScreen(container, { apps, badges, flavorAppsEnabled, s
         <button class="wp-app-tile wp-dock-sync${syncing ? ' wp-syncing' : ''}" data-action="unified-sync" ${(airplane || syncing || !flavorAppsEnabled) ? 'disabled' : ''} title="One API call refreshes every app">
             <span class="wp-app-icon wp-sync-icon"><i class="fa-solid fa-rotate${syncing ? ' fa-spin' : ''}"></i></span>
             <span class="wp-app-label">${syncing ? 'Syncing…' : 'Sync'}</span>
+            ${generationAllowance ? `<span class="wp-rate-limit-status">${generationAllowance.allowed
+                ? (Number.isFinite(generationAllowance.remaining) ? `${generationAllowance.remaining} ready` : 'Unlimited')
+                : `Ready in ${escapeHtml(formatCooldown(generationAllowance.retryAfterMs))}`}</span>` : ''}
         </button>
     </div>
 </div>`;

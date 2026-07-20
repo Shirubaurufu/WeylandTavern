@@ -168,7 +168,7 @@ export function renderCharacterWallpapersScreen(container, { settings }) {
  *   batteryStatus?: string,
  * }} state
  */
-export function renderSettingsScreen(container, { settings, currentLiveModel, logLines, formatClockTime, batteryStatus = '' }) {
+export function renderSettingsScreen(container, { settings, currentLiveModel, logLines, formatClockTime, batteryStatus = '', generationAllowance = null, formatCooldown = value => String(value) }) {
     const wallpaperValue = settings.ui?.wallpaper ?? 'default';
     const isCustomWallpaper = !(wallpaperValue in WALLPAPER_PRESETS);
     const wallpaperX = clampPercent(settings.ui?.wallpaperPositionX, 50);
@@ -289,6 +289,31 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     </label>
 </div>`;
 
+    const rateLimitSection = generationAllowance ? `
+<div class="wp-settings-section wp-generation-limit-settings">
+    <div class="wp-settings-section-title">Generation Cooldowns</div>
+    <div class="wp-generation-limit-summary">
+        <strong>${escapeHtml(generationAllowance.label)}</strong>
+        <span>${Number.isFinite(generationAllowance.remaining) ? `${generationAllowance.remaining}/${generationAllowance.maxRequests} ready` : 'Unlimited'}</span>
+    </div>
+    <div class="wp-settings-hint wp-generation-limit-explanation">
+        <strong>To ensure system stability, we limit the rate at which users can request prompts and refresh socials.</strong>
+        <span>PawXai prompt sets, Social Sync, and generated Chitter profiles share one rolling allowance.</span>
+        <span>A Sync refreshes all four social apps for one slot.</span>
+        <span>Texting, Kressa, Mien, and normal roleplay are unaffected by this limit.</span>
+    </div>
+    <div class="wp-generation-limit-tiers">
+        <span><strong>Standard</strong> 2 every 15 minutes</span>
+        <span><strong>Paw Patrol Plus</strong> 2 every 10 minutes <small>beta key</small></span>
+        <span><strong>Paw Patrol Platinum</strong> 2 every 5 minutes <small>alpha key</small></span>
+    </div>
+    <div class="wp-generation-limit-next">${generationAllowance.enforced === false
+        ? `Admin enforcement is disabled. This display-only counter may go negative; its next recorded output clears in ${generationAllowance.nextRestoreAfterMs ? escapeHtml(formatCooldown(generationAllowance.nextRestoreAfterMs)) : '5 minutes'}.`
+        : generationAllowance.remaining > 0
+            ? `A generation is available now.${generationAllowance.nextRestoreAfterMs ? ` The next spent slot restores in ${escapeHtml(formatCooldown(generationAllowance.nextRestoreAfterMs))}.` : ''}`
+            : `Next generation available in ${escapeHtml(formatCooldown(generationAllowance.retryAfterMs))}.`}</div>
+</div>` : '';
+
     const behaviorSection = `
 <div class="wp-settings-section">
     <div class="wp-settings-section-title">Generation Behavior</div>
@@ -337,6 +362,7 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     ${clockSection}
     ${batterySection}
     ${tetherSection}
+    ${rateLimitSection}
     ${modelSection}
     ${behaviorSection}
     ${labelsSection}

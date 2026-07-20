@@ -65,6 +65,7 @@ import { charPer } from '../quick-reply-ext/src/charper.js';
 import { world_names } from '../../world-info.js';
 import { applyPhoneHardModePolicy } from './lib/phonePromptPolicy.js';
 import { isGeneralMessagingContact } from './lib/contactVisibility.js';
+import { formatGenerationCooldown, generationAllowance, generationRateTier, recordGenerationRequest } from './lib/generationRateLimit.js';
 
 // One of the 10 data-view values showScreen() sets on #wp-panel:
 // 'home' | 'contacts' | 'conversation' | 'memory' | 'messages' | 'threads' | 'phone-app' |
@@ -115,6 +116,27 @@ const phoneState = {
 function wpToast(kind, message, title = 'WeyPhone') {
     if (phoneState.dnd && kind !== 'error') return;
     toastr[kind](message, title);
+}
+
+function currentGenerationAllowance(context, settings, now = Date.now()) {
+    return generationAllowance(settings.generationRateLimitEvents, generationRateTier(context), now);
+}
+
+function updateHeaderGenerationCounter(context, settings, visible = false) {
+    const counter = document.getElementById('wp-header-rate-counter');
+    if (!counter) return;
+    const allowance = currentGenerationAllowance(context, settings);
+    const show = visible && Number.isFinite(allowance.remaining);
+    counter.textContent = show ? `${allowance.remaining}/${allowance.maxRequests}` : '';
+    counter.classList.toggle('wp-visible', show);
+}
+
+function showGenerationCooldown(allowance) {
+    wpToast(
+        'info',
+        `Try again in ${formatGenerationCooldown(allowance.retryAfterMs)}. ${allowance.label} allows ${allowance.maxRequests} generations every ${Math.round(allowance.windowMs / 60_000)} minutes.`,
+        'Generation cooldown',
+    );
 }
 let editingMessageIndex = -1;
 let editingMemoryId = null;
@@ -699,6 +721,11 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
         rerender();
 
         const settings = getSettings(context.extensionSettings);
+        let allowance = currentGenerationAllowance(context, settings);
+        if (!allowance.allowed) {
+            showGenerationCooldown(allowance);
+            return;
+        }
         const mainCharacter = context.characters[context.characterId];
         if (!mainCharacter) {
             toastr.info('No active roleplay to pull content from right now.', 'WeyPhone');
@@ -762,6 +789,11 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
             liveModel: context.getChatCompletionModel?.(),
         });
         const flavorOverridePayload = flavorModel ? { model: flavorModel } : undefined;
+        allowance = currentGenerationAllowance(context, settings);
+        if (!allowance.allowed) {
+            showGenerationCooldown(allowance);
+            return;
+        }
         const result = await sendMessage({
             sendRequest: (id, msgs) => context.ConnectionManagerRequestService.sendRequest(id, msgs, maxTokens, undefined, flavorOverridePayload),
             profileId,
@@ -773,6 +805,9 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
             toastr.warning('The model did not return usable content this time.', 'WeyPhone');
             return;
         }
+        // The cooldown counts usable output, not attempts. Provider failures, empty responses,
+        // and responses the parser cannot commit therefore leave the allowance untouched.
+        recordGenerationRequest(settings);
         queueWeyPhoneSave(context);
     } catch (error) {
         console.error(`[${MODULE_NAME}] ${errorLabel}:`, error);
@@ -872,6 +907,8 @@ function rerenderPhoneAppScreenIfVisible(appKey) {
         isGenerating: isSyncInFlight(),
         formatRelativeTime,
         savedIds: savedIdSet(settings, appKey),
+        generationAllowance: currentGenerationAllowance(context, settings),
+        formatCooldown: formatGenerationCooldown,
     });
 }
 
@@ -962,7 +999,15 @@ function rerenderTwitterScreenIfVisible(mode, subjectName) {
     if (mode === 'feed') {
         const authorNames = (entry?.content?.posts ?? []).map(p => p.authorName);
         const portraitMap = buildTwitterPortraitMap(context, authorNames);
-        renderTwitterFeedScreen(screenBody, { entry, isGenerating, formatRelativeTime, portraitMap, savedIds: savedIdSet(settings, 'feed') });
+        renderTwitterFeedScreen(screenBody, {
+            entry,
+            isGenerating,
+            formatRelativeTime,
+            portraitMap,
+            savedIds: savedIdSet(settings, 'feed'),
+            generationAllowance: currentGenerationAllowance(context, settings),
+            formatCooldown: formatGenerationCooldown,
+        });
     } else {
         renderTwitterProfileScreen(screenBody, {
             character: findTwitterProfileSubject(subjectName),
@@ -971,6 +1016,8 @@ function rerenderTwitterScreenIfVisible(mode, subjectName) {
             isGenerating,
             formatRelativeTime,
             savedIds: savedIdSet(settings, 'feed'),
+            generationAllowance: currentGenerationAllowance(context, settings),
+            formatCooldown: formatGenerationCooldown,
         });
     }
 }
@@ -1817,6 +1864,8 @@ function renderPawXaiScreenNow() {
         generating: pawxaiGenerating,
         currentLiveModel: context.getChatCompletionModel?.() ?? '',
         formatRelativeTime,
+        generationAllowance: currentGenerationAllowance(context, settings),
+        formatCooldown: formatGenerationCooldown,
     });
 }
 
@@ -1833,7 +1882,13 @@ async function runPawXaiGeneration() {
     }
     const context = SillyTavern.getContext();
     const settings = getSettings(context.extensionSettings);
+    updateHeaderGenerationCounter(context, settings, appKey === 'chronicle');
     settings.pawxai = normalizePawXaiSettings(settings.pawxai);
+    let allowance = currentGenerationAllowance(context, settings);
+    if (!allowance.allowed) {
+        showGenerationCooldown(allowance);
+        return;
+    }
     const source = currentPawXaiSource(context);
     if (!source) {
         wpToast('info', 'Open a roleplay chat with a character message first.', 'PawXai');
@@ -1857,6 +1912,11 @@ async function runPawXaiGeneration() {
     pawxaiGenerating = true;
     if (currentView === 'pawxai') renderPawXaiScreenNow();
     try {
+        allowance = currentGenerationAllowance(context, settings);
+        if (!allowance.allowed) {
+            showGenerationCooldown(allowance);
+            return;
+        }
         const response = await sendMessage({
             sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(
                 id,
@@ -1870,6 +1930,7 @@ async function runPawXaiGeneration() {
         });
         const prompts = parsePawXaiResponse(extractResponseText(response), settings.pawxai.promptCount);
         if (!prompts.length) throw new Error('The model did not return any usable prompts.');
+        recordGenerationRequest(settings);
         settings.pawxai.lastRun = {
             characterName: source.characterName,
             sourceExcerpt: source.message.slice(0, 280),
@@ -3084,6 +3145,7 @@ function showScreen(view) {
     helpButton.classList.toggle('wp-help-visible', Boolean(helpAppKey));
     helpButton.dataset.appKey = helpAppKey ?? '';
     helpButton.dataset.appLabel = helpAppKey ? resolveAppLabel(settings, helpAppKey) : '';
+    updateHeaderGenerationCounter(context, settings, view === 'phone-app' && currentPhoneApp === 'chronicle');
     const helpDialog = document.getElementById('wp-app-help');
     helpDialog.hidden = true;
     helpDialog.innerHTML = '';
@@ -3129,6 +3191,8 @@ function showScreen(view) {
             flavorAppsEnabled,
             syncing: isSyncInFlight(),
             airplane: phoneState.airplane,
+            generationAllowance: currentGenerationAllowance(context, settings),
+            formatCooldown: formatGenerationCooldown,
         });
         return;
     }
@@ -3200,7 +3264,11 @@ function showScreen(view) {
         }
         const roster = getTwitterRoster();
         const portraitMap = buildTwitterPortraitMap(context, roster.map(c => c.name));
-        renderTwitterFollowingScreen(screenBody, { roster: [...roster, ...PSA_ACCOUNTS], portraitMap });
+        renderTwitterFollowingScreen(screenBody, {
+            roster: [...roster, ...PSA_ACCOUNTS],
+            portraitMap,
+            generationAllowance: currentGenerationAllowance(context, settings),
+        });
         return;
     }
 
@@ -3228,6 +3296,8 @@ function showScreen(view) {
                 enabled: Boolean(settings.ui?.batteryTracker),
                 ...getQuotaSnapshot(context),
             }),
+            generationAllowance: currentGenerationAllowance(context, settings),
+            formatCooldown: formatGenerationCooldown,
         });
         return;
     }

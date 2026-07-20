@@ -47,14 +47,23 @@ function parseStatNumber(raw) {
  * @param {string} handle
  * @param {Array<{name: string, handle: string}>} roster
  * @param {Array<{name: string, handle: string}>} psaAccounts
- * @returns {string}
+ * @returns {{name: string, handle: string}}
  */
-function resolveAuthorName(handle, roster, psaAccounts) {
-    const rosterMatch = roster.find(c => c.handle === handle);
-    if (rosterMatch) return rosterMatch.name;
-    const psaMatch = psaAccounts.find(a => a.handle === handle);
-    if (psaMatch) return psaMatch.name;
-    return handle.replace(/^@/, '');
+function resolveAuthorIdentity(handle, roster = [], psaAccounts = []) {
+    const normalizedHandle = String(handle || '').trim().replace(/^@?/, '@').toLocaleLowerCase();
+    const match = [...roster, ...psaAccounts].find(candidate => (
+        String(candidate?.handle || '').trim().replace(/^@?/, '@').toLocaleLowerCase() === normalizedHandle
+    ));
+    if (match) {
+        return {
+            name: match.name,
+            handle: String(match.handle || handle).replace(/^@?/, '@'),
+        };
+    }
+    return {
+        name: String(handle || '').replace(/^@/, ''),
+        handle,
+    };
 }
 
 /**
@@ -86,9 +95,10 @@ export function parseTwitterPosts(rawText, { roster, psaAccounts }) {
             const views = parseStatNumber(statsMatch?.[3]);
 
             const retweetMatch = bodyText.match(RETWEET_RE);
+            const author = resolveAuthorIdentity(handle, roster, psaAccounts);
             const post = {
-                authorName: resolveAuthorName(handle, roster, psaAccounts),
-                handle,
+                authorName: author.name,
+                handle: author.handle,
                 likes,
                 retweets,
                 views,

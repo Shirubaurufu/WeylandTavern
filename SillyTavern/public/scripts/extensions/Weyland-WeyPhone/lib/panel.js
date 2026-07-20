@@ -25,6 +25,7 @@ export function createPanelMarkup() {
             <button type="button" id="wp-back-button" class="wp-header-btn" title="Back" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></button>
             <div id="wp-panel-avatar"></div>
             <div id="wp-panel-title">Messages</div>
+            <span id="wp-header-rate-counter" aria-label="Generation requests remaining"></span>
             <button id="wp-help-button" class="wp-header-btn" title="What is this?" aria-label="What is this?"><i class="fa-solid fa-circle-question"></i></button>
             <label id="wp-registrar-toggle-label" class="wp-toggle-label" title="Also show community characters from the registrar on the map">
                 <span class="wp-toggle-switch">
@@ -204,19 +205,24 @@ function inlineHelpButton(appKey) {
     return `<button type="button" class="wp-inline-help" data-app-key="${appKey}" title="What is this?" aria-label="What is this?"><i class="fa-solid fa-circle-question"></i></button>`;
 }
 
+function generationRateCounterMarkup(allowance) {
+    if (!allowance || !Number.isFinite(allowance.remaining)) return '';
+    return `<span class="wp-generation-rate-counter" aria-label="${allowance.remaining} of ${allowance.maxRequests} generation requests remaining">${allowance.remaining}/${allowance.maxRequests}</span>`;
+}
+
 // These in-app bars give generated content a recognizable product shell. Yip Yap stays purely
 // aesthetic; Chitter's existing Following destination is exposed as its header tab so there is
 // only one navigation affordance for the feature.
-function boardHeaderMarkup() {
+function boardHeaderMarkup(generationAllowance = null) {
     return `
 <div class="wp-yipyap-header">
-    <div class="wp-yipyap-brand"><img src="${ASSET_BASE_URL}/weyphone_yikyak.webp" alt="" /><span>Yip Yap</span></div>${inlineHelpButton('board')}
+    <div class="wp-yipyap-brand"><img src="${ASSET_BASE_URL}/weyphone_yikyak.webp" alt="" /><span>Yip Yap</span></div><div class="wp-yipyap-header-actions">${generationRateCounterMarkup(generationAllowance)}${inlineHelpButton('board')}</div>
     <div class="wp-yipyap-campus">Weyland Campus</div>
     <div class="wp-yipyap-tabs"><span class="wp-active">Nearby</span><span class="wp-yipyap-coming-tab">Hot<small>Coming soon!</small></span><span class="wp-yipyap-coming-tab">New<small>Coming soon!</small></span></div>
 </div>`;
 }
 
-function chitterHeaderMarkup(activeTab = 'feed') {
+function chitterHeaderMarkup(activeTab = 'feed', generationAllowance = null) {
     const feedTab = activeTab === 'feed'
         ? '<span class="wp-active">For you</span>'
         : '<button type="button" id="wp-twitter-feed-link">For you</button>';
@@ -228,13 +234,13 @@ function chitterHeaderMarkup(activeTab = 'feed') {
     <div class="wp-chitter-topline">
         <i class="fa-solid fa-comment-dots wp-chitter-mark"></i>
         <span class="wp-chitter-wordmark">chitter</span>
-        <span class="wp-chitter-icons"><i class="fa-solid fa-magnifying-glass"></i>${inlineHelpButton('feed')}</span>
+        <span class="wp-chitter-icons"><i class="fa-solid fa-magnifying-glass"></i>${generationRateCounterMarkup(generationAllowance)}${inlineHelpButton('feed')}</span>
     </div>
     <div class="wp-chitter-tabs">${feedTab}${followingTab}</div>
 </div>`;
 }
 
-function discorgiHeaderMarkup(activeChannelNames = []) {
+function discorgiHeaderMarkup(activeChannelNames = [], generationAllowance = null) {
     const activeChannels = new Set(activeChannelNames.map(name => String(name).trim().toLowerCase()));
     const channelDirectory = DISCORGI_CHANNELS.map(channel => {
         const activeClass = activeChannels.has(channel.name) ? ' wp-active' : '';
@@ -245,6 +251,7 @@ function discorgiHeaderMarkup(activeChannelNames = []) {
     <div class="wp-discorgi-topline">
         <span class="wp-discorgi-brand"><i class="fa-solid fa-dog"></i> Weyland University Discorgi</span>
         <span class="wp-discorgi-server-name"></span>
+        ${generationRateCounterMarkup(generationAllowance)}
         ${inlineHelpButton('chat')}
     </div>
     <div class="wp-discorgi-channel-list" aria-label="Discorgi channels">${channelDirectory}</div>
@@ -300,13 +307,13 @@ function phoneAppItemMarkup(appKey, item, saveButtonHtml = '') {
  * @param {HTMLElement} container #wp-screen-body
  * @param {{appKey: string, appLabel: string, emptyCopy: string, entry: {content: {sections: Array<{title: string, items: Array<{text: string, timestamp?: string}>}>}, generatedAt: number} | undefined, isGenerating: boolean, formatRelativeTime: (epochMs: number) => string, savedIds?: Set<string>}} state
  */
-export function renderPhoneAppScreen(container, { appKey, appLabel, emptyCopy, entry, isGenerating, formatRelativeTime, savedIds = new Set() }) {
+export function renderPhoneAppScreen(container, { appKey, appLabel, emptyCopy, entry, isGenerating, formatRelativeTime, savedIds = new Set(), generationAllowance = null, formatCooldown }) {
     const refreshButton = refreshButtonMarkup(isGenerating);
     const activeDiscorgiChannels = entry?.content?.sections
         ?.map(section => String(section.title).trim().toLowerCase())
         .filter(title => title.startsWith('#')) ?? [];
-    const appHeader = appKey === 'board' ? boardHeaderMarkup()
-        : appKey === 'chat' ? discorgiHeaderMarkup(activeDiscorgiChannels)
+    const appHeader = appKey === 'board' ? boardHeaderMarkup(generationAllowance)
+        : appKey === 'chat' ? discorgiHeaderMarkup(activeDiscorgiChannels, generationAllowance)
         : '';
 
     if (!entry || !entry.content || entry.content.sections.length === 0) {
@@ -402,9 +409,9 @@ function twitterPostCardMarkup(post, portraitMap, postIndex, saved = undefined) 
  * @param {HTMLElement} container #wp-screen-body
  * @param {{entry: {content: {posts: Array}, generatedAt: number} | undefined, isGenerating: boolean, formatRelativeTime: (epochMs: number) => string, portraitMap: Record<string, {primaryUrl: string|null, fallbackUrl: string|null, initial: string|null}>}} state
  */
-export function renderTwitterFeedScreen(container, { entry, isGenerating, formatRelativeTime, portraitMap, savedIds = new Set() }) {
+export function renderTwitterFeedScreen(container, { entry, isGenerating, formatRelativeTime, portraitMap, savedIds = new Set(), generationAllowance = null, formatCooldown }) {
     const refreshButton = refreshButtonMarkup(isGenerating);
-    const appHeader = chitterHeaderMarkup('feed');
+    const appHeader = chitterHeaderMarkup('feed', generationAllowance);
 
     if (!entry || !entry.content || !entry.content.posts || entry.content.posts.length === 0) {
         container.innerHTML = `
@@ -429,8 +436,8 @@ ${appHeader}
  * @param {HTMLElement} container #wp-screen-body
  * @param {{roster: Array<{name: string, handle: string}>, portraitMap: Record<string, {primaryUrl: string|null, fallbackUrl: string|null, initial: string|null}>}} state
  */
-export function renderTwitterFollowingScreen(container, { roster, portraitMap }) {
-    container.innerHTML = `${chitterHeaderMarkup('following')}
+export function renderTwitterFollowingScreen(container, { roster, portraitMap, generationAllowance = null }) {
+    container.innerHTML = `${chitterHeaderMarkup('following', generationAllowance)}
 <div class="wp-chitter-pane wp-chitter-following-pane">${roster.map(character => `
 <div class="wp-list-item wp-twitter-following-item" data-name="${escapeHtml(character.name)}">
     ${avatarMarkup(portraitMap[character.name])}
@@ -445,9 +452,9 @@ export function renderTwitterFollowingScreen(container, { roster, portraitMap })
  * @param {HTMLElement} container #wp-screen-body
  * @param {{character: {name: string, handle: string} | undefined, portraitMap: Record<string, {primaryUrl: string|null, fallbackUrl: string|null, initial: string|null}>, entry: {content: {posts: Array}, generatedAt: number} | undefined, isGenerating: boolean, formatRelativeTime: (epochMs: number) => string}} state
  */
-export function renderTwitterProfileScreen(container, { character, portraitMap, entry, isGenerating, formatRelativeTime, savedIds = new Set() }) {
+export function renderTwitterProfileScreen(container, { character, portraitMap, entry, isGenerating, formatRelativeTime, savedIds = new Set(), generationAllowance = null, formatCooldown }) {
     if (!character) {
-        container.innerHTML = `${chitterHeaderMarkup('profile')}<div class="wp-empty-state">Character not found.</div>`;
+        container.innerHTML = `${chitterHeaderMarkup('profile', generationAllowance)}<div class="wp-empty-state">Character not found.</div>`;
         return;
     }
     const refreshButton = refreshButtonMarkup(isGenerating);
@@ -466,7 +473,7 @@ export function renderTwitterProfileScreen(container, { character, portraitMap, 
 </div>`;
 
     if (!entry || !entry.content || !entry.content.posts || entry.content.posts.length === 0) {
-        container.innerHTML = `${chitterHeaderMarkup('profile')}${header}
+        container.innerHTML = `${chitterHeaderMarkup('profile', generationAllowance)}${header}
 ${emptyStateMarkup("This profile hasn't loaded — weak signal out here.")}
 <div id="wp-phone-app-actions">${refreshButton}</div>`;
         return;
@@ -475,7 +482,7 @@ ${emptyStateMarkup("This profile hasn't loaded — weak signal out here.")}
     const postsHtml = entry.content.posts.map((post, i) =>
         twitterPostCardMarkup(post, portraitMap, i, savedIds.has(postIdFor('feed', post)))).join('');
 
-    container.innerHTML = `${chitterHeaderMarkup('profile')}${header}
+    container.innerHTML = `${chitterHeaderMarkup('profile', generationAllowance)}${header}
 <div id="wp-phone-app-meta">Refreshed ${escapeHtml(formatRelativeTime(entry.generatedAt))}</div>
 <div id="wp-twitter-feed-content">${postsHtml}</div>
 <div id="wp-phone-app-actions">${refreshButton}</div>`;

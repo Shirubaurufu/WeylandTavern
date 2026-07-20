@@ -36,7 +36,7 @@ function resultCard(result, index) {
     </article>`;
 }
 
-function renderGenerate(settings, source, generating) {
+function renderGenerate(settings, source, generating, generationAllowance, formatCooldown) {
     const lastRun = settings.lastRun;
     const sourceName = source?.characterName || lastRun?.characterName || 'No active character';
     const sourceText = source?.message || 'Open a roleplay chat with a character message, then return here.';
@@ -66,6 +66,9 @@ function renderGenerate(settings, source, generating) {
             <i class="fa-solid fa-${generating ? 'spinner fa-spin' : 'paw'}"></i>
             ${generating ? 'Writing prompts…' : `Generate ${settings.promptCount} prompt${settings.promptCount === 1 ? '' : 's'}`}
         </button>
+        ${generationAllowance ? `<div class="wp-pawxai-rate-status"><i class="fa-regular fa-clock"></i> ${generationAllowance.allowed
+            ? (Number.isFinite(generationAllowance.remaining) ? `${generationAllowance.remaining} generation${generationAllowance.remaining === 1 ? '' : 's'} ready` : 'Unlimited generations')
+            : `Cooldown: ready in ${escapeHtml(formatCooldown(generationAllowance.retryAfterMs))}`}</div>` : ''}
         ${results.length ? `<div class="wp-pawxai-results-head"><span>${escapeHtml(lastRun.characterName)} set</span><small>${results.length} prompt${results.length === 1 ? '' : 's'}</small></div>
             <div class="wp-pawxai-results">${results.map(resultCard).join('')}</div>` : `<div class="wp-pawxai-empty">
                 <i class="fa-solid fa-sparkles"></i>
@@ -167,13 +170,13 @@ function renderSettings(settings, currentLiveModel) {
 }
 
 /** @param {HTMLElement} container */
-export function renderPawXaiScreen(container, { settings, activeTab = 'generate', selectedSavedCharacter = null, source, generating = false, currentLiveModel = '', formatRelativeTime = () => '' }) {
+export function renderPawXaiScreen(container, { settings, activeTab = 'generate', selectedSavedCharacter = null, source, generating = false, currentLiveModel = '', formatRelativeTime = () => '', generationAllowance = null, formatCooldown = value => String(value) }) {
     const savedCount = settings.savedPrompts.length;
     const content = activeTab === 'saved'
         ? renderSaved(settings.savedPrompts, selectedSavedCharacter, formatRelativeTime)
         : activeTab === 'settings'
             ? renderSettings(settings, currentLiveModel)
-            : renderGenerate(settings, source, generating);
+            : renderGenerate(settings, source, generating, generationAllowance, formatCooldown);
     container.innerHTML = `<div class="wp-pawxai">
         <header class="wp-pawxai-masthead"><span class="wp-pawxai-logo"><img src="${ASSET_BASE_URL}/weyphone_pawxai.webp" alt="" /></span><div><strong>PawXai</strong><small>Scene to SDXL prompt studio</small></div></header>
         ${tabs(activeTab, savedCount)}

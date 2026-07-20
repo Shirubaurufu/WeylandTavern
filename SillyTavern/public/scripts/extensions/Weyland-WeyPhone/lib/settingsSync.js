@@ -1,3 +1,5 @@
+import { mergeGenerationRateLimitEvents } from './generationRateLimit.js';
+
 // WeyPhone can be open in several browsers at once (desktop, phone over Tailscale, another tab).
 // SillyTavern normally saves one complete settings snapshot, so a stale tab can otherwise replace
 // a newer WeyPhone wholesale. These helpers describe only the paths changed by the current tab and
@@ -84,7 +86,14 @@ export function applySettingsPatch(latest, operations) {
 
 /** Replays only local changes onto a newer remote WeyPhone snapshot. */
 export function mergeWeyPhoneSettings(base, local, remote) {
-    return applySettingsPatch(remote, createSettingsPatch(base, local));
+    const merged = applySettingsPatch(remote, createSettingsPatch(base, local));
+    // This is an append-only event ledger. An older desktop tab must not erase requests made on
+    // a phone and thereby reset the shared cooldown.
+    merged.generationRateLimitEvents = mergeGenerationRateLimitEvents(
+        local?.generationRateLimitEvents,
+        remote?.generationRateLimitEvents,
+    );
+    return merged;
 }
 
 /**

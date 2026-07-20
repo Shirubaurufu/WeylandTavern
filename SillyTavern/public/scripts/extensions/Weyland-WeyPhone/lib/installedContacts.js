@@ -1,4 +1,5 @@
-import { canonicalCharacterName, displayCharacterName } from './characterIdentity.js';
+import { canonicalCharacterName, displayCharacterName, isSharedPersonalityCardMatch } from './characterIdentity.js';
+import { isGeneralMessagingContact } from './contactVisibility.js';
 
 function localPortraitUrl(character, getThumbnailUrl) {
     if (!character?.avatar || typeof getThumbnailUrl !== 'function') return null;
@@ -48,12 +49,16 @@ export function mergeInstalledContacts(entries, characters, getThumbnailUrl, res
         const installedName = resolveInstalledName?.(entry.name);
         const character = installedName ? byName.get(canonicalCharacterName(installedName)) : null;
         if (!character) return entry;
+        // A shared multi-character card may supply generation personality without replacing the
+        // individual sister's cast portrait with the combo card thumbnail.
+        if (isSharedPersonalityCardMatch(entry.name, character.name)) return entry;
         representedCards.add(canonicalCharacterName(character.name));
         return { ...entry, localPortraitUrl: localPortraitUrl(character, getThumbnailUrl) };
     });
 
     const knownDirectoryNames = new Set(merged.map(entry => canonicalCharacterName(entry.name)));
     for (const character of installed) {
+        if (!isGeneralMessagingContact(character.name)) continue;
         const key = canonicalCharacterName(character.name);
         if (representedCards.has(key) || knownDirectoryNames.has(key)) continue;
         representedCards.add(key);

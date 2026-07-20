@@ -10,6 +10,9 @@ export const defaultSettings = Object.freeze({
     // Per-chatId notification state written by the unified sync:
     // { [chatId]: { items: [{id, appKey, title, text, timestamp, read}], lastRefreshAt } }
     notifications: {},
+    // Shared rolling allowance for social Sync/profile generations and PawXai prompt sets.
+    // Event IDs make this union-mergeable across stale tabs and separate devices.
+    generationRateLimitEvents: [],
     // Cached cast.weybooru.com directory: { fetchedAt, entries } | null
     castDirectory: null,
     // Optional per-appKey display-name overrides (owner renames without a code change)

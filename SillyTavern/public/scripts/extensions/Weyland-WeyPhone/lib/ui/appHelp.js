@@ -1,19 +1,19 @@
 const APP_HELP = {
     chronicle: {
         intro: 'Weyland’s local newspaper and campus bulletin.',
-        bullets: ['Read city headlines and practical campus alerts.', 'Refreshes together with Chitter, Discorgi, and Yip Yap when you tap Sync.'],
+        bullets: ['Read city headlines and practical campus alerts.', 'Refreshes together with Chitter, Discorgi, and Yip Yap when you tap Sync.', 'One Sync uses one shared generation slot and updates all four social apps.', 'Shared cooldown: Standard gets 2 generations per 15 minutes, Paw Patrol Plus gets 2 per 10 minutes, and Platinum gets 2 per 5 minutes.'],
     },
     feed: {
         intro: 'A public social feed for Weyland’s cast and local accounts.',
-        bullets: ['Browse posts, likes, and character profiles.', 'Registrar characters you imported may appear occasionally.', 'Refreshes as part of the four-app Sync.'],
+        bullets: ['Browse posts, likes, and character profiles.', 'Registrar characters you imported may appear occasionally.', 'Refreshes as part of the four-app Sync.', 'Sync and newly generated character profiles use the shared cooldown: Standard gets 2 generations per 15 minutes, Plus gets 2 per 10 minutes, and Platinum gets 2 per 5 minutes.'],
     },
     chat: {
         intro: 'A live server-style view of Weyland community chatter.',
-        bullets: ['Messages are grouped into channels.', 'Expect short conversations, announcements, and campus nonsense.', 'Refreshes as part of the four-app Sync.'],
+        bullets: ['Messages are grouped into channels.', 'Expect short conversations, announcements, and campus nonsense.', 'Refreshes as part of the four-app Sync.', 'Shared cooldown: Standard gets 2 generations per 15 minutes, Paw Patrol Plus gets 2 per 10 minutes, and Platinum gets 2 per 5 minutes.'],
     },
     board: {
         intro: 'Weyland’s anonymous local message board.',
-        bullets: ['Expect confessions, complaints, missed connections, and gossip.', 'Posts are anonymous and are not organized conversations.', 'Refreshes as part of the four-app Sync.'],
+        bullets: ['Expect confessions, complaints, missed connections, and gossip.', 'Posts are anonymous and are not organized conversations.', 'Refreshes as part of the four-app Sync.', 'Shared cooldown: Standard gets 2 generations per 15 minutes, Paw Patrol Plus gets 2 per 10 minutes, and Platinum gets 2 per 5 minutes.'],
     },
     messages: {
         intro: 'Private text conversations with available Weyland contacts.',
@@ -77,7 +77,7 @@ const APP_HELP = {
     },
     pawxai: {
         intro: 'An SDXL-style prompt writer based on the latest roleplay scene.',
-        bullets: ['Uses the latest three messages for context and depicts the final character message.', 'Generated prompts can be copied, deleted, or saved by character.', 'It writes prompts only. Image generation happens in the service of your choice.'],
+        bullets: ['Uses the latest three messages for context and depicts the final character message.', 'Generated prompts can be copied, deleted, or saved by character.', 'It writes prompts only. Image generation happens in the service of your choice.', 'A full prompt set uses one shared generation slot, whether it contains one prompt or ten. Paw Patrol tiers have shorter cooldown windows.'],
     },
     mien: {
         intro: 'A pocket expression gallery for the character in your active chat.',
