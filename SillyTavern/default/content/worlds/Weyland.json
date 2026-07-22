@@ -19075,7 +19075,7 @@
             ],
             "keysecondary": [],
             "comment": "Brietta",
-            "content": "{{getvar::OKSA}}",
+            "content": "{{getvar::BRIET}}",
             "constant": false,
             "vectorized": false,
             "selective": true,
