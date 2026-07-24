@@ -2355,6 +2355,8 @@ async function XXX(charName) {
             setLocalVariable("ThoughtSet", rav.thinkYes);
         } else if (charName === "Vera" && getLocalVariable("Scenario") && rav.thinkYes) {
             setLocalVariable("ThoughtSet", rav.thinkYes);
+        } else if (charName === "Cerberus Sisters" && getLocalVariable("CerberusSister") === "Fawne" && rav.thinkYes) {
+            setLocalVariable("ThoughtSet", rav.thinkYes);
         } else if (getLocalVariable("SpecialThoughts") && rav.thinkSpec) {
             setLocalVariable("ThoughtSet", rav.thinkSpec);
         } else {
