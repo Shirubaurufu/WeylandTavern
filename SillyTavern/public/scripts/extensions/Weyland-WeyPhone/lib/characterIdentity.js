@@ -1,3 +1,9 @@
+// Common honorific abbreviations, expanded so "Prof. Akiyama" and "Professor Akiyama" resolve to
+// the same person (Weyland is a university, so titled names are common and users type them both
+// ways). Only a title that's directly followed by a name is expanded, so a character literally
+// nicknamed "Prof" or "Doc" is left untouched.
+const TITLE_ABBREVIATIONS = { prof: 'professor', dr: 'doctor' };
+
 export function canonicalCharacterName(value) {
     return String(value ?? '')
         .normalize('NFKD')
@@ -5,7 +11,8 @@ export function canonicalCharacterName(value) {
         .trim()
         .replace(/^[!@]+/, '')
         .replace(/\s+/g, ' ')
-        .toLocaleLowerCase();
+        .toLocaleLowerCase()
+        .replace(/\b(prof|dr)\.?(?=\s)/g, (_, title) => TITLE_ABBREVIATIONS[title]);
 }
 
 export function displayCharacterName(value) {
@@ -20,7 +27,7 @@ export function displayCharacterName(value) {
 // card's real name untouched; these keys only answer whether two labels identify the same person.
 const CHARACTER_ALIAS_GROUPS = [
     ['dash', 'dakota ash', 'dakota ash (dash)'],
-    ['akiyama', 'prof akiyama', 'prof. akiyama', 'professor akiyama', 'sayori akiyama'],
+    ['akiyama', 'professor akiyama', 'sayori akiyama'],
 ];
 
 const SHARED_PERSONALITY_CARD_FALLBACKS = new Map([

@@ -266,6 +266,12 @@ function getUserName() {
     return SillyTavern.getContext().name1 || 'the user';
 }
 
+// Same field WeyPhone's buildPersonaContextBlock reads (see lib/contactContext.js) — the active
+// SillyTavern persona description, not anything LTM-specific.
+function getPersonaDescription() {
+    return SillyTavern.getContext().powerUserSettings?.persona_description || '';
+}
+
 function collectChatRange(firstMessageId, lastMessageId) {
     const chat = SillyTavern.getContext().chat || [];
     const slice = chat.slice(Math.max(0, firstMessageId), lastMessageId + 1);
@@ -440,6 +446,20 @@ function computeNextAutoRange(chatId) {
 const THINKING_DISCIPLINE = `Keep any <think></think> reasoning SHORT — a handful of terse bullet points, not an essay. The instant you close </think>, continue in that SAME response with the actual output. Stopping after only the thinking block is a failure — you are not done until [END MEMORY ENTRY] (or the equivalent closing marker) has been written.`;
 
 /**
+ * Identity-only grounding shared by every prompt builder: fixes the summarizer guessing
+ * {{user}}'s pronouns from ambiguous names or character-side context when persona info was
+ * sitting in SillyTavern the whole time. Bounded strictly to identity so the model doesn't
+ * launder unrelated persona biography into the memory as if it were an event.
+ * Returns '' when no persona is set, so the block never appears empty.
+ * @param {string} user
+ * @param {string} personaDescription
+ */
+function buildPersonaIdentityBlock(user, personaDescription) {
+    if (!personaDescription) return '';
+    return `\n[USER IDENTITY REFERENCE — "${user}"]\nBackground on "${user}" for identity and pronoun accuracy ONLY. Use it strictly to determine ${user}'s gender/pronouns and identity when the source text itself is ambiguous. Do NOT treat anything below as an event that happened, do NOT copy biographical/appearance details into the memory, and do NOT mention that this reference was provided.\n${personaDescription}\n[END USER IDENTITY REFERENCE]\n`;
+}
+
+/**
  * @param {'first'|'third'} [override] explicit POV, bypassing settings.povMode
  * @returns {'first'|'third'}
  */
@@ -467,6 +487,9 @@ function buildLTMPrompt(chatHistoryText, timeline = []) {
             .join('\n')}\n`
         : '';
 
+    const personaDescription = getPersonaDescription().trim();
+    const personaBlock = buildPersonaIdentityBlock(user, personaDescription);
+
     const dateInstruction = anchor
         ? `- The in-story date and time is already known from the excerpt's own message headers (see TIME MARKERS above) — do NOT infer or invent one. The output template below already has the correct value filled in on the date/time line; reproduce that line exactly as written, character for character.`
         : `- Determine the IN-STORY date and time from context clues in the excerpt itself (explicit dates/times, time-of-day cues, anything establishing the story's own timeline). This is a FICTIONAL scene — it has no relation to today's real-world calendar date, so never use that. If the excerpt gives no explicit date, use a relative marker instead (e.g. "Later that evening", "The next morning") rather than inventing a specific one.`;
@@ -486,7 +509,7 @@ function buildLTMPrompt(chatHistoryText, timeline = []) {
     const systemMsg = `[MEMORY FORMATION SYSTEM]
 
 You are assisting with memory formation for the character "${character}". This is NOT a roleplay turn — you are stepping outside the story to produce a structured summary of it, for the character's own long-term memory.
-${timelineBlock}
+${timelineBlock}${personaBlock}
 Before writing, reason inside a single <think></think> block:
 - Confirm the boundaries of the excerpt. Do NOT invent context from before it begins.
 ${dateInstruction}
@@ -494,6 +517,7 @@ ${dateInstruction}
 - Only include inferences you are 90%+ confident in.
 ${povInstruction}
 - Use real names in your output ("${character}", "${user}") — write them out normally, not as placeholders or tokens.
+- Refer to "${user}" with the correct gender/pronouns${personaDescription ? ' from the USER IDENTITY REFERENCE above' : ' — if not evident from the excerpt, default to gender-neutral "they/them" rather than guessing'}.
 
 ${THINKING_DISCIPLINE}
 
@@ -538,10 +562,14 @@ ${chatHistoryText}
 function buildMergePrompt(entryA, entryB) {
     const character = getCurrentCharacterName();
     const user = getUserName();
+    // A merged entry is saved without a sourceRange, so a later reroll can only ever rewrite it.
+    // Grounding identity here keeps a merge from baking a wrong pronoun into an entry that has
+    // lost its link back to the original messages.
+    const personaBlock = buildPersonaIdentityBlock(user, getPersonaDescription().trim());
     const systemMsg = `[MEMORY CONSOLIDATION SYSTEM]
 
 You are assisting with memory consolidation for the character "${character}". This is NOT a roleplay turn.
-
+${personaBlock}
 Combine the two memory entries given below into ONE entry in the same format. Preserve all distinct Key Events, Conversations, and Fragments; drop only true duplicates. Keep the narrative in the same voice and point of view as the originals. Choose the earlier entry's date.
 
 Use real names in your output ("${character}", "${user}"). If either source entry contains the literal placeholder text "{{char}}" or "{{user}}" instead of a real name, replace it with the correct real name in your output — don't reproduce the placeholder.
@@ -572,11 +600,21 @@ ${entryB.content}
 function buildRewritePrompt(entry) {
     const character = getCurrentCharacterName();
     const user = getUserName();
+    const personaDescription = getPersonaDescription().trim();
+    const personaBlock = buildPersonaIdentityBlock(user, personaDescription);
+    // A reroll falls back to this rewrite path whenever the entry has no recorded sourceRange
+    // (legacy STscript entries and merged entries) — precisely the old entries most likely to
+    // carry a misgendered user. The pronoun correction below is therefore an explicit, deliberate
+    // exception to the "do not change information" rule; without it the rewrite would faithfully
+    // preserve the wrong pronouns and rerolling could never fix them.
+    const pronounInstruction = personaDescription
+        ? `\n\nIMPORTANT EXCEPTION to "do not change information": if the entry refers to "${user}" with pronouns or gendered wording that contradicts the USER IDENTITY REFERENCE above, correct them. This is a factual correction, not new information. Change nothing else about those sentences.`
+        : '';
     const systemMsg = `[MEMORY REWRITE SYSTEM]
 
 You are assisting with cleaning up an existing memory entry for the character "${character}". This is NOT a roleplay turn.
-
-Rewrite the entry given below in the exact same format, improving clarity and prose quality. Preserve all factual content — every Key Event, Conversation, and Fragment must still be present in some form. Do not add new information, do not remove information, and do not change the date/time line.
+${personaBlock}
+Rewrite the entry given below in the exact same format, improving clarity and prose quality. Preserve all factual content — every Key Event, Conversation, and Fragment must still be present in some form. Do not add new information, do not remove information, and do not change the date/time line.${pronounInstruction}
 
 Use real names in your output ("${character}", "${user}"). If the source entry contains the literal placeholder text "{{char}}" or "{{user}}" instead of a real name, replace it with the correct real name in your output — don't reproduce the placeholder.
 
@@ -901,6 +939,13 @@ async function readAllLTMEntries() {
  */
 function unionSourceRange(a, b) {
     if (!a || !b) return null;
+    // Merging is allowed on ANY two entries, not just adjacent ones. A min..max union across a gap
+    // would claim coverage of messages neither memory ever summarized (merge 1-10 with 50-60 and
+    // the union is 1-60), so a later reroll would regenerate from 40 messages of unrelated scene.
+    // When the spans don't touch or overlap, record no range at all — reroll then falls back to
+    // rewriting the merged text, which is the honest, non-destructive behavior.
+    const disjoint = a.lastMessageId + 1 < b.firstMessageId || b.lastMessageId + 1 < a.firstMessageId;
+    if (disjoint) return null;
     return {
         firstMessageId: Math.min(a.firstMessageId, b.firstMessageId),
         lastMessageId: Math.max(a.lastMessageId, b.lastMessageId),

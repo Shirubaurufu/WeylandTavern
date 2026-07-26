@@ -1,0 +1,8 @@
+# WeyPhone user data — conversations, notifications and cached app content.
+#
+# This directory is git-tracked, and the WeyPhone data file is written INSIDE it (so the feature
+# stays self-contained in one folder). Without this ignore, a routine `git add` would stage real
+# users' private DM threads and push them to a PUBLIC repository. Keep this entry.
+#
+# It also keeps the data out of `git clean -fd` and out of diffs during updates.
+data/

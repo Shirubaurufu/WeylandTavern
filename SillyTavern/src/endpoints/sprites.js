@@ -108,6 +108,34 @@ export function importRisuSprites(directories, data) {
 
 export const router = express.Router();
 
+/**
+ * Lists a character's outfit subfolders (e.g. "Regular Outfit", "Naked", "Santa").
+ * Clients (WeyPhone's Mien gallery) need this to discover outfit folders whose names follow no
+ * convention — without it only hardcoded guesses like Regular Outfit/Lingerie/Naked are findable,
+ * silently hiding every custom outfit a character has.
+ * Returns [{ name: string }]; entries deliberately carry no `path` key so callers can tell
+ * folder entries apart from the file entries returned by /get.
+ */
+router.get('/folders', function (request, response) {
+    const name = String(request.query.name);
+    // isSubfolder=false — this lists the children OF the character folder, so the query is always
+    // a bare character name. getSpritesPath sanitizes it, same as every other route here.
+    const spritesPath = getSpritesPath(request.user.directories, name, false);
+    let folders = [];
+
+    try {
+        if (spritesPath && fs.existsSync(spritesPath) && fs.statSync(spritesPath).isDirectory()) {
+            folders = fs.readdirSync(spritesPath, { withFileTypes: true })
+                .filter(entry => entry.isDirectory())
+                .map(entry => ({ name: entry.name }));
+        }
+    }
+    catch (err) {
+        // Match /get's behavior: an unreadable folder yields an empty list rather than a 500.
+    }
+    return response.send(folders);
+});
+
 router.get('/get', function (request, response) {
     const name = String(request.query.name);
     const isSubfolder = name.includes('/');

@@ -17,7 +17,7 @@ export const HOME_GRID_ORDER = [
     'chat', 'board',
     'pawxai', 'mien',
     'housing', 'kressa',
-    'calculator', 'notes',
+    'calculator', 'clock', 'notes',
     'settings',
 ];
 

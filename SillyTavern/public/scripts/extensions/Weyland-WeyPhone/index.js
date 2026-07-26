@@ -2,7 +2,7 @@ import { MODULE_NAME, getSettings, resetSettings } from './lib/config.js';
 import { getRequestHeaders } from '../../../script.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, applySpecialCase } from './lib/promptResolution.js';
 import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLorebookContactProfile, resolveWorldInfoTethered, resolveWorldInfoUntethered } from './lib/worldInfo.js';
-import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor } from './lib/storage.js';
+import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
 import { buildSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
 import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
@@ -40,7 +40,12 @@ import { initialState as calcInitialState, reduceKeypress } from './lib/calculat
 import { renderCalculatorScreen, renderCalculatorSettingsScreen, updateCalculatorDisplay } from './lib/ui/apps/calculator.js';
 import { createNote, getNotes, getNote, updateNote, deleteNote } from './lib/notesStorage.js';
 import { renderNotesScreen, renderNoteEditorScreen } from './lib/ui/apps/notes.js';
-import { renderAppNamesScreen, renderCharacterWallpapersScreen, renderSettingsScreen, WALLPAPER_PRESETS } from './lib/ui/apps/settings.js';
+import { renderAppNamesScreen, renderCharacterWallpapersScreen, renderFolderWallpapersScreen, renderSettingsScreen, WALLPAPER_PRESETS } from './lib/ui/apps/settings.js';
+import { renderClockScreen, renderTimerEditorScreen, renderAlarmEditorScreen, renderClockAlertScreen, renderClockPickerScreen, ringDashoffset, pickerBasename } from './lib/ui/apps/clock.js';
+import { startAlarmSound, unlockAudio } from './lib/clockAlert.js';
+import { staticRoster, costumeProbeList, isNsfwGreeting } from './lib/clockCostumes.js';
+import { createTimer, getVisibleTimers, getTimer, updateTimer, deleteTimer, formatDuration, timerFraction, TIME_MODE, effectiveTimeMode, getDefaultTimeMode, setDefaultTimeMode, createAlarm, getVisibleAlarms, getAlarm, updateAlarm, deleteAlarm, computeNextFire, isOneShot, RECURRENCE } from './lib/clockStorage.js';
+import { currentRpMoment, rpMinutesBetween } from './lib/rpTime.js';
 import { pushLogLine, getLogLines, clearLogLines } from './lib/debugLog.js';
 import { createWeyPhoneBackup, parseWeyPhoneBackup, restoreWeyPhoneBackup } from './lib/settingsBackup.js';
 import { findMostRecentRpTime } from './lib/rpClock.js';
@@ -56,7 +61,7 @@ import { buildShareBlock, buildShareTitle } from './lib/shareContext.js';
 import { saveShareAsLtmEntry } from './lib/ltmShare.js';
 import { applyMienExpression, loadMienGallery, resolveMienCharacter, selectMienOutfit } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
-import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, dedupeCapturedMessages, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants } from './lib/roleplayTether.js';
+import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, dedupeCapturedMessages, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './lib/roleplayMode.js';
 import { buildContactContextBlock, buildGroupContactContextBlock, buildPersonaContextBlock, resolveContactContext } from './lib/contactContext.js';
 import { applySettingsPatch, createSettingsPatch, mergeWeyPhoneSettings, replaceSettingsInPlace, settingsChangedDuringRefresh } from './lib/settingsSync.js';
@@ -88,6 +93,49 @@ let currentPawXaiSavedCharacter = null;
 let pawxaiGenerating = false;
 let currentMienGallery = null;
 let currentMienIndex = 0;
+// Clock app state. currentClockTab picks the visible tab; the timer editor's draft is declared just
+// below. timerRuntime holds LIVE run state (never persisted, like TinyClock's [JsonIgnore] fields),
+// keyed by timer id → { state, endTime, remainingSeconds }. clockTickHandle is the countdown loop.
+let currentClockTab = 'timers';
+// The timer editor works on a DRAFT copy so nothing persists until Create/Save; back = discard.
+let timerDraft = null;       // working copy being edited, or null when the editor is closed
+let timerDraftIsNew = false; // true while adding (Create button), false while editing (Save/Delete)
+const timerRuntime = new Map();
+let clockTickHandle = null;
+// Alarm editor draft, same discard-on-back model as timers.
+let alarmDraft = null;
+let alarmDraftIsNew = false;
+// Going-off queue. currentAlert is the one on screen; alertSound is its looping-sound handle.
+let alertQueue = [];
+let currentAlert = null;
+let alertSound = null;
+// Real (wall-clock) alarm scheduler: id -> next-fire epoch ms (in memory, so missed-while-closed
+// alarms are simply recomputed to their next future time rather than firing late on reopen).
+const alarmNextFire = new Map();
+let alarmTickHandle = null;
+const ALARM_SNOOZE_MS = 5 * 60 * 1000;
+// When an RP alarm fires, a one-shot system note is injected into the next roleplay generation so
+// the story reacts to it (e.g. wakes {{user}}). Consumed + cleared by the generate interceptor.
+const RP_ALARM_INJECT_KEY = 'weyphone_rp_alarm';
+let pendingAlarmInjection = null;       // LATE one-shot note(s) for alarm(s) that already fired
+let earlyInjectAlarmId = null;          // the single closest alarm currently getting the EARLY note
+// Only the closest alarm within ~2 story-days gets the forward/early note (covers "today or
+// tomorrow", so a sleep time-skip still rings on time). Anything further stays late-only until closer.
+const EARLY_INJECT_WINDOW_MIN = 2 * 24 * 60;
+// Sound/image picker: which field ('sound'), which editor to return to, the fetched list (null =
+// loading), and a transient preview-audio handle.
+let pickerField = null;
+let pickerReturn = null;
+let pickerItems = null;
+let previewAudio = null;
+// Image picker navigation: 'root' (greetings + character list) or 'char' (one character's costumes).
+let imgLevel = 'root';
+let imgChar = null;
+let imgCharacters = [];
+let imgCostumeData = null;
+// Settings-app folder wallpaper gallery: 'Weyland' (greetings) or 'FFFox'; items null = loading.
+let wallpaperFolder = null;
+let wallpaperFolderItems = null;
 let mienLoading = false;
 let mienApplying = false;
 let mienError = '';
@@ -201,6 +249,93 @@ async function writeServerSettings(settings) {
     if (!response.ok) throw new Error(`Could not save WeyPhone settings (${response.status}).`);
 }
 
+// ---------------------------------------------------------------------------
+// WeyPhone data store (data/<user>/weyphone/weyphone.json)
+// ---------------------------------------------------------------------------
+// WeyPhone's threads used to live inside settings.json. That meant every phone save rewrote the
+// whole global settings file — shared with every other extension and all user settings — so chat
+// data caused write amplification and sat in the blast radius of an unrelated bad write.
+// The store below is the same shape as the old extension_settings.WeyPhone object; only the
+// transport changed, so the merge-safe multi-tab logic in flushWeyPhoneSettings is untouched.
+
+/** @returns {Promise<object|null>} stored payload, or null when nothing has been written yet. */
+async function readWeyPhoneStore() {
+    const response = await fetchSettingsApi('/api/weyphone/data', {
+        method: 'GET',
+        headers: getRequestHeaders(),
+        cache: 'no-cache',
+    });
+    if (!response.ok) throw new Error(`Could not read WeyPhone data (${response.status}).`);
+    const payload = await response.json();
+    const data = payload?.data;
+    // null is meaningful — it is what triggers the one-time migration below. Anything that is not
+    // a plain object is treated as "nothing stored".
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+    return data;
+}
+
+async function writeWeyPhoneStore(data) {
+    const response = await fetchSettingsApi('/api/weyphone/data', {
+        method: 'POST',
+        headers: getRequestHeaders(),
+        body: JSON.stringify({ data }),
+        cache: 'no-cache',
+    });
+    if (!response.ok) throw new Error(`Could not save WeyPhone data (${response.status}).`);
+}
+
+/**
+ * One-time move of an existing install's WeyPhone data out of settings.json and into its own file.
+ *
+ * Ordering is deliberately paranoid, because getting this wrong means a user opens the phone to
+ * find every conversation gone:
+ *   1. If the data file already exists, nothing to do — it is the source of truth.
+ *   2. Otherwise take whatever is in settings.json (the legacy home) and WRITE it to the file.
+ *   3. READ IT BACK and confirm it is really there.
+ *   4. Only after that verification, clear the legacy copy out of settings.json.
+ * If any step throws, we return the legacy data and leave settings.json completely untouched, so
+ * the worst case is that the data briefly lives in both places — never in neither.
+ *
+ * @returns {Promise<object|null>} the payload WeyPhone should run on, or null for a fresh install.
+ */
+async function migrateWeyPhoneStore() {
+    const stored = await readWeyPhoneStore();
+    if (stored) return stored;
+
+    // No file yet: either a brand-new install, or an existing user who predates the data file.
+    let serverSettings;
+    try {
+        serverSettings = await readServerSettings();
+    } catch (error) {
+        console.warn('[WeyPhone] Could not read settings.json while checking for legacy data:', error);
+        return null;
+    }
+    const legacy = serverSettings?.extension_settings?.[MODULE_NAME];
+    const hasLegacyData = legacy && typeof legacy === 'object' && !Array.isArray(legacy)
+        && Object.keys(legacy).length > 0;
+    if (!hasLegacyData) return null; // fresh install — defaults will be created normally
+
+    try {
+        await writeWeyPhoneStore(legacy);
+        const verified = await readWeyPhoneStore();
+        if (!verified) throw new Error('data file was not readable after writing');
+
+        // Verified present in the new home — now, and only now, drop the legacy copy so settings.json
+        // stops carrying it. A failure here is harmless: the file already holds the real data.
+        delete serverSettings.extension_settings[MODULE_NAME];
+        await writeServerSettings(serverSettings);
+        log('Migrated WeyPhone data out of settings.json into its own file');
+        toastr.success('WeyPhone conversations moved to their own storage file.', 'WeyPhone');
+        return verified;
+    } catch (error) {
+        // Leave settings.json exactly as it was. WeyPhone keeps working from the legacy copy and
+        // migration is retried on the next load.
+        console.error('[WeyPhone] Data migration failed — keeping existing settings.json copy:', error);
+        toastr.warning('WeyPhone could not move its data to the new storage file; your conversations are safe and it will retry next time.', 'WeyPhone');
+        return legacy;
+    }
+}
+
 function queueWeyPhoneSave(context = SillyTavern.getContext(), { delay = WEYPHONE_SAVE_DELAY_MS, retry = false } = {}) {
     if (!retry) settingsSaveRetryCount = 0;
     if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
@@ -221,15 +356,13 @@ async function flushWeyPhoneSettings(context = SillyTavern.getContext()) {
     if (!localPatch.length) return true;
 
     try {
-        const serverSettings = await readServerSettings();
-        if (!serverSettings.extension_settings || typeof serverSettings.extension_settings !== 'object') {
-            serverSettings.extension_settings = {};
-        }
-        const remote = serverSettings.extension_settings[MODULE_NAME];
+        // Reads/writes the dedicated WeyPhone data file rather than rewriting the whole global
+        // settings.json. The three-way merge below is unchanged — only where `remote` comes from
+        // and where `merged` goes has moved, so multi-tab conflict handling behaves exactly as before.
+        const remote = await readWeyPhoneStore();
         const merged = mergeWeyPhoneSettings(base, localSnapshot,
             remote && typeof remote === 'object' && !Array.isArray(remote) ? remote : base);
-        serverSettings.extension_settings[MODULE_NAME] = merged;
-        await writeServerSettings(serverSettings);
+        await writeWeyPhoneStore(merged);
 
         // User input may have arrived while the two network requests were in flight. Preserve it
         // locally, mark the just-written merge as the new baseline, and schedule one more save.
@@ -264,8 +397,8 @@ async function refreshWeyPhoneSettings(context = SillyTavern.getContext()) {
             return false;
         }
         try {
-            const serverSettings = await readServerSettings();
-            const remote = serverSettings.extension_settings?.[MODULE_NAME];
+            // Same dedicated data file the writer uses — see readWeyPhoneStore.
+            const remote = await readWeyPhoneStore();
             if (!remote || typeof remote !== 'object' || Array.isArray(remote)) return false;
             // Lucy can finish generating, a mode can change, or a queued save can complete while
             // readServerSettings is awaiting the network. Applying the response captured before
@@ -484,28 +617,42 @@ async function resolveWorldInfo(context, history, additionalBookNames = [], char
 // resolveMainActiveLtmEntries's own "no book bound yet" behavior — this function must never throw,
 // since generateReply has no separate error path for "tethered assembly failed" vs "the whole
 // reply failed."
-async function buildTetheredContext(context, conversation) {
+async function buildTetheredContext(context, conversation, { kressaObserver = false } = {}) {
     if (getRoleplayMode(conversation) !== ROLEPLAY_MODES.OBSERVE) return '';
     if (!isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId })) return '';
 
+    // Observers need the same scene-relevant lore and LTM grounding as the active roleplay. Kressa
+    // remains Kressa because her own app prompt is still the acting character prompt; this material
+    // is reference context only. Her transcript is capped separately below so it cannot become a
+    // second full roleplay context window and tempt the model to continue the scene.
     const worldInfo = await resolveWorldInfoTetheredForMainChat(context);
-
-    const ltmSettings = context.extensionSettings['Weyland-LTM'];
-    const lastLtmMessageId = ltmSettings?.__chatState?.[context.chatId]?.lastLtmMessageId ?? -1;
     const ltmEntries = await resolveMainActiveLtmEntries({
         loadWorldInfo: context.loadWorldInfo,
         chatMetadata: context.chatMetadata,
         chatId: context.chatId,
     });
 
+    const ltmSettings = context.extensionSettings['Weyland-LTM'];
+    const lastLtmMessageId = ltmSettings?.__chatState?.[context.chatId]?.lastLtmMessageId ?? -1;
+
     const historySlice = resolveMainHistorySlice({
         chat: context.chat,
         lastLtmMessageId,
-        historyCap: conversation.tetheredHistoryCap,
+        historyCap: kressaObserver
+            ? Math.min(15, Number.isFinite(conversation.tetheredHistoryCap) ? conversation.tetheredHistoryCap : 15)
+            : conversation.tetheredHistoryCap,
     });
     const historyTranscript = formatMainHistoryTranscript(historySlice);
 
-    return buildTetheredViewBlock({ worldInfoText: worldInfo, ltmEntries, historyTranscript });
+    return buildTetheredViewBlock({
+        worldInfoText: worldInfo,
+        ltmEntries,
+        historyTranscript,
+        // NOTE: Lucky's "post-chatlog orientation" refinement (postTranscriptInstructions:
+        // KRESSA_POST_CHATLOG_ORIENTATION) needs his updated tetheredContext.js — the const and the
+        // buildTetheredViewBlock param that consumes it were never delivered. Restore both lines
+        // (here and the import) once that file lands.
+    });
 }
 
 // Scans World Info against the MAIN chat's own history (not WeyPhone's texting history) — this is
@@ -622,7 +769,19 @@ function recordIncomingDmNotification(context, settings, conversationId, convers
         || ((conversation.participants?.length ?? 1) > 1
             ? conversation.participants.join(', ')
             : (latest.speaker || conversation.charName || 'New message'));
-    recordMessageNotification(settings, context.chatId, { title, text: latest.content, conversationId });
+    // A dedicated-app thread (Kressa) opens from its own home tile, not Messages, so its
+    // notification has to badge that tile instead. Validate the tag against the registry first —
+    // an unknown/stale appKey would badge no tile at all and could never be cleared, so fall back
+    // to Messages in that case.
+    const dedicatedAppKey = conversation.isDedicatedApp;
+    const appKey = dedicatedAppKey && getApp(dedicatedAppKey) ? dedicatedAppKey : 'messages';
+    recordMessageNotification(settings, context.chatId, {
+        title,
+        text: latest.content,
+        conversationId,
+        appKey,
+        appLabel: resolveAppLabel(settings, appKey),
+    });
     if (currentView === 'home') showScreen('home');
     renderShadeNow();
     renderLockScreenNow();
@@ -1325,7 +1484,7 @@ async function generateReply(conversationId, conversation, context, settings) {
         // active story as a read-only [TETHERED VIEW] — that is the entire "show Kressa my Nara
         // roleplay" use case. Other observing DMs swap their own scan for the active roleplay's
         // scan above; Kressa's assistant identity/lore remains additive and intact.
-        const tetheredBlock = await buildTetheredContext(context, conversation);
+        const tetheredBlock = await buildTetheredContext(context, conversation, { kressaObserver: isKressa });
         const kressaObserverInstructions = isKressa && tetheredBlock
             ? KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS
             : '';
@@ -2198,6 +2357,10 @@ function handleFormatWeyPhone() {
 }
 
 function handleScreenBodyClick(event) {
+    // Any tap primes audio playback for the going-off sound (browsers gate audio on a user gesture).
+    unlockAudio();
+    if (event.target.closest('#wp-alert-dismiss')) { dismissCurrentAlert(); return; }
+    if (event.target.closest('#wp-alert-snooze')) { snoozeCurrentAlert(); return; }
     // While bulk-deleting, this delegated listener handles exactly three things — cancel, delete,
     // and toggling a bubble's selection — and nothing else (no edit, no regenerate, no nav) should
     // be reachable, so this returns unconditionally rather than falling through to the branches below.
@@ -2370,12 +2533,326 @@ function handleScreenBodyClick(event) {
         showScreen('notes');
         return;
     }
+    // Clock: open the sound picker from an editor.
+    const chooseBtn = event.target.closest('.wp-clock-choose');
+    if (chooseBtn) {
+        openPicker(chooseBtn.dataset.picker);
+        return;
+    }
+    // Clock picker: preview a sound.
+    const previewBtn = event.target.closest('.wp-picker-preview');
+    if (previewBtn) {
+        previewSound(previewBtn.dataset.previewUrl);
+        return;
+    }
+    // Clock picker: pick a sound row (empty url = default beep).
+    const soundRow = event.target.closest('.wp-picker-row');
+    if (soundRow) {
+        setPickerValue(soundRow.dataset.soundUrl || '');
+        return;
+    }
+    // Clock picker: pick an image (empty url = no image).
+    const imagePick = event.target.closest('.wp-picker-image, .wp-picker-none');
+    if (imagePick) {
+        setPickerValue(imagePick.dataset.imageUrl || '');
+        return;
+    }
+    // Clock picker: open the greetings folder.
+    if (event.target.closest('#wp-picker-greetings-btn')) {
+        imgLevel = 'greetings';
+        showScreen('clock-picker');
+        return;
+    }
+    // Clock picker: back from greetings to the root list.
+    if (event.target.closest('#wp-picker-greetings-back')) {
+        imgLevel = 'root';
+        showScreen('clock-picker');
+        return;
+    }
+    // Clock picker: open a character's costumes (probe their folders).
+    const charBtn = event.target.closest('.wp-picker-char-btn');
+    if (charBtn) {
+        const name = charBtn.dataset.imgChar;
+        imgLevel = 'char';
+        imgChar = name;
+        imgCostumeData = null;
+        showScreen('clock-picker');
+        probeCostumes(name).then(data => {
+            if (currentView === 'clock-picker' && imgLevel === 'char' && imgChar === name) {
+                imgCostumeData = data;
+                showScreen('clock-picker');
+            }
+        });
+        return;
+    }
+    // Clock picker: back from a character's costumes to the root list.
+    if (event.target.closest('#wp-picker-char-back')) {
+        imgLevel = 'root';
+        imgChar = null;
+        imgCostumeData = null;
+        showScreen('clock-picker');
+        return;
+    }
+    // Clock picker: use a pasted URL.
+    if (event.target.closest('#wp-picker-url-use')) {
+        const input = document.getElementById('wp-picker-url-input');
+        setPickerValue((input?.value || '').trim());
+        return;
+    }
+    // Clock: switch between the Timers and Alarms tabs.
+    const clockTab = event.target.closest('.wp-clock-tab');
+    if (clockTab) {
+        currentClockTab = clockTab.dataset.clockTab === 'alarms' ? 'alarms' : 'timers';
+        showScreen('clock');
+        return;
+    }
+    // Clock: the Time-source control. Pressing either segment TOGGLES (you only touch it to change
+    // it), and it drives BOTH the phone's displayed clock and the default mode for new timers/alarms.
+    const defaultModeBtn = event.target.closest('.wp-clock-default-btn');
+    if (defaultModeBtn) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const next = getDefaultTimeMode(settings) === TIME_MODE.RP ? TIME_MODE.REAL : TIME_MODE.RP;
+        setDefaultTimeMode(settings, next);
+        settings.ui.rpClockEnabled = (next === TIME_MODE.RP); // phone clock follows the same switch
+        queueWeyPhoneSave(context);
+        renderStatusBarNow();
+        showScreen('clock');
+        return;
+    }
+    // Clock: open the editor on a fresh, unsaved draft (persisted only if Create is pressed).
+    // A new timer starts on the app default (concrete Real/Roleplay); with no chat it can only be Real.
+    if (event.target.closest('#wp-timer-add')) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const startMode = context.chatId ? getDefaultTimeMode(settings) : TIME_MODE.REAL;
+        timerDraft = { id: null, name: '', durationSeconds: 600, timeMode: startMode, soundUrl: '', imageUrl: '' };
+        timerDraftIsNew = true;
+        showScreen('timer-editor');
+        return;
+    }
+    // Clock: commit a brand-new timer (draft -> stored). RP timers are scoped to the current chat.
+    if (event.target.closest('#wp-timer-create-btn')) {
+        if (!timerDraft) return;
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const isRp = effectiveTimeMode(settings, timerDraft) === 'rp';
+        if (isRp && !context.chatId) { wpToast('info', 'Open a roleplay chat to use roleplay time.'); return; }
+        createTimer(settings, {
+            name: timerDraft.name,
+            durationSeconds: timerDraft.durationSeconds,
+            timeMode: timerDraft.timeMode,
+            soundUrl: timerDraft.soundUrl,
+            imageUrl: timerDraft.imageUrl,
+            chatId: isRp ? context.chatId : null,
+        });
+        queueWeyPhoneSave(context);
+        timerDraft = null;
+        timerDraftIsNew = false;
+        showScreen('clock');
+        return;
+    }
+    // Clock: save edits to an existing timer (draft -> stored).
+    if (event.target.closest('#wp-timer-save-btn')) {
+        if (!timerDraft?.id) return;
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const isRp = effectiveTimeMode(settings, timerDraft) === 'rp';
+        if (isRp && !context.chatId) { wpToast('info', 'Open a roleplay chat to use roleplay time.'); return; }
+        updateTimer(settings, timerDraft.id, {
+            name: timerDraft.name,
+            durationSeconds: timerDraft.durationSeconds,
+            timeMode: timerDraft.timeMode,
+            soundUrl: timerDraft.soundUrl,
+            imageUrl: timerDraft.imageUrl,
+            chatId: isRp ? context.chatId : null,
+        });
+        // A timer switched to real time can't keep a persisted RP run; clear it and its live state.
+        if (!isRp) {
+            const timer = getTimer(settings, timerDraft.id);
+            if (timer) timer.run = null;
+            timerRuntime.delete(timerDraft.id);
+        }
+        // Keep an idle timer's shown remaining in step with a changed duration (don't disturb a run).
+        const rt = timerRuntime.get(timerDraft.id);
+        if (!rt || rt.state === 'idle') timerRuntime.set(timerDraft.id, { state: 'idle', mode: isRp ? 'rp' : 'real', endTime: 0, startMoment: null, baseSeconds: timerDraft.durationSeconds, remainingSeconds: timerDraft.durationSeconds });
+        queueWeyPhoneSave(context);
+        timerDraft = null;
+        showScreen('clock');
+        return;
+    }
+    // Clock: delete from within the timer editor.
+    const timerDeleteBtn = event.target.closest('#wp-timer-delete-btn');
+    if (timerDeleteBtn) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const id = timerDeleteBtn.dataset.timerId;
+        deleteTimer(settings, id);
+        timerRuntime.delete(id);
+        queueWeyPhoneSave(context);
+        timerDraft = null;
+        timerDraftIsNew = false;
+        showScreen('clock');
+        return;
+    }
+    // Clock: a timer card control (start/pause/continue/reset/+1/edit/delete).
+    const timerBtnEl = event.target.closest('.wp-timer-btn');
+    if (timerBtnEl) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const id = timerBtnEl.dataset.timerId;
+        const timer = getTimer(settings, id);
+        if (!timer) return;
+        const rpMoment = currentRpMoment(context.chat);
+        switch (timerBtnEl.dataset.action) {
+            case 'start': startTimer(timer, settings, rpMoment); break;
+            case 'pause': pauseTimer(timer, settings, rpMoment); break;
+            case 'continue': continueTimer(timer, settings, rpMoment); break;
+            case 'reset': resetTimer(timer); break;
+            case 'addminute': addMinuteTimer(timer); break;
+            case 'edit':
+                // Edit a copy so back = discard changes; Save commits it. Resolve any legacy
+                // 'default' mode to its concrete Real/Roleplay so the editor reflects reality.
+                timerDraft = { ...timer, timeMode: effectiveTimeMode(settings, timer) };
+                timerDraftIsNew = false;
+                showScreen('timer-editor');
+                return;
+            case 'delete':
+                deleteTimer(settings, id);
+                timerRuntime.delete(id);
+                queueWeyPhoneSave(context);
+                showScreen('clock');
+                return;
+        }
+        // Real timers keep run state in memory only; RP timers persist theirs so a reload resumes.
+        if (effectiveTimeMode(settings, timer) === 'rp') persistRpTimerRun(timer, context);
+        showScreen('clock');
+        return;
+    }
+    // Clock: open the editor on a fresh, unsaved alarm draft. A new alarm starts on the app default
+    // (concrete Real/Roleplay); with no chat it can only be Real.
+    if (event.target.closest('#wp-alarm-add')) {
+        const addContext = SillyTavern.getContext();
+        const addSettings = getSettings(addContext.extensionSettings);
+        const startMode = addContext.chatId ? getDefaultTimeMode(addSettings) : TIME_MODE.REAL;
+        alarmDraft = {
+            id: null, title: '', hour: 7, minute: 0, kind: RECURRENCE.NEXT, date: null,
+            weekDays: [], nthWeek: 1, nthDay: 1, month: 1, day: 1,
+            timeMode: startMode, soundUrl: '', imageUrl: '', enabled: true,
+        };
+        alarmDraftIsNew = true;
+        showScreen('alarm-editor');
+        return;
+    }
+    // Clock: commit a brand-new alarm (createAlarm reads only the known fields; id/enabled ignored).
+    // RP alarms are scoped to the current chat.
+    if (event.target.closest('#wp-alarm-create-btn')) {
+        if (!alarmDraft) return;
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const isRp = effectiveTimeMode(settings, alarmDraft) === 'rp';
+        if (isRp && !context.chatId) { wpToast('info', 'Open a roleplay chat to use roleplay time.'); return; }
+        createAlarm(settings, { ...alarmDraft, chatId: isRp ? context.chatId : null });
+        queueWeyPhoneSave(context);
+        syncAlarmTick(settings); // a new enabled real alarm needs the checker running
+        alarmDraft = null;
+        alarmDraftIsNew = false;
+        showScreen('clock');
+        return;
+    }
+    // Clock: save edits to an existing alarm.
+    if (event.target.closest('#wp-alarm-save-btn')) {
+        if (!alarmDraft?.id) return;
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const isRp = effectiveTimeMode(settings, alarmDraft) === 'rp';
+        if (isRp && !context.chatId) { wpToast('info', 'Open a roleplay chat to use roleplay time.'); return; }
+        updateAlarm(settings, alarmDraft.id, {
+            title: alarmDraft.title, hour: alarmDraft.hour, minute: alarmDraft.minute,
+            kind: alarmDraft.kind, date: alarmDraft.date, weekDays: alarmDraft.weekDays,
+            nthWeek: alarmDraft.nthWeek, nthDay: alarmDraft.nthDay, month: alarmDraft.month, day: alarmDraft.day,
+            timeMode: alarmDraft.timeMode, soundUrl: alarmDraft.soundUrl, imageUrl: alarmDraft.imageUrl,
+            chatId: isRp ? context.chatId : null,
+        });
+        alarmNextFire.delete(alarmDraft.id); // recompute next fire from the edited schedule
+        const editedAlarm = getAlarm(settings, alarmDraft.id);
+        if (editedAlarm) editedAlarm.rpArm = null; // re-arm RP alarms against the edited schedule
+        queueWeyPhoneSave(context);
+        syncAlarmTick(settings);
+        alarmDraft = null;
+        showScreen('clock');
+        return;
+    }
+    // Clock: delete from within the alarm editor.
+    const alarmDeleteBtn = event.target.closest('#wp-alarm-delete-btn');
+    if (alarmDeleteBtn) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        alarmNextFire.delete(alarmDeleteBtn.dataset.alarmId);
+        deleteAlarm(settings, alarmDeleteBtn.dataset.alarmId);
+        queueWeyPhoneSave(context);
+        syncAlarmTick(settings);
+        alarmDraft = null;
+        alarmDraftIsNew = false;
+        showScreen('clock');
+        return;
+    }
+    // Clock: tap an alarm card body to edit it (works on a copy so back = discard changes).
+    const alarmMain = event.target.closest('.wp-alarm-main');
+    if (alarmMain) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const alarm = getAlarm(settings, alarmMain.dataset.alarmId);
+        if (!alarm) return;
+        // Resolve any legacy 'default' mode to concrete so the editor reflects reality.
+        alarmDraft = { ...alarm, weekDays: [...(alarm.weekDays ?? [])], timeMode: effectiveTimeMode(settings, alarm) };
+        alarmDraftIsNew = false;
+        showScreen('alarm-editor');
+        return;
+    }
+    // Clock: delete an alarm straight from its card.
+    const alarmDel = event.target.closest('.wp-alarm-del');
+    if (alarmDel) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        alarmNextFire.delete(alarmDel.dataset.alarmId);
+        deleteAlarm(settings, alarmDel.dataset.alarmId);
+        queueWeyPhoneSave(context);
+        syncAlarmTick(settings);
+        showScreen('clock');
+        return;
+    }
+    // Clock: toggle a weekday chip in the alarm editor (draft + class only, no re-render).
+    const alarmDay = event.target.closest('.wp-alarm-day');
+    if (alarmDay) {
+        if (!alarmDraft) return;
+        if (!Array.isArray(alarmDraft.weekDays)) alarmDraft.weekDays = [];
+        const day = Number(alarmDay.dataset.weekday);
+        const at = alarmDraft.weekDays.indexOf(day);
+        if (at === -1) alarmDraft.weekDays.push(day); else alarmDraft.weekDays.splice(at, 1);
+        alarmDay.classList.toggle('wp-selected');
+        return;
+    }
     if (event.target.closest('#wp-app-names-button')) {
         showScreen('app-names');
         return;
     }
     if (event.target.closest('#wp-character-wallpapers-button')) {
         showScreen('character-wallpapers');
+        return;
+    }
+    if (event.target.closest('#wp-greetings-wallpapers-button')) {
+        wallpaperFolder = 'Weyland';
+        wallpaperFolderItems = null;
+        showScreen('folder-wallpapers');
+        void loadWallpaperFolder('Weyland');
+        return;
+    }
+    if (event.target.closest('#wp-fffox-wallpapers-button')) {
+        wallpaperFolder = 'FFFox';
+        wallpaperFolderItems = null;
+        showScreen('folder-wallpapers');
+        void loadWallpaperFolder('FFFox');
         return;
     }
     const characterWallpaper = event.target.closest('.wp-character-wallpaper-card');
@@ -2386,6 +2863,16 @@ function handleScreenBodyClick(event) {
         queueWeyPhoneSave(context);
         applyWallpaper();
         showScreen('character-wallpapers');
+        return;
+    }
+    const folderWallpaper = event.target.closest('.wp-folder-wallpaper-card');
+    if (folderWallpaper) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        settings.ui.wallpaper = folderWallpaper.dataset.wallpaperUrl;
+        queueWeyPhoneSave(context);
+        applyWallpaper();
+        showScreen('folder-wallpapers');
         return;
     }
     const pawxaiTab = event.target.closest('.wp-pawxai-tab');
@@ -2527,10 +3014,14 @@ function handleScreenBodyClick(event) {
         }
         const appKey = appTile.dataset.app;
         const app = getApp(appKey);
-        if (appKey === 'messages') {
-            const context = SillyTavern.getContext();
-            const settings = getSettings(context.extensionSettings);
-            markAppNotificationsRead(settings, context.chatId, 'messages');
+        // Mirrors openNotificationTarget's shade-entry behavior — any app tile opened directly
+        // from the home screen should clear its own badge too, not just Messages. Guarded on a
+        // truthy appKey because markAppNotificationsRead treats a missing key as "mark ALL apps
+        // read"; a tile without data-app must never silently wipe every badge.
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        if (appKey) {
+            markAppNotificationsRead(settings, context.chatId, appKey);
             queueWeyPhoneSave(context);
             renderShadeNow();
             renderLockScreenNow();
@@ -2937,7 +3428,59 @@ function handleWallpaperRangeInput(target) {
     return true;
 }
 
+// Discrete slider (15/30/45/60/All) controlling how many recent Linked-thread texts are injected
+// into the roleplay as context. The slider position is an index into TETHER_CONTEXT_MESSAGE_OPTIONS;
+// 0 in that list means "no cap". Returns true when it handled the event.
+function handleTetherContextRangeInput(target) {
+    if (target.id !== 'wp-settings-tether-context') return false;
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const value = TETHER_CONTEXT_MESSAGE_OPTIONS[Number(target.value)] ?? 30;
+    settings.tetherContextMessages = value;
+    const output = document.getElementById('wp-tether-context-value');
+    if (output) output.textContent = value === 0 ? 'All messages' : `${value} messages`;
+    queueWeyPhoneSave(context);
+    return true;
+}
+
 function handleScreenBodyChange(event) {
+    if (applyTimerFieldFromEvent(event.target)) return;
+    // Alarm recurrence change re-renders the editor so the kind-specific fields swap in.
+    if (event.target.classList?.contains('wp-alarm-field') && event.target.dataset.field === 'kind') {
+        if (alarmDraft) {
+            alarmDraft.kind = event.target.value;
+            showScreen('alarm-editor');
+        }
+        return;
+    }
+    // Alarm time-source change re-renders so the recurrence options update (RP has a reduced set),
+    // coercing an unsupported kind (e.g. Weekly) down to Once when switching to Roleplay.
+    if (event.target.classList?.contains('wp-alarm-field') && event.target.dataset.field === 'timeMode') {
+        if (alarmDraft) {
+            alarmDraft.timeMode = event.target.value;
+            const rpKinds = [RECURRENCE.NEXT, RECURRENCE.DAILY, RECURRENCE.DATE];
+            if (alarmDraft.timeMode === TIME_MODE.RP && !rpKinds.includes(alarmDraft.kind)) {
+                alarmDraft.kind = RECURRENCE.NEXT;
+            }
+            showScreen('alarm-editor');
+        }
+        return;
+    }
+    if (applyAlarmFieldFromEvent(event.target)) return;
+    // Alarm on/off toggle lives on the card and persists immediately (it isn't part of any draft).
+    if (event.target.classList?.contains('wp-alarm-enable')) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const alarmId = event.target.dataset.alarmId;
+        updateAlarm(settings, alarmId, { enabled: event.target.checked });
+        alarmNextFire.delete(alarmId); // recompute next fire fresh on re-enable; clear on disable
+        const toggledAlarm = getAlarm(settings, alarmId);
+        if (toggledAlarm) toggledAlarm.rpArm = null; // re-arm an RP alarm fresh from current story time
+        queueWeyPhoneSave(context);
+        syncAlarmTick(settings);
+        if (currentView === 'clock') showScreen('clock');
+        return;
+    }
     if (event.target.classList?.contains('wp-group-contact-checkbox')) {
         const name = event.target.dataset.name;
         if (event.target.checked) {
@@ -2959,6 +3502,7 @@ function handleScreenBodyChange(event) {
         return;
     }
     if (handleWallpaperRangeInput(event.target)) return;
+    if (handleTetherContextRangeInput(event.target)) return;
     if (event.target.id === 'wp-mien-outfit') {
         currentMienGallery = selectMienOutfit(currentMienGallery, event.target.value);
         currentMienIndex = 0;
@@ -3033,14 +3577,6 @@ function handleScreenBodyChange(event) {
         // Reflect the new name in the hero/title immediately ('change' fires on commit, so the
         // re-render doesn't steal focus mid-typing).
         if (currentView === 'contact-detail') showScreen('contact-detail');
-        return;
-    }
-    if (event.target.id === 'wp-settings-rpclock') {
-        const context = SillyTavern.getContext();
-        const settings = getSettings(context.extensionSettings);
-        settings.ui.rpClockEnabled = event.target.checked;
-        queueWeyPhoneSave(context);
-        renderStatusBarNow();
         return;
     }
     if (event.target.id === 'wp-settings-battery-tracker') {
@@ -3156,6 +3692,654 @@ function helpAppKeyForView(view, settings) {
     return null;
 }
 
+// ---------------------------------------------------------------- Clock: timer engine
+//
+// The stored timer holds only its definition (name/duration/etc). Its live run state lives here in
+// timerRuntime and is recomputed from an absolute endTime, so a running timer keeps counting while
+// you browse other apps and is correct when you return. Not persisted — a page reload resets timers
+// to idle, matching the desktop TinyClock.
+
+// A timer runs on either 'real' (wall clock, ticks every 250ms) or 'rp' time. RP timers can't tick —
+// roleplay time only moves when a new scene header arrives — so they hold a startMoment (the RP
+// moment they began at) and baseSeconds (remaining when they began), and recompute their remaining
+// as a snapshot each time a message lands: remaining = baseSeconds - (RP minutes elapsed × 60). A
+// 30-second RP timer therefore fires the moment the story clock advances a full minute, exactly as
+// intended. The engine mode is fixed at start (rt.mode).
+
+/**
+ * Materialize (or fetch) a timer's live run state. On first touch, an RP timer rehydrates from its
+ * persisted `timer.run` (so story-time progress survives a reload); everything else starts idle. A
+ * real timer has no persisted run, so it always comes back idle after a reload — cancelled, as
+ * intended.
+ */
+function timerRuntimeFor(timer) {
+    let rt = timerRuntime.get(timer.id);
+    if (!rt) {
+        rt = timer.run
+            ? { state: timer.run.state, mode: timer.run.mode, endTime: 0, startMoment: timer.run.startMoment, baseSeconds: timer.run.baseSeconds, remainingSeconds: timer.run.remainingSeconds }
+            : { state: 'idle', mode: 'real', endTime: 0, startMoment: null, baseSeconds: timer.durationSeconds, remainingSeconds: timer.durationSeconds };
+        timerRuntime.set(timer.id, rt);
+    }
+    return rt;
+}
+
+/** Mirror an RP timer's live run state onto the persisted record so it survives a reload. */
+function persistRpTimerRun(timer, context) {
+    const rt = timerRuntime.get(timer.id);
+    if (!rt) return;
+    timer.run = { state: rt.state, mode: rt.mode, startMoment: rt.startMoment, baseSeconds: rt.baseSeconds, remainingSeconds: rt.remainingSeconds };
+    queueWeyPhoneSave(context);
+}
+
+/** Remaining seconds for a RUNNING timer. `rpMoment` is the latest story time (may be null). */
+function runningRemaining(rt, rpMoment) {
+    if (rt.mode === 'rp') {
+        // No baseline yet (started before any header) or no readable story time: hold steady.
+        if (!rt.startMoment || !rpMoment) return rt.baseSeconds;
+        const elapsedMin = rpMinutesBetween(rt.startMoment, rpMoment);
+        const elapsed = (elapsedMin != null && elapsedMin > 0) ? elapsedMin * 60 : 0;
+        return rt.baseSeconds - elapsed;
+    }
+    return (rt.endTime - Date.now()) / 1000;
+}
+
+/**
+ * Snapshot a timer's display state for rendering.
+ * @param {object} timer
+ * @param {object} settings
+ * @param {ReturnType<typeof currentRpMoment>} rpMoment latest story moment (null if none)
+ */
+function timerDisplayState(timer, settings, rpMoment) {
+    const rt = timerRuntimeFor(timer);
+    if (rt.state === 'running') {
+        const remaining = runningRemaining(rt, rpMoment);
+        if (remaining <= 0) return { state: 'done', remainingSeconds: 0 };
+        // A RP timer with no baseline/story time yet is "waiting" — running but not advancing.
+        const waiting = rt.mode === 'rp' && (!rt.startMoment || !rpMoment);
+        return { state: 'running', remainingSeconds: remaining, waiting };
+    }
+    if (rt.state === 'paused') return { state: 'paused', remainingSeconds: rt.remainingSeconds };
+    if (rt.state === 'done') return { state: 'done', remainingSeconds: 0 };
+    return { state: 'idle', remainingSeconds: timer.durationSeconds };
+}
+
+function startTimer(timer, settings, rpMoment) {
+    const rt = timerRuntimeFor(timer);
+    rt.mode = effectiveTimeMode(settings, timer);
+    rt.state = 'running';
+    rt.remainingSeconds = timer.durationSeconds;
+    if (rt.mode === 'rp') {
+        rt.startMoment = rpMoment || null; // null baseline is filled in on the next message with a header
+        rt.baseSeconds = timer.durationSeconds;
+        rt.endTime = 0;
+    } else {
+        rt.endTime = Date.now() + timer.durationSeconds * 1000;
+    }
+}
+function pauseTimer(timer, settings, rpMoment) {
+    const rt = timerRuntimeFor(timer);
+    if (rt.state !== 'running') return;
+    rt.remainingSeconds = Math.max(0, runningRemaining(rt, rpMoment));
+    rt.state = 'paused';
+}
+function continueTimer(timer, settings, rpMoment) {
+    const rt = timerRuntimeFor(timer);
+    if (rt.state !== 'paused') return;
+    // Re-baseline from "now" (wall or story) with whatever time was left.
+    if (rt.mode === 'rp') {
+        rt.startMoment = rpMoment || null;
+        rt.baseSeconds = rt.remainingSeconds;
+    } else {
+        rt.endTime = Date.now() + rt.remainingSeconds * 1000;
+    }
+    rt.state = 'running';
+}
+function resetTimer(timer) {
+    const rt = timerRuntimeFor(timer);
+    rt.state = 'idle';
+    rt.endTime = 0;
+    rt.startMoment = null;
+    rt.baseSeconds = timer.durationSeconds;
+    rt.remainingSeconds = timer.durationSeconds;
+}
+function addMinuteTimer(timer) {
+    const rt = timerRuntimeFor(timer);
+    if (rt.state === 'running') {
+        if (rt.mode === 'rp') rt.baseSeconds += 60; // one more RP minute to elapse
+        else rt.endTime += 60_000;
+    } else if (rt.state === 'paused') {
+        rt.remainingSeconds += 60;
+    }
+}
+
+/**
+ * Advance RP timers when a new message (and possibly a new scene header) arrives. RP timers don't
+ * use the wall-clock interval, so this is their heartbeat: fill in a missing baseline, detect
+ * completion, and refresh the display if the Clock app is open.
+ */
+function refreshRpTimersOnMessage() {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const rpMoment = currentRpMoment(context.chat);
+    let changed = false;
+    const completed = [];
+    // Only this chat's RP timers advance on its messages (an RP timer is scoped to one chat).
+    for (const timer of getVisibleTimers(settings, context.chatId)) {
+        const rt = timerRuntime.get(timer.id);
+        if (!rt || rt.state !== 'running' || rt.mode !== 'rp') continue;
+        if (!rt.startMoment && rpMoment) rt.startMoment = rpMoment; // begin counting now
+        if (runningRemaining(rt, rpMoment) <= 0) {
+            rt.state = 'done';
+            rt.remainingSeconds = 0;
+            completed.push(timer);
+        }
+        persistRpTimerRun(timer, context); // save advanced progress so a reload resumes here
+        changed = true;
+    }
+    if (completed.length) {
+        for (const timer of completed) fireTimerAlert(timer);
+    } else if (changed && currentView === 'clock' && currentClockTab === 'timers') {
+        showScreen('clock');
+    }
+}
+
+// The wall-clock countdown loop for REAL timers only (RP timers advance via refreshRpTimersOnMessage).
+// Runs in the BACKGROUND while any real timer is active — even when the Clock isn't the visible app
+// or the phone is closed — so a timer can pop the phone open when it fires. Card text/ring are only
+// touched while the Timers tab is actually showing; completion fires an alert regardless. Stops
+// itself once no real timer is left running.
+function clockTickFrame() {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const onTimersTab = currentView === 'clock' && currentClockTab === 'timers';
+    const completed = [];
+    let stillRunning = false;
+    for (const timer of getVisibleTimers(settings, context.chatId)) {
+        const rt = timerRuntime.get(timer.id);
+        if (!rt || rt.state !== 'running' || rt.mode === 'rp') continue;
+        const remaining = (rt.endTime - Date.now()) / 1000;
+        if (remaining <= 0) {
+            rt.state = 'done';
+            rt.remainingSeconds = 0;
+            completed.push(timer);
+            continue;
+        }
+        stillRunning = true;
+        if (onTimersTab) {
+            const display = document.querySelector(`[data-timer-display="${CSS.escape(timer.id)}"]`);
+            if (display) display.textContent = formatDuration(remaining);
+            const ring = document.querySelector(`[data-timer-ring="${CSS.escape(timer.id)}"] .wp-timer-ring-progress`);
+            if (ring) ring.style.strokeDashoffset = ringDashoffset(timerFraction(remaining, timer.durationSeconds)).toFixed(2);
+        }
+    }
+    for (const timer of completed) fireTimerAlert(timer); // takes over the screen
+    if (!stillRunning) stopClockTick();
+}
+function startClockTick() {
+    if (clockTickHandle === null) clockTickHandle = setInterval(clockTickFrame, 250);
+}
+function stopClockTick() {
+    if (clockTickHandle !== null) { clearInterval(clockTickHandle); clockTickHandle = null; }
+}
+/** Keep the wall-clock ticker alive whenever a REAL-mode timer is running (any screen, even closed). */
+function syncClockTick(settings) {
+    const chatId = SillyTavern.getContext().chatId;
+    const anyRealRunning = getVisibleTimers(settings, chatId).some(t => {
+        const rt = timerRuntime.get(t.id);
+        return rt?.state === 'running' && rt.mode !== 'rp';
+    });
+    if (anyRealRunning) startClockTick(); else stopClockTick();
+}
+
+/**
+ * Persist a timer editor field edit. Returns true if it handled a `.wp-timer-field` target. Called
+ * from both the change and input delegated listeners so selects, text, and number inputs all save.
+ * Never re-renders (the editor screen would lose focus mid-typing).
+ */
+function applyTimerFieldFromEvent(target) {
+    if (!target?.classList?.contains('wp-timer-field')) return false;
+    if (!timerDraft) return true;
+    // Edits land on the in-memory draft only. Persistence happens on Create/Save, and no re-render
+    // fires here so the field keeps focus mid-typing.
+    const field = target.dataset.field;
+    if (field === 'name') timerDraft.name = target.value;
+    else if (field === 'timeMode') timerDraft.timeMode = target.value;
+    else if (field === 'soundUrl') timerDraft.soundUrl = target.value.trim();
+    else if (field === 'imageUrl') timerDraft.imageUrl = target.value.trim();
+    else if (field === 'h' || field === 'm' || field === 's') {
+        // Recombine the three duration inputs from the DOM into total seconds.
+        const editor = target.closest('.wp-timer-editor');
+        const readNum = (f) => {
+            const el = editor?.querySelector(`.wp-timer-field[data-field="${f}"]`);
+            const n = Math.trunc(Number(el?.value));
+            return Number.isFinite(n) && n > 0 ? n : 0;
+        };
+        timerDraft.durationSeconds = Math.max(1, readNum('h') * 3600 + readNum('m') * 60 + readNum('s'));
+    }
+    return true;
+}
+
+/**
+ * Persist an alarm editor field into the in-memory draft. Returns true if it handled a
+ * `.wp-alarm-field` target. 'kind' is intentionally a no-op here — the recurrence <select> is
+ * handled in the change listener so it can re-render the editor with the right fields.
+ */
+function applyAlarmFieldFromEvent(target) {
+    if (!target?.classList?.contains('wp-alarm-field')) return false;
+    if (!alarmDraft) return true;
+    const field = target.dataset.field;
+    const clampInt = (value, min, max, fallback) => {
+        const n = Math.trunc(Number(value));
+        return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+    };
+    if (field === 'title') alarmDraft.title = target.value;
+    else if (field === 'time') {
+        const [h, m] = String(target.value || '').split(':');
+        alarmDraft.hour = clampInt(h, 0, 23, alarmDraft.hour);
+        alarmDraft.minute = clampInt(m, 0, 59, alarmDraft.minute);
+    }
+    else if (field === 'kind') { /* re-rendered by the change listener */ }
+    else if (field === 'date') alarmDraft.date = target.value || null;
+    else if (field === 'nthWeek') alarmDraft.nthWeek = clampInt(target.value, 1, 4, 1);
+    else if (field === 'nthDay') alarmDraft.nthDay = clampInt(target.value, 0, 6, 0);
+    else if (field === 'month') alarmDraft.month = clampInt(target.value, 1, 12, 1);
+    else if (field === 'day') alarmDraft.day = clampInt(target.value, 1, 31, 1);
+    else if (field === 'timeMode') alarmDraft.timeMode = target.value;
+    else if (field === 'soundUrl') alarmDraft.soundUrl = target.value.trim();
+    else if (field === 'imageUrl') alarmDraft.imageUrl = target.value.trim();
+    return true;
+}
+
+// ---------------------------------------------------------------- Clock: going-off alerts
+//
+// A timer or alarm that fires enqueues an alert. The phone pops open (or swaps apps) to a full-screen
+// going-off view with a looping sound and Snooze/Dismiss. Alerts queue so simultaneous fires stack.
+
+function fireTimerAlert(timer) {
+    enqueueAlert({
+        kind: 'timer',
+        id: timer.id,
+        title: timer.name?.trim() || 'Timer',
+        subtitle: "Time's up",
+        imageUrl: timer.imageUrl || '',
+        soundUrl: timer.soundUrl || '',
+    });
+}
+
+function enqueueAlert(alert) {
+    // Skip a duplicate for something already going off or already queued.
+    if (currentAlert?.id === alert.id || alertQueue.some(a => a.id === alert.id)) return;
+    alertQueue.push(alert);
+    if (!currentAlert) showNextAlert();
+}
+
+function showNextAlert() {
+    if (alertSound) { alertSound.stop(); alertSound = null; }
+    currentAlert = alertQueue.shift() || null;
+    if (!currentAlert) return;
+    alertSound = startAlarmSound(currentAlert.soundUrl);
+    // Make the phone visible and take over with the going-off screen.
+    const panel = document.getElementById('wp-panel');
+    if (panel) panel.classList.add('wp-open');
+    setLocked(false); // un-dims and shows the app screen
+    showScreen('clock-alert');
+    renderStatusBarNow();
+}
+
+/** Leave the going-off screen: silence it, run the per-kind after-action, then show next / the app. */
+function closeCurrentAlert(afterAction) {
+    if (alertSound) { alertSound.stop(); alertSound = null; }
+    const alert = currentAlert;
+    currentAlert = null;
+    if (alert && typeof afterAction === 'function') afterAction(alert);
+    if (alertQueue.length) showNextAlert();
+    else showScreen('clock');
+}
+
+function dismissCurrentAlert() {
+    closeCurrentAlert((alert) => {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        if (alert.kind === 'timer') {
+            const timer = getTimer(settings, alert.id);
+            if (timer) {
+                resetTimer(timer); // dismiss = back to idle, ready to run again
+                if (effectiveTimeMode(settings, timer) === 'rp') persistRpTimerRun(timer, context);
+            }
+        } else if (alert.kind === 'alarm') {
+            const alarm = getAlarm(settings, alert.id);
+            if (alarm) {
+                if (effectiveTimeMode(settings, alarm) === 'rp') {
+                    // RP: a one-shot is done; a repeat re-arms from the current story time.
+                    if (isOneShot(alarm)) { alarm.enabled = false; alarm.rpArm = null; }
+                    else { alarm.rpArm = armRpAlarm(alarm, currentRpMoment(context.chat)) ?? null; }
+                    queueWeyPhoneSave(context);
+                } else if (isOneShot(alarm)) {
+                    updateAlarm(settings, alarm.id, { enabled: false }); // a one-shot is done
+                    alarmNextFire.delete(alarm.id);
+                    queueWeyPhoneSave(context);
+                    syncAlarmTick(settings);
+                } else {
+                    alarmNextFire.set(alarm.id, computeNextFire(alarm, Date.now())); // schedule the next repeat
+                    syncAlarmTick(settings);
+                }
+            }
+        }
+    });
+}
+
+function snoozeCurrentAlert() {
+    closeCurrentAlert((alert) => {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        if (alert.kind === 'timer') {
+            const timer = getTimer(settings, alert.id);
+            if (timer) {
+                startTimer(timer, settings, currentRpMoment(context.chat)); // snooze a timer = run it again
+                if (effectiveTimeMode(settings, timer) === 'rp') persistRpTimerRun(timer, context);
+            }
+        } else if (alert.kind === 'alarm') {
+            const alarm = getAlarm(settings, alert.id);
+            if (alarm) {
+                if (effectiveTimeMode(settings, alarm) === 'rp') {
+                    const m = currentRpMoment(context.chat);
+                    alarm.rpArm = m ? { armedFrom: m, targetMinutes: 5 } : null; // re-fire after 5 RP minutes
+                    queueWeyPhoneSave(context);
+                } else {
+                    alarmNextFire.set(alarm.id, Date.now() + ALARM_SNOOZE_MS); // re-fire in 5 minutes
+                    syncAlarmTick(settings);
+                }
+            }
+        }
+    });
+}
+
+// ---- Real (wall-clock) alarm scheduler ----
+
+function fireAlarmAlert(alarm) {
+    const h = alarm.hour % 12 || 12;
+    const time = `${h}:${String(alarm.minute).padStart(2, '0')} ${alarm.hour < 12 ? 'AM' : 'PM'}`;
+    enqueueAlert({
+        kind: 'alarm',
+        id: alarm.id,
+        title: alarm.title?.trim() || 'Alarm',
+        subtitle: time,
+        imageUrl: alarm.imageUrl || '',
+        soundUrl: alarm.soundUrl || '',
+    });
+}
+
+// Checks each enabled REAL alarm against the wall clock. Runs in the background whenever any enabled
+// real alarm exists, so an alarm can pop the phone open. On fire, the alarm is pulled from the map so
+// it doesn't re-fire while the going-off screen is up; Dismiss/Snooze re-establish its next time.
+function alarmTickFrame() {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const now = Date.now();
+    let anyReal = false;
+    for (const alarm of getVisibleAlarms(settings, context.chatId)) {
+        if (!alarm.enabled || effectiveTimeMode(settings, alarm) === 'rp') continue;
+        anyReal = true;
+        let next = alarmNextFire.get(alarm.id);
+        if (next === undefined) {
+            next = computeNextFire(alarm, now);
+            if (next === null) continue; // nothing to schedule (e.g. a past one-shot date)
+            alarmNextFire.set(alarm.id, next);
+        }
+        if (now >= next) {
+            alarmNextFire.delete(alarm.id); // don't re-fire until Dismiss/Snooze re-arms it
+            fireAlarmAlert(alarm);
+        }
+    }
+    if (!anyReal) stopAlarmTick();
+}
+function startAlarmTick() {
+    if (alarmTickHandle === null) alarmTickHandle = setInterval(alarmTickFrame, 5000);
+}
+function stopAlarmTick() {
+    if (alarmTickHandle !== null) { clearInterval(alarmTickHandle); alarmTickHandle = null; }
+}
+/** Keep the alarm checker alive while any enabled REAL alarm exists (global, any screen). */
+function syncAlarmTick(settings) {
+    const chatId = SillyTavern.getContext().chatId;
+    const anyReal = getVisibleAlarms(settings, chatId).some(a => a.enabled && effectiveTimeMode(settings, a) !== 'rp');
+    if (anyReal) startAlarmTick(); else stopAlarmTick();
+}
+
+// ---- RP (story-time) alarm firing ----
+
+/** The next RP moment an alarm should fire at, relative to `from`. Null if unschedulable. */
+function rpTargetMoment(alarm, from) {
+    if (alarm.kind === RECURRENCE.DATE) {
+        // RP stories are often yearless, so a specific-date RP alarm fires at the next occurrence of
+        // that MONTH/DAY in the story (the picked year is ignored). rpMinutesBetween rolls a
+        // month/day that's already behind `from` forward to its next occurrence.
+        const [, mo, d] = String(alarm.date ?? '').split('-').map(Number);
+        if (!mo || !d) return null;
+        return { year: from.year, month: mo - 1, day: d, hour: alarm.hour, minute: alarm.minute };
+    }
+    // NEXT (once) / DAILY: next arrival of hour:minute strictly after `from`.
+    const anchorY = from.year ?? 2000;
+    const fromMs = Date.UTC(anchorY, from.month, from.day, from.hour, from.minute);
+    let tMs = Date.UTC(anchorY, from.month, from.day, alarm.hour, alarm.minute);
+    if (tMs <= fromMs) tMs += 24 * 60 * 60 * 1000;
+    const d = new Date(tMs);
+    return { year: from.year == null ? null : d.getUTCFullYear(), month: d.getUTCMonth(), day: d.getUTCDate(), hour: d.getUTCHours(), minute: d.getUTCMinutes() };
+}
+
+/** Arm an RP alarm from a moment: { armedFrom, targetMinutes }, or null if already past (missed). */
+function armRpAlarm(alarm, from) {
+    const target = rpTargetMoment(alarm, from);
+    if (!target) return null;
+    const mins = rpMinutesBetween(from, target);
+    if (mins === null || mins < 0) return null;
+    return { armedFrom: from, targetMinutes: mins };
+}
+
+function alarmTimeLabel(alarm) {
+    const h = alarm.hour % 12 || 12;
+    return `${h}:${String(alarm.minute).padStart(2, '0')} ${alarm.hour < 12 ? 'AM' : 'PM'}`;
+}
+
+/** LATE note: an RP alarm already fired this turn — react to it going off (used for non-closest ones). */
+function alarmInjectionText(alarm, userName) {
+    const name = alarm.title?.trim() || 'Alarm';
+    return `[WEYPHONE ALARM] ${userName}'s phone alarm "${name}" is set to go off at ${alarmTimeLabel(alarm)}. If they're asleep or occupied, let it intrude on the scene and react naturally.`;
+}
+
+/** EARLY note: a standing instruction so the AI rings the alarm in the very turn the scene reaches it. */
+function earlyAlarmInjectionText(alarm, userName) {
+    const name = alarm.title?.trim() || 'Alarm';
+    const time = alarmTimeLabel(alarm);
+    return `[WEYPHONE ALARM] ${userName} has a phone alarm set for ${time} ("${name}"). Don't mention or trigger it until the scene's clock reaches ${time}; then have it go off and wake them.`;
+}
+
+/**
+ * The single closest enabled RP alarm (in this chat) within the early-injection window, for the
+ * forward "ring when reached" note. Returns { id, text } or null.
+ */
+function computeEarlyAlarmInjection(context, settings) {
+    const moment = currentRpMoment(context.chat);
+    if (!moment) return null;
+    let closest = null;
+    let minRemaining = Infinity;
+    for (const alarm of getVisibleAlarms(settings, context.chatId)) {
+        if (!alarm.enabled || effectiveTimeMode(settings, alarm) !== 'rp' || !alarm.rpArm) continue;
+        const elapsed = rpMinutesBetween(alarm.rpArm.armedFrom, moment);
+        if (elapsed === null) continue;
+        const remaining = alarm.rpArm.targetMinutes - elapsed;
+        if (remaining > 0 && remaining < minRemaining) { minRemaining = remaining; closest = alarm; }
+    }
+    if (!closest || minRemaining > EARLY_INJECT_WINDOW_MIN) return null;
+    return { id: closest.id, text: earlyAlarmInjectionText(closest, context.name1 || 'User') };
+}
+
+// Fire RP alarms whose story-time target has been reached, on each new message in their chat. Timing
+// is measured forward from a persisted armedFrom moment, so it survives reload. The alarm is advanced
+// on Dismiss/Snooze (not here); the going-off dedup keeps repeat alerts from stacking meanwhile.
+function refreshRpAlarmsOnMessage() {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const moment = currentRpMoment(context.chat);
+    if (!moment) return;
+    let changed = false;
+    const fired = [];
+    for (const alarm of getVisibleAlarms(settings, context.chatId)) {
+        if (!alarm.enabled || effectiveTimeMode(settings, alarm) !== 'rp') continue;
+        if (!alarm.rpArm) {
+            const arm = armRpAlarm(alarm, moment);
+            if (!arm) {
+                if (isOneShot(alarm)) { alarm.enabled = false; changed = true; } // a past specific date = missed
+                continue;
+            }
+            alarm.rpArm = arm;
+            changed = true;
+        }
+        const elapsed = rpMinutesBetween(alarm.rpArm.armedFrom, moment);
+        if (elapsed !== null && elapsed >= alarm.rpArm.targetMinutes) fired.push(alarm);
+    }
+    if (changed) queueWeyPhoneSave(context);
+    for (const alarm of fired) fireAlarmAlert(alarm);
+    if (fired.length) {
+        // The closest alarm already had the EARLY (forward) note, so it should have rung in-scene;
+        // only the others need the LATE one-shot note so simultaneous fires still react.
+        const userName = context.name1 || 'User';
+        const notes = fired.filter(alarm => alarm.id !== earlyInjectAlarmId).map(alarm => alarmInjectionText(alarm, userName));
+        if (notes.length) pendingAlarmInjection = [pendingAlarmInjection, ...notes].filter(Boolean).join('\n');
+    }
+    if (fired.length === 0 && changed && currentView === 'clock' && currentClockTab === 'alarms') showScreen('clock');
+}
+
+// ---- Sound/image picker ----
+
+function openPicker(field) {
+    pickerField = field;
+    pickerReturn = currentView;
+    pickerItems = null;
+    imgLevel = 'root';
+    imgChar = null;
+    imgCostumeData = null;
+    if (field === 'image') imgCharacters = buildCharacterList();
+    showScreen('clock-picker');
+    void loadPickerItems(field);
+}
+
+/** Character/folder list for the image picker: the static WT roster + the user's installed cards. */
+function buildCharacterList() {
+    const context = SillyTavern.getContext();
+    const installed = Array.isArray(context.characters) ? context.characters.map(c => c?.name).filter(Boolean) : [];
+    return [...new Set([...staticRoster(), ...installed])].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Whether NSFW content should be SHOWN. WT's `NSFW` variable is inverted from its name: it means
+ * "force safe" when true (see Mien's `forceSafe` and the Pic QR, where NSFW==true shows the censor
+ * sticker). So NSFW content is allowed only when the flag is falsy. Local chat var overrides global.
+ */
+function isNsfwEnabled() {
+    const context = SillyTavern.getContext();
+    const local = context.chatMetadata?.variables?.NSFW;
+    const global = context.extensionSettings?.variables?.global?.NSFW;
+    const value = local !== undefined ? local : global;
+    const forceSafe = /^(true|1|yes|on)$/i.test(String(value ?? '').trim());
+    return !forceSafe;
+}
+
+/** Probe a character's known costume folders (+ base folder), keeping those that return images. */
+async function probeCostumes(char) {
+    const names = costumeProbeList(char, { nsfw: isNsfwEnabled() });
+    const targets = [{ folder: char, label: 'Default' }, ...names.map(c => ({ folder: `${char}/${c}`, label: c }))];
+    const results = await Promise.all(targets.map(async target => {
+        try {
+            const res = await fetch('/api/sprites/get?name=' + encodeURIComponent(target.folder));
+            if (!res.ok) return null;
+            const data = await res.json();
+            const images = Array.isArray(data) ? data.map(sprite => sprite?.path).filter(Boolean) : [];
+            return images.length ? { label: target.label, images } : null;
+        } catch { return null; }
+    }));
+    return results.filter(Boolean);
+}
+
+async function loadPickerItems(field) {
+    try {
+        if (field === 'sound') {
+            const res = await fetch('/api/assets/get', { method: 'POST', headers: getRequestHeaders() });
+            const data = await res.json();
+            const bgm = Array.isArray(data?.bgm) ? data.bgm : [];
+            pickerItems = bgm.map(p => ({ label: pickerBasename(p), url: '/' + String(p).replace(/^\/+/, '') }));
+        } else {
+            // The Weyland greeting-image folder (user/images/Weyland), served at /user/images/Weyland/.
+            const res = await fetch('/api/images/list', { method: 'POST', headers: getRequestHeaders(), body: JSON.stringify({ folder: 'Weyland', sortField: 'name' }) });
+            const files = await res.json();
+            pickerItems = (Array.isArray(files) ? files : []).map(f => `/user/images/Weyland/${encodeURIComponent(f)}`);
+        }
+    } catch {
+        pickerItems = [];
+    }
+    if (currentView === 'clock-picker' && pickerField === field) showScreen('clock-picker'); // refresh once loaded
+}
+
+// The Weyland greeting folder holds real greeting backgrounds alongside other assets. Backgrounds are
+// the 3-digit files 000–799; 099, 147, and 154 are literal phone screenshots, not usable wallpapers.
+const EXCLUDED_GREETINGS = new Set(['099', '147', '154']);
+
+/**
+ * Greeting URLs to show as wallpaper / alarm images. Keeps only real greeting backgrounds — 3-digit
+ * filenames 000–799, minus the phone-screenshot files — then drops NSFW greetings while SFW. The
+ * 3-digit rule also removes the NSFW.avif censor sticker and any non-numeric or 800+ asset.
+ */
+function filterGreetings(urls) {
+    if (urls === null) return null;
+    const nsfw = isNsfwEnabled();
+    return urls.filter(url => {
+        const base = String(url).split('/').pop()?.replace(/\.[^.]+$/, '') ?? '';
+        if (!/^\d{3}$/.test(base) || Number(base) > 799) return false; // real greetings are 000–799
+        if (EXCLUDED_GREETINGS.has(base)) return false;                // literal phone screenshots
+        if (!nsfw && isNsfwGreeting(url)) return false;                // hide NSFW greetings while SFW
+        return true;
+    });
+}
+
+/** Load a folder-backed wallpaper gallery (Weyland greetings get NSFW-filtered; FFFox raw). */
+async function loadWallpaperFolder(folder) {
+    try {
+        const res = await fetch('/api/images/list', { method: 'POST', headers: getRequestHeaders(), body: JSON.stringify({ folder, sortField: 'name' }) });
+        const files = await res.json();
+        let urls = (Array.isArray(files) ? files : []).map(f => `/user/images/${encodeURIComponent(folder)}/${encodeURIComponent(f)}`);
+        urls = folder === 'Weyland' ? (filterGreetings(urls) ?? []) : urls.filter(u => !/\/NSFW\.avif$/i.test(u));
+        wallpaperFolderItems = urls;
+    } catch {
+        wallpaperFolderItems = [];
+    }
+    if (currentView === 'folder-wallpapers' && wallpaperFolder === folder) showScreen('folder-wallpapers');
+}
+
+/** The editor draft the picker is choosing for (timer or alarm). */
+function pickerDraft() {
+    return pickerReturn === 'alarm-editor' ? alarmDraft : timerDraft;
+}
+
+function setPickerValue(value) {
+    const draft = pickerDraft();
+    if (draft) {
+        if (pickerField === 'sound') draft.soundUrl = value;
+        else draft.imageUrl = value;
+    }
+    stopPreview();
+    showScreen(pickerReturn || 'clock');
+}
+
+function stopPreview() {
+    if (previewAudio) { try { previewAudio.pause(); } catch { /* ignore */ } previewAudio = null; }
+}
+
+function previewSound(url) {
+    stopPreview();
+    if (!url) return;
+    try { previewAudio = new Audio(url); previewAudio.play().catch(() => { /* blocked/bad url */ }); } catch { /* ignore */ }
+}
+
 function showScreen(view) {
     currentView = view;
     if (view !== 'mien') mienFullscreen = false;
@@ -3197,6 +4381,7 @@ function showScreen(view) {
         : (view === 'contacts-app' || view === 'contact-detail') ? 'contacts'
         : (view === 'calculator' || view === 'calculator-settings') ? 'calculator'
         : (view === 'notes' || view === 'note-editor') ? 'notes'
+        : (view === 'clock' || view === 'timer-editor' || view === 'alarm-editor' || view === 'clock-alert' || view === 'clock-picker') ? 'clock'
         : view === 'pawxai' ? 'pawxai'
         : view === 'mien' ? 'mien'
         : null;
@@ -3374,10 +4559,49 @@ function showScreen(view) {
         return;
     }
 
+    if (view === 'clock-alert') {
+        if (!currentAlert) {
+            showScreen('clock');
+            return;
+        }
+        title.textContent = currentAlert.kind === 'alarm' ? 'Alarm' : 'Timer';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderClockAlertScreen(screenBody, { alert: currentAlert });
+        return;
+    }
+
+    if (view === 'clock') {
+        title.textContent = resolveAppLabel(settings, 'clock');
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        const clockRpMoment = currentRpMoment(context.chat);
+        renderClockScreen(screenBody, {
+            tab: currentClockTab,
+            timers: getVisibleTimers(settings, context.chatId),
+            alarms: getVisibleAlarms(settings, context.chatId),
+            runtimeOf: (timer) => timerDisplayState(timer, settings, clockRpMoment),
+            defaultMode: getDefaultTimeMode(settings),
+        });
+        syncClockTick(settings);
+        return;
+    }
+
     if (view === 'character-wallpapers') {
         title.textContent = 'Character Wallpapers';
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
         renderCharacterWallpapersScreen(screenBody, { settings });
+        return;
+    }
+
+    if (view === 'folder-wallpapers') {
+        const isGreetings = wallpaperFolder === 'Weyland';
+        title.textContent = isGreetings ? 'Greetings Wallpapers' : 'FFFox Wallpapers';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderFolderWallpapersScreen(screenBody, {
+            title: isGreetings ? 'Greetings Wallpapers' : 'FFFox Wallpapers',
+            emptyHint: isGreetings ? 'No greeting images found.' : 'No FFFox wallpapers yet — add images to user/images/FFFox.',
+            images: wallpaperFolderItems,
+            currentValue: settings.ui?.wallpaper ?? '',
+        });
         return;
     }
 
@@ -3427,6 +4651,47 @@ function showScreen(view) {
         title.textContent = 'Note';
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
         renderNoteEditorScreen(screenBody, { note });
+        return;
+    }
+
+    if (view === 'timer-editor') {
+        if (!timerDraft) {
+            showScreen('clock');
+            return;
+        }
+        title.textContent = timerDraftIsNew ? 'New Timer' : 'Timer';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderTimerEditorScreen(screenBody, { timer: timerDraft, isNew: timerDraftIsNew, chatOpen: Boolean(context.chatId) });
+        return;
+    }
+
+    if (view === 'alarm-editor') {
+        if (!alarmDraft) {
+            showScreen('clock');
+            return;
+        }
+        title.textContent = alarmDraftIsNew ? 'New Alarm' : 'Alarm';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderAlarmEditorScreen(screenBody, { alarm: alarmDraft, isNew: alarmDraftIsNew, chatOpen: Boolean(context.chatId) });
+        return;
+    }
+
+    if (view === 'clock-picker') {
+        if (!pickerReturn || !pickerDraft()) {
+            showScreen('clock');
+            return;
+        }
+        title.textContent = pickerField === 'image' ? 'Choose Image' : 'Choose Sound';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        const draft = pickerDraft();
+        const currentValue = (pickerField === 'image' ? draft.imageUrl : draft.soundUrl) || '';
+        const imgNav = pickerField === 'image'
+            ? { level: imgLevel, char: imgChar, characters: imgCharacters, costumeData: imgCostumeData }
+            : undefined;
+        // Only the greetings level gets the greeting filter; costume/character levels pass through
+        // (their images aren't 3-digit-named and are already NSFW-scoped at probe time).
+        const items = pickerField === 'image' && imgLevel === 'greetings' ? filterGreetings(pickerItems) : pickerItems;
+        renderClockPickerScreen(screenBody, { field: pickerField, items, currentValue, imgNav });
         return;
     }
 
@@ -4315,6 +5580,7 @@ async function weyPhoneMainChatInterceptor() {
                 chat: context.chat,
                 userName: context.name1 || 'User',
                 formatClockTime: formatTetherClockTime,
+                maxMessages: settings.tetherContextMessages,
             })
             : { caution: null, groups: [] };
         const reconciled = reconcileTetherPrompts(plan, tetherPromptKeys);
@@ -4322,6 +5588,14 @@ async function weyPhoneMainChatInterceptor() {
             context.setExtensionPrompt(op.key, op.content, op.position, op.depth, op.scan ?? false, op.role);
         }
         tetherPromptKeys = reconciled.nextKeys;
+        // RP-alarm note (IN_CHAT depth 0, system role). EARLY: a standing "ring when reached" note for
+        // the closest upcoming alarm (recomputed each turn, so it rings on time in the crossing turn).
+        // LATE: any one-shot note for alarms that already fired (consumed once). Empty = cleared.
+        const early = computeEarlyAlarmInjection(context, settings);
+        earlyInjectAlarmId = early?.id ?? null;
+        const alarmNote = [early?.text, pendingAlarmInjection].filter(Boolean).join('\n');
+        context.setExtensionPrompt(RP_ALARM_INJECT_KEY, alarmNote || '', 1, 0, false, 0);
+        pendingAlarmInjection = null;
     } catch (error) {
         console.error('[WeyPhone] Roleplay text injection failed:', error);
     }
@@ -4450,11 +5724,34 @@ function initPanel() {
             showScreen('contacts-app');
         } else if (currentView === 'note-editor') {
             showScreen('notes');
+        } else if (currentView === 'timer-editor') {
+            // Back = discard the draft (a new timer is dropped; edits to an existing one are reverted).
+            timerDraft = null;
+            timerDraftIsNew = false;
+            showScreen('clock');
+        } else if (currentView === 'alarm-editor') {
+            alarmDraft = null;
+            alarmDraftIsNew = false;
+            showScreen('clock');
+        } else if (currentView === 'clock-alert') {
+            dismissCurrentAlert(); // back = dismiss the going-off screen
+        } else if (currentView === 'clock-picker') {
+            stopPreview();
+            if (pickerField === 'image' && imgLevel !== 'root') {
+                imgLevel = 'root'; // step up from a character's costumes / greetings to the list
+                imgChar = null;
+                imgCostumeData = null;
+                showScreen('clock-picker');
+            } else {
+                showScreen(pickerReturn || 'clock'); // back = cancel, keep the current value
+            }
         } else if (currentView === 'kressa-settings') {
             showScreen('conversation');
         } else if (currentView === 'app-names') {
             showScreen('settings-app');
         } else if (currentView === 'character-wallpapers') {
+            showScreen('settings-app');
+        } else if (currentView === 'folder-wallpapers') {
             showScreen('settings-app');
         } else if (currentView === 'calculator-settings') {
             showScreen('calculator');
@@ -4560,6 +5857,10 @@ function initPanel() {
     updateRoleplayModeAvailability();
     const context = SillyTavern.getContext();
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, handleRoleplayPhoneCapture);
+    // RP-time timers advance with the story, so a new message (carrying a fresh scene header) is
+    // their tick. Real-time timers are unaffected (they run off the wall-clock interval).
+    context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpTimersOnMessage);
+    context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpAlarmsOnMessage);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateRoleplayModeAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, refreshHomeScreenAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateLoreWarningAvailability);
@@ -4601,6 +5902,9 @@ function initPanel() {
     // Notes editor — persist on every keystroke (saveSettingsDebounced coalesces the writes).
     screenBody.addEventListener('input', (event) => {
         if (handleWallpaperRangeInput(event.target)) return;
+        if (handleTetherContextRangeInput(event.target)) return;
+        if (applyTimerFieldFromEvent(event.target)) return;
+        if (applyAlarmFieldFromEvent(event.target)) return;
         if (event.target.id === 'wp-group-title') {
             groupDraftTitle = event.target.value;
             return;
@@ -4637,7 +5941,28 @@ function initPanel() {
 
 jQuery(async () => {
     const context = SillyTavern.getContext();
-    initializeSettingsSync(getSettings(context.extensionSettings));
+    // Load WeyPhone's data from its own file BEFORE anything reads settings, migrating an existing
+    // install out of settings.json on first run. On any failure this returns null (or the legacy
+    // copy) and WeyPhone falls back to whatever ST already loaded into extensionSettings, so a
+    // storage problem degrades to the old behavior instead of showing an empty phone.
+    try {
+        const stored = await migrateWeyPhoneStore();
+        if (stored) {
+            context.extensionSettings[MODULE_NAME] = stored;
+        }
+    } catch (error) {
+        console.error('[WeyPhone] Could not load stored data; falling back to settings.json copy:', error);
+    }
+    const settings = getSettings(context.extensionSettings);
+    // Sweep stale per-chat caches once per load. These are keyed by chatId and were never cleaned
+    // up, so they grew with the number of chats a user had ever opened. Both are regenerable caches.
+    const prunedBuckets = pruneOrphanedChatBuckets(settings);
+    initializeSettingsSync(settings);
+    if (prunedBuckets) {
+        log(`Pruned ${prunedBuckets} stale per-chat cache bucket${prunedBuckets === 1 ? '' : 's'}`);
+        queueWeyPhoneSave(context);
+    }
     initPanel();
+    syncAlarmTick(settings); // resume watching any enabled real alarms from a previous session
     log('WeyPhone initialized');
 });

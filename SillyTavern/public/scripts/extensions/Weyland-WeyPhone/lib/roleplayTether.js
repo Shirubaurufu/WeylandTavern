@@ -314,6 +314,25 @@ function participantLabel(participants) {
 
 export const TETHER_INACTIVE_AFTER_ROLEPLAY_RESPONSES = 10;
 
+// Default ceiling on how many transcript messages ride along in the injected block. Without a cap
+// the backlog is bounded only by the WeyPhone memory checkpoint (default ~100 outgoing texts) — a
+// mandatory injection that large can push the prompt past the context limit and truncate the
+// system prompt. Only the most recent messages are kept; older ones are covered by memory anyway.
+// This is just the default; the live value comes from settings.tetherContextMessages via the slider
+// in WeyPhone system settings (15/30/45/60, or 0 = keep all un-summarized messages).
+export const TETHER_MAX_MESSAGES = 30;
+
+// The discrete slider stops surfaced in system settings. 0 means "no cap" (keep everything).
+export const TETHER_CONTEXT_MESSAGE_OPTIONS = [15, 30, 45, 60, 0];
+
+// Normalize whatever is stored in settings into a usable cap. Anything not on the allowed list
+// falls back to the default, so a corrupt/legacy value can never silently mean "unbounded".
+export function resolveTetherMessageCap(value) {
+    const n = Math.floor(Number(value));
+    if (n === 0) return 0; // 0 = keep all
+    return TETHER_CONTEXT_MESSAGE_OPTIONS.includes(n) ? n : TETHER_MAX_MESSAGES;
+}
+
 function countRoleplayResponsesSince(chat, anchor, chatLength) {
     if (Array.isArray(chat)) {
         return chat
@@ -326,7 +345,8 @@ function countRoleplayResponsesSince(chat, anchor, chatLength) {
     return Math.max(0, chatLength - anchor);
 }
 
-export function buildTetherInjectionPlan({ conversations, chatId, chatLength, chat, userName, formatClockTime }) {
+export function buildTetherInjectionPlan({ conversations, chatId, chatLength, chat, userName, formatClockTime, maxMessages = TETHER_MAX_MESSAGES }) {
+    const cap = resolveTetherMessageCap(maxMessages);
     const groups = [];
     for (const conversation of conversations) {
         if (!isConversationLinkedToChat(conversation, chatId)) continue;
@@ -335,9 +355,12 @@ export function buildTetherInjectionPlan({ conversations, chatId, chatLength, ch
         // later inside WeyPhone need to round-trip back, otherwise the prompt would duplicate the
         // model's own original phone block and waste main-chat context. A user can also scrub an
         // already-visible phone bubble from future injections without deleting it from WeyPhone.
-        const recent = conversation.messages
+        const withinWindow = conversation.messages
             .slice(Math.max(conversation.lastMemoryMessageIndex ?? 0, 0))
             .filter(message => !message.capturedFromRoleplay && !message.suppressedFromRoleplay);
+        // Keep only the most recent `cap` messages so the injected block can't balloon. cap === 0
+        // means the user chose "all" — keep the full un-summarized window.
+        const recent = cap > 0 ? withinWindow.slice(-cap) : withinWindow;
         const memories = (conversation.memories ?? []).filter(memory => memory.pinned);
         if (!recent.length && !memories.length) continue;
 
@@ -354,6 +377,12 @@ export function buildTetherInjectionPlan({ conversations, chatId, chatLength, ch
         }
 
         const label = participantLabel(participants);
+        // The live transcript block. This is the ONLY part that participates in the World Info scan
+        // (see reconcileTetherPrompts): the participant names + the actual message text are what
+        // should legitimately activate lore — e.g. a text to Zora about Mama's Bar should fire that
+        // lore. Pinned memories are deliberately kept OUT of this block (see memoryLines below):
+        // they are keyword-dense historical summaries that were over-activating unrelated lorebooks
+        // and blowing the context budget, which truncated the system prompt in Linked mode.
         const lines = [
             '[CURRENT TEXTING CHATLOG]',
             `Active conversation: ${userName} and ${label}.`,
@@ -364,7 +393,6 @@ export function buildTetherInjectionPlan({ conversations, chatId, chatLength, ch
             '- Do not reread, rediscover, or answer messages the character already handled.',
             '- If nothing is new, continue the roleplay naturally. Mention an older text only when it is currently relevant.',
         ];
-        for (const memory of memories) lines.push(`[MEMORY ENTRY]\n${memory.content}\n[END MEMORY ENTRY]`);
         for (const message of recent) {
             // Captured roleplay phone blocks already carry the scene's displayed clock time.
             // Preserve that exact value instead of replacing 7:06 PM with the browser's noon
@@ -376,12 +404,28 @@ export function buildTetherInjectionPlan({ conversations, chatId, chatLength, ch
             else lines.push(`Incoming¦${time}¦${message.speaker || label}¦${message.content}`);
         }
         lines.push('[END CURRENT TEXTING CHATLOG]');
+
+        // Pinned memories ride along as context but are injected separately with scanning OFF, so
+        // they inform the model without triggering World Info. They carry their own framing header
+        // because they no longer sit inside the [CURRENT TEXTING CHATLOG] block that explained what
+        // the surrounding material was. Empty string when there are none.
+        const memoryContent = memories.length
+            ? [
+                `[EARLIER TEXTING HISTORY — ${userName} and ${label}]`,
+                'Summarized background from this same texting thread, provided for continuity only.',
+                'These are past events, not new texts — do not respond to them or treat them as unread.',
+                ...memories.map(memory => `[MEMORY ENTRY]\n${memory.content}\n[END MEMORY ENTRY]`),
+                '[END EARLIER TEXTING HISTORY]',
+            ].join('\n')
+            : '';
+
         groups.push({
             key: `weyphone_tether_${conversation.id}`,
             // Depth zero places this one consolidated block beside the newest user-side message.
             // It must not be distributed back across the historical turns where texts originated.
             depth: 0,
             content: lines.join('\n'),
+            memoryContent,
         });
     }
     return { caution: groups.length ? TETHER_CAUTION : null, groups };
@@ -395,10 +439,20 @@ export function reconcileTetherPrompts(plan, previousKeys) {
         nextKeys.add('weyphone_tether_caution');
     }
     for (const group of plan.groups) {
-        // Linked transcript names and message contents must participate in the normal World Info
-        // scan. Otherwise a text to Zora cannot activate Zora/Mama's Bar lore for the main model.
-        ops.push({ ...group, position: 1, role: 1, scan: true });
+        // Only the transcript block (participant names + message text) participates in the World
+        // Info scan. That preserves the intended behavior — a text to Zora can still activate
+        // Zora/Mama's Bar lore for the main model.
+        ops.push({ key: group.key, content: group.content, position: 1, depth: group.depth, role: 1, scan: true });
         nextKeys.add(group.key);
+        // Pinned memories are injected as context but with scanning OFF. Their keyword-dense
+        // summaries were over-activating unrelated lorebooks and blowing the context budget in
+        // Linked mode (truncating the system prompt); as plain context they still inform the model
+        // without triggering World Info.
+        if (group.memoryContent) {
+            const memoryKey = `${group.key}_mem`;
+            ops.push({ key: memoryKey, content: group.memoryContent, position: 1, depth: group.depth, role: 1, scan: false });
+            nextKeys.add(memoryKey);
+        }
     }
     for (const key of previousKeys) {
         if (!nextKeys.has(key)) ops.push({ key, content: '', position: -1, depth: 0, role: 0 });

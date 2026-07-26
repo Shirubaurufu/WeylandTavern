@@ -546,3 +546,61 @@ export function findOrCreateDedicatedAppConversation(settings, charName, appKey)
     if (existing) return existing;
     return createConversation(settings, charName, { isDedicatedApp: appKey });
 }
+
+/**
+ * Drops per-chat buckets belonging to roleplay chats that no longer exist.
+ *
+ * `notifications` and `phoneApps` are keyed by chatId and were never cleaned up, so every chat a
+ * user ever opened left a bucket behind forever — including deleted ones. The per-chat notification
+ * cap does not help, because the growth is in the number of chats, not the size of each bucket.
+ *
+ * Pruning is by AGE rather than by "does this chat still exist", deliberately: SillyTavern exposes
+ * no endpoint that lists every chat id, so an existence check would have to guess — and guessing
+ * wrong deletes data belonging to a chat the user still uses. Age is a signal we own outright
+ * (`lastRefreshAt` on notifications, `generatedAt` on phone-app content), and both are pure caches
+ * that regenerate on the next sync, so an over-eager prune costs a refresh, never real content.
+ *
+ * Conversations are deliberately NOT pruned by anything here. A thread is user-authored content;
+ * only derived caches are safe to discard automatically.
+ *
+ * Buckets with no usable timestamp are LEFT ALONE rather than assumed old.
+ *
+ * @param {{notifications?: Record<string, any>, phoneApps?: Record<string, any>}} settings
+ * @param {{now?: number, maxAgeMs?: number}} [options]
+ * @returns {number} how many buckets were removed
+ */
+export const ORPHANED_BUCKET_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
+
+export function pruneOrphanedChatBuckets(settings, { now = Date.now(), maxAgeMs = ORPHANED_BUCKET_MAX_AGE_MS } = {}) {
+    let removed = 0;
+
+    const notifications = settings.notifications;
+    if (notifications && typeof notifications === 'object') {
+        for (const [chatId, bucket] of Object.entries(notifications)) {
+            const stamp = Number(bucket?.lastRefreshAt);
+            if (!Number.isFinite(stamp)) continue; // unknown age — keep
+            if (now - stamp > maxAgeMs) {
+                delete notifications[chatId];
+                removed++;
+            }
+        }
+    }
+
+    const phoneApps = settings.phoneApps;
+    if (phoneApps && typeof phoneApps === 'object') {
+        for (const [chatId, apps] of Object.entries(phoneApps)) {
+            if (!apps || typeof apps !== 'object') continue;
+            // A chat's bucket is only as old as its freshest cached app.
+            const stamps = Object.values(apps)
+                .map(entry => Number(entry?.generatedAt))
+                .filter(Number.isFinite);
+            if (!stamps.length) continue; // unknown age — keep
+            if (now - Math.max(...stamps) > maxAgeMs) {
+                delete phoneApps[chatId];
+                removed++;
+            }
+        }
+    }
+
+    return removed;
+}

@@ -32,6 +32,7 @@ import { router as contentManagerRouter } from './endpoints/content-manager.js';
 import { router as settingsRouter } from './endpoints/settings.js';
 import { router as backgroundsRouter } from './endpoints/backgrounds.js';
 import { router as spritesRouter } from './endpoints/sprites.js';
+import { router as weyPhoneRouter } from './endpoints/weyphone.js';
 import { router as stableDiffusionRouter } from './endpoints/stable-diffusion.js';
 import { router as hordeRouter } from './endpoints/horde.js';
 import { router as vectorsRouter } from './endpoints/vectors.js';
@@ -160,6 +161,7 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/stats', statsRouter);
     app.use('/api/backgrounds', backgroundsRouter);
     app.use('/api/sprites', spritesRouter);
+    app.use('/api/weyphone', weyPhoneRouter);
     app.use('/api/content', contentManagerRouter);
     app.use('/api/settings', settingsRouter);
     app.use('/api/sd', stableDiffusionRouter);

@@ -35,15 +35,22 @@ function trimNotificationStore(store) {
     }
 }
 
-/** Records one unread Messages notification for an incoming DM batch. */
-export function recordMessageNotification(settings, chatId, { title, text, conversationId, now = Date.now() }) {
+/**
+ * Records one unread notification for an incoming DM batch.
+ *
+ * `appKey`/`appLabel` exist because a DM does not always belong to the Messages app: a thread
+ * tagged isDedicatedApp (Kressa, and any future dedicated character app) lives behind its OWN home
+ * tile, so routing its notification to 'messages' badged the wrong icon and left the real app's
+ * tile silent. Callers pass the owning app; both default to Messages for ordinary DMs.
+ */
+export function recordMessageNotification(settings, chatId, { title, text, conversationId, appKey = 'messages', appLabel = 'Messages', now = Date.now() }) {
     const preview = truncate(text);
     if (!preview) return null;
     const store = ensureNotificationStore(settings, chatId, now);
     const item = {
         id: genNotificationId(),
-        appKey: 'messages',
-        title: `Messages · ${String(title || 'New message').trim()}`,
+        appKey,
+        title: `${String(appLabel || 'Messages').trim()} · ${String(title || 'New message').trim()}`,
         text: preview,
         timestamp: now,
         read: false,

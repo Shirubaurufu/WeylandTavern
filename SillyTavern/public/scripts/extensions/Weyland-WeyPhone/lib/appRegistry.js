@@ -106,6 +106,17 @@ export const APP_REGISTRY = [
         inGrid: true,
     },
     {
+        key: 'clock',
+        requiresRoleplay: false,
+        label: 'Clock',
+        icon: null,
+        iconFa: 'fa-solid fa-clock', // simple "factory app" tile, not a bespoke asset
+        accent: '#C9CED6',           // soft white — reads as a plain white clock icon on the grey tile
+        syncSection: null,
+        screenView: 'clock',
+        inGrid: true,
+    },
+    {
         key: 'housing',
         requiresRoleplay: false,
         label: 'Housing',

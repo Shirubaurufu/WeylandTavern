@@ -1,6 +1,27 @@
 // lib/ui/apps/settings.js
 
 import { APP_REGISTRY } from '../../appRegistry.js';
+import { TETHER_CONTEXT_MESSAGE_OPTIONS } from '../../roleplayTether.js';
+
+// Display labels paired 1:1 with TETHER_CONTEXT_MESSAGE_OPTIONS ([15,30,45,60,0]); the trailing 0
+// stop means "no cap", shown as "All".
+const TETHER_CONTEXT_LABELS = ['15', '30', '45', '60', 'All'];
+
+function tetherContextValueLabel(value) {
+    return Number(value) === 0 ? 'All messages' : `${Number(value)} messages`;
+}
+
+function tetherContextSliderMarkup(settings) {
+    const current = Number(settings.tetherContextMessages ?? 30);
+    let index = TETHER_CONTEXT_MESSAGE_OPTIONS.indexOf(current);
+    if (index < 0) index = TETHER_CONTEXT_MESSAGE_OPTIONS.indexOf(30);
+    return `
+    <label class="wp-settings-field wp-settings-field-column wp-tether-context-field" title="How many recent Linked-thread texts are sent to the roleplay as context.">
+        <span>Linked texts as context <output id="wp-tether-context-value">${escapeHtml(tetherContextValueLabel(TETHER_CONTEXT_MESSAGE_OPTIONS[index]))}</output></span>
+        <input id="wp-settings-tether-context" type="range" min="0" max="${TETHER_CONTEXT_MESSAGE_OPTIONS.length - 1}" step="1" value="${index}" />
+        <div class="wp-settings-hint">Only the most recent Linked texts ride along as roleplay context; older ones stay covered by WeyPhone memories. Higher settings add more context, but a very high value can crowd a long roleplay's prompt.</div>
+    </label>`;
+}
 
 // Same UI format as Weyland-LTM's model selection (input + "Use current" + quickfill preset
 // buttons + disclaimer), with WeyPhone's own values. minimax-m3 is the default per Lucky;
@@ -158,6 +179,29 @@ export function renderCharacterWallpapersScreen(container, { settings }) {
 }
 
 /**
+ * A folder-backed wallpaper gallery (Greetings or FFFox). `images` is null while loading, else an
+ * array of URLs. Selecting a tile sets it as the phone wallpaper (see index.js).
+ * @param {HTMLElement} container #wp-screen-body
+ * @param {{title: string, emptyHint: string, images: string[]|null, currentValue: string}} state
+ */
+export function renderFolderWallpapersScreen(container, { title, emptyHint, images, currentValue }) {
+    let grid;
+    if (images === null) grid = '<div class="wp-settings-hint">Loading…</div>';
+    else if (images.length === 0) grid = `<div class="wp-settings-hint">${escapeHtml(emptyHint)}</div>`;
+    else grid = `<div class="wp-folder-wallpaper-grid">${images.map(url => `
+        <button type="button" class="wp-folder-wallpaper-card${currentValue === url ? ' wp-selected' : ''}" data-wallpaper-url="${escapeHtml(url)}">
+            <img src="${escapeHtml(url)}" alt="" loading="lazy" />
+        </button>`).join('')}</div>`;
+    container.innerHTML = `
+<div class="wp-settings">
+    <div class="wp-settings-section">
+        <div class="wp-settings-section-title">${escapeHtml(title)}</div>
+        ${grid}
+    </div>
+</div>`;
+}
+
+/**
  * The Settings app: one scrolling screen of sections.
  * @param {HTMLElement} container #wp-screen-body
  * @param {{
@@ -185,6 +229,14 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     </div>
     <button type="button" id="wp-character-wallpapers-button" class="wp-settings-link-row wp-character-wallpapers-link">
         <span>Character wallpapers <small>Browse an alphabetical gallery and adjust each image's focus.</small></span>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    </button>
+    <button type="button" id="wp-greetings-wallpapers-button" class="wp-settings-link-row">
+        <span>Greetings wallpapers <small>Use a Weyland greeting image as your wallpaper.</small></span>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    </button>
+    <button type="button" id="wp-fffox-wallpapers-button" class="wp-settings-link-row">
+        <span>FFFox wallpapers <small>Wallpapers curated by FFFox.</small></span>
         <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
     </button>
     <input id="wp-settings-wallpaper-url" type="text" placeholder="…or paste a custom image URL" value="${isCustomWallpaper ? escapeHtml(wallpaperValue) : ''}" />
@@ -221,16 +273,8 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     </button>
 </div>`;
 
-    const clockSection = `
-<div class="wp-settings-section">
-    <div class="wp-settings-section-title">Clock</div>
-    ${toggleRowMarkup({
-        id: 'wp-settings-rpclock',
-        label: 'Roleplay time',
-        sub: 'Read the clock from the latest scene header',
-        checked: Boolean(settings.ui?.rpClockEnabled),
-    })}
-</div>`;
+    // The Roleplay-time clock toggle moved to the Clock app's "Time source" control (it now drives
+    // both the phone's displayed clock and the default for new timers/alarms).
 
     const batterySection = `
 <div class="wp-settings-section">
@@ -265,6 +309,7 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
         </div>
     </div>
     <div class="wp-settings-hint">Unrecognized or ambiguous speakers are left untouched in the roleplay. Captured threads are visible only while their original roleplay is active.</div>
+    ${tetherContextSliderMarkup(settings)}
 </div>`;
 
     const modelSection = `
@@ -359,7 +404,6 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     container.innerHTML = `
 <div class="wp-settings">
     ${wallpaperSection}
-    ${clockSection}
     ${batterySection}
     ${tetherSection}
     ${rateLimitSection}

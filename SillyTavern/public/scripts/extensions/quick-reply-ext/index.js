@@ -1111,7 +1111,8 @@ Dated Nix at start of Freshman, but ended getting dumped.`, true);
         setLocalVariable("LENS", strings.rsbLENS, true);
         setLocalVariable("OKSA", strings.rsbOKSA, true);
         setLocalVariable("MONTE", strings.rsbMONTE, true);
-        setLocalVariable("BRIET", strings.rsbBRIET);
+        setLocalVariable("BRIET", strings.rsbBRIET, true);
+        setLocalVariable("TORY", strings.rsbTORY, true);
 
         DebugLog(`[P] RosterSB: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
     } catch (error) {
@@ -2344,7 +2345,7 @@ async function XXX(charName) {
     try {
         charName = charName || getCurrentCharacterName();
         if (!charName) return;
-        if (getLocalVariable("RPPOVLocalSet") === "") setLocalVariable("RPPOVLocal", getGlobalVariable("RPPov"));
+        if (getLocalVariable("RPPOVLocalSet") === "") setLocalVariable("RPPOVLocal", getGlobalVariable("RPPOV"));
         if (/Kinsbane Manor|Aethel|Muse|Kressa/.test(charName)) await SpecialChar();
         if (getLocalVariable("LocalN") === "") setLocalVariable("LocalNarrator", getGlobalVariable("Narrator"));
         if (ravs.get(getGlobalVariable("PromptChoice")) === undefined) setGlobalVariable("PromptChoice", "Current Prompt");

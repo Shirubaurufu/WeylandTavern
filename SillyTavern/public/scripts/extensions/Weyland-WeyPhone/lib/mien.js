@@ -70,6 +70,42 @@ function visibleSpriteFolder(characterName, documentRef) {
         .find(folder => folder.split('/')[0].trim().toLowerCase() === normalized) ?? '';
 }
 
+/**
+ * Resolve the sprite folder the SAME way SillyTavern's own expression extension does
+ * (see getSpriteFolderName in extensions/expressions/index.js): the folder is the character
+ * name UNLESS an expression override exists for this character's avatar filename, in which case
+ * ST renders from the override's `path`. Overrides are stored as { name: <avatarFilename>, path }
+ * (see quick-reply-ext ExpressionOverride) and are how Weyland's outfit system points a character
+ * at sprites that don't live under a name-matching folder.
+ *
+ * Mien previously only *guessed* folders from the character name, so any character whose real
+ * folder came from an override (e.g. Sofya) showed a live expression in the roleplay but reported
+ * "no expressions" in Mien. Reading the same override ST reads makes this the single source of
+ * truth instead of guesswork. Returns '' when there is no override (caller falls back to the name).
+ */
+export function resolveOverrideFolder(context, character) {
+    const overrides = context?.extensionSettings?.expressionOverrides;
+    if (!Array.isArray(overrides) || !character) return '';
+    const avatarBase = avatarBaseName(character.avatar);
+    // Primary: ST's own key — the override name equals the avatar filename (with or without its
+    // extension). Fallback: match by canonical character name, which also folds decorated/Unicode
+    // card names down to their plain form (e.g. a stylized "Nara" card matching a "Nara" override).
+    // Matching both ways keeps the previous lenient behavior while adding ST's exact resolution.
+    const aliasKeys = new Set([
+        character.name,
+        displayCharacterName(character.name),
+        avatarBase,
+        displayCharacterName(avatarBase),
+    ].map(canonicalCharacterName).filter(Boolean));
+    const override = overrides.find(entry => {
+        const key = String(entry?.name ?? '').trim();
+        if (!key) return false;
+        if (avatarBase && (key === avatarBase || key === character.avatar || avatarBaseName(key) === avatarBase)) return true;
+        return aliasKeys.has(canonicalCharacterName(key));
+    });
+    return override?.path ? String(override.path).trim() : '';
+}
+
 export function mienFolderCandidates(context, character, documentRef = globalThis.document) {
     const outfit = currentOutfitBucket(context);
     const avatarBase = avatarBaseName(character.avatar);
@@ -79,15 +115,27 @@ export function mienFolderCandidates(context, character, documentRef = globalThi
         avatarBase,
         displayCharacterName(avatarBase),
     ].map(value => String(value ?? '').trim()).filter(Boolean))];
-    const aliasKeys = new Set(aliases.map(canonicalCharacterName));
-    const override = (context.extensionSettings?.expressionOverrides ?? [])
-        .find(entry => aliasKeys.has(canonicalCharacterName(entry?.name)))?.path ?? '';
+    // Authoritative folder: whatever ST itself resolves for this character — the character name,
+    // or an expression override keyed by the avatar filename (exactly how getSpriteFolderName in
+    // extensions/expressions/index.js resolves it). This is the exact folder ST renders from, so it
+    // is guaranteed to contain sprites — no guessing. If the override points at an outfit subfolder
+    // (e.g. "Sofya/Regular Outfit"), derive its base so the sibling outfits can be enumerated too.
+    const overrideFolder = resolveOverrideFolder(context, character);
+    const overrideBase = overrideFolder.includes('/')
+        ? overrideFolder.slice(0, overrideFolder.lastIndexOf('/'))
+        : overrideFolder;
     const candidates = [
+        // The currently-visible sprite folder stays highest priority so the open outfit is selected
+        // first; the override folder is the authoritative fallback when the DOM has no usable match.
         visibleSpriteFolder(character.name, documentRef),
-        override,
+        overrideFolder,
         ...aliases.map(name => `${name}/${outfit.local}`),
         ...aliases.flatMap(name => COMMON_LOCAL_OUTFIT_FOLDERS.map(folder => `${name}/${folder}`)),
         ...aliases,
+        // Sibling outfits under a custom override base (e.g. "SofyaSprites/Naked") — lower priority
+        // so they only fill in when the name-based guesses don't already cover them.
+        overrideBase,
+        ...(overrideBase ? COMMON_LOCAL_OUTFIT_FOLDERS.map(folder => `${overrideBase}/${folder}`) : []),
     ];
     return [...new Set(candidates.map(value => String(value ?? '').trim()).filter(Boolean))];
 }
@@ -164,6 +212,9 @@ function outfitRecord({ source, label, folderName, outfit = '', expressions }) {
 
 async function findLocalOutfits(context, character, fetchImpl, documentRef) {
     const preferredFolders = mienFolderCandidates(context, character, documentRef);
+    // Enumerates a character's REAL outfit subfolders. This is what surfaces non-conventional
+    // outfits (Summer/Baker, Mika/Santa, Weybot/female, …) that no name-guess list can cover.
+    // Requires GET /api/sprites/folders — see src/endpoints/sprites.js.
     const folderData = await fetchJson(`/api/sprites/folders?name=${encodeURIComponent(character.name)}`, fetchImpl);
     const discoveredFolders = Array.isArray(folderData)
         ? folderData

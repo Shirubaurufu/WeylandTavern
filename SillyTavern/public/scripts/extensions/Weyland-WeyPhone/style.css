@@ -184,16 +184,6 @@
 }
 
 #wp-help-button.wp-help-visible { display: flex; }
-#wp-lore-warning-button.wp-lore-warning-visible {
-    display: flex;
-    color: #e8c547;
-    animation: wp-lore-warning-pulse 2.4s ease-in-out infinite;
-}
-
-@keyframes wp-lore-warning-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-}
 #wp-header-rate-counter { display: none; }
 #wp-header-rate-counter.wp-visible { display: inline-flex; }
 .wp-generation-rate-counter,
@@ -3785,3 +3775,241 @@
 .wp-saved-remove:hover { opacity: 0.7; }
 /* Saved phone-app items don't need the floating in-item bookmark slot's padding. */
 .wp-saved-entry .wp-phone-app-item { margin: 0; }
+
+/* ============================================================ CLOCK APP
+   Timers (increment 2). --wp-app-accent is the clock tile's soft white, set per-screen by
+   showScreen(). Reuses .wp-fab and .wp-empty-state from elsewhere. */
+.wp-clock { position: relative; height: 100%; display: flex; flex-direction: column; padding: 10px; box-sizing: border-box; gap: 10px; }
+
+.wp-clock-tabs { display: flex; gap: 6px; }
+.wp-clock-tab {
+    flex: 1;
+    background: var(--wp-surface);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--wp-text-dim);
+    padding: 8px 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.wp-clock-tab-active {
+    color: color-mix(in srgb, var(--wp-app-accent) 80%, white);
+    border-color: color-mix(in srgb, var(--wp-app-accent) 42%, transparent);
+    background: color-mix(in srgb, var(--wp-surface) 88%, var(--wp-app-accent));
+}
+
+.wp-clock-default { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wp-clock-default-label { font-size: 11px; color: var(--wp-text-dim); }
+.wp-clock-default-seg { display: flex; gap: 4px; background: var(--wp-surface); border-radius: 8px; padding: 3px; }
+.wp-clock-default-btn {
+    border: none; background: none; cursor: pointer;
+    color: var(--wp-text-dim); font-size: 11.5px; font-weight: 600;
+    padding: 4px 12px; border-radius: 6px;
+}
+.wp-clock-default-btn.wp-selected {
+    color: color-mix(in srgb, var(--wp-app-accent) 82%, white);
+    background: color-mix(in srgb, var(--wp-surface-2) 70%, var(--wp-app-accent));
+}
+
+.wp-timer-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+
+.wp-timer-card {
+    display: grid;
+    grid-template-columns: 62px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    background: var(--wp-surface);
+    border: 1px solid transparent;
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+.wp-timer-done { border-color: color-mix(in srgb, var(--wp-app-accent) 55%, transparent); }
+
+.wp-timer-ringwrap { position: relative; width: 62px; height: 62px; display: grid; place-items: center; }
+.wp-timer-ring { width: 62px; height: 62px; transform: rotate(-90deg); }
+.wp-timer-ring-track { fill: none; stroke: var(--wp-surface-2); stroke-width: 6; }
+.wp-timer-ring-progress {
+    fill: none;
+    stroke: var(--wp-app-accent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.25s linear;
+}
+.wp-timer-display {
+    position: absolute;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--wp-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.wp-timer-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.wp-timer-name { font-size: 13.5px; font-weight: 600; color: var(--wp-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wp-timer-sub { font-size: 11px; color: var(--wp-text-dim); display: flex; align-items: center; gap: 6px; }
+.wp-timer-waiting { font-size: 10px; font-style: italic; color: var(--wp-text-dim); opacity: 0.85; }
+.wp-timer-mode {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--wp-app-accent) 80%, white);
+    background: color-mix(in srgb, var(--wp-app-accent) 22%, transparent);
+    border-radius: 5px; padding: 1px 5px;
+}
+
+.wp-timer-controls { display: flex; gap: 4px; }
+.wp-timer-btn {
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    background: var(--wp-surface-2);
+    border: none; border-radius: 8px;
+    color: var(--wp-text);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+}
+.wp-timer-btn:hover { filter: brightness(1.15); }
+
+/* Timer editor */
+.wp-timer-editor { display: flex; flex-direction: column; gap: 12px; padding: 10px; box-sizing: border-box; overflow-y: auto; }
+.wp-timer-duration { display: flex; gap: 8px; }
+.wp-timer-duration-field { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.wp-timer-duration-field span { font-size: 10.5px; color: var(--wp-text-dim); }
+.wp-timer-duration-field input {
+    background: var(--wp-surface); border: none; border-radius: 8px;
+    color: var(--wp-text); padding: 8px; font-family: inherit; font-size: 13px; text-align: center; outline: none;
+}
+.wp-timer-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+/* Alarms */
+.wp-alarm-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.wp-alarm-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px;
+    background: var(--wp-surface);
+    border-radius: 14px;
+    padding: 8px 12px;
+}
+.wp-alarm-off { opacity: 0.5; }
+.wp-alarm-main {
+    display: flex; flex-direction: column; gap: 2px;
+    background: none; border: none; text-align: left; cursor: pointer; padding: 4px 0; min-width: 0;
+}
+.wp-alarm-time { font-size: 22px; font-weight: 600; color: var(--wp-text); font-variant-numeric: tabular-nums; }
+.wp-alarm-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.wp-alarm-title { font-size: 12.5px; color: var(--wp-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wp-alarm-sub { font-size: 11px; color: var(--wp-text-dim); display: flex; align-items: center; gap: 6px; }
+.wp-alarm-side { display: flex; align-items: center; gap: 8px; }
+.wp-alarm-del {
+    width: 28px; height: 28px; display: grid; place-items: center;
+    background: var(--wp-surface-2); border: none; border-radius: 8px;
+    color: var(--wp-text-dim); font-size: 12px; cursor: pointer;
+}
+.wp-alarm-del:hover { color: var(--wp-text); filter: brightness(1.15); }
+
+/* Alarm editor */
+.wp-alarm-editor { display: flex; flex-direction: column; gap: 12px; padding: 10px; box-sizing: border-box; overflow-y: auto; }
+.wp-alarm-editor input[type="text"],
+.wp-alarm-editor input[type="time"],
+.wp-alarm-editor input[type="date"],
+.wp-alarm-editor input[type="number"],
+.wp-alarm-editor select {
+    background: var(--wp-surface); border: none; border-radius: 8px;
+    color: var(--wp-text); padding: 9px; font-family: inherit; font-size: 13px; outline: none;
+}
+.wp-alarm-inline { display: flex; gap: 8px; }
+.wp-alarm-inline > * { flex: 1; }
+.wp-alarm-days { display: flex; gap: 6px; }
+.wp-alarm-day {
+    flex: 1; aspect-ratio: 1;
+    background: var(--wp-surface); border: 1px solid transparent; border-radius: 50%;
+    color: var(--wp-text-dim); font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.wp-alarm-day.wp-selected {
+    color: color-mix(in srgb, var(--wp-app-accent) 85%, white);
+    border-color: color-mix(in srgb, var(--wp-app-accent) 55%, transparent);
+    background: color-mix(in srgb, var(--wp-surface) 82%, var(--wp-app-accent));
+}
+.wp-alarm-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+/* Sound/image picker trigger row (in editors) + picker screen */
+.wp-picker-trigger { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wp-picker-current { font-size: 12.5px; color: var(--wp-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wp-picker-thumb { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; object-position: top; }
+
+.wp-clock-picker { display: flex; flex-direction: column; gap: 8px; padding: 10px; box-sizing: border-box; overflow-y: auto; }
+.wp-picker-section-title { font-size: 11px; font-weight: 700; color: var(--wp-text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 6px; }
+.wp-picker-section-title small { text-transform: none; font-weight: 400; opacity: 0.8; }
+.wp-picker-row-wrap { display: flex; gap: 6px; }
+.wp-picker-row {
+    flex: 1; text-align: left;
+    background: var(--wp-surface); border: 1px solid transparent; border-radius: 8px;
+    color: var(--wp-text); font-size: 13px; padding: 10px 12px; cursor: pointer;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.wp-picker-row.wp-selected { border-color: color-mix(in srgb, var(--wp-app-accent) 55%, transparent); background: color-mix(in srgb, var(--wp-surface) 82%, var(--wp-app-accent)); }
+.wp-picker-preview {
+    width: 40px; display: grid; place-items: center;
+    background: var(--wp-surface-2); border: none; border-radius: 8px; color: var(--wp-text); cursor: pointer;
+}
+.wp-picker-preview:hover { filter: brightness(1.15); }
+.wp-picker-loading, .wp-picker-empty { font-size: 12px; color: var(--wp-text-dim); padding: 10px 2px; }
+.wp-picker-empty code { background: var(--wp-surface-2); padding: 1px 4px; border-radius: 4px; }
+.wp-picker-none {
+    text-align: left; background: var(--wp-surface); border: 1px solid transparent; border-radius: 8px;
+    color: var(--wp-text); font-size: 13px; padding: 10px 12px; cursor: pointer;
+}
+.wp-picker-none.wp-selected { border-color: color-mix(in srgb, var(--wp-app-accent) 55%, transparent); background: color-mix(in srgb, var(--wp-surface) 82%, var(--wp-app-accent)); }
+.wp-picker-image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.wp-picker-image {
+    padding: 0; border: 2px solid transparent; border-radius: 10px; background: var(--wp-surface);
+    cursor: pointer; overflow: hidden; aspect-ratio: 1;
+}
+.wp-picker-image img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.wp-picker-image.wp-selected { border-color: var(--wp-app-accent); }
+
+/* Settings-app folder wallpaper gallery (Greetings / FFFox) — portrait phone-shaped tiles */
+.wp-folder-wallpaper-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+.wp-folder-wallpaper-card {
+    padding: 0; border: 2px solid transparent; border-radius: 10px; overflow: hidden;
+    background: var(--wp-surface); cursor: pointer; aspect-ratio: 9 / 16;
+}
+.wp-folder-wallpaper-card img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.wp-folder-wallpaper-card.wp-selected { border-color: var(--wp-app-accent); }
+.wp-picker-char-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.wp-picker-char-btn {
+    background: var(--wp-surface); border: 1px solid transparent; border-radius: 8px;
+    color: var(--wp-text); font-size: 12.5px; padding: 8px 12px; cursor: pointer;
+}
+.wp-picker-char-btn:hover { border-color: color-mix(in srgb, var(--wp-app-accent) 45%, transparent); }
+.wp-picker-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: none; color: var(--wp-app-accent); cursor: pointer;
+    font-size: 13px; font-weight: 600; padding: 4px 0; margin-bottom: 4px;
+}
+.wp-picker-url { display: flex; gap: 8px; margin-top: 10px; }
+.wp-picker-url input {
+    flex: 1; background: var(--wp-surface); border: none; border-radius: 8px;
+    color: var(--wp-text); padding: 9px; font-family: inherit; font-size: 12.5px; outline: none;
+}
+
+/* Going-off (alert) takeover screen */
+.wp-clock-alert {
+    height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; padding: 24px; box-sizing: border-box; text-align: center;
+}
+.wp-alert-image {
+    width: 140px; height: 140px; border-radius: 20px; object-fit: cover; object-position: top;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+}
+.wp-alert-image-fallback {
+    display: grid; place-items: center;
+    background: color-mix(in srgb, var(--wp-surface) 70%, var(--wp-app-accent));
+    color: color-mix(in srgb, var(--wp-app-accent) 85%, white); font-size: 54px;
+}
+.wp-alert-copy { display: flex; flex-direction: column; gap: 4px; }
+.wp-alert-title { font-size: 22px; font-weight: 700; color: var(--wp-text); }
+.wp-alert-sub { font-size: 13px; color: var(--wp-text-dim); }
+.wp-alert-actions { display: flex; gap: 12px; margin-top: 6px; }
+.wp-alert-actions .menu_button { min-width: 96px; }

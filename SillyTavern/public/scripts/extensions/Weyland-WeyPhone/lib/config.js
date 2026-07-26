@@ -60,6 +60,10 @@ export const defaultSettings = Object.freeze({
     // changes an existing user's roleplay transcript or prompt without explicit opt-in.
     bidirectionalTetheringEnabled: false,
     captureRoleplayTextsEnabled: false,
+    // How many recent Linked-thread texts ride along as roleplay context. Discrete slider stops:
+    // 15 / 30 / 45 / 60, or 0 meaning "all un-summarized messages" (the pre-cap behavior). Bounds
+    // the size of a mandatory injection that could otherwise blow the context limit. Default 30.
+    tetherContextMessages: 30,
     // Bookmarked posts, per appKey — global (not per-chat) and never touched by sync, so a
     // re-sync overwriting the content caches can't take a saved post with it.
     savedPosts: {},
