@@ -167,7 +167,7 @@ async function OnUser(messageID) {
             // MuseFirst
             if (characterName === "Muse" && getGlobalVariable("Muse1st") !== "true") {
                 await doPopup({large: true, wide: true}, strings.musF);
-                setGlobalVariable("Must1st", "true");
+                setGlobalVariable("Muse1st", "true");
             }
 
             setLocalVariable("lastUserMessID", currentUserMessID); // Update lastUserMessID to check if message has changed next call
