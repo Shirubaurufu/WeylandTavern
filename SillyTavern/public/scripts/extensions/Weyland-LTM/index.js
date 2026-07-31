@@ -52,7 +52,12 @@ const EXT_VERSION = '1.5.5';
 // applies as the default the first time the extension initializes for a
 // given install.
 const RECOMMENDED_LTM_MODEL = 'glm-4.7-thinking';
-const ALTERNATE_LTM_MODELS = ['minimax-m3', 'gemini-3-pro-preview'];
+const ALTERNATE_LTM_MODELS = ['minimax-m3', 'gemini-3.1-pro-preview'];
+
+// The provider renamed this model in place (same model, new id string). Anyone who used the old
+// quick-fill button has the dead id saved in modelOverride, where every LTM summarization would
+// silently fail against it — so rewrite it on load rather than waiting for them to notice.
+const STALE_MODEL_RENAMES = { 'gemini-3-pro-preview': 'gemini-3.1-pro-preview' };
 
 // =====================================================================
 // SETTINGS
@@ -103,6 +108,10 @@ function loadSettings() {
     for (const [k, v] of Object.entries(defaultSettings)) {
         if (settings[k] === undefined) settings[k] = structuredClone(v);
     }
+    // Idempotent: only rewrites an exact stale id, so it's a no-op once migrated (and for anyone
+    // who never picked the renamed model).
+    const renamed = STALE_MODEL_RENAMES[settings.modelOverride];
+    if (renamed) settings.modelOverride = renamed;
 }
 
 function persistSettings() {
@@ -1396,7 +1405,7 @@ function buildModalHtml() {
             <button class="wlm-btn-sm wlm-model-quickfill" data-model="${RECOMMENDED_LTM_MODEL}" title="Fill the field above with ${RECOMMENDED_LTM_MODEL}">${RECOMMENDED_LTM_MODEL}</button>
             ${ALTERNATE_LTM_MODELS.map(m => `<button class="wlm-btn-sm wlm-model-quickfill" data-model="${m}" title="Fill the field above with ${m}">${m}</button>`).join('')}
           </div>
-          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use glm-4.7-thinking and gemini-3-pro-preview whenever possible. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
+          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use glm-4.7-thinking and gemini-3.1-pro-preview whenever possible. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
         </label>
         <label class="wlm-field" title="How many new messages should pass before the reminder banner suggests a new LTM. On Auto below, this also sets how many messages go into each memory.">
           <span>Suggest an LTM every N messages</span>
