@@ -189,6 +189,12 @@ export const chat_completion_sources = {
     COMETAPI: 'cometapi',
 };
 
+// Per-image ceiling enforced by the Bedrock-hosted Claude models behind Weyland's endpoint. It
+// rejects anything larger with a 413 before the model runs, so an oversized attachment fails the
+// whole message rather than degrading. Kept slightly under the stated 5MB for headroom, matching
+// the limit quoted in the provider's own error text. See Message#compressImage.
+const MAX_INLINE_IMAGE_BASE64_BYTES = 4_900_000;
+
 const character_names_behavior = {
     NONE: -1,
     DEFAULT: 0,
@@ -2846,6 +2852,12 @@ class Message {
             chat_completion_sources.MAKERSUITE,
             chat_completion_sources.MISTRALAI,
             chat_completion_sources.VERTEXAI,
+            // 'custom' is the source Weyland Tavern ships with (HelixMind). Without it, images
+            // were never downscaled here, so full-resolution photos went up untouched — and the
+            // Claude models behind that endpoint sit on Bedrock, which hard-rejects any single
+            // image over ~5MB of base64 with a 413 before the model ever sees it:
+            //   "Image exceeds the per-image size limit: 13705676 base64 bytes > 4900000"
+            chat_completion_sources.CUSTOM,
         ];
         const sizeThreshold = 2 * 1024 * 1024;
         const dataSize = image.length * 0.75;
@@ -2854,6 +2866,15 @@ class Message {
         if (compressImageSources.includes(oai_settings.chat_completion_source) && dataSize > sizeThreshold) {
             const maxSide = 2048;
             image = await createThumbnail(image, maxSide, maxSide);
+            // Belt and braces: the 2048px JPEG above is normally far under the cap, but an
+            // unusually dense image could still exceed it. Halve the long side until it fits so
+            // the user gets a smaller picture rather than a failed request. Scoped to the sources
+            // above so providers with larger limits keep their original quality.
+            let guardSide = maxSide;
+            while (image.length > MAX_INLINE_IMAGE_BASE64_BYTES && guardSide > 256) {
+                guardSide = Math.floor(guardSide / 2);
+                image = await createThumbnail(image, guardSide, guardSide);
+            }
         } else if (!safeMimeTypes.includes(mimeType)) {
             image = await createThumbnail(image, null, null);
         }

@@ -4156,3 +4156,21 @@
 }
 .wp-community-cta-danger:not(:disabled) { background: #7f2f35; }
 .wp-community-cta-danger:hover:not(:disabled) { background: #a13b43; filter: none; }
+
+/* ---- Weybooru Viewer stacking ----
+   The viewer's own rule is `.st-modal-overlay#wbv-modal-overlay { z-index: 9999 }` — exactly the
+   same value as #wp-panel above. On an equal z-index the later element in DOM order wins, and the
+   viewer is appended to <body> before the phone, so the phone covered it. On desktop the phone is a
+   small floating box so the viewer still showed around it, but on mobile the phone is fullscreen
+   and the viewer opened completely hidden behind it, making the tile look broken.
+
+   This must be CSS rather than a JS z-index tweak at launch time: the viewer's slash command calls
+   openOverlay() without awaiting it, and openOverlay awaits a fetch of its own template before the
+   overlay element exists — so there is nothing to style yet when the tile's handler resumes.
+
+   `html body` prefix beats the viewer's own (0,1,1,0) specificity regardless of which extension's
+   stylesheet loads last, without needing !important. The viewer is a full-screen modal, so sitting
+   above the phone is correct in every context, not just when launched from the tile. */
+html body .st-modal-overlay#wbv-modal-overlay {
+    z-index: 10000;
+}

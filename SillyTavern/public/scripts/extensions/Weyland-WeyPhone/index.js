@@ -1947,7 +1947,29 @@ function openKressaConversation() {
 // `/weybooru` slash command. Reusing that command (rather than reaching into the viewer's private
 // module state) keeps this working even if the viewer's internal implementation changes, and fails
 // gracefully with a toast if that extension is missing or disabled.
+const WEYBOORU_OVERLAY_ID = 'wbv-modal-overlay';
+const WEYBOORU_CLOSE_BUTTON_ID = 'wbv-close-btn';
+
+/** The viewer builds its overlay lazily on first open, so this is null until then. */
+function weybooruOverlayElement() {
+    return document.getElementById(WEYBOORU_OVERLAY_ID);
+}
+
+function isWeybooruViewerOpen() {
+    const overlay = weybooruOverlayElement();
+    return Boolean(overlay) && getComputedStyle(overlay).display !== 'none';
+}
+
 async function openWeybooruViewer() {
+    // Tapping the tile again while the viewer is up closes it. Click the viewer's OWN close
+    // button rather than just hiding the element: closeOverlay() also cancels in-flight
+    // searches, stops the slideshow timer, and resets its tag-review UI (see
+    // weybooru-viewer/index.js). Hiding the node would leave all of that running.
+    if (isWeybooruViewerOpen()) {
+        document.getElementById(WEYBOORU_CLOSE_BUTTON_ID)?.click();
+        return;
+    }
+
     const context = SillyTavern.getContext();
     try {
         await context.executeSlashCommandsWithOptions('/weybooru');
@@ -1955,6 +1977,12 @@ async function openWeybooruViewer() {
         console.warn('[WeyPhone] Could not open the Weybooru Viewer:', error);
         wpToast('error', 'Weybooru Viewer isn\'t available — make sure that extension is installed and enabled.');
     }
+    // NOTE: the viewer stacks above the phone via a CSS rule in style.css, NOT from here. Setting
+    // the z-index in JS after this await does not work: the viewer's slash command fires
+    // openOverlay() without awaiting it, and openOverlay in turn awaits a fetch of its own
+    // template before appending the overlay — so on a first open the element does not exist yet
+    // and any lookup here returns null. (It appeared to work only on a second open, once the
+    // element was already built.)
 }
 
 // "Start New Thread" — creates a fresh conversation with the SAME character (and, if the current
