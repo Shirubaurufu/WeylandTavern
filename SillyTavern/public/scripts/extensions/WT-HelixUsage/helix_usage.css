@@ -78,3 +78,45 @@
     background-color: rgba(255, 255, 255, 0.1);
     opacity: 1;
 }
+
+/* Estimated Hour Breakdown — a full-width block below the status row. */
+#hm-api-breakdown {
+    flex: 1 1 100%;
+    margin-top: 0.4em;
+    font-weight: 300;
+}
+
+#hm-api-breakdown .hm-breakdown-title {
+    font-weight: 700;
+    font-size: 90%;
+    opacity: 0.85;
+    margin-bottom: 0.35em;
+}
+
+#hm-api-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+#hm-api-breakdown .hm-bd-row {
+    font-size: calc(var(--mainFontSize) * 0.85);
+    line-height: 1.6;
+    opacity: 0.85;
+}
+
+#hm-api-breakdown .hm-bd-hour,
+#hm-api-breakdown .hm-bd-count {
+    opacity: 0.95;
+}
+
+#hm-api-breakdown .hm-bd-daybreak {
+    margin: 4px 0 2px;
+    padding-top: 4px;
+    font-size: calc(var(--mainFontSize) * 0.75);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    border-top: 1px dashed var(--SmartThemeBorderColor);
+}

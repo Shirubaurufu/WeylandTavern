@@ -3,10 +3,12 @@
 // mirroring the welcome-panel tracker UI. Always visible in the API panel
 // when a HelixMind key is set.
 
-import { eventSource, event_types } from '../../../../script.js';
+import { eventSource, event_types, saveSettingsDebounced } from '../../../../script.js';
+import { reconcileTally, bucketByHour, oldestTallyMs, WINDOW_MS } from './usageTally.js';
 
 const LOG = '[WT Helix Tracker]';
 const TRACKER_ID = 'hm-api-tracker';
+const MODULE_NAME = 'WT-HelixUsage';
 
 let trackerEl = null;
 let countdownInterval = null;
@@ -26,79 +28,37 @@ function formatMillisecondsToTime(ms) {
         : `${pad(minutes)}:${pad(seconds)}`;
 }
 
-const HELIX_QUOTA_ENDPOINT = 'https://helixmind.online/v1/usage/quota';
-const HELIX_USAGE_ENDPOINT = 'https://helixmind.online/v1/usage';
-
-// Find the oldest usage record inside the rolling 24h window, in ms (or null).
-// The quota endpoint gives no reset timestamp, so the "next message" countdown is derived
-// from when the oldest request ages out of the window and frees a slot. The records API
-// guarantees no sort order, so we page through and take the minimum created_at. Fails
-// soft: any error/empty result yields null, which the caller renders as "Ready" — a wrong
-// timer never surfaces, at worst the countdown is briefly absent.
-async function fetchOldestHelixTimestampMs(apiKey) {
-    const sinceIso = new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString();
-    let cursor = null;
-    let oldestMs = null;
-
-    for (let page = 0; page < 10; page++) {
-        const url = new URL(HELIX_USAGE_ENDPOINT);
-        url.searchParams.set('since', sinceIso);
-        url.searchParams.set('limit', '100');
-        if (cursor) url.searchParams.set('cursor', cursor);
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { Authorization: `Bearer ${apiKey}` },
-        });
-        if (!response.ok) break;
-
-        const parsed = await response.json();
-        const records = Array.isArray(parsed?.data) ? parsed.data : [];
-        for (const record of records) {
-            const ms = new Date(record?.created_at).getTime();
-            if (Number.isFinite(ms) && (oldestMs === null || ms < oldestMs)) {
-                oldestMs = ms;
-            }
-        }
-
-        if (!parsed?.has_more || !parsed?.next_cursor) break;
-        cursor = parsed.next_cursor;
-    }
-
-    return oldestMs;
-}
+const HELIX_USAGE_PROXY = '/api/weyland/helix-usage';
 
 async function fetchHelixUsageData(apiKey) {
-    const response = await fetch(HELIX_QUOTA_ENDPOINT, {
+    // Fetch per-key usage through Weyland's server proxy. The provider's new backend only
+    // allows browser CORS from its own origin, so we can't call it from this page directly;
+    // the proxy fetches server-side and returns { used, limit, remaining } already computed.
+    const response = await fetch(HELIX_USAGE_PROXY, {
         method: 'GET',
-        headers: { Authorization: `Bearer ${apiKey}` },
+        headers: { 'X-Helix-Key': apiKey },
+        cache: 'no-store', // usage changes constantly; never serve a stale cached count
     });
 
     if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Usage request failed: ${response.status} ${response.statusText}`);
     }
 
-    // New backend: { global_rpd: { used, limit }, ... }. Remaining is limit - used; the
-    // old per-record list we used to count and sort by hand is gone from this endpoint.
     const parsed = await response.json();
-    const rpd = parsed?.global_rpd;
-    const used = Number(rpd?.used);
-    const limit = Number(rpd?.limit);
+    const used = Number(parsed?.used);
+    const limit = Number(parsed?.limit);
 
     const currentUsage = Number.isFinite(used) ? used : 0;
-    // limit <= 0 (or non-numeric) is treated as unlimited/unknown until a live unlimited
-    // response confirms how the new backend signals "no cap"; Infinity keeps the existing
-    // display path that just shows the running count.
+    // A non-positive/unknown limit is treated as "no finite cap": the display then shows the
+    // running count instead of "remaining / limit".
     const totalLimit = (Number.isFinite(limit) && limit > 0) ? limit : Infinity;
 
-    // The countdown needs the oldest in-window request, and only when something's been
-    // used — at zero usage there is nothing to count down to, so skip the extra call.
-    const oldestMs = currentUsage > 0 ? await fetchOldestHelixTimestampMs(apiKey) : null;
-
+    // The live "next message" countdown is driven by the local hourly tally (a later step),
+    // not a records call — so there is no oldest-record lookup here. null => shows "Ready".
     return {
         current_usage_count: currentUsage,
         total_limit: totalLimit,
-        oldest_ms: oldestMs,
+        oldest_ms: null,
     };
 }
 
@@ -135,6 +95,82 @@ function getHelixApiKey() {
     return ctx?.variables?.global?.get('HMKey') ?? null;
 }
 
+// ── Estimated Hour Breakdown (local tally) ──────────────────────────────────────
+
+/** Load the persisted tally store from extensionSettings (server-side, cross-device). */
+function getTallyStore() {
+    const ctx = SillyTavern?.getContext?.();
+    const bucket = ctx?.extensionSettings?.[MODULE_NAME];
+    const tally = bucket && typeof bucket === 'object' ? bucket.tally : null;
+    return (tally && Array.isArray(tally.tallies)) ? tally : { lastUsed: null, tallies: [] };
+}
+
+/** Persist the tally store. */
+function saveTallyStore(store) {
+    const ctx = SillyTavern?.getContext?.();
+    if (!ctx?.extensionSettings) return;
+    if (!ctx.extensionSettings[MODULE_NAME] || typeof ctx.extensionSettings[MODULE_NAME] !== 'object') {
+        ctx.extensionSettings[MODULE_NAME] = {};
+    }
+    ctx.extensionSettings[MODULE_NAME].tally = { lastUsed: store.lastUsed, tallies: store.tallies };
+    saveSettingsDebounced();
+}
+
+/** Hour label like "5 AM" in the user's locale. */
+function formatHourLabel(hourStartMs) {
+    return new Date(hourStartMs).toLocaleTimeString([], { hour: 'numeric' });
+}
+
+/** Epoch ms of the upcoming local midnight. */
+function nextMidnightMs(now) {
+    const d = new Date(now);
+    d.setHours(24, 0, 0, 0);
+    return d.getTime();
+}
+
+/**
+ * Draw the per-hour usage bars. Rows are oldest-first (soonest to renew first); a "Tomorrow"
+ * divider marks where a row's renewal (its hour + 24h) crosses the next midnight.
+ */
+function renderBreakdown(tallies) {
+    const wrapEl = trackerEl?.querySelector('#hm-api-breakdown');
+    const listEl = trackerEl?.querySelector('#hm-api-breakdown-list');
+    if (!wrapEl || !listEl) return;
+
+    const now = Date.now();
+    const buckets = bucketByHour(tallies, now);
+    if (buckets.length === 0) {
+        wrapEl.style.display = 'none';
+        listEl.innerHTML = '';
+        return;
+    }
+
+    // Group by when each hour's messages renew (its hour + 24h): before the upcoming midnight
+    // = "Today", at/after = "Tomorrow". Buckets are oldest-first, so the soonest-to-renew
+    // (today) come first. Each header only appears if its group has rows.
+    const midnight = nextMidnightMs(now);
+    const today = [];
+    const tomorrow = [];
+    for (const b of buckets) {
+        ((b.hourStart + WINDOW_MS) < midnight ? today : tomorrow).push(b);
+    }
+
+    const rowHtml = (b) => {
+        const msgs = b.count === 1 ? '1 message' : `${b.count} messages`;
+        return '<div class="hm-bd-row">'
+            + `<span class="hm-bd-hour">${formatHourLabel(b.hourStart)}</span> - `
+            + `<span class="hm-bd-count">${msgs}</span>`
+            + '</div>';
+    };
+
+    let html = '';
+    if (today.length) html += '<div class="hm-bd-daybreak">Today</div>' + today.map(rowHtml).join('');
+    if (tomorrow.length) html += '<div class="hm-bd-daybreak">Tomorrow</div>' + tomorrow.map(rowHtml).join('');
+
+    wrapEl.style.display = '';
+    listEl.innerHTML = html;
+}
+
 async function refreshUsage() {
     if (!trackerEl) return;
     const messagesUsedText = trackerEl.querySelector('#hm-api-messages-used-text');
@@ -151,8 +187,12 @@ async function refreshUsage() {
         return;
     }
 
-    messagesUsedText.textContent = 'Loading...';
-    nextMessageTimeText.textContent = 'Loading...';
+    // Only show "Loading..." when there isn't already a value on screen — otherwise frequent
+    // refreshes (e.g. from SETTINGS_UPDATED) flicker the number.
+    if (!/\d/.test(messagesUsedText.textContent)) {
+        messagesUsedText.textContent = 'Loading...';
+        nextMessageTimeText.textContent = 'Loading...';
+    }
 
     try {
         const data = await fetchHelixUsageData(apiKey);
@@ -163,23 +203,38 @@ async function refreshUsage() {
             messagesUsedText.textContent = `${data.current_usage_count}`;
         }
 
-        if (data.current_usage_count === 0 || data.oldest_ms == null) {
+        // Estimated hour breakdown: reconcile the local tally to the authoritative used count,
+        // persist it ONLY when it actually changed (saving re-emits SETTINGS_UPDATED, which
+        // would re-trigger this refresh and loop), and redraw.
+        const store = reconcileTally(getTallyStore(), data.current_usage_count, Date.now());
+        if (store.changed) saveTallyStore(store);
+        renderBreakdown(store.tallies);
+
+        const finiteLimit = Number.isFinite(data.total_limit);
+        const remaining = finiteLimit ? (data.total_limit - data.current_usage_count) : Infinity;
+
+        // "Next message" counts down only at the cap; otherwise a slot is free right now.
+        if (remaining > 0) {
             nextMessageTimeText.textContent = 'Ready';
             if (nextContainer) nextContainer.style.display = 'none';
             stopCountdown();
             return;
         }
 
-        if (nextContainer) nextContainer.style.display = 'inline';
-
-        const oldestMs = data.oldest_ms;
-        const expiry = oldestMs + (24 * 60 * 60 * 1000);
+        const oldest = oldestTallyMs(store.tallies, Date.now());
+        if (oldest == null) {
+            nextMessageTimeText.textContent = 'Ready';
+            if (nextContainer) nextContainer.style.display = 'none';
+            stopCountdown();
+            return;
+        }
+        const expiry = oldest + WINDOW_MS;
         if (expiry <= Date.now()) {
             nextMessageTimeText.textContent = 'Slot Open!';
             stopCountdown();
             return;
         }
-
+        if (nextContainer) nextContainer.style.display = 'inline';
         startCountdown(expiry);
     } catch (error) {
         console.error(`${LOG} Error fetching Helix usage data:`, error);
@@ -189,8 +244,10 @@ async function refreshUsage() {
     }
 }
 
-function updateKeyUI() {
-    if (!trackerEl) return;
+// Toggle the key-set vs key-unset UI. Returns whether a key is present. Does NOT fetch —
+// so it's safe to call on frequent events (e.g. SETTINGS_UPDATED) without hitting the API.
+function updateKeyVisibility() {
+    if (!trackerEl) return false;
     const unset = trackerEl.querySelector('#hm-api-key-unset');
     const set = trackerEl.querySelector('#hm-api-key-set');
     const key = getHelixApiKey();
@@ -199,12 +256,18 @@ function updateKeyUI() {
     if (hasKey) {
         if (unset) unset.style.display = 'none';
         if (set) set.style.display = '';
-        void refreshUsage();
     } else {
         stopCountdown();
         if (unset) unset.style.display = '';
         if (set) set.style.display = 'none';
     }
+    return hasKey;
+}
+
+// Visibility + a usage refresh. Use on load / key change / generation-ended — not on every
+// settings save, or we'd hit the usage endpoint far more than needed.
+function updateKeyUI() {
+    if (updateKeyVisibility()) void refreshUsage();
 }
 
 async function setKeyFromInput() {
@@ -251,12 +314,16 @@ function buildTracker() {
         <div id="hm-api-key-set" style="display: none;">
             Messages Available: <span id="hm-api-messages-used-text">Loading...</span>
             <span id="hm-api-next-message-container">
-                (<span class="hm-tracker-label">Next Message: <span id="hm-api-next-message-time-text">Loading...</span>)
+                (<span class="hm-tracker-label">Next Message: <span id="hm-api-next-message-time-text">Loading...</span></span>)
             </span>
             <button id="hm-api-clear-tracker-key" class="menu_button hm-api-clear-button">
                 <i class="fa-solid fa-xmark"></i>
                 <span>Clear Tracker Key</span>
             </button>
+            <div id="hm-api-breakdown" class="hm-breakdown" style="display: none;">
+                <div class="hm-breakdown-title">Estimated Hour Breakdown</div>
+                <div id="hm-api-breakdown-list" class="hm-breakdown-list"></div>
+            </div>
         </div>
     `;
     return container;
@@ -316,12 +383,21 @@ jQuery(async () => {
     injectTracker();
 
     eventSource.on(event_types.SETTINGS_UPDATED, () => {
-        if (trackerEl) updateKeyUI();
+        // Visibility only — never fetch on arbitrary settings saves. Key changes are picked up
+        // by the 2s key poll (syncKeyState), and usage by GENERATION_ENDED below.
+        if (trackerEl) updateKeyVisibility();
     });
 
     eventSource.on(event_types.GENERATION_ENDED, () => {
         if (!trackerEl) return;
         const key = getHelixApiKey();
-        if (key) void refreshUsage();
+        if (!key) return;
+        void refreshUsage(); // prompt number update
+        // The provider's per-key count can lag a moment behind the finished generation, so
+        // re-check shortly after to catch (and tally) the increment. Reconcile is idempotent,
+        // so if the first fetch already saw it, this one adds nothing.
+        setTimeout(() => {
+            if (trackerEl && getHelixApiKey()) void refreshUsage();
+        }, 3500);
     });
 });

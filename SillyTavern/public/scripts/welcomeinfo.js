@@ -30,88 +30,35 @@ function formatMillisecondsToTime(ms) {
     return `${pad(minutes)}:${pad(seconds)}`;
 }
 
-const WELCOME_HELIX_QUOTA_ENDPOINT = 'https://helixmind.online/v1/usage/quota';
-const WELCOME_HELIX_USAGE_ENDPOINT = 'https://helixmind.online/v1/usage';
-
-// Find the oldest usage record inside the rolling 24h window, in ms (or null).
-// The quota endpoint gives no reset timestamp, so the "next message" countdown is derived
-// from when the oldest request ages out of the window and frees a slot. The records API
-// guarantees no sort order, so we page through and take the minimum created_at. Fails
-// soft: any error/empty result yields null, which the caller renders as "Ready" — a wrong
-// timer never surfaces, at worst the countdown is briefly absent. (Twin of the same helper
-// in WT-HelixUsage/helix_usage.js.)
-async function fetchWelcomeOldestHelixTimestampMs(apiKey) {
-    const sinceIso = new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString();
-    let cursor = null;
-    let oldestMs = null;
-
-    for (let page = 0; page < 10; page++) {
-        const url = new URL(WELCOME_HELIX_USAGE_ENDPOINT);
-        url.searchParams.set('since', sinceIso);
-        url.searchParams.set('limit', '100');
-        if (cursor) {
-            url.searchParams.set('cursor', cursor);
-        }
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { Authorization: `Bearer ${apiKey}` },
-        });
-        if (!response.ok) {
-            break;
-        }
-
-        const parsed = await response.json();
-        const records = Array.isArray(parsed?.data) ? parsed.data : [];
-        for (const record of records) {
-            const ms = new Date(record?.created_at).getTime();
-            if (Number.isFinite(ms) && (oldestMs === null || ms < oldestMs)) {
-                oldestMs = ms;
-            }
-        }
-
-        if (!parsed?.has_more || !parsed?.next_cursor) {
-            break;
-        }
-        cursor = parsed.next_cursor;
-    }
-
-    return oldestMs;
-}
+const WELCOME_HELIX_USAGE_PROXY = '/api/weyland/helix-usage';
 
 async function fetchWelcomeHelixUsageData(apiKey) {
-    const response = await fetch(WELCOME_HELIX_QUOTA_ENDPOINT, {
+    // Fetch per-key usage through Weyland's server proxy (the provider's new backend blocks
+    // browser CORS from non-helixmind origins). Returns { used, limit, remaining } computed
+    // server-side. The welcome panel shows only the count — the "next message" countdown
+    // lives solely on the API screen — so there is no oldest-record lookup here.
+    const response = await fetch(WELCOME_HELIX_USAGE_PROXY, {
         method: 'GET',
-        headers: {
-            Authorization: `Bearer ${apiKey}`,
-        },
+        headers: { 'X-Helix-Key': apiKey },
+        cache: 'no-store', // never serve a stale cached usage count
     });
 
     if (!response.ok) {
         throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
 
-    // New backend: { global_rpd: { used, limit }, ... }. Remaining is limit - used; the
-    // old per-record list we used to count and sort by hand is gone from this endpoint.
     const parsedResponse = await response.json();
-    const rpd = parsedResponse?.global_rpd;
-    const used = Number(rpd?.used);
-    const limit = Number(rpd?.limit);
+    const used = Number(parsedResponse?.used);
+    const limit = Number(parsedResponse?.limit);
 
     const currentUsage = Number.isFinite(used) ? used : 0;
-    // limit <= 0 (or non-numeric) is treated as unlimited/unknown until a live unlimited
-    // response confirms how the new backend signals "no cap"; Infinity keeps the existing
-    // display path that just shows the running count.
     const totalLimit = (Number.isFinite(limit) && limit > 0) ? limit : Infinity;
 
-    // The countdown needs the oldest in-window request, and only when something's been
-    // used — at zero usage there is nothing to count down to, so skip the extra call.
-    const oldestMs = currentUsage > 0 ? await fetchWelcomeOldestHelixTimestampMs(apiKey) : null;
-
+    // null => refreshWelcomeTrackerUsage renders "Ready" and hides the next-message line.
     return {
         current_usage_count: currentUsage,
         total_limit: totalLimit,
-        oldest_ms: oldestMs,
+        oldest_ms: null,
     };
 }
 

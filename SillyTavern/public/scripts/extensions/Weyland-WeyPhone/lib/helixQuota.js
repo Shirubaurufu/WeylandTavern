@@ -5,11 +5,11 @@
 // couple of minutes — the status bar re-renders every 30s and must never turn that cadence
 // into API hammering.
 
-// Match WT-HelixUsage's real endpoint and response format. The earlier quota endpoint used a
-// different service schema, so it could never supply WeyPhone with a valid battery number.
-// After the HelixMind backend migration the per-key quota lives at /v1/usage/quota, which
-// returns the used/limit counts directly instead of a list of timestamped records.
-export const QUOTA_ENDPOINT = 'https://helixmind.online/v1/usage/quota';
+// Fetches per-key usage through Weyland's own server proxy (/api/weyland/helix-usage) rather
+// than calling HelixMind from the browser: the provider's new backend only allows CORS from
+// its own origin, so a direct browser fetch is blocked. The proxy fetches server-side and
+// returns the per-key numbers already computed as { used, limit, remaining }.
+export const QUOTA_ENDPOINT = '/api/weyland/helix-usage';
 export const QUOTA_CACHE_MS = 2 * 60_000;
 export const QUOTA_FETCH_TIMEOUT_MS = 8_000;
 
@@ -36,21 +36,19 @@ export async function fetchMessageQuota(apiKey, fetchFn = fetch, { timeoutMs = Q
     const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
     try {
         const response = await fetchFn(QUOTA_ENDPOINT, {
-            headers: { Authorization: `Bearer ${apiKey}` },
+            headers: { 'X-Helix-Key': apiKey },
+            cache: 'no-store', // never serve a stale cached usage count
             ...(controller ? { signal: controller.signal } : {}),
         });
         if (!response.ok) return null;
+        // Proxy shape: { used, limit, remaining }. remaining/limit are already computed
+        // server-side; either is null when the provider can't supply it, which we treat as
+        // "unknowable" so the battery falls back to its theatrical mode.
         const payload = await response.json();
-        // New backend shape: { global_rpd: { used, limit }, global_rpm: {...}, ... }.
-        // This replaces the old { limit, data[] } response, where remaining had to be
-        // derived by counting timestamped records inside a rolling 24h window.
-        const rpd = payload?.global_rpd;
-        const limit = Number(rpd?.limit);
-        const used = Number(rpd?.used);
-        // limit <= 0 is treated as unusable (and covers a possible unlimited-key signal)
-        // until a live unlimited response confirms how the new backend represents "no cap".
-        if (!Number.isFinite(limit) || limit <= 0 || !Number.isFinite(used)) return null;
-        return { remaining: Math.max(0, limit - used), limit };
+        const limit = Number(payload?.limit);
+        const remaining = Number(payload?.remaining);
+        if (!Number.isFinite(limit) || limit <= 0 || !Number.isFinite(remaining)) return null;
+        return { remaining, limit };
     } catch {
         return null;
     } finally {
