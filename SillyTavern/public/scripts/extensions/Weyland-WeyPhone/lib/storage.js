@@ -4,7 +4,7 @@ import { getRoleplayMode, isValidRoleplayMode, ROLEPLAY_MODES } from './roleplay
  * @typedef {Object} Conversation
  * @property {string} id
  * @property {string} charName
- * @property {Array<{role: string, content: string}>} messages
+ * @property {Array<{role: string, content: string, timestamp?: number, displayTime?: string}>} messages
  * @property {number} createdAt
  * @property {number} lastActive
  */
@@ -13,7 +13,33 @@ import { getRoleplayMode, isValidRoleplayMode, ROLEPLAY_MODES } from './roleplay
 // id doesn't. Defaults chosen by the operator: thinking GLM 4.7 as primary, Gemini 3 Pro as the
 // fallback if the primary model call fails.
 export const DEFAULT_MEMORY_PRIMARY_MODEL = 'glm-4.7-thinking';
-export const DEFAULT_MEMORY_BACKUP_MODEL = 'gemini-3-pro-preview';
+export const DEFAULT_MEMORY_BACKUP_MODEL = 'gemini-3.1-pro-preview';
+
+// HelixMind renamed this exact model id (2026-07-30) with no change to the underlying model.
+// Existing settings/conversations already hold a real STRING value for these fields, so the
+// type-based backfills in migrateMemoryFields never touch them — this explicitly rewrites the
+// stale id wherever it's stored so already-created threads don't keep silently sending a model id
+// the provider no longer recognizes. Add future provider renames here.
+const STALE_MODEL_RENAMES = { 'gemini-3-pro-preview': 'gemini-3.1-pro-preview' };
+
+/**
+ * Rewrites any stored model-id string that a provider has since renamed (see
+ * STALE_MODEL_RENAMES) — both the top-level model settings and every per-conversation memory
+ * model. Idempotent — safe to call on every settings load.
+ * @param {{modelOverride?: string, textingModelOverride?: string, kressaModel?: string, pawxai?: {modelOverride?: string}, conversations: Record<string, Conversation>}} settings
+ */
+export function migrateStaleModelNames(settings) {
+    for (const key of ['modelOverride', 'textingModelOverride', 'kressaModel']) {
+        if (STALE_MODEL_RENAMES[settings[key]]) settings[key] = STALE_MODEL_RENAMES[settings[key]];
+    }
+    if (settings.pawxai && STALE_MODEL_RENAMES[settings.pawxai.modelOverride]) {
+        settings.pawxai.modelOverride = STALE_MODEL_RENAMES[settings.pawxai.modelOverride];
+    }
+    for (const conversation of Object.values(settings.conversations ?? {})) {
+        if (STALE_MODEL_RENAMES[conversation.memoryPrimaryModel]) conversation.memoryPrimaryModel = STALE_MODEL_RENAMES[conversation.memoryPrimaryModel];
+        if (STALE_MODEL_RENAMES[conversation.memoryBackupModel]) conversation.memoryBackupModel = STALE_MODEL_RENAMES[conversation.memoryBackupModel];
+    }
+}
 
 let lastTimestamp = 0;
 
@@ -83,7 +109,7 @@ export function getConversation(settings, id) {
 /**
  * @param {{conversations: Record<string, Conversation>}} settings
  * @param {string} id
- * @param {{role: string, content: string}} message
+ * @param {{role: string, content: string, timestamp?: number, displayTime?: string}} message
  * @returns {Conversation | undefined}
  */
 export function appendMessage(settings, id, message) {

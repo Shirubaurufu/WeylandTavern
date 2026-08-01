@@ -6,11 +6,16 @@ import { limitPhoneRequestMessages } from './requestBudget.js';
  * instructing the model to condense the given window into one short, plain-prose memory, and a
  * user message containing the window reformatted as a phone-style transcript (reusing the same
  * reconstruction the regular chat-history uses, for consistency).
- * @param {{charName: string, personalityText: string, windowMessages: Array<{role: 'user'|'assistant', content: string, timestamp?: number}>, userName: string, formatClockTime: (epochMs: number) => string}} options
+ * @param {{charName: string, personalityText: string, windowMessages: Array<{role: 'user'|'assistant', content: string, timestamp?: number, displayTime?: string}>, userName: string, formatClockTime: (epochMs: number) => string, suppressTimestampFallback?: boolean}} options
  * @returns {Array<{role: string, content: string}>}
  */
-export function buildMemoryGenerationMessages({ charName, personalityText, windowMessages, userName, formatClockTime }) {
-    const reconstructed = reconstructHistoryAsPhoneFormat(windowMessages, { charName, userName }, formatClockTime);
+export function buildMemoryGenerationMessages({ charName, personalityText, windowMessages, userName, formatClockTime, suppressTimestampFallback = false }) {
+    const reconstructed = reconstructHistoryAsPhoneFormat(
+        windowMessages,
+        { charName, userName },
+        formatClockTime,
+        { suppressTimestampFallback },
+    );
     const transcript = reconstructed.map(m => m.content).join('\n');
     const systemPrompt = joinNonEmptySections([
         `You are condensing a portion of a text-message conversation into ONE short memory entry for ${charName}, so future replies can recall what happened without needing to re-read the full history.`,

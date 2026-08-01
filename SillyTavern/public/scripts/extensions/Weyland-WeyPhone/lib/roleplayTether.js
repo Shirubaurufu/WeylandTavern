@@ -396,8 +396,9 @@ export function buildTetherInjectionPlan({ conversations, chatId, chatLength, ch
         for (const message of recent) {
             // Captured roleplay phone blocks already carry the scene's displayed clock time.
             // Preserve that exact value instead of replacing 7:06 PM with the browser's noon
-            // wall clock. Messages authored inside WeyPhone have no displayTime and use the
-            // caller's clock resolver (RP clock when enabled, real time otherwise).
+            // wall clock. New messages authored inside WeyPhone also carry displayTime while the
+            // RP clock is enabled. Legacy entries without it use the caller's clock policy, which
+            // deliberately returns an empty time in RP mode instead of leaking browser wall time.
             const time = String(message.displayTime ?? '').trim()
                 || (Number.isFinite(message.timestamp) ? formatClockTime(message.timestamp) : '');
             if (message.role === 'user') lines.push(`Outgoing¦${time}¦${userName}¦${message.content}`);

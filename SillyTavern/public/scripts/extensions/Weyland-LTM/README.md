@@ -52,7 +52,7 @@ Auto-trigger only evaluates the **currently active** chat — it runs off `Silly
 
 **Tag the cast cards before release** — untagged multi-char bots will produce first-person entries from an ambiguous "I". This is a card-authoring step on our side; users never see or touch it (cards are locked down, and the settings UI deliberately doesn't mention tags).
 
-**Default model.** Fresh installs default `modelOverride` to `glm-4.7-thinking`. Existing installs that already have saved settings keep whatever they had — the default only applies when `extensionSettings['Weyland-LTM']` doesn't exist yet. The settings panel has one-click quick-fill buttons for the recommended model plus two alternates (`minimax-m3`, `gemini-3-pro-preview`) — Lucky wants Sonnet reserved for actual roleplay messaging rather than spent on LTM summarization.
+**Default model.** Fresh installs default `modelOverride` to `glm-4.7-thinking`. Existing installs that already have saved settings keep whatever they had — the default only applies when `extensionSettings['Weyland-LTM']` doesn't exist yet. The settings panel has one-click quick-fill buttons for the recommended model plus two alternates (`minimax-m3`, `gemini-3.1-pro-preview`) — Lucky wants Sonnet reserved for actual roleplay messaging rather than spent on LTM summarization.
 
 ## Key files / functions map
 

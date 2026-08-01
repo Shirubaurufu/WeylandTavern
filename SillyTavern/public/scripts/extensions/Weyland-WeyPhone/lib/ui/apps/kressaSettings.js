@@ -13,7 +13,7 @@ export const KRESSA_PALETTES = Object.freeze([
     { id: 'ocean-bloom', label: 'Ocean Bloom', colors: ['#dfecef', '#b6d1d7', '#3f7891'] },
     { id: 'forest-sprite', label: 'Forest Sprite', colors: ['#e4ece6', '#bcd2c1', '#456f59'] },
     { id: 'ember-plum', label: 'Golden Hour', colors: ['#fff5df', '#e7b75d', '#a74f23'] },
-    { id: 'night-owl', label: 'Night Owl', colors: ['#17131f', '#3f3155', '#b788ef'] },
+    { id: 'night-owl', label: 'Night Owl', colors: ['#17151a', '#4a2530', '#b4677a'] },
     { id: 'terminal-bloom', label: 'Terminal Bloom', colors: ['#10191a', '#263c3e', '#ff79bd'] },
 ]);
 

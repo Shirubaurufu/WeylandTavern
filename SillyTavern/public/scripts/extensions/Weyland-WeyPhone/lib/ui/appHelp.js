@@ -83,6 +83,18 @@ const APP_HELP = {
         intro: 'A pocket expression gallery for the character in your active chat.',
         bullets: ['Choose among every installed outfit available for the character.', 'Browse sprites or open the immersive full-screen viewer without changing the chat portrait.', 'Tap Set in chat to apply one expression temporarily.', 'The next character message returns expression control to SillyTavern.', 'If local sprites are missing, Mien checks each Registrar outfit gallery.'],
     },
+    clock: {
+        intro: 'A simple clock with timers and alarms.',
+        bullets: ['Set timers and alarms right from this app.', 'If an alarm is set while you’re roleplaying, characters will be aware when it goes off.', 'Nothing here calls a model or spends a message.'],
+    },
+    weybooru: {
+        intro: 'A shortcut to the Weybooru Viewer — browse and search Weyland community art.',
+        bullets: ['Opens the same standalone viewer as the picture-frame button on the chat bar.', 'Requires the separate Weybooru Viewer extension to be installed and enabled.', 'Nothing here calls a model or spends a message.'],
+    },
+    registrar: {
+        intro: 'A preview tile for the upcoming Weyland Registrar app.',
+        bullets: ['Not functional yet — this is a placeholder.', 'Nothing here calls a model or spends a message.'],
+    },
     settings: {
         intro: 'Controls for this WeyPhone.',
         bullets: ['Change wallpapers, models, app names, and device preferences.', 'Export or import the full phone when moving between installs.', 'Format WeyPhone erases its stored data and returns to first-time setup.'],
@@ -90,6 +102,11 @@ const APP_HELP = {
 };
 
 const MESSAGE_BUDGET_BULLET = 'Budget rule: one generation request = one message spent. Actions that do not call a model spend nothing.';
+
+// Apps that never call a model on their own. The budget rule is noise on their help screens —
+// either it restates a bullet they already carry ("Nothing here calls a model or spends a
+// message") or it implies a cost that app simply cannot incur. Keyed by app key.
+const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien']);
 
 function escapeHtml(value) {
     return String(value)
@@ -103,13 +120,16 @@ function escapeHtml(value) {
 export function getAppHelp(appKey) {
     const help = APP_HELP[appKey];
     if (!help) return null;
+    const addBudgetRule = !NO_BUDGET_RULE_APPS.has(appKey);
     if (help.sections?.length) {
         const sections = help.sections.map(section => ({ ...section, bullets: [...(section.bullets ?? [])] }));
-        const general = sections.find(section => section.heading === 'General') ?? sections[0];
-        general.bullets.push(MESSAGE_BUDGET_BULLET);
+        if (addBudgetRule) {
+            const general = sections.find(section => section.heading === 'General') ?? sections[0];
+            general.bullets.push(MESSAGE_BUDGET_BULLET);
+        }
         return { ...help, sections };
     }
-    return { ...help, bullets: [...(help.bullets ?? []), MESSAGE_BUDGET_BULLET] };
+    return { ...help, bullets: [...(help.bullets ?? []), ...(addBudgetRule ? [MESSAGE_BUDGET_BULLET] : [])] };
 }
 
 export function renderNoticeDialog(container, { kicker = 'WeyPhone', title, body, bullets = [] }) {

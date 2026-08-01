@@ -99,12 +99,17 @@ export function renderContactDetailScreen(container, { entry, messagable, lorebo
     ${lorebookOnly ? `<div class="wp-contact-source-note"><i class="fa-solid fa-book-open"></i> Texting personality comes from ${escapeHtml(lorebookLabel)}.</div>` : ''}
     ${messagable ? `
     <label class="wp-contact-history-row" title="When off, new texting threads start with this character having no idea who you are — 'who is this? how'd you get my number?' energy.">
-        <span class="wp-contact-history-label">Prior history? <span class="wp-contact-history-sub">New threads assume you already know each other</span></span>
+        <span class="wp-contact-history-label">Prior History?</span>
         <span class="wp-toggle-switch">
             <input type="checkbox" id="wp-contact-history-toggle" class="wp-toggle-input" data-contact-name="${escapeHtml(entry.name)}"${knowsUser ? ' checked' : ''} />
             <span class="wp-toggle-track"><span class="wp-toggle-thumb"></span></span>
         </span>
-    </label>` : ''}
+    </label>
+    <ul class="wp-contact-history-hint">
+        <li>If enabled, characters will behave like they know who you are, for better or worse. You decide your relationship.</li>
+        <li>If disabled, characters will believe you have never met before to start.</li>
+        <li>This toggle only affects new chats - toggling mid conversation has no effect.</li>
+    </ul>` : ''}
     ${renameKey ? `
     <label class="wp-contact-history-row" title="How this contact's name displays on YOUR phone — their real identity doesn't change.">
         <span class="wp-contact-history-label"><i class="fa-solid fa-pencil"></i> Edit name</span>

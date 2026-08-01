@@ -73,15 +73,23 @@ const usageCache = new Map(); // Tracks { apiKey: { count: number, firstUsed: Da
 
 async function checkUsage(apiKey) {
     try {
-        // Call HelixMind's usage endpoint
-        const usageResponse = await fetch('https://helixmind.online/v1/usages', {
+        // Call HelixMind's quota endpoint. Post-migration this replaces the old
+        // /v1/usages route (removed in the new backend) and returns per-key counts directly.
+        const usageResponse = await fetch('https://helixmind.online/v1/usage/quota', {
             headers: { 'Authorization': `Bearer ${apiKey}` }
         });
 
         if (usageResponse.ok) {
             const data = await usageResponse.json();
             console.log('[HelixMind Usage]', data);
-            return data; // Expecting { total: number, used: number, remaining: number }
+            // New shape: { global_rpd: { used, limit }, ... }. Normalise to the
+            // { total, used, remaining } shape this diagnostic tracker already consumes.
+            const rpd = data?.global_rpd;
+            const used = Number(rpd?.used);
+            const limit = Number(rpd?.limit);
+            if (Number.isFinite(used) && Number.isFinite(limit)) {
+                return { total: limit, used, remaining: Math.max(0, limit - used) };
+            }
         }
     } catch (error) {
         console.error('Usage check failed:', error);

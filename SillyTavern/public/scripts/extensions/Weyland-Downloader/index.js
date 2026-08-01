@@ -1,5 +1,7 @@
 import { saveSettingsDebounced } from "../../../script.js";
+import { Popup } from "../../popup.js";
 import { fetchManifests, fetchKeyFile, openDownloadStream, downloadCharacters, listCharacters, listCharactersVersioned, downloadCharactersTest, manifestCache } from "./Modules/backend.js";
+import { REPAIR_CONFIRMATION_TITLE, REPAIR_CONFIRMATION_MESSAGE, isRepairAction, downloadOutcomeLabel } from "./Modules/repair.js";
 
 const { extensionSettings, renderExtensionTemplateAsync } = SillyTavern.getContext();
 export const WT_DOWNLOAD_MODULE_NAME = "Weyland-Downloader";
@@ -511,9 +513,11 @@ function showCharacterInfo(id) {
     const infoDlBtn = document.getElementById('btn-info-dl');
     infoDlBtn.setAttribute('data-id', char.id);
 
-    if (char.installed && !char.updateAvailable) {
-        infoDlBtn.innerHTML = '<i class="fa-solid fa-download"></i> Redownload Character';
-        infoDlBtn.style.display = settings?.debug ? 'inline-block' : 'none';
+    if (char.unavailableOnServer) {
+        infoDlBtn.style.display = 'none';
+    } else if (isRepairAction(char)) {
+        infoDlBtn.innerHTML = '<i class="fa-solid fa-screwdriver-wrench"></i> Repair / Redownload Character';
+        infoDlBtn.style.display = 'inline-block';
     } else {
         infoDlBtn.style.display = 'inline-block';
         if (char.updateAvailable) infoDlBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Update Character';
@@ -678,7 +682,7 @@ async function startDownload(targetIds = [], reDownload = false) {
     await sleep(500);
 
     const charWord = targetIds.length === 1 ? "character" : "characters";
-    addLine(`Initializing server-side download for ${targetIds.length} ${charWord}...`);
+    addLine(`Initializing server-side ${reDownload ? 'repair / redownload' : 'download'} for ${targetIds.length} ${charWord}...`);
 
     const namesArray = targetIds.map(id => {
         const char = CHARACTER_DATA.find(c => c.id === id);
@@ -783,7 +787,11 @@ async function startDownload(targetIds = [], reDownload = false) {
                 addLine(`<span class="term-ok">Transfer sequence finalized safely.</span>`);
             }
             progContainer.style.display = 'none';
-            finishProcessing(addLine, event.aborted ? "SEQUENCE ABORTED." : "TRANSFER SEQUENCE COMPLETE.");
+            finishProcessing(addLine, downloadOutcomeLabel({
+                repair: reDownload,
+                aborted: Boolean(event.aborted),
+                failedCount: Array.isArray(event.failed) ? event.failed.length : 0,
+            }));
         }
     });
 
@@ -801,7 +809,11 @@ async function startDownload(targetIds = [], reDownload = false) {
             addLine(`<i class="fa-solid fa-xmark term-err"></i> <span class="term-err">API TRANSFER FAILED: ${err.message}</span>`);
         }
         progContainer.style.display = 'none';
-        finishProcessing(addLine, signal.aborted ? "SEQUENCE ABORTED." : "TRANSFER SEQUENCE COMPLETE.");
+        finishProcessing(addLine, downloadOutcomeLabel({
+            repair: reDownload,
+            aborted: signal.aborted,
+            requestFailed: !signal.aborted,
+        }));
     }
 }
 
@@ -947,10 +959,17 @@ function bindWeylandEvents() {
         if (window.innerWidth <= 900) window.wt_setMobileView('main');
     });
 
-    document.getElementById('btn-info-dl').addEventListener('click', (e) => {
+    document.getElementById('btn-info-dl').addEventListener('click', async (e) => {
         const currentTarget = /** @type {HTMLElement} */ (e.currentTarget);
         const id = currentTarget.getAttribute('data-id');
-        if (id) handleRowDownloadClick(id, true);
+        const char = CHARACTER_DATA.find(c => c.id === id);
+        if (!id || !char || char.unavailableOnServer) return;
+        const repair = isRepairAction(char);
+        if (repair) {
+            const confirmed = await Popup.show.confirm(REPAIR_CONFIRMATION_TITLE, REPAIR_CONFIRMATION_MESSAGE);
+            if (!confirmed) return;
+        }
+        startDownload([id], repair);
     });
 
     document.querySelectorAll('.sortable').forEach(header => {

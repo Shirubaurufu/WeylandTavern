@@ -262,3 +262,23 @@ export function formatPawXaiAppearanceReferences(source = {}) {
 }
 
 export const PAWXAI_CURATED_CHARACTER_NAMES = Object.freeze(Object.keys(APPEARANCES));
+
+/**
+ * A fresh, mutable copy of the curated library for callers that want to inspect or repackage the
+ * raw entries (e.g. an admin/export screen) without risking a mutation reaching the frozen
+ * APPEARANCES source used by resolvePawXaiAppearanceReferences.
+ * @returns {Array<{name: string, tags: string, note: string, avoid: string, aliases: string[], variants: Array<{label: string, tags: string}>}>}
+ */
+export function getPawXaiAppearanceCatalog() {
+    return Object.entries(APPEARANCES).map(([name, appearance]) => ({
+        name,
+        tags: clean(appearance.tags),
+        note: clean(appearance.note),
+        avoid: clean(appearance.avoid),
+        aliases: [...(appearance.aliases ?? [])],
+        variants: (appearance.variants ?? []).map(variant => ({
+            label: clean(variant.label),
+            tags: clean(variant.tags),
+        })),
+    }));
+}

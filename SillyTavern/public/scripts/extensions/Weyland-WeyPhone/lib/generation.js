@@ -41,19 +41,33 @@ export function buildGroupSystemPrompt({ participants, worldInfo = '', textingIn
 }
 
 /**
+ * Prefers the roleplay scene time captured when the message was authored. When RP-clock mode is
+ * active, callers suppress the timestamp fallback so a legacy entry cannot leak browser time.
+ * @param {{displayTime?: string, timestamp?: number}} entry
+ * @param {(epochMs: number) => string} formatClockTime
+ * @param {{suppressTimestampFallback?: boolean}} [options]
+ * @returns {string}
+ */
+export function resolveStoredMessageTime(entry, formatClockTime, { suppressTimestampFallback = false } = {}) {
+    const displayTime = String(entry?.displayTime ?? '').trim();
+    if (displayTime) return displayTime;
+    if (suppressTimestampFallback) return '';
+    return Number.isFinite(entry?.timestamp) ? formatClockTime(entry.timestamp) : '';
+}
+
+/**
  * Reformats stored conversation turns into bare Incoming¦/Outgoing¦ lines (no Phone¦/Texting¦
  * header — those only matter for initializing a fresh live reply's visual interface, not for
- * conditioning past turns) using each message's own real stored timestamp, never anything the
- * model itself emitted (which is discarded during parsing and would be untrustworthy free text
- * to re-parse anyway). Reinforces the phone-format style across a long conversation.
- * @param {Array<{role: 'user'|'assistant', content: string, timestamp?: number}>} history
+ * conditioning past turns). Reinforces the phone-format style across a long conversation.
+ * @param {Array<{role: 'user'|'assistant', content: string, timestamp?: number, displayTime?: string}>} history
  * @param {{charName: string, userName: string}} names
  * @param {(epochMs: number) => string} formatClockTime
+ * @param {{suppressTimestampFallback?: boolean}} [options]
  * @returns {Array<{role: 'user'|'assistant', content: string}>}
  */
-export function reconstructHistoryAsPhoneFormat(history, { charName, userName }, formatClockTime) {
+export function reconstructHistoryAsPhoneFormat(history, { charName, userName }, formatClockTime, options = {}) {
     return history.map(entry => {
-        const time = typeof entry.timestamp === 'number' ? formatClockTime(entry.timestamp) : '';
+        const time = resolveStoredMessageTime(entry, formatClockTime, options);
         if (entry.role === 'user') {
             return { role: 'user', content: `Outgoing¦${time}¦${userName}¦${entry.content}` };
         }

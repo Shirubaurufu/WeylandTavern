@@ -28,7 +28,27 @@ export function displayCharacterName(value) {
 const CHARACTER_ALIAS_GROUPS = [
     ['dash', 'dakota ash', 'dakota ash (dash)'],
     ['akiyama', 'professor akiyama', 'sayori akiyama'],
+    ['bap', 'baphrodel puddyfoot'],
+    ['blake', 'blake fuyuki'],
 ];
+
+// The single display name a contact-directory entry should collapse to when its sources disagree
+// (e.g. the live cast directory calls her "Baphrodel Puddyfoot" while her subbot/roster entries
+// say "Bap") — getCombinedContactEntries (index.js) rewrites every source to this form before
+// deduping, so the same person shows up as ONE contact instead of two. Keyed by the matching
+// CHARACTER_ALIAS_GROUPS entry's first element; a name outside any group is left as-is.
+const PREFERRED_CONTACT_DISPLAY_NAMES = {
+    dash: 'Dash',
+    bap: 'Bap',
+    blake: 'Blake Fuyuki',
+};
+
+export function preferredContactDisplayName(value) {
+    const key = canonicalCharacterName(value);
+    const group = CHARACTER_ALIAS_GROUPS.find(aliases => aliases.includes(key));
+    const preferred = group && PREFERRED_CONTACT_DISPLAY_NAMES[group[0]];
+    return preferred ?? displayCharacterName(value);
+}
 
 const SHARED_PERSONALITY_CARD_FALLBACKS = new Map([
     ['astrid', ['cerberus sisters', 'cerb sisters']],

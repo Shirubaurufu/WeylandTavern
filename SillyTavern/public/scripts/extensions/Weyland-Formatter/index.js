@@ -224,7 +224,7 @@ const weylandRegex = {
     spacer2: /^=+$/,
     verticalBar: /[\|│¦]/,
 
-    expressionClothingParagraph: /^((?:\[[a-z]+?\]) ?(?:\[[a-z]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*$/i,
+    expressionClothingParagraph: /^((?:\[[a-z]+?\]) ?(?:\[[a-z0-9]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*$/i,
     weybotRelationships: /^New (?:Aquaintance|Friend|Hostile|Lover): ?{?.+?}?$/im,
     ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im,
     roughDraftRemove: /((?<=\n)\n+)? *\[D\] *(\n+(?=\n))?/i,
@@ -892,7 +892,7 @@ function expCloParCodeExt(){
     try {
         return [{
             type: 'output',
-            regex: /<p>((?:\[[a-z]+?\]) ?(?:\[[a-z]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*<\/p>/i,
+            regex: /<p>((?:\[[a-z]+?\]) ?(?:\[[a-z0-9]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*<\/p>/i,
             replace: ``
         }];
     } catch (e) {

@@ -184,6 +184,16 @@
 }
 
 #wp-help-button.wp-help-visible { display: flex; }
+#wp-lore-warning-button.wp-lore-warning-visible {
+    display: flex;
+    color: #e8c547;
+    animation: wp-lore-warning-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes wp-lore-warning-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
 #wp-header-rate-counter { display: none; }
 #wp-header-rate-counter.wp-visible { display: inline-flex; }
 .wp-generation-rate-counter,
@@ -289,6 +299,14 @@
 
 #wp-panel[data-view="messages"] #wp-compose-button,
 #wp-panel[data-view="messages"] #wp-group-compose-button {
+    display: flex;
+}
+
+/* Chronicle/Discorgi/Yip Yap share this one 'phone-app' view — the saved-posts shortcut used to
+   sit at the bottom of the feed (easy to scroll past); it now lives in the shared header instead,
+   between the lore-warning icon and the help button. Chitter has its own separate button inline
+   in its own header (see .wp-chitter-mark-btn below) since it isn't a 'phone-app' view. */
+#wp-panel[data-view="phone-app"] #wp-phone-app-saved-button {
     display: flex;
 }
 
@@ -1038,19 +1056,6 @@
     gap: 6px;
 }
 
-#wp-share-button[aria-busy="true"] i {
-    animation: wp-spin 0.8s linear infinite;
-}
-
-@keyframes wp-spin {
-    to { transform: rotate(360deg); }
-}
-
-#wp-share-button:disabled {
-    cursor: wait;
-    opacity: 0.55;
-}
-
 #wp-select-actions {
     display: flex;
     align-items: center;
@@ -1580,7 +1585,13 @@
 }
 .wp-home .wp-app-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    /* auto-fit instead of a hardcoded repeat(4, 1fr): a fixed 4-column track can't shrink below
+       each tile's own min-content width (the 52px icon), so on a narrow panel/phone the grid used
+       to overflow past the right edge instead of reflowing — icons were silently cut off rather
+       than wrapping. auto-fit computes however many >=60px columns actually fit and always fills
+       100% of the row width (1fr), so normal widths still look identical, but a narrow width drops
+       to 3 or 2 columns and wraps the rest onto more rows instead of spilling off-screen. */
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
     gap: 14px 6px;
     align-content: start;
 }
@@ -1629,6 +1640,47 @@
 }
 .wp-home .wp-app-tile-disabled { opacity: 0.4; }
 .wp-home .wp-app-tile-tier-locked { opacity: 0.62; }
+
+/* Static "coming soon" placeholder screen (see lib/ui/apps/comingSoon.js) — a maroon CRT-ish
+   backdrop with a subtle scanline overlay. No interactive elements of its own. */
+.wp-coming-soon {
+    position: relative;
+    height: 100%;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 35%, #5c1414 0%, #3a0d0d 55%, #240808 100%);
+}
+.wp-coming-soon-scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.05) 0px,
+        rgba(255, 255, 255, 0.05) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+    mix-blend-mode: overlay;
+    opacity: 0.5;
+}
+.wp-coming-soon-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 24px;
+    text-align: center;
+}
+.wp-coming-soon-icon { font-size: 30px; color: rgba(255, 255, 255, 0.55); margin-bottom: 8px; }
+.wp-coming-soon-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.55); }
+.wp-coming-soon-title { font-size: 22px; font-weight: 800; color: #fff; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
+.wp-coming-soon-note { font-size: 12px; color: rgba(255, 255, 255, 0.65); max-width: 240px; }
 .wp-app-tier-lock {
     position: absolute;
     right: -5px;
@@ -1964,7 +2016,7 @@
 
 @media (max-width: 340px) {
     .wp-home { padding-right: 4px; padding-left: 4px; }
-    .wp-home .wp-app-grid { column-gap: 2px; }
+    .wp-home .wp-app-grid { column-gap: 2px; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); }
     .wp-home .wp-app-icon { width: 48px; height: 48px; }
     .wp-pawxai-quick-row { grid-template-columns: 1fr; }
     .wp-kressa-palette-grid,
@@ -2358,6 +2410,19 @@
     padding: 0 14px;
 }
 .wp-chitter-mark { color: #1DA1F2; font-size: 17px; }
+/* Wraps the mark icon + saved-posts button as ONE grid item so the topline's 3-column
+   (mark-group / wordmark / icons) layout stays intact — a bare sibling button here would instead
+   consume the wordmark's grid column and break centering. */
+.wp-chitter-mark-group { display: inline-flex; align-items: center; gap: 10px; }
+.wp-chitter-mark-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #e7edf2;
+    font-size: 15px;
+    cursor: pointer;
+}
+.wp-chitter-mark-btn:hover { color: #1DA1F2; }
 .wp-chitter-wordmark { color: #f1f5f8; font-size: 30px; line-height: 1; font-weight: 850; letter-spacing: -0.055em; }
 .wp-chitter-icons { justify-self: end; display: inline-flex; gap: 8px; color: #e7edf2; font-size: 13px; }
 .wp-chitter-icons { align-items: center; }
@@ -2427,7 +2492,7 @@
 }
 .wp-discorgi-topline {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto auto;
     align-items: center;
     gap: 10px;
     min-height: 46px;
@@ -2565,6 +2630,15 @@
 }
 .wp-contact-history-label { font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; }
 .wp-contact-history-sub { font-size: 10.5px; color: var(--wp-text-dim); }
+.wp-contact-history-hint {
+    font-size: 10.5px;
+    color: var(--wp-text-dim);
+    line-height: 1.4;
+    margin: -6px 0 12px;
+    padding-left: 16px;
+}
+.wp-contact-history-hint li { margin-bottom: 2px; }
+.wp-contact-history-hint li:last-child { margin-bottom: 0; }
 
 /* Tappable like (2.1-M7) */
 .wp-twitter-like-btn {
@@ -3041,7 +3115,7 @@
 #wp-panel[data-app="kressa"][data-kressa-palette="ocean-bloom"] { --kr-bg: #dfecef; --kr-user-bubble: #b6d1d7; --kr-accent: #3f7891; --kr-accent-2: #a35f9b; --kr-text: #25373f; --kr-muted: #5d747c; }
 #wp-panel[data-app="kressa"][data-kressa-palette="forest-sprite"] { --kr-bg: #e4ece6; --kr-user-bubble: #bcd2c1; --kr-accent: #456f59; --kr-accent-2: #9a6096; --kr-text: #28372d; --kr-muted: #607366; }
 #wp-panel[data-app="kressa"][data-kressa-palette="ember-plum"] { --kr-bg: #fff5df; --kr-user-bubble: #e7b75d; --kr-accent: #a74f23; --kr-accent-2: #d47a2f; --kr-text: #382214; --kr-muted: #765b48; }
-#wp-panel[data-app="kressa"][data-kressa-palette="night-owl"] { --kr-bg: #17131f; --kr-user-bubble: #493365; --kr-accent: #b788ef; --kr-accent-2: #ef78bd; --kr-text: #f7efff; --kr-muted: #b9a8c7; }
+#wp-panel[data-app="kressa"][data-kressa-palette="night-owl"] { --kr-bg: #17151a; --kr-user-bubble: #4a2530; --kr-accent: #b4677a; --kr-accent-2: #d98fa0; --kr-text: #f4eef0; --kr-muted: #a99298; }
 #wp-panel[data-app="kressa"][data-kressa-palette="terminal-bloom"] { --kr-bg: #10191a; --kr-user-bubble: #29494c; --kr-accent: #75d7d1; --kr-accent-2: #ff79bd; --kr-text: #effdfb; --kr-muted: #9dbdbc; }
 
 #wp-panel[data-app="kressa"][data-kressa-palette="midnight-violet"] .wp-message.wp-char,
@@ -3282,7 +3356,7 @@
 #wp-panel[data-app="pawxai"][data-pawxai-palette="sakura-ink"] { --px-bg: #21151d; --px-surface: #2d1c27; --px-surface-2: #38222f; --px-purple: #e66f9f; --px-pink: #f4b8ce; --px-lime: #f1a5c2; --px-text: #fff2f7; --px-muted: #c7a7b4; }
 #wp-panel[data-app="pawxai"][data-pawxai-palette="moonberry"] { --px-bg: #151629; --px-surface: #1f2038; --px-surface-2: #282a48; --px-purple: #7770e8; --px-pink: #d09cff; --px-lime: #b8b3ff; --px-text: #f2f1ff; --px-muted: #aaa9c9; }
 #wp-panel[data-app="pawxai"][data-pawxai-palette="cyber-paw"] { --px-bg: #101b20; --px-surface: #17272d; --px-surface-2: #1d3037; --px-purple: #3ccdc4; --px-pink: #75e1d8; --px-lime: #c9f05a; --px-text: #edffff; --px-muted: #9db8b9; }
-#wp-panel[data-app="pawxai"][data-pawxai-palette="ember-plum"] { --px-bg: #21151b; --px-surface: #2e1d25; --px-surface-2: #38242c; --px-purple: #c35f86; --px-pink: #e58ca9; --px-lime: #f2a85d; --px-text: #fff2f5; --px-muted: #c5a3ae; }
+#wp-panel[data-app="pawxai"][data-pawxai-palette="ember-plum"] { --px-bg: #17151a; --px-surface: #241e22; --px-surface-2: #2e262b; --px-purple: #b4677a; --px-pink: #d98fa0; --px-lime: #e0a8b3; --px-text: #f7f0f2; --px-muted: #b39ba0; }
 #wp-panel[data-app="pawxai"][data-pawxai-palette="bluebell"] { --px-bg: #131b2a; --px-surface: #1c273a; --px-surface-2: #233149; --px-purple: #6299e9; --px-pink: #a6c8ff; --px-lime: #9fc2ff; --px-text: #f1f6ff; --px-muted: #a4b2c8; }
 #wp-panel[data-app="pawxai"][data-pawxai-palette="moss-magic"] { --px-bg: #151d18; --px-surface: #1e2922; --px-surface-2: #27342b; --px-purple: #67ad78; --px-pink: #91c49d; --px-lime: #d0df72; --px-text: #f3faef; --px-muted: #a9baa9; }
 #wp-panel[data-app="pawxai"][data-pawxai-palette="paper-bloom"] { --px-bg: #f3eaf0; --px-surface: #fffafd; --px-surface-2: #eadce6; --px-purple: #a64f88; --px-pink: #cc79a9; --px-lime: #d99bbb; --px-text: #3c2635; --px-muted: #765d6d; }
@@ -4013,3 +4087,90 @@
 .wp-alert-sub { font-size: 13px; color: var(--wp-text-dim); }
 .wp-alert-actions { display: flex; gap: 12px; margin-top: 6px; }
 .wp-alert-actions .menu_button { min-width: 96px; }
+
+/* ---------------------------------------------------------------------------
+   Community Contacts picker (Settings -> Community Contacts).
+   --------------------------------------------------------------------------- */
+.wp-community-book-list, .wp-community-pick-screen .wp-settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.wp-community-book-row, .wp-community-candidate-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    background: var(--wp-surface);
+    cursor: pointer;
+}
+.wp-community-book-row input, .wp-community-candidate-row input {
+    margin-top: 2px;
+}
+.wp-community-candidate-added { opacity: 0.55; cursor: default; }
+.wp-community-candidate-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.wp-community-candidate-name {
+    font-size: 13px;
+    font-weight: 650;
+    color: #fff;
+}
+.wp-community-candidate-name small {
+    font-weight: 400;
+    color: var(--wp-text-dim);
+}
+.wp-community-candidate-preview {
+    font-size: 11px;
+    color: var(--wp-text-dim);
+    line-height: 1.4;
+}
+/* Scan / Add / Delete-confirm — the three primary actions across the picker's three steps.
+   Matches #wp-contact-message-btn's full-width pill treatment instead of the bare host
+   menu_button default, which shrink-wrapped to the text and looked out of place here. */
+.wp-community-cta-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 8px;
+    padding: 11px 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--wp-accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+.wp-community-cta-button:hover:not(:disabled) { filter: brightness(1.08); }
+.wp-community-cta-button:disabled {
+    background: var(--wp-surface-2);
+    color: var(--wp-text-dim);
+    cursor: default;
+}
+.wp-community-cta-danger:not(:disabled) { background: #7f2f35; }
+.wp-community-cta-danger:hover:not(:disabled) { background: #a13b43; filter: none; }
+
+/* ---- Weybooru Viewer stacking ----
+   The viewer's own rule is `.st-modal-overlay#wbv-modal-overlay { z-index: 9999 }` — exactly the
+   same value as #wp-panel above. On an equal z-index the later element in DOM order wins, and the
+   viewer is appended to <body> before the phone, so the phone covered it. On desktop the phone is a
+   small floating box so the viewer still showed around it, but on mobile the phone is fullscreen
+   and the viewer opened completely hidden behind it, making the tile look broken.
+
+   This must be CSS rather than a JS z-index tweak at launch time: the viewer's slash command calls
+   openOverlay() without awaiting it, and openOverlay awaits a fetch of its own template before the
+   overlay element exists — so there is nothing to style yet when the tile's handler resumes.
+
+   `html body` prefix beats the viewer's own (0,1,1,0) specificity regardless of which extension's
+   stylesheet loads last, without needing !important. The viewer is a full-screen modal, so sitting
+   above the phone is correct in every context, not just when launched from the tile. */
+html body .st-modal-overlay#wbv-modal-overlay {
+    z-index: 10000;
+}

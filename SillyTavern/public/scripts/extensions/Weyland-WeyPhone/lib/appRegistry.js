@@ -158,6 +158,26 @@ export const APP_REGISTRY = [
         inGrid: true,
     },
     {
+        key: 'weybooru',
+        requiresRoleplay: false,
+        label: 'Weybooru',
+        icon: `${ASSET_BASE_URL}/weyphone_weybooru.png`,
+        accent: '#D9A441',
+        syncSection: null,
+        screenView: 'weybooru', // routed specially in index.js — opens the Weybooru Viewer overlay via its /weybooru slash command, not an in-phone screen
+        inGrid: true,
+    },
+    {
+        key: 'registrar',
+        requiresRoleplay: false,
+        label: 'Registrar',
+        icon: `${ASSET_BASE_URL}/weyphone_registrar.png`,
+        accent: '#7A2323',
+        syncSection: null,
+        screenView: 'registrar-coming-soon', // a static "coming soon" placeholder screen — no functionality yet
+        inGrid: true,
+    },
+    {
         key: 'settings',
         requiresRoleplay: false,
         label: 'Settings',

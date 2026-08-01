@@ -1111,8 +1111,8 @@ Dated Nix at start of Freshman, but ended getting dumped.`, true);
         setLocalVariable("LENS", strings.rsbLENS, true);
         setLocalVariable("OKSA", strings.rsbOKSA, true);
         setLocalVariable("MONTE", strings.rsbMONTE, true);
-        setLocalVariable("BRIET", strings.rsbBRIET, true);
-        setLocalVariable("TORY", strings.rsbTORY, true);
+        setLocalVariable("BRIET", strings.rsbBRIET);
+        setLocalVariable("TORY", strings.rsbTORY);
 
         DebugLog(`[P] RosterSB: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
     } catch (error) {
@@ -1981,8 +1981,6 @@ async function OpenWorldCostumes(charName, charMessage) {
         if (!foundCharacters?.length) {
             DebugLog(`OpenWorldCostumes: No characters found.`);
             // TODO: Add Weybot Male/Female/Other costumes here
-            setLocalVariable("CostmSave", "");
-            setLocalVariable("CostmSaveSide", "");
             await setExpression('#reset');
             updateSideCharacter({clear: 'true'});
             return;
@@ -2305,17 +2303,6 @@ async function SpecialChar(charName) {
                 for (const key of keys) {
                     DebugLog(`SpecialChar set ${key}`);
                     setLocalVariable(key, specialVars.vars[key], key !== lastKey);
-                }
-            }
-        }
-        if (specialVars?.booleanVars) {
-            const keys = Object.keys(specialVars.booleanVars);
-            switch (charName) {
-                case "Muse": {
-                    if (keys.includes("PostMuse")) {
-                        // @ts-ignore
-                        setLocalVariable("PostMuse", specialVars.booleanVars["PostMuse"][String(getLocalVariable("MuseTurbo")!=="false").toLowerCase()]);
-                    }
                 }
             }
         }

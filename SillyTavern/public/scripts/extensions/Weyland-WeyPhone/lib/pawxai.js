@@ -27,7 +27,7 @@ export const PAWXAI_PALETTES = Object.freeze([
     { id: 'sakura-ink', label: 'Sakura Ink', colors: ['#21151d', '#e66f9f', '#f4b8ce'] },
     { id: 'moonberry', label: 'Moonberry', colors: ['#151629', '#7770e8', '#d09cff'] },
     { id: 'cyber-paw', label: 'Cyber Paw', colors: ['#101b20', '#3ccdc4', '#c9f05a'] },
-    { id: 'ember-plum', label: 'Ember Plum', colors: ['#21151b', '#c35f86', '#f2a85d'] },
+    { id: 'ember-plum', label: 'Night Owl', colors: ['#17151a', '#4a2530', '#b4677a'] },
     { id: 'bluebell', label: 'Bluebell', colors: ['#131b2a', '#6299e9', '#a6c8ff'] },
     { id: 'moss-magic', label: 'Moss Magic', colors: ['#151d18', '#67ad78', '#d0df72'] },
     { id: 'paper-bloom', label: 'Paper Bloom', colors: ['#f3eaf0', '#a64f88', '#5c3655'] },

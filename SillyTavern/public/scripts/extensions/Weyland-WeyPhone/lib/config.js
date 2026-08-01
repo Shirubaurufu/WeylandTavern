@@ -1,4 +1,4 @@
-import { migrateLegacyConversations, migrateMemoryFields, migrateTetheredFields, migrateContactHistoryFields } from './storage.js';
+import { migrateLegacyConversations, migrateMemoryFields, migrateTetheredFields, migrateContactHistoryFields, migrateStaleModelNames } from './storage.js';
 
 export const MODULE_NAME = 'WeyPhone';
 
@@ -67,8 +67,16 @@ export const defaultSettings = Object.freeze({
     // Bookmarked posts, per appKey — global (not per-chat) and never touched by sync, so a
     // re-sync overwriting the content caches can't take a saved post with it.
     savedPosts: {},
+    // Contacts the user picked from their own lorebooks via Settings -> Community Contacts (see
+    // lib/communityLorebook.js). { name, lorebookName, addedAt }[]. Messaging one is resolved
+    // live against lorebookName every time, the same as a Registrar contact — no separate
+    // "is this still valid" bookkeeping needed here.
+    communityContacts: [],
     // onboarded flips to true when the first-open intro cards are completed ("Let's go").
-    // batteryTracker maps the battery icon to remaining HelixMind daily messages when on.
+    // batteryTracker maps the battery icon to remaining HelixMind daily messages. Defaults on —
+    // the real percentage is the expected out-of-the-box behavior; the toggle exists for anyone
+    // without a HelixMind key (it falls back to the theatrical drain automatically anyway) or
+    // who prefers the drain animation.
     ui: {
         wallpaper: 'default',
         wallpaperPositionX: 50,
@@ -76,7 +84,7 @@ export const defaultSettings = Object.freeze({
         wallpaperDim: 20,
         wallpaperLightWash: 0,
         onboarded: false,
-        batteryTracker: false,
+        batteryTracker: true,
     },
 });
 
@@ -175,6 +183,7 @@ export function getSettings(extensionSettings) {
     migrateMemoryFields(settings);
     migrateTetheredFields(settings);
     migrateContactHistoryFields(settings);
+    migrateStaleModelNames(settings);
     migrateRemoveAethel(settings);
     migratePhoneAppKeys(settings);
     return settings;

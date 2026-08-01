@@ -16,6 +16,7 @@ export const HOME_GRID_ORDER = [
     'chronicle', 'feed',
     'chat', 'board',
     'pawxai', 'mien',
+    'weybooru', 'registrar',
     'housing', 'kressa',
     'calculator', 'clock', 'notes',
     'settings',

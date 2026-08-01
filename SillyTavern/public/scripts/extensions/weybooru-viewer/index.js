@@ -2343,7 +2343,9 @@ jQuery(async () => {
   console.debug(`[${WBV_MODULE_NAME}] Initializing v${EXT_VERSION}`);
   getSettings();
   setTimeout(() => {
-    setupLaunchEntry();
+    // setupLaunchEntry() (the chat-bar "Weybooru Viewer" quick-reply button + its floating
+    // fallback) is intentionally disabled now that WeyPhone has its own Weybooru home-screen
+    // tile — that tile calls the /weybooru slash command below, so registerSlashCommand() stays.
     registerSlashCommand();
   }, 300);
 });

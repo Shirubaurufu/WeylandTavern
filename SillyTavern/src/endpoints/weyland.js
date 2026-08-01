@@ -3,6 +3,7 @@ import { readdir, stat, writeFile, readFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
+import { readSecret } from './secrets.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const router = express.Router();
@@ -11,6 +12,8 @@ const rateLimits = {
   'fetch-manifests': { lastCall: 0, cooldown: 2000 },
   'download': {lastCall: 0, cooldown: 5000 }
 };
+
+const HELIX_BASE = 'https://helixmind.online';
 
 const BASE_URL = 'https://WeylandTavern.b-cdn.net';
 const EXTENSION_PATH = join(__dirname, '..', '..', 'public', 'scripts', 'extensions', 'Weyland-Downloader', 'Bunny');
@@ -515,6 +518,75 @@ router.get('/fetch-key', async (request, response) => {
     }
 });
 
+/**
+ * Per-key HelixMind usage, fetched server-side.
+ *
+ * The provider's new backend only allows browser (CORS) requests from its own origin, so the
+ * usage trackers can't call it directly from WeyTavern's page. This route makes the same call
+ * server-to-server (no browser, no CORS) and hands the tracker a normalised result.
+ *
+ * `used` comes from /v1/usage/by-token (the calling key's own request count); `limit` comes from
+ * /v1/key (limits.effective_rpd, the calling key's effective daily cap). `remaining` = limit -
+ * used. Any field that can't be read stays null and the client degrades gracefully.
+ */
+router.get('/helix-usage', async (request, response) => {
+    response.set('Cache-Control', 'no-store'); // usage changes constantly; never cache this
+    try {
+        // Prefer the api_key_custom secret — the very key generation uses, read server-side —
+        // so the tracker can never drift from the active key the way the HMKey global can (a
+        // user who updates their key via ST's native field updates the secret but not HMKey).
+        // Fall back to the X-Helix-Key header only if the secret isn't set.
+        let key = '';
+        try {
+            const secret = request.user?.directories ? readSecret(request.user.directories, 'api_key_custom') : null;
+            if (typeof secret === 'string') key = secret.trim();
+        } catch { /* fall through to the header */ }
+        if (!key) {
+            const header = request.header('X-Helix-Key');
+            if (typeof header === 'string') key = header.trim();
+        }
+        if (!key) {
+            return response.status(400).json({ error: 'No HelixMind key configured' });
+        }
+
+        const auth = { headers: { Authorization: `Bearer ${key}` } };
+        const sinceIso = new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString();
+
+        // Each upstream is isolated so one failure can't blank the other or 500 the route.
+        // used = the calling key's own request count in the last 24h (/v1/usage/by-token)
+        let used = null;
+        try {
+            const r = await fetch(`${HELIX_BASE}/v1/usage/by-token?since=${encodeURIComponent(sinceIso)}`, auth);
+            if (r.ok) {
+                const payload = await r.json();
+                const row = Array.isArray(payload?.data) ? payload.data[0] : null;
+                const n = Number(row?.total_requests);
+                if (Number.isFinite(n)) used = n;
+            }
+        } catch { /* leave used null */ }
+
+        // limit = the calling key's effective daily cap (/v1/key -> limits.effective_rpd)
+        let limit = null;
+        try {
+            const r = await fetch(`${HELIX_BASE}/v1/key`, auth);
+            if (r.ok) {
+                const info = await r.json();
+                const n = Number(info?.limits?.effective_rpd);
+                if (Number.isFinite(n) && n > 0) limit = n;
+            }
+        } catch { /* leave limit null */ }
+
+        const messagesLeft = (typeof used === 'number' && typeof limit === 'number')
+            ? Math.max(0, limit - used)
+            : null;
+
+        return response.status(200).json({ used, limit, remaining: messagesLeft });
+    } catch (error) {
+        console.error('/weyland/helix-usage: lookup failed:', error);
+        return response.status(500).json({ error: `/weyland/helix-usage: ${error.message}` });
+    }
+});
+
 router.get('/fetch-manifests', async (request, response) => {
     const { limited, remaining } = checkRateLimit('fetch-manifests');
     if (limited) {
@@ -550,8 +622,6 @@ router.post('/download', async (request, response) => {
     try {
         const userHandle = request.header('X-User-Handle') || 'default-user';
         const reDownload = (request.header('X-Redownload') || 'false').toLowerCase() === 'true';
-        const reDownloadPngs = (request.header('X-RedownloadPNG') || 'true').toLowerCase() !== 'false';
-        const reDownloadExpressions = (request.header('X-RedownloadEXP') || 'false').toLowerCase() === 'true';
         const { characters } = request.body;
         if (!pendingDiff) {
             return response.status(400).json({ error: 'No diff available, fetch manifests first' });
@@ -576,7 +646,7 @@ router.post('/download', async (request, response) => {
         if (reDownload) {
             if (!remoteManifest || typeof remoteManifest === 'string') throw new Error(`Cannot load character for re-download`);
             // Filter remote to only requested characters
-            diffChars = remoteManifest.characters.filter(c => characters.includes(c.name)).map(c => ({...c, updatePng: reDownloadPngs}));
+            diffChars = remoteManifest.characters.filter(c => characters.includes(c.name)).map(c => ({...c, updatePng: true}));
         } else {
             // Filter diff to only requested characters
             diffChars = pendingDiff.characters.filter(c => characters.includes(c.name));
@@ -644,73 +714,70 @@ router.post('/download', async (request, response) => {
                 });
             }
 
-            if (!reDownload || reDownloadExpressions) {
-                for (const diffSub of diffChar.subcharacters) {
-                    let localSub = localChar.subcharacters.find(s => s.name === diffSub.name);
-                    if (!localSub) {
-                        localSub = { name: diffSub.name, costumes: [] };
-                        localChar.subcharacters.push(localSub);
+            for (const diffSub of diffChar.subcharacters) {
+                let localSub = localChar.subcharacters.find(s => s.name === diffSub.name);
+                if (!localSub) {
+                    localSub = { name: diffSub.name, costumes: [] };
+                    localChar.subcharacters.push(localSub);
+                }
+
+                for (const diffCostume of diffSub.costumes) {
+                    let localCostume = localSub.costumes.find(c => c.name === diffCostume.name);
+                    if (!localCostume) {
+                        localCostume = { name: diffCostume.name, expressions: [] };
+                        localSub.costumes.push(localCostume);
                     }
 
-                    for (const diffCostume of diffSub.costumes) {
-                        let localCostume = localSub.costumes.find(c => c.name === diffCostume.name);
-                        if (!localCostume) {
-                            localCostume = { name: diffCostume.name, expressions: [] };
-                            localSub.costumes.push(localCostume);
-                        }
+                    const costumePath = join(charactersPath, diffSub.name, diffCostume.name);
 
-                        const costumePath = join(charactersPath, diffSub.name, diffCostume.name);
+                    for (const diffExpr of diffCostume.expressions) {
+                        const url = `${BASE_URL}/Characters/${zoneFolder}/${diffChar.name}/${diffSub.name}/${diffCostume.name}/${diffExpr.filename}`;
+                        const destPath = join(costumePath, diffExpr.filename);
+                        const characterName = diffChar.name;
+                        const costumeName = diffCostume.name;
+                        const filename = diffExpr.filename;
+                        const version = diffExpr.version;
 
-                        for (const diffExpr of diffCostume.expressions) {
-                            const url = `${BASE_URL}/Characters/${zoneFolder}/${diffChar.name}/${diffSub.name}/${diffCostume.name}/${diffExpr.filename}`;
-                            const destPath = join(costumePath, diffExpr.filename);
-                            const characterName = diffChar.name;
-                            const costumeName = diffCostume.name;
-                            const filename = diffExpr.filename;
-                            const version = diffExpr.version;
+                        downloadTasks.push(async () => {
+                            if (aborted) return;
+                            try {
+                                const response = await downloadWithRetry(url, abortController.signal);
+                                if (!response) throw new Error('Failed after retry');
 
-                            downloadTasks.push(async () => {
-                                if (aborted) return;
-                                try {
-                                    const response = await downloadWithRetry(url, abortController.signal);
-                                    if (!response) throw new Error('Failed after retry');
+                                const buffer = Buffer.from(await response.arrayBuffer());
+                                await mkdir(costumePath, { recursive: true });
+                                await writeFile(destPath, buffer);
 
-                                    const buffer = Buffer.from(await response.arrayBuffer());
-                                    await mkdir(costumePath, { recursive: true });
-                                    await writeFile(destPath, buffer);
-
-                                    const localExpr = localCostume.expressions.find(e => e.filename === filename);
-                                    if (localExpr) {
-                                        localExpr.version = version;
-                                    } else {
-                                        localCostume.expressions.push({ filename, version });
-                                    }
-
-                                    consecutiveFailures = 0;
-
-                                    const charProgress = charTotals.get(characterName);
-                                    charProgress.completed++;
-                                    emitEvent('progress', { character: characterName, completed: charProgress.completed, total: charProgress.total });
-                                } catch (error) {
-                                    failed.push({ character: characterName, file: `/${costumeName}/${filename}` });
-                                    if (error.name === 'AbortError') return;
-                                    consecutiveFailures++;
-
-                                    const charProgress = charTotals.get(characterName);
-                                    charProgress.failed++;
-                                    emitEvent('error', { character: characterName, message: `${charProgress.failed} file(s) failed to download` });
-
-                                    if (consecutiveFailures >= 10) {
-                                        aborted = true;
-                                        abortController.abort();
-                                    }
+                                const localExpr = localCostume.expressions.find(e => e.filename === filename);
+                                if (localExpr) {
+                                    localExpr.version = version;
+                                } else {
+                                    localCostume.expressions.push({ filename, version });
                                 }
-                            });
-                        }
+
+                                consecutiveFailures = 0;
+
+                                const charProgress = charTotals.get(characterName);
+                                charProgress.completed++;
+                                emitEvent('progress', { character: characterName, completed: charProgress.completed, total: charProgress.total });
+                            } catch (error) {
+                                failed.push({ character: characterName, file: `/${costumeName}/${filename}` });
+                                if (error.name === 'AbortError') return;
+                                consecutiveFailures++;
+
+                                const charProgress = charTotals.get(characterName);
+                                charProgress.failed++;
+                                emitEvent('error', { character: characterName, message: `${charProgress.failed} file(s) failed to download` });
+
+                                if (consecutiveFailures >= 10) {
+                                    aborted = true;
+                                    abortController.abort();
+                                }
+                            }
+                        });
                     }
                 }
             }
-            
 
             if (diffChar.lorebooks?.length) {
                 // Ensure lorebooks array exists in local manifest

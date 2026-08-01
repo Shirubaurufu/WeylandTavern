@@ -3,19 +3,19 @@ import { getRequestHeaders } from '../../../script.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, applySpecialCase } from './lib/promptResolution.js';
 import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLorebookContactProfile, resolveWorldInfoTethered, resolveWorldInfoUntethered } from './lib/worldInfo.js';
 import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
-import { buildSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
+import { buildSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
 import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
 import { withTypingState } from './lib/generationTracking.js';
 import { buildPortraitMap, buildPsaPortraitMap } from './lib/portraits.js';
 import { mergeInstalledContacts } from './lib/installedContacts.js';
-import { characterNamesEquivalent, displayCharacterName, findInstalledCharacterName } from './lib/characterIdentity.js';
+import { characterNamesEquivalent, displayCharacterName, findInstalledCharacterName, preferredContactDisplayName } from './lib/characterIdentity.js';
 import { parseReply, parseGroupReply } from './lib/messageParsing.js';
 import { TEXTING_MODE_INSTRUCTIONS, TEXTING_THOUGHTS_DISABLED } from './lib/textingModeInstructions.js';
 import { FIRST_CONTACT_BLOCK } from './lib/firstContact.js';
 import { isKnownByDefault } from './lib/knownContacts.js';
 import { buildMemoryGenerationMessages, joinMemoriesForInjection, sendMemoryRequest } from './lib/memoryGeneration.js';
-import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText, KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS } from './lib/tetheredContext.js';
+import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText, KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS, KRESSA_POST_CHATLOG_ORIENTATION } from './lib/tetheredContext.js';
 import { getPhoneAppContent, setPhoneAppContent } from './lib/phoneApps.js';
 import { toggleLike } from './lib/twitterLikes.js';
 import { parseTwitterPosts } from './lib/twitterParsing.js';
@@ -40,7 +40,10 @@ import { initialState as calcInitialState, reduceKeypress } from './lib/calculat
 import { renderCalculatorScreen, renderCalculatorSettingsScreen, updateCalculatorDisplay } from './lib/ui/apps/calculator.js';
 import { createNote, getNotes, getNote, updateNote, deleteNote } from './lib/notesStorage.js';
 import { renderNotesScreen, renderNoteEditorScreen } from './lib/ui/apps/notes.js';
+import { renderComingSoonScreen } from './lib/ui/apps/comingSoon.js';
 import { renderAppNamesScreen, renderCharacterWallpapersScreen, renderFolderWallpapersScreen, renderSettingsScreen, WALLPAPER_PRESETS } from './lib/ui/apps/settings.js';
+import { renderCommunityBooksScreen, renderCommunityPickScreen, renderCommunityDeleteScreen } from './lib/ui/apps/communityContacts.js';
+import { scanBookForCandidates, addCommunityContacts, getCommunityContacts, deleteCommunityContacts, communityLorebookNames, communityContactDirectoryEntry, communityPickableBookNames } from './lib/communityLorebook.js';
 import { renderClockScreen, renderTimerEditorScreen, renderAlarmEditorScreen, renderClockAlertScreen, renderClockPickerScreen, ringDashoffset, pickerBasename } from './lib/ui/apps/clock.js';
 import { startAlarmSound, unlockAudio } from './lib/clockAlert.js';
 import { staticRoster, costumeProbeList, isNsfwGreeting } from './lib/clockCostumes.js';
@@ -57,8 +60,6 @@ import { renderOnboarding, clampOnboardingPage, ONBOARDING_PAGES } from './lib/u
 import { renderAppHelpDialog, renderNoticeDialog } from './lib/ui/appHelp.js';
 import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster } from './lib/registrarLorebook.js';
 import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
-import { buildShareBlock, buildShareTitle } from './lib/shareContext.js';
-import { saveShareAsLtmEntry } from './lib/ltmShare.js';
 import { applyMienExpression, loadMienGallery, resolveMienCharacter, selectMienOutfit } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
 import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, dedupeCapturedMessages, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
@@ -86,6 +87,10 @@ let contactsQuery = ''; // live search text in the Contacts app
 let groupSelectionNames = [];
 let groupDraftTitle = '';
 let currentContactName = null; // cast entry name — set when entering 'contact-detail'
+// Settings -> Community Contacts picker's in-progress state (session-only; nothing here persists
+// until "Add Contacts" is pressed). selectedBooks/selectedCandidates are keyed the same way the
+// UI module expects — see lib/ui/apps/communityContacts.js's JSDoc for the candidate key shape.
+const communityPickerState = { selectedBooks: new Set(), candidates: [], selectedCandidates: new Set(), selectedDeletes: new Set() };
 let calcState = calcInitialState(); // session-only, like a real calculator
 let currentNoteId = null; // set when entering 'note-editor'
 let currentPawXaiTab = 'generate';
@@ -434,10 +439,12 @@ const contactLorebookState = {
     officialBook: null,
     registrarBooks: new Map(),
     registrarContacts: [],
+    communityBooks: new Map(),
 };
 
 function contactLorebookSignature() {
-    return ['Weyland', ...findRegistrarBookNames(world_names)].join('|');
+    const settings = getSettings(SillyTavern.getContext().extensionSettings);
+    return ['Weyland', ...findRegistrarBookNames(world_names), ...communityLorebookNames(settings)].join('|');
 }
 
 function contactLorebooksAreReady() {
@@ -459,10 +466,21 @@ async function ensureContactLorebooks(context) {
             console.warn('[WeyPhone] Could not read the Weyland lorebook for Contacts:', error);
         }
         const registrar = await loadRegistrarLorebooks({ worldNames: world_names, loadWorldInfo: context.loadWorldInfo });
+        const communityBooks = new Map();
+        const settingsForCommunity = getSettings(context.extensionSettings);
+        await Promise.all(communityLorebookNames(settingsForCommunity).map(async name => {
+            try {
+                const book = await context.loadWorldInfo(name);
+                if (book?.entries) communityBooks.set(name, book);
+            } catch (error) {
+                console.warn(`[WeyPhone] Could not read community lorebook "${name}":`, error);
+            }
+        }));
         if (contactLorebookState.signature === signature) {
             contactLorebookState.officialBook = officialBook;
             contactLorebookState.registrarBooks = registrar.books;
             contactLorebookState.registrarContacts = registrar.contacts;
+            contactLorebookState.communityBooks = communityBooks;
             contactLorebookState.ready = true;
         }
         return contactLorebookState;
@@ -648,10 +666,7 @@ async function buildTetheredContext(context, conversation, { kressaObserver = fa
         worldInfoText: worldInfo,
         ltmEntries,
         historyTranscript,
-        // NOTE: Lucky's "post-chatlog orientation" refinement (postTranscriptInstructions:
-        // KRESSA_POST_CHATLOG_ORIENTATION) needs his updated tetheredContext.js — the const and the
-        // buildTetheredViewBlock param that consumes it were never delivered. Restore both lines
-        // (here and the import) once that file lands.
+        postTranscriptInstructions: kressaObserver ? KRESSA_POST_CHATLOG_ORIENTATION : undefined,
     });
 }
 
@@ -1281,6 +1296,7 @@ async function generateMemory(conversationId, conversation, context, settings, o
             windowMessages: window.messages,
             userName,
             formatClockTime,
+            suppressTimestampFallback: Boolean(settings.ui?.rpClockEnabled),
         });
         // Same real-macro resolution as generateReply's system prompt — personalityText can
         // itself contain macros (it comes from the same charper.js source as the main prompt).
@@ -1376,8 +1392,9 @@ async function generateGroupReply(conversationId, conversation, context, setting
             finalInstructions: TEXTING_THOUGHTS_DISABLED,
         });
         const substituted = applyMacroSubstitution({ substituteParams: context.substituteParams, content: systemPrompt, userName, charName: participants.join(', ') });
+        const storedTimeOptions = { suppressTimestampFallback: Boolean(settings.ui?.rpClockEnabled) };
         const wire = message => {
-            const time = Number.isFinite(message.timestamp) ? formatClockTime(message.timestamp) : '';
+            const time = resolveStoredMessageTime(message, formatClockTime, storedTimeOptions);
             return message.role === 'user'
                 ? `Outgoing¦${time}¦${userName}¦${message.content}`
                 : `Incoming¦${time}¦${message.speaker || participants[0]}¦${message.content}`;
@@ -1399,6 +1416,7 @@ async function generateGroupReply(conversationId, conversation, context, setting
                 || reply.speaker || 'Group';
             const added = {
                 role: 'assistant', speaker, content: reply.content, timestamp: genTimestamp(),
+                displayTime: resolveRpTime()?.time,
                 mainChatAnchor: isConversationLinkedToChat(conversation, context.chatId) ? context.chat.length : undefined,
             };
             appendMessage(settings, conversationId, added);
@@ -1533,8 +1551,9 @@ async function generateReply(conversationId, conversation, context, settings) {
             charName: character.name,
         });
         const lastMessage = conversation.messages[conversation.messages.length - 1];
-        const reconstructedHistory = reconstructHistoryAsPhoneFormat(historyBeforeLast, { charName: character.name, userName }, formatClockTime);
-        const wrappedUserMessage = reconstructHistoryAsPhoneFormat([lastMessage], { charName: character.name, userName }, formatClockTime)[0].content;
+        const storedTimeOptions = { suppressTimestampFallback: Boolean(settings.ui?.rpClockEnabled) };
+        const reconstructedHistory = reconstructHistoryAsPhoneFormat(historyBeforeLast, { charName: character.name, userName }, formatClockTime, storedTimeOptions);
+        const wrappedUserMessage = reconstructHistoryAsPhoneFormat([lastMessage], { charName: character.name, userName }, formatClockTime, storedTimeOptions)[0].content;
 
         const messages = buildMessages({
             systemPromptText: substitutedSystemPromptText,
@@ -1567,7 +1586,7 @@ async function generateReply(conversationId, conversation, context, settings) {
         }
         const addedReplies = [];
         for (const messageText of parsed.messages) {
-            const added = { role: 'assistant', content: messageText, timestamp: genTimestamp() };
+            const added = { role: 'assistant', content: messageText, timestamp: genTimestamp(), displayTime: resolveRpTime()?.time };
             appendMessage(settings, conversationId, added);
             addedReplies.push(added);
         }
@@ -1609,7 +1628,7 @@ function handleQueueMessage() {
         role: 'user', content: userMessage, timestamp: genTimestamp(),
         // Store the scene clock at authorship time. This keeps several queued texts at the time
         // the user actually sent them even if the roleplay header advances before injection.
-        displayTime: linkedToCurrentRoleplay ? resolveRpTime()?.time : undefined,
+        displayTime: resolveRpTime()?.time,
         mainChatAnchor: linkedToCurrentRoleplay ? context.chat.length : undefined,
     });
     queueWeyPhoneSave(context);
@@ -1634,53 +1653,6 @@ async function handleRequestReply() {
         return;
     }
     await generateReply(conversationId, conversation, context, settings);
-}
-
-// Share/inject: pushes the tail of the open texting thread into the main roleplay as a
-// Weyland-LTM-compatible lorebook entry (toggleable in the LTM panel), so the RP character
-// knows what was arranged over text. One press = one entry; re-sharing the same WeyPhone thread
-// updates that entry in place.
-let shareInFlight = false;
-async function handleShareConversation() {
-    if (shareInFlight) return;
-    const context = SillyTavern.getContext();
-    const settings = getSettings(context.extensionSettings);
-    const conversationId = currentConversationId;
-    const conversation = conversationId ? getConversation(settings, conversationId) : null;
-    if (!conversation || conversation.messages.length === 0) {
-        wpToast('info', 'Nothing to share yet — this thread has no messages.');
-        return;
-    }
-    const userName = context.name1 || 'You';
-    const block = buildShareBlock({ userName, charName: conversation.charName, messages: conversation.messages });
-    if (!block) {
-        wpToast('info', 'Nothing to share yet — this thread has no messages.');
-        return;
-    }
-    shareInFlight = true;
-    const shareButton = document.getElementById('wp-share-button');
-    if (shareButton) {
-        shareButton.disabled = true;
-        shareButton.setAttribute('aria-busy', 'true');
-    }
-    try {
-        const { updated } = await saveShareAsLtmEntry({
-            title: buildShareTitle(conversation.charName),
-            content: block,
-            shareId: conversationId,
-        });
-        pushLogLine(`Shared texts with ${conversation.charName} to the roleplay (${updated ? 'updated' : 'new'} memory entry)`);
-        wpToast('success', `${updated ? 'Updated the shared' : 'Shared this'} conversation with the roleplay — toggle it anytime in the LTM panel.`);
-    } catch (error) {
-        console.error('[WeyPhone] share failed', error);
-        wpToast('error', error.message || 'Could not share this conversation.');
-    } finally {
-        shareInFlight = false;
-        if (shareButton?.isConnected) {
-            shareButton.disabled = false;
-            shareButton.removeAttribute('aria-busy');
-        }
-    }
 }
 
 async function handleRegenerate() {
@@ -1865,9 +1837,27 @@ function resolveInstalledCharacterName(context, castName) {
 
 function getCombinedContactEntries(settings, refreshOptions = {}) {
     const context = SillyTavern.getContext();
-    const official = getCastEntries(settings, refreshOptions);
+    // preferredContactDisplayName collapses known name-mismatches between sources (e.g. the live
+    // cast directory's "Baphrodel Puddyfoot" vs. her subbot/roster's "Bap") onto one canonical
+    // display form BEFORE the exact-string dedup below runs — otherwise the same person shows up
+    // as two separate contacts whenever the official directory and a community/registrar source
+    // disagree on which name to use. Installed-card/subbot resolution stays correct either way
+    // since that lookup is alias-aware (see findInstalledCharacterName/findLorebookCharacterEntry).
+    const official = getCastEntries(settings, refreshOptions).map(entry => ({ ...entry, name: preferredContactDisplayName(entry.name) }));
     const seen = new Set(official.map(entry => entry.name.toLowerCase()));
-    const directoryEntries = [...official, ...contactLorebookState.registrarContacts.filter(entry => {
+    // Deliberately does NOT splice in contactLorebookState.registrarContacts here. That list is
+    // every character parsed out of any imported /registrar/i-named book (see
+    // lib/registrarLorebook.js) with no user choice involved — it still feeds social-app roster
+    // sampling and roleplay-capture name matching elsewhere, which is fine (occasional flavor
+    // characters, not a Contacts entry). But splicing it into the visible directory here made
+    // Registrar characters permanently reappear in Contacts even after being removed via the
+    // Community Contacts picker (deleteCommunityContacts only removes from communityContacts,
+    // which never touched this always-on list) — the picker's whole point is that a Registrar
+    // character becomes a contact only when the user explicitly adds them via
+    // getCommunityContacts/addCommunityContacts below.
+    const communityEntries = getCommunityContacts(settings).map(communityContactDirectoryEntry)
+        .map(entry => ({ ...entry, name: preferredContactDisplayName(entry.name) }));
+    const directoryEntries = [...official, ...communityEntries.filter(entry => {
         const key = entry.name.toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
@@ -1890,7 +1880,7 @@ function resolveContactCapability(context, entry) {
     const preferredBookName = entry.lorebookName || 'Weyland';
     const preferredBook = preferredBookName === 'Weyland'
         ? contactLorebookState.officialBook
-        : contactLorebookState.registrarBooks.get(preferredBookName);
+        : (contactLorebookState.registrarBooks.get(preferredBookName) ?? contactLorebookState.communityBooks.get(preferredBookName));
     if (findLorebookCharacterEntry(preferredBook, entry.name)) {
         return {
             messageable: true,
@@ -1902,8 +1892,9 @@ function resolveContactCapability(context, entry) {
     }
 
     // A community profile may share an official-directory name. If the official book has no
-    // subbot, a uniquely matching imported Registrar profile still makes that person reachable.
-    for (const [bookName, book] of contactLorebookState.registrarBooks) {
+    // subbot, a uniquely matching imported Registrar or user-picked community profile still
+    // makes that person reachable.
+    for (const [bookName, book] of [...contactLorebookState.registrarBooks, ...contactLorebookState.communityBooks]) {
         if (!findLorebookCharacterEntry(book, entry.name)) continue;
         return {
             messageable: true,
@@ -1949,6 +1940,49 @@ function openKressaConversation() {
     queueWeyPhoneSave(context);
     currentConversationId = conversation.id;
     showScreen('conversation');
+}
+
+// The Weybooru app tile: not an in-phone screen at all — it just launches the same standalone
+// Weybooru Viewer overlay as the chat-bar picture-frame button, via the viewer's own registered
+// `/weybooru` slash command. Reusing that command (rather than reaching into the viewer's private
+// module state) keeps this working even if the viewer's internal implementation changes, and fails
+// gracefully with a toast if that extension is missing or disabled.
+const WEYBOORU_OVERLAY_ID = 'wbv-modal-overlay';
+const WEYBOORU_CLOSE_BUTTON_ID = 'wbv-close-btn';
+
+/** The viewer builds its overlay lazily on first open, so this is null until then. */
+function weybooruOverlayElement() {
+    return document.getElementById(WEYBOORU_OVERLAY_ID);
+}
+
+function isWeybooruViewerOpen() {
+    const overlay = weybooruOverlayElement();
+    return Boolean(overlay) && getComputedStyle(overlay).display !== 'none';
+}
+
+async function openWeybooruViewer() {
+    // Tapping the tile again while the viewer is up closes it. Click the viewer's OWN close
+    // button rather than just hiding the element: closeOverlay() also cancels in-flight
+    // searches, stops the slideshow timer, and resets its tag-review UI (see
+    // weybooru-viewer/index.js). Hiding the node would leave all of that running.
+    if (isWeybooruViewerOpen()) {
+        document.getElementById(WEYBOORU_CLOSE_BUTTON_ID)?.click();
+        return;
+    }
+
+    const context = SillyTavern.getContext();
+    try {
+        await context.executeSlashCommandsWithOptions('/weybooru');
+    } catch (error) {
+        console.warn('[WeyPhone] Could not open the Weybooru Viewer:', error);
+        wpToast('error', 'Weybooru Viewer isn\'t available — make sure that extension is installed and enabled.');
+    }
+    // NOTE: the viewer stacks above the phone via a CSS rule in style.css, NOT from here. Setting
+    // the z-index in JS after this await does not work: the viewer's slash command fires
+    // openOverlay() without awaiting it, and openOverlay in turn awaits a fetch of its own
+    // template before appending the overlay — so on a first open the element does not exist yet
+    // and any lookup here returns null. (It appeared to work only on a second open, once the
+    // element was already built.)
 }
 
 // "Start New Thread" — creates a fresh conversation with the SAME character (and, if the current
@@ -2431,11 +2465,6 @@ function handleScreenBodyClick(event) {
         );
         return;
     }
-    const shareBtn = event.target.closest('#wp-share-button');
-    if (shareBtn) {
-        handleShareConversation();
-        return;
-    }
     const calcKey = event.target.closest('.wp-calc-key');
     if (calcKey) {
         calcState = reduceKeypress(calcState, calcKey.dataset.calcKey);
@@ -2837,6 +2866,66 @@ function handleScreenBodyClick(event) {
         showScreen('app-names');
         return;
     }
+    if (event.target.closest('#wp-community-contacts-button')) {
+        communityPickerState.selectedBooks.clear();
+        communityPickerState.candidates = [];
+        communityPickerState.selectedCandidates.clear();
+        showScreen('community-contacts-books');
+        return;
+    }
+    if (event.target.closest('#wp-community-scan-button')) {
+        (async () => {
+            const context = SillyTavern.getContext();
+            const results = await Promise.all([...communityPickerState.selectedBooks].map(async name => {
+                try {
+                    const book = await context.loadWorldInfo(name);
+                    return scanBookForCandidates(book, name);
+                } catch (error) {
+                    console.warn(`[WeyPhone] Could not scan lorebook "${name}":`, error);
+                    return [];
+                }
+            }));
+            communityPickerState.candidates = results.flat();
+            // A mixed lorebook can surface locations and backstory entries alongside people.
+            // Start with nothing checked so every imported contact is an explicit user choice.
+            communityPickerState.selectedCandidates.clear();
+            if (communityPickerState.candidates.length === 0) {
+                wpToast('info', 'No named entries with body text found in the selected lorebook(s).');
+            }
+            showScreen('community-contacts-pick');
+        })();
+        return;
+    }
+    if (event.target.closest('#wp-community-add-button')) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const existingKeys = new Set(getCommunityContacts(settings).map(c => `${c.name.toLowerCase()}|${c.lorebookName.toLowerCase()}`));
+        const picked = communityPickerState.candidates.filter(c =>
+            communityPickerState.selectedCandidates.has(`${c.name.toLowerCase()}|${c.lorebookName.toLowerCase()}`) &&
+            !existingKeys.has(`${c.name.toLowerCase()}|${c.lorebookName.toLowerCase()}`));
+        const added = addCommunityContacts(settings, picked);
+        queueWeyPhoneSave(context);
+        contactLorebookState.ready = false; // force a reload so the new book(s) resolve for messaging
+        wpToast('success', `Added ${added} ${added === 1 ? 'contact' : 'contacts'}.`);
+        showScreen('settings-app');
+        return;
+    }
+    if (event.target.closest('#wp-community-delete-button')) {
+        communityPickerState.selectedDeletes.clear();
+        showScreen('community-contacts-delete');
+        return;
+    }
+    if (event.target.closest('#wp-community-delete-confirm')) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const deleted = deleteCommunityContacts(settings, communityPickerState.selectedDeletes);
+        communityPickerState.selectedDeletes.clear();
+        queueWeyPhoneSave(context);
+        contactLorebookState.ready = false;
+        wpToast('success', `Deleted ${deleted} community ${deleted === 1 ? 'contact' : 'contacts'}.`);
+        showScreen('settings-app');
+        return;
+    }
     if (event.target.closest('#wp-character-wallpapers-button')) {
         showScreen('character-wallpapers');
         return;
@@ -3028,6 +3117,8 @@ function handleScreenBodyClick(event) {
         }
         if (appKey === 'kressa') {
             openKressaConversation();
+        } else if (appKey === 'weybooru') {
+            void openWeybooruViewer();
         } else if (app?.screenView === 'phone-app') {
             currentPhoneApp = appKey;
             showScreen('phone-app');
@@ -3491,6 +3582,27 @@ function handleScreenBodyChange(event) {
         if (currentView === 'group-compose') showScreen('group-compose');
         return;
     }
+    if (event.target.classList?.contains('wp-community-book-checkbox')) {
+        const name = event.target.value;
+        if (event.target.checked) communityPickerState.selectedBooks.add(name);
+        else communityPickerState.selectedBooks.delete(name);
+        if (currentView === 'community-contacts-books') showScreen('community-contacts-books');
+        return;
+    }
+    if (event.target.classList?.contains('wp-community-candidate-checkbox')) {
+        const key = event.target.value;
+        if (event.target.checked) communityPickerState.selectedCandidates.add(key);
+        else communityPickerState.selectedCandidates.delete(key);
+        if (currentView === 'community-contacts-pick') showScreen('community-contacts-pick');
+        return;
+    }
+    if (event.target.classList?.contains('wp-community-delete-checkbox')) {
+        const key = event.target.value;
+        if (event.target.checked) communityPickerState.selectedDeletes.add(key);
+        else communityPickerState.selectedDeletes.delete(key);
+        if (currentView === 'community-contacts-delete') showScreen('community-contacts-delete');
+        return;
+    }
     if (event.target.id === 'wp-thread-display-name' || event.target.id === 'wp-thread-user-nickname') {
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
@@ -3685,10 +3797,13 @@ function helpAppKeyForView(view, settings) {
     if (view === 'calculator' || view === 'calculator-settings') return 'calculator';
     if (view === 'notes' || view === 'note-editor') return 'notes';
     if (view === 'housing') return 'housing';
+    if (view === 'clock' || view === 'timer-editor' || view === 'alarm-editor' || view === 'clock-picker') return 'clock';
     if (view === 'pawxai') return 'pawxai';
     if (view === 'mien') return 'mien';
-    if (view === 'settings-app' || view === 'app-names' || view === 'character-wallpapers') return 'settings';
+    if (view === 'settings-app' || view === 'app-names' || view === 'character-wallpapers' ||
+        view === 'community-contacts-books' || view === 'community-contacts-pick' || view === 'community-contacts-delete') return 'settings';
     if (view === 'kressa-settings') return 'kressa';
+    if (view === 'registrar-coming-soon') return 'registrar';
     return null;
 }
 
@@ -4384,6 +4499,7 @@ function showScreen(view) {
         : (view === 'clock' || view === 'timer-editor' || view === 'alarm-editor' || view === 'clock-alert' || view === 'clock-picker') ? 'clock'
         : view === 'pawxai' ? 'pawxai'
         : view === 'mien' ? 'mien'
+        : view === 'registrar-coming-soon' ? 'registrar'
         : null;
     panel.style.setProperty('--wp-app-accent', getApp(accentApp)?.accent ?? '#AA3F3F');
     // Per-app visual identity hook — CSS scopes fonts/palettes on [data-app] (see style.css's
@@ -4519,6 +4635,38 @@ function showScreen(view) {
             }),
             generationAllowance: currentGenerationAllowance(context, settings),
             formatCooldown: formatGenerationCooldown,
+            communityContactCount: getCommunityContacts(settings).length,
+        });
+        return;
+    }
+
+    if (view === 'community-contacts-books') {
+        title.textContent = 'Community Contacts';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderCommunityBooksScreen(screenBody, {
+            worldNames: communityPickableBookNames(world_names.filter(name => name !== 'Weyland')),
+            selected: communityPickerState.selectedBooks,
+        });
+        return;
+    }
+
+    if (view === 'community-contacts-pick') {
+        title.textContent = 'Community Contacts';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderCommunityPickScreen(screenBody, {
+            candidates: communityPickerState.candidates,
+            selected: communityPickerState.selectedCandidates,
+            existingKeys: new Set(getCommunityContacts(settings).map(c => `${c.name.toLowerCase()}|${c.lorebookName.toLowerCase()}`)),
+        });
+        return;
+    }
+
+    if (view === 'community-contacts-delete') {
+        title.textContent = 'Delete Community Contacts';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderCommunityDeleteScreen(screenBody, {
+            contacts: getCommunityContacts(settings),
+            selected: communityPickerState.selectedDeletes,
         });
         return;
     }
@@ -4556,6 +4704,16 @@ function showScreen(view) {
         title.textContent = resolveAppLabel(settings, 'notes');
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
         renderNotesScreen(screenBody, { notes: getNotes(settings), formatRelativeTime });
+        return;
+    }
+
+    if (view === 'registrar-coming-soon') {
+        title.textContent = resolveAppLabel(settings, 'registrar');
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderComingSoonScreen(screenBody, {
+            label: resolveAppLabel(settings, 'registrar'),
+            note: 'The Weyland Registrar is on its way to WeyPhone.',
+        });
         return;
     }
 
@@ -5199,7 +5357,14 @@ function resolveRpTime() {
 }
 
 function formatTetherClockTime(timestamp) {
-    return resolveRpTime()?.time ?? formatClockTime(timestamp);
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    // A message without a stored displayTime predates scene-time capture (or was sent before
+    // this conversation was attached to a roleplay). The current scene clock is not its
+    // historical send time, so leave the wire-time blank instead of inventing a timestamp that
+    // changes whenever the scene advances. The original epoch remains stored for IRL mode.
+    if (settings.ui?.rpClockEnabled) return '';
+    return formatClockTime(timestamp);
 }
 
 // Meta battery mode: percent = remaining daily messages (Settings toggle). The quota lookup
@@ -5753,6 +5918,10 @@ function initPanel() {
             showScreen('settings-app');
         } else if (currentView === 'folder-wallpapers') {
             showScreen('settings-app');
+        } else if (currentView === 'community-contacts-pick') {
+            showScreen('community-contacts-books');
+        } else if (currentView === 'community-contacts-books' || currentView === 'community-contacts-delete') {
+            showScreen('settings-app');
         } else if (currentView === 'calculator-settings') {
             showScreen('calculator');
         } else if (currentView === 'group-compose') {
@@ -5788,6 +5957,15 @@ function initPanel() {
             appKey: helpButton.dataset.appKey,
             appLabel: helpButton.dataset.appLabel,
         });
+    });
+    // The shared-header saved-posts button (Chronicle/Discorgi/Yip Yap — see the
+    // #wp-panel[data-view="phone-app"] visibility rule in style.css). Lives in #wp-panel-header,
+    // which is static markup created once and never re-rendered, so — unlike the screenBody click
+    // delegation below that handles Chitter's own in-content copy of this same button id — it
+    // needs its own direct listener attached here at setup time.
+    document.getElementById('wp-phone-app-saved-button').addEventListener('click', () => {
+        currentSavedAppKey = currentPhoneApp;
+        showScreen('saved-posts');
     });
     document.getElementById('wp-lore-warning-button').addEventListener('click', () => {
         renderNoticeDialog(helpDialog, {

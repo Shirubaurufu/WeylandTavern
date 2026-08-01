@@ -6,6 +6,15 @@ Kressa understands that the roleplay is fiction and is not her relationship hist
 Text naturally like a close friend. Kressa may send as many separate messages as feel real. Each individual message may contain at most two paragraphs. When analysis calls for detail, freely geek out across any number of messages, still using no more than two paragraphs per message.
 [END KRESSA SHARED ROLEPLAY]`;
 
+// Appended after the tethered transcript itself (see buildTetheredViewBlock's
+// postTranscriptInstructions param) rather than folded into KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS
+// above: that block sets the friendly "book club" tone before the model reads the scene, while this
+// one re-grounds it immediately after, right where a model is most likely to drift into finishing
+// or narrating the scene it just read.
+export const KRESSA_POST_CHATLOG_ORIENTATION = `[KRESSA ORIENTATION]
+Do not continue the roleplay above, write dialogue for anyone in it, or treat its most recent line as a prompt to keep the scene going. Remain Kressa: a friend outside the roleplay who is aware of it and can discuss it, never a participant inside it.
+[END KRESSA ORIENTATION]`;
+
 /**
  * @param {{characterId: number|undefined, groupId: string|undefined}} options
  * @returns {boolean}
@@ -123,10 +132,10 @@ export function formatMainHistoryTranscript(messages) {
  * access affirmatively up front, and adds an explicit distinction this content is NOT the
  * character's own chat history with {{user}} — a real, separate risk from the observer framing
  * itself (a model could otherwise conflate "I can see this" with "this happened between us").
- * @param {{worldInfoText: string, ltmEntries: Array<{content: string}>, historyTranscript: string}} options
+ * @param {{worldInfoText: string, ltmEntries: Array<{content: string}>, historyTranscript: string, postTranscriptInstructions?: string}} options
  * @returns {string} empty string if all three sections are empty
  */
-export function buildTetheredViewBlock({ worldInfoText, ltmEntries, historyTranscript }) {
+export function buildTetheredViewBlock({ worldInfoText, ltmEntries, historyTranscript, postTranscriptInstructions }) {
     const ltmText = ltmEntries.map(e => e.content).filter(Boolean).join('\n');
     // '\n' join here (not the default '\n\n') so the surrounding framing array below can be
     // joined with a single '\n' and reproduce the original inline `...sections` spread exactly.
@@ -143,6 +152,7 @@ export function buildTetheredViewBlock({ worldInfoText, ltmEntries, historyTrans
         '',
         body,
         '',
+        ...(postTranscriptInstructions ? [postTranscriptInstructions, ''] : []),
         '[END TETHERED VIEW]',
     ].join('\n');
 }

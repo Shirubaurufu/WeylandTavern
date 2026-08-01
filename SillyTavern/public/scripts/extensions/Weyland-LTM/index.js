@@ -52,7 +52,14 @@ const EXT_VERSION = '1.5.5';
 // applies as the default the first time the extension initializes for a
 // given install.
 const RECOMMENDED_LTM_MODEL = 'glm-4.7-thinking';
-const ALTERNATE_LTM_MODELS = ['minimax-m3', 'gemini-3-pro-preview'];
+// NOTE: LTM keeps its own list rather than sharing WeyPhone's ALTERNATE_PHONE_MODELS — the two
+// extensions are independently installable, so a model added to one must be added here too.
+const ALTERNATE_LTM_MODELS = ['minimax-m3', 'gemini-3.1-pro-preview', 'gemini-3.6-flash'];
+
+// The provider renamed this model in place (same model, new id string). Anyone who used the old
+// quick-fill button has the dead id saved in modelOverride, where every LTM summarization would
+// silently fail against it — so rewrite it on load rather than waiting for them to notice.
+const STALE_MODEL_RENAMES = { 'gemini-3-pro-preview': 'gemini-3.1-pro-preview' };
 
 // =====================================================================
 // SETTINGS
@@ -103,6 +110,10 @@ function loadSettings() {
     for (const [k, v] of Object.entries(defaultSettings)) {
         if (settings[k] === undefined) settings[k] = structuredClone(v);
     }
+    // Idempotent: only rewrites an exact stale id, so it's a no-op once migrated (and for anyone
+    // who never picked the renamed model).
+    const renamed = STALE_MODEL_RENAMES[settings.modelOverride];
+    if (renamed) settings.modelOverride = renamed;
 }
 
 function persistSettings() {
@@ -264,6 +275,40 @@ function getCurrentCharacterName() {
 
 function getUserName() {
     return SillyTavern.getContext().name1 || 'the user';
+}
+
+// Weybot and Mirror Weyland are open-world Weyland framing cards, not characters. The scene is
+// populated entirely by subbot NPCs, and the card name is a system label that never appears in the
+// fiction — so there is no viewpoint character to anchor a memory on, and no NPC can be treated as
+// "the" protagonist. Naming the card in the prompt caused two reported bugs: weaker models wrote
+// third-person memories about "Weybot" itself instead of the NPCs actually in the scene, and auto
+// POV had to guess whose first person to write in, landing on the persona in one memory and an NPC
+// in the next. These runs are therefore always third person, and never name a viewpoint character.
+const OPEN_WORLD_CARDS = new Set(['weybot', 'mirror weyland']);
+
+function isOpenWorldRun() {
+    return OPEN_WORLD_CARDS.has(getCurrentCharacterName().trim().toLowerCase());
+}
+
+/**
+ * How the prompt should describe whose memory this is. A real character is named; an open-world
+ * run is described instead, so the card's system name never enters the prompt at all.
+ */
+function memorySubjectLabel() {
+    return isOpenWorldRun()
+        ? 'an open-world Weyland session'
+        : `the character "${getCurrentCharacterName()}"`;
+}
+
+/**
+ * The "use real names" instruction, shared by the merge and rewrite prompts. On an open-world run
+ * the card name must be named only to forbid it — a merge or reroll of an open-world memory would
+ * otherwise be told to write "Weybot" in as a real character's name.
+ */
+function openWorldNamesLine(character, user) {
+    return isOpenWorldRun()
+        ? `Use the real names of everyone who appears, and "${user}" for the player. "${character}" is the system label for the world itself, NOT a person — it must never appear in your output or stand in for a character's name.`
+        : `Use real names in your output ("${character}", "${user}").`;
 }
 
 // Same field WeyPhone's buildPersonaContextBlock reads (see lib/contactContext.js) — the active
@@ -464,6 +509,9 @@ function buildPersonaIdentityBlock(user, personaDescription) {
  * @returns {'first'|'third'}
  */
 function resolvePovMode(override) {
+    // Open-world runs have no viewpoint character, so first person is meaningless there — this
+    // deliberately overrides both the user's setting and an explicit reroll override.
+    if (isOpenWorldRun()) return 'third';
     if (override === 'first' || override === 'third') return override;
     if (settings.povMode === 'first') return 'first';
     if (settings.povMode === 'third') return 'third';
@@ -478,6 +526,7 @@ function resolvePovMode(override) {
 function buildLTMPrompt(chatHistoryText, timeline = []) {
     const character = getCurrentCharacterName();
     const user = getUserName();
+    const openWorld = isOpenWorldRun();
     const povMode = resolvePovMode();
     const anchor = timeline.length ? timeline[timeline.length - 1] : null;
 
@@ -498,9 +547,11 @@ function buildLTMPrompt(chatHistoryText, timeline = []) {
         ? `[${anchor.date} - ${anchor.time}]`
         : `[IN-STORY DATE AND TIME, taken from the excerpt's own timeline — e.g. "Saturday, June 4th - 11:51 PM" — or a relative marker like "Later that evening" if the excerpt gives no explicit date. Do NOT use today's real-world date.]`;
 
-    const povInstruction = povMode === 'first'
-        ? `- Write from ${character}'s limited point of view, in FIRST PERSON, in ${character}'s authentic voice — no clinical jargon, no metaphors that don't fit them. Reads like ${character}'s own diary entry. Omit anything ${character} does not know (no spoilers, no other characters' secrets).`
-        : `- Write in THIRD PERSON as a neutral, dispassionate narrator — NOT in ${character}'s voice. Do not adopt their personality, speech patterns, or emotional coloring; this is a plain factual account, like an incident report. Still limited to what ${character} would know at the time (no spoilers, no other characters' secrets) — just narrated without characterization.`;
+    const povInstruction = openWorld
+        ? `- Write in THIRD PERSON as a neutral, dispassionate narrator — a plain factual account, like an incident report, with no characterization. This is an open-world scene with NO main character: name every person who appears exactly as the excerpt names them, and never treat any one of them as the viewpoint character. Limit the account to what ${user} was present for (no spoilers, no off-screen events, no other characters' private secrets).`
+        : povMode === 'first'
+            ? `- Write from ${character}'s limited point of view, in FIRST PERSON, in ${character}'s authentic voice — no clinical jargon, no metaphors that don't fit them. Reads like ${character}'s own diary entry. Omit anything ${character} does not know (no spoilers, no other characters' secrets).`
+            : `- Write in THIRD PERSON as a neutral, dispassionate narrator — NOT in ${character}'s voice. Do not adopt their personality, speech patterns, or emotional coloring; this is a plain factual account, like an incident report. Still limited to what ${character} would know at the time (no spoilers, no other characters' secrets) — just narrated without characterization.`;
 
     const narrativeTemplateLine = povMode === 'first'
         ? `[NARRATIVE SECTION — 500 tokens maximum, first person, in ${character}'s voice, like a journal entry]`
@@ -508,7 +559,7 @@ function buildLTMPrompt(chatHistoryText, timeline = []) {
 
     const systemMsg = `[MEMORY FORMATION SYSTEM]
 
-You are assisting with memory formation for the character "${character}". This is NOT a roleplay turn — you are stepping outside the story to produce a structured summary of it, for the character's own long-term memory.
+You are assisting with memory formation for ${memorySubjectLabel()}. This is NOT a roleplay turn — you are stepping outside the story to produce a structured summary of it, for ${openWorld ? `${user}'s` : "the character's"} own long-term memory.
 ${timelineBlock}${personaBlock}
 Before writing, reason inside a single <think></think> block:
 - Confirm the boundaries of the excerpt. Do NOT invent context from before it begins.
@@ -516,7 +567,9 @@ ${dateInstruction}
 - List every location and scene so coverage spans the whole excerpt, not just the end.
 - Only include inferences you are 90%+ confident in.
 ${povInstruction}
-- Use real names in your output ("${character}", "${user}") — write them out normally, not as placeholders or tokens.
+${openWorld
+        ? `- Use the real names of everyone who appears, exactly as the excerpt names them (and "${user}" for the player) — written out normally, not as placeholders or tokens. "${character}" is the system label for the world itself, NOT a person: it must never appear anywhere in your output, and must never be used in place of an actual character's name.`
+        : `- Use real names in your output ("${character}", "${user}") — write them out normally, not as placeholders or tokens.`}
 - Refer to "${user}" with the correct gender/pronouns${personaDescription ? ' from the USER IDENTITY REFERENCE above' : ' — if not evident from the excerpt, default to gender-neutral "they/them" rather than guessing'}.
 
 ${THINKING_DISCIPLINE}
@@ -545,12 +598,14 @@ FRAGMENTS:
 
 Guidelines: condense repetitive events; keep only major developments. For intimate/NSFW content, summarize briefly (what happened and why it mattered) — never a blow-by-blow.`;
 
-    const excerptMsg = `CHAT EXCERPT BETWEEN "${user}" AND "${character}" — reference material for the summary below, NOT something to continue:
+    const excerptMsg = `${openWorld
+        ? `CHAT EXCERPT FROM "${user}"'s OPEN-WORLD SESSION (multiple NPCs, no single main character)`
+        : `CHAT EXCERPT BETWEEN "${user}" AND "${character}"`} — reference material for the summary below, NOT something to continue:
 ---
 ${chatHistoryText}
 ---`;
 
-    const reminderMsg = `Reminder: do not continue the scene above and do not write a new line of dialogue or narration as ${character}. Your only task right now is to produce the [MEMORY ENTRY] block described in the system instructions, summarizing the excerpt above. ${THINKING_DISCIPLINE}`;
+    const reminderMsg = `Reminder: do not continue the scene above and do not write a new line of dialogue or narration as ${openWorld ? 'anyone in it' : character}. Your only task right now is to produce the [MEMORY ENTRY] block described in the system instructions, summarizing the excerpt above. ${THINKING_DISCIPLINE}`;
 
     return [
         { role: 'system', content: systemMsg },
@@ -568,11 +623,11 @@ function buildMergePrompt(entryA, entryB) {
     const personaBlock = buildPersonaIdentityBlock(user, getPersonaDescription().trim());
     const systemMsg = `[MEMORY CONSOLIDATION SYSTEM]
 
-You are assisting with memory consolidation for the character "${character}". This is NOT a roleplay turn.
+You are assisting with memory consolidation for ${memorySubjectLabel()}. This is NOT a roleplay turn.
 ${personaBlock}
 Combine the two memory entries given below into ONE entry in the same format. Preserve all distinct Key Events, Conversations, and Fragments; drop only true duplicates. Keep the narrative in the same voice and point of view as the originals. Choose the earlier entry's date.
 
-Use real names in your output ("${character}", "${user}"). If either source entry contains the literal placeholder text "{{char}}" or "{{user}}" instead of a real name, replace it with the correct real name in your output — don't reproduce the placeholder.
+${openWorldNamesLine(character, user)} If either source entry contains the literal placeholder text "{{char}}" or "{{user}}" instead of a real name, replace it with the correct real name in your output — don't reproduce the placeholder.
 
 ${THINKING_DISCIPLINE}
 
@@ -588,7 +643,7 @@ ENTRY B:
 ${entryB.content}
 ---`;
 
-    const reminderMsg = `Reminder: do not roleplay as ${character}. Your only task right now is to output the single merged [MEMORY ENTRY] block described in the system instructions. ${THINKING_DISCIPLINE}`;
+    const reminderMsg = `Reminder: do not roleplay as ${isOpenWorldRun() ? 'anyone from the scene' : character}. Your only task right now is to output the single merged [MEMORY ENTRY] block described in the system instructions. ${THINKING_DISCIPLINE}`;
 
     return [
         { role: 'system', content: systemMsg },
@@ -612,11 +667,11 @@ function buildRewritePrompt(entry) {
         : '';
     const systemMsg = `[MEMORY REWRITE SYSTEM]
 
-You are assisting with cleaning up an existing memory entry for the character "${character}". This is NOT a roleplay turn.
+You are assisting with cleaning up an existing memory entry for ${memorySubjectLabel()}. This is NOT a roleplay turn.
 ${personaBlock}
 Rewrite the entry given below in the exact same format, improving clarity and prose quality. Preserve all factual content — every Key Event, Conversation, and Fragment must still be present in some form. Do not add new information, do not remove information, and do not change the date/time line.${pronounInstruction}
 
-Use real names in your output ("${character}", "${user}"). If the source entry contains the literal placeholder text "{{char}}" or "{{user}}" instead of a real name, replace it with the correct real name in your output — don't reproduce the placeholder.
+${openWorldNamesLine(character, user)} If the source entry contains the literal placeholder text "{{char}}" or "{{user}}" instead of a real name, replace it with the correct real name in your output — don't reproduce the placeholder.
 
 ${THINKING_DISCIPLINE}
 
@@ -627,7 +682,7 @@ Output EXACTLY one [MEMORY ENTRY] ... [END MEMORY ENTRY] block in the same struc
 ${entry.content}
 ---`;
 
-    const reminderMsg = `Reminder: do not roleplay as ${character}. Your only task right now is to output the rewritten [MEMORY ENTRY] block described in the system instructions. ${THINKING_DISCIPLINE}`;
+    const reminderMsg = `Reminder: do not roleplay as ${isOpenWorldRun() ? 'anyone from the scene' : character}. Your only task right now is to output the rewritten [MEMORY ENTRY] block described in the system instructions. ${THINKING_DISCIPLINE}`;
 
     return [
         { role: 'system', content: systemMsg },
@@ -1396,7 +1451,7 @@ function buildModalHtml() {
             <button class="wlm-btn-sm wlm-model-quickfill" data-model="${RECOMMENDED_LTM_MODEL}" title="Fill the field above with ${RECOMMENDED_LTM_MODEL}">${RECOMMENDED_LTM_MODEL}</button>
             ${ALTERNATE_LTM_MODELS.map(m => `<button class="wlm-btn-sm wlm-model-quickfill" data-model="${m}" title="Fill the field above with ${m}">${m}</button>`).join('')}
           </div>
-          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use glm-4.7-thinking and gemini-3-pro-preview whenever possible. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
+          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use glm-4.7-thinking and gemini-3.1-pro-preview whenever possible. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
         </label>
         <label class="wlm-field" title="How many new messages should pass before the reminder banner suggests a new LTM. On Auto below, this also sets how many messages go into each memory.">
           <span>Suggest an LTM every N messages</span>
@@ -1439,6 +1494,7 @@ function buildModalHtml() {
             <option value="third">Force 3rd person — plain narrator, no characterization</option>
           </select>
           <small>"Auto" uses each character's built-in memory style, preconfigured by the Weyland team — most characters journal in 1st person; multi-character casts use a neutral narrator. Pick a forced option only if you want to override that for everyone.</small>
+          <small id="wlm-pov-openworld-note" class="wlm-note-locked" style="display:none">Open-world scenes have no single main character, so their memories are always written in 3rd person. 1st person is unavailable here — your saved preference is kept and will apply again on a normal character.</small>
         </label>
         <label class="wlm-field wlm-check" title="For troubleshooting — only enable if asked to.">
           <input id="wlm-set-debug" type="checkbox" />
@@ -1551,6 +1607,37 @@ function loadSettingsIntoForm() {
     check('wlm-set-enabled', settings.enabled);
     set('wlm-set-povmode', settings.povMode || 'auto');
     set('wlm-set-automode', settings.autoLtmMode || 'off');
+    applyOpenWorldPovLock();
+}
+
+/**
+ * Open-world runs (Weybot / Mirror Weyland) have no viewpoint character, so resolvePovMode forces
+ * 3rd person there no matter what is selected. Surface that in the UI instead of silently ignoring
+ * the setting: grey out the 1st-person option and explain why. The stored preference is left
+ * untouched, so it applies again as soon as a normal character is loaded.
+ */
+function applyOpenWorldPovLock() {
+    const select = /** @type {HTMLSelectElement | null} */ (document.getElementById('wlm-set-povmode'));
+    if (!select) return;
+    const openWorld = isOpenWorldRun();
+
+    const firstOption = /** @type {HTMLOptionElement | null} */ (select.querySelector('option[value="first"]'));
+    if (firstOption) {
+        firstOption.disabled = openWorld;
+        firstOption.textContent = openWorld
+            ? 'Force 1st person — unavailable in open world'
+            : 'Force 1st person — diary entry, in character\'s voice';
+    }
+
+    const autoOption = /** @type {HTMLOptionElement | null} */ (select.querySelector('option[value="auto"]'));
+    if (autoOption) {
+        autoOption.textContent = openWorld
+            ? 'Auto — 3rd person (open world has no main character)'
+            : 'Auto — reads the character card\'s tag, else 1st person';
+    }
+
+    const note = document.getElementById('wlm-pov-openworld-note');
+    if (note) note.style.display = openWorld ? '' : 'none';
 }
 
 /**
@@ -2244,6 +2331,9 @@ function addWandMenuItem() {
             updateChip({ trigger: false });
             if (document.getElementById(MODAL_ID)?.style.display === 'block') {
                 refreshSidebar();
+                // Switching between an open-world card and a normal one while the settings pane is
+                // already open must re-evaluate whether 1st person is selectable.
+                applyOpenWorldPovLock();
             }
         });
         // The ONLY event allowed to start a new auto-job — see updateChip's

@@ -27,6 +27,7 @@ export function createPanelMarkup() {
             <div id="wp-panel-title">Messages</div>
             <span id="wp-header-rate-counter" aria-label="Generation requests remaining"></span>
             <button type="button" id="wp-lore-warning-button" class="wp-header-btn wp-lore-warning-button" title="Lore not fully loaded" aria-label="Lore not fully loaded"><i class="fa-solid fa-triangle-exclamation"></i></button>
+            <button type="button" id="wp-phone-app-saved-button" class="wp-header-btn" title="Saved posts" aria-label="Saved posts"><i class="fa-solid fa-bookmark"></i></button>
             <button id="wp-help-button" class="wp-header-btn" title="What is this?" aria-label="What is this?"><i class="fa-solid fa-circle-question"></i></button>
             <label id="wp-registrar-toggle-label" class="wp-toggle-label" title="Also show community characters from the registrar on the map">
                 <span class="wp-toggle-switch">
@@ -173,14 +174,6 @@ function refreshButtonMarkup(isGenerating) {
 }
 
 /**
- * The bookmark-list button that sits next to the sync button on every content app — opens that
- * app's saved-posts screen (index.js delegation matches the id).
- */
-function savedButtonMarkup() {
-    return '<button id="wp-phone-app-saved-button" class="menu_button wp-refresh-btn" title="Saved posts"><i class="fa-solid fa-bookmark"></i></button>';
-}
-
-/**
  * A small ghost bookmark toggle. `saved` paints it filled; the data attributes let index.js's
  * click delegation find the underlying content again.
  * @param {{saved: boolean, attrs: string}} state attrs = pre-escaped data-attribute string
@@ -206,6 +199,17 @@ function inlineHelpButton(appKey) {
     return `<button type="button" class="wp-inline-help" data-app-key="${appKey}" title="What is this?" aria-label="What is this?"><i class="fa-solid fa-circle-question"></i></button>`;
 }
 
+// Discorgi/Yip Yap's own in-header copy of the shared saved-posts shortcut (see
+// chitterHeaderMarkup's savedButton for the pattern this follows). Needed because
+// #wp-panel-header — where the "real" #wp-phone-app-saved-button lives — is hidden
+// outright for these two apps in favor of their own custom headers (style.css,
+// the `[data-app="chat"]`/`[data-app="board"] #wp-panel-header { display: none; }`
+// rule), so without this copy the button never renders at all. Reuses the same id
+// on purpose: index.js's screenBody click delegation already matches on that id.
+function inlineSavedButton() {
+    return `<button type="button" id="wp-phone-app-saved-button" class="wp-inline-help" title="Saved posts" aria-label="Saved posts"><i class="fa-solid fa-bookmark"></i></button>`;
+}
+
 function generationRateCounterMarkup(allowance) {
     if (!allowance || !Number.isFinite(allowance.remaining)) return '';
     return `<span class="wp-generation-rate-counter" aria-label="${allowance.remaining} of ${allowance.maxRequests} generation requests remaining">${allowance.remaining}/${allowance.maxRequests}</span>`;
@@ -217,7 +221,7 @@ function generationRateCounterMarkup(allowance) {
 function boardHeaderMarkup(generationAllowance = null) {
     return `
 <div class="wp-yipyap-header">
-    <div class="wp-yipyap-brand"><img src="${ASSET_BASE_URL}/weyphone_yikyak.webp" alt="" /><span>Yip Yap</span></div><div class="wp-yipyap-header-actions">${generationRateCounterMarkup(generationAllowance)}${inlineHelpButton('board')}</div>
+    <div class="wp-yipyap-brand"><img src="${ASSET_BASE_URL}/weyphone_yikyak.webp" alt="" /><span>Yip Yap</span></div><div class="wp-yipyap-header-actions">${generationRateCounterMarkup(generationAllowance)}${inlineSavedButton()}${inlineHelpButton('board')}</div>
     <div class="wp-yipyap-campus">Weyland Campus</div>
     <div class="wp-yipyap-tabs"><span class="wp-active">Nearby</span><span class="wp-yipyap-coming-tab">Hot<small>Coming soon!</small></span><span class="wp-yipyap-coming-tab">New<small>Coming soon!</small></span></div>
 </div>`;
@@ -230,10 +234,17 @@ function chitterHeaderMarkup(activeTab = 'feed', generationAllowance = null) {
     const followingTab = activeTab === 'following'
         ? '<span class="wp-active">Following</span>'
         : '<button type="button" id="wp-twitter-following-link">Following</button>';
+    // The saved-posts shortcut only makes sense next to the actual feed (matches where the Sync
+    // button also lives) — 'following'/'profile' headers reuse this same markup without it.
+    const savedButton = activeTab === 'feed'
+        ? '<button type="button" id="wp-phone-app-saved-button" class="wp-chitter-mark-btn" title="Saved posts" aria-label="Saved posts"><i class="fa-solid fa-bookmark"></i></button>'
+        : '';
     return `
 <div class="wp-chitter-header">
     <div class="wp-chitter-topline">
-        <i class="fa-solid fa-comment-dots wp-chitter-mark"></i>
+        <span class="wp-chitter-mark-group">
+            <i class="fa-solid fa-comment-dots wp-chitter-mark"></i>${savedButton}
+        </span>
         <span class="wp-chitter-wordmark">chitter</span>
         <span class="wp-chitter-icons"><i class="fa-solid fa-magnifying-glass"></i>${generationRateCounterMarkup(generationAllowance)}${inlineHelpButton('feed')}</span>
     </div>
@@ -250,9 +261,10 @@ function discorgiHeaderMarkup(activeChannelNames = [], generationAllowance = nul
     return `
 <div class="wp-discorgi-header">
     <div class="wp-discorgi-topline">
-        <span class="wp-discorgi-brand"><i class="fa-solid fa-dog"></i> Weyland University Discorgi</span>
+        <span class="wp-discorgi-brand"><i class="fa-solid fa-dog"></i> Weyland Discorgi</span>
         <span class="wp-discorgi-server-name"></span>
         ${generationRateCounterMarkup(generationAllowance)}
+        ${inlineSavedButton()}
         ${inlineHelpButton('chat')}
     </div>
     <div class="wp-discorgi-channel-list" aria-label="Discorgi channels">${channelDirectory}</div>
@@ -321,7 +333,7 @@ export function renderPhoneAppScreen(container, { appKey, appLabel, emptyCopy, e
         container.innerHTML = `
 ${appHeader}
 ${emptyStateMarkup(emptyCopy ?? 'No connection.')}
-<div id="wp-phone-app-actions">${refreshButton}${savedButtonMarkup()}</div>`;
+<div id="wp-phone-app-actions">${refreshButton}</div>`;
         return;
     }
 
@@ -353,7 +365,7 @@ ${emptyStateMarkup(emptyCopy ?? 'No connection.')}
 ${appHeader}
 <div id="wp-phone-app-meta">Refreshed ${escapeHtml(formatRelativeTime(entry.generatedAt))}</div>
 <div id="wp-phone-app-content">${sectionsHtml}</div>
-<div id="wp-phone-app-actions">${refreshButton}${savedButtonMarkup()}</div>`;
+<div id="wp-phone-app-actions">${refreshButton}</div>`;
 }
 
 /**
@@ -418,7 +430,7 @@ export function renderTwitterFeedScreen(container, { entry, isGenerating, format
         container.innerHTML = `
 ${appHeader}
 ${emptyStateMarkup('Your feed is out of signal range.')}
-<div id="wp-phone-app-actions">${refreshButton}${savedButtonMarkup()}</div>`;
+<div id="wp-phone-app-actions">${refreshButton}</div>`;
         return;
     }
 
@@ -429,7 +441,7 @@ ${emptyStateMarkup('Your feed is out of signal range.')}
 ${appHeader}
 <div id="wp-phone-app-meta">Refreshed ${escapeHtml(formatRelativeTime(entry.generatedAt))}</div>
 <div id="wp-twitter-feed-content">${postsHtml}</div>
-<div id="wp-phone-app-actions">${refreshButton}${savedButtonMarkup()}</div>`;
+<div id="wp-phone-app-actions">${refreshButton}</div>`;
 }
 
 /**
@@ -613,7 +625,6 @@ ${kressaHeader}
             <button type="button" class="wp-popup-menu-item" data-action="scrub-roleplay" title="Stop injecting the current chatlog without deleting its bubbles" hidden>Scrub messages</button>
         </div>
     </div>
-    <button id="wp-share-button" class="wp-header-btn" title="Share recent texts with the roleplay" aria-label="Share recent texts with the roleplay"><i class="fa-solid fa-share-nodes"></i></button>
     <input type="text" id="wp-input" placeholder="Message..." />
     <button id="wp-request-reply-button" class="wp-compose-action wp-request-reply" title="Request a reply" aria-label="Request a reply" disabled><i class="fa-solid fa-rotate"></i></button>
     <button id="wp-send-button" class="wp-compose-action wp-queue-message" title="Add message to the conversation" aria-label="Add message to the conversation"><i class="fa-solid fa-arrow-up"></i></button>
@@ -738,7 +749,7 @@ export function renderMemoryScreen(container, memories, editingMemoryId = null, 
         exchanges
     </label>
     <label class="wp-memory-settings-label">Primary model
-        <input type="text" id="wp-memory-primary-model-input" placeholder="gemini-3-pro-preview" />
+        <input type="text" id="wp-memory-primary-model-input" placeholder="gemini-3.1-pro-preview" />
     </label>
     <label class="wp-memory-settings-label">Backup model (used if primary fails)
         <input type="text" id="wp-memory-backup-model-input" placeholder="glm-4.7" />

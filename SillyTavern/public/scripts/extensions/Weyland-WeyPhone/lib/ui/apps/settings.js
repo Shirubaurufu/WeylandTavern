@@ -2,6 +2,7 @@
 
 import { APP_REGISTRY } from '../../appRegistry.js';
 import { TETHER_CONTEXT_MESSAGE_OPTIONS } from '../../roleplayTether.js';
+import { communityContactsSummaryMarkup } from './communityContacts.js';
 
 // Display labels paired 1:1 with TETHER_CONTEXT_MESSAGE_OPTIONS ([15,30,45,60,0]); the trailing 0
 // stop means "no cap", shown as "All".
@@ -27,7 +28,10 @@ function tetherContextSliderMarkup(settings) {
 // buttons + disclaimer), with WeyPhone's own values. minimax-m3 is the default per Lucky;
 // deepseek-v4-pro is his other tested favorite. Both keep Sonnet supply for actual messaging.
 export const RECOMMENDED_PHONE_MODEL = 'minimax-m3';
-export const ALTERNATE_PHONE_MODELS = ['deepseek-v4-pro', 'glm-4.7-thinking', 'gemini-3-pro-preview'];
+// This one list feeds the quickfill buttons on WeyPhone's own model fields, Kressa's model field,
+// and PawXai's — all three import it from here, so a model added below shows up in all of them.
+// (Weyland-LTM keeps a separate list of its own; new models need adding there too.)
+export const ALTERNATE_PHONE_MODELS = ['deepseek-v4-pro', 'glm-4.7-thinking', 'gemini-3.1-pro-preview', 'gemini-3.6-flash'];
 
 // Wallpaper presets — pure-CSS background values applied to #wp-wallpaper, each themed to a
 // corner of Weyland. Anything not in this map is treated as a custom image URL.
@@ -210,9 +214,10 @@ export function renderFolderWallpapersScreen(container, { title, emptyHint, imag
  *   logLines: Array<{timestamp: number, message: string}>,
  *   formatClockTime: (ts: number) => string,
  *   batteryStatus?: string,
+ *   communityContactCount?: number,
  * }} state
  */
-export function renderSettingsScreen(container, { settings, currentLiveModel, logLines, formatClockTime, batteryStatus = '', generationAllowance = null, formatCooldown = value => String(value) }) {
+export function renderSettingsScreen(container, { settings, currentLiveModel, logLines, formatClockTime, batteryStatus = '', generationAllowance = null, formatCooldown = value => String(value), communityContactCount = 0 }) {
     const wallpaperValue = settings.ui?.wallpaper ?? 'default';
     const isCustomWallpaper = !(wallpaperValue in WALLPAPER_PRESETS);
     const wallpaperX = clampPercent(settings.ui?.wallpaperPositionX, 50);
@@ -405,6 +410,7 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
 <div class="wp-settings">
     ${wallpaperSection}
     ${batterySection}
+    ${communityContactsSummaryMarkup({ count: communityContactCount })}
     ${tetherSection}
     ${rateLimitSection}
     ${modelSection}

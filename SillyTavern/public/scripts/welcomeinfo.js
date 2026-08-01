@@ -30,12 +30,17 @@ function formatMillisecondsToTime(ms) {
     return `${pad(minutes)}:${pad(seconds)}`;
 }
 
+const WELCOME_HELIX_USAGE_PROXY = '/api/weyland/helix-usage';
+
 async function fetchWelcomeHelixUsageData(apiKey) {
-    const response = await fetch('https://helixmind.online/v1/usage', {
+    // Fetch per-key usage through Weyland's server proxy (the provider's new backend blocks
+    // browser CORS from non-helixmind origins). Returns { used, limit, remaining } computed
+    // server-side. The welcome panel shows only the count — the "next message" countdown
+    // lives solely on the API screen — so there is no oldest-record lookup here.
+    const response = await fetch(WELCOME_HELIX_USAGE_PROXY, {
         method: 'GET',
-        headers: {
-            Authorization: `Bearer ${apiKey}`,
-        },
+        headers: { 'X-Helix-Key': apiKey },
+        cache: 'no-store', // never serve a stale cached usage count
     });
 
     if (!response.ok) {
@@ -43,30 +48,17 @@ async function fetchWelcomeHelixUsageData(apiKey) {
     }
 
     const parsedResponse = await response.json();
-    const twentyFourHoursAgoMs = Date.now() - (24 * 60 * 60 * 1000);
-    let activeMessages = [];
+    const used = Number(parsedResponse?.used);
+    const limit = Number(parsedResponse?.limit);
 
-    if (parsedResponse.data && Array.isArray(parsedResponse.data)) {
-        activeMessages = parsedResponse.data
-            .map(item => ({
-                ...item,
-                timestamp_ms: item.timestamp * 1000,
-            }))
-            .filter(message => message.timestamp_ms >= twentyFourHoursAgoMs)
-            .sort((a, b) => a.timestamp_ms - b.timestamp_ms);
-    }
+    const currentUsage = Number.isFinite(used) ? used : 0;
+    const totalLimit = (Number.isFinite(limit) && limit > 0) ? limit : Infinity;
 
-    let totalLimit = Infinity;
-    if (parsedResponse.limit === '') {
-        totalLimit = Infinity;
-    } else if (parsedResponse.limit && !Number.isNaN(parseInt(parsedResponse.limit, 10))) {
-        totalLimit = parseInt(parsedResponse.limit, 10);
-    }
-
+    // null => refreshWelcomeTrackerUsage renders "Ready" and hides the next-message line.
     return {
-        current_usage_count: activeMessages.length,
-        messages: activeMessages,
+        current_usage_count: currentUsage,
         total_limit: totalLimit,
+        oldest_ms: null,
     };
 }
 
@@ -135,7 +127,7 @@ async function refreshWelcomeTrackerUsage(welcomePanel) {
             messagesUsedText.textContent = `${data.current_usage_count}`;
         }
 
-        if (data.current_usage_count === 0 || !data.messages || data.messages.length === 0) {
+        if (data.current_usage_count === 0 || data.oldest_ms == null) {
             nextMessageTimeText.textContent = 'Ready';
             const nextMessageContainer = welcomePanel.querySelector('#hm-next-message-container');
             if (nextMessageContainer instanceof HTMLElement) {
@@ -150,7 +142,7 @@ async function refreshWelcomeTrackerUsage(welcomePanel) {
             nextMessageContainer.style.display = 'inline';
         }
 
-        const oldestMessageTimestampMs = data.messages[0].timestamp_ms;
+        const oldestMessageTimestampMs = data.oldest_ms;
         const calculatedExpiryTimeMs = oldestMessageTimestampMs + (24 * 60 * 60 * 1000);
 
         if (calculatedExpiryTimeMs <= Date.now()) {
