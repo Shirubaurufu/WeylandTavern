@@ -1,4 +1,4 @@
-import { saveSettingsDebounced } from "../../../script.js";
+import { getCharacters, saveSettingsDebounced } from "../../../script.js";
 import { Popup } from "../../popup.js";
 import { fetchManifests, fetchKeyFile, openDownloadStream, downloadCharacters, listCharacters, listCharactersVersioned, downloadCharactersTest, manifestCache } from "./Modules/backend.js";
 import { REPAIR_CONFIRMATION_TITLE, REPAIR_CONFIRMATION_MESSAGE, isRepairAction, downloadOutcomeLabel } from "./Modules/repair.js";
@@ -632,6 +632,16 @@ function handleRowDownloadClick(id, reDownload = false) {
     else startDownload([id], reDownload);
 }
 
+async function reloadCharactersAfterDownload() {
+    try {
+        await getCharacters();
+    } catch (error) {
+        console.error(`[${WT_DOWNLOAD_MODULE_NAME}] Download completed, but the character list could not be reloaded:`, error);
+        // @ts-ignore
+        toastr.warning('Characters were updated, but WeyTav may need to be restarted before the changes appear.');
+    }
+}
+
 /**
  * @param {*} targetIds
  * @param {boolean} reDownload
@@ -801,6 +811,7 @@ async function startDownload(targetIds = [], reDownload = false) {
         addLine(`Transmitting handshake to backend API...`);
         const response = await downloadCharacters(namesArray, reDownload);
         if (typeof response === 'string') throw new Error(response);
+        await reloadCharactersAfterDownload();
     } catch (err) {
         stream.close();
         if (err.message === 'ABORTED') {
@@ -830,6 +841,7 @@ async function runAutoUpdate() {
         toastr.info(`Auto-Updating ${updateCount} character${updateCount > 1 ? `s` : ``}`);
         const downloadResult = await downloadCharacters(updateOnlyNameList);
         if (typeof downloadResult === 'string') throw new Error(downloadResult);
+        await reloadCharactersAfterDownload();
         // @ts-ignore
         toastr.info(`Auto-Update Complete`);
         refreshRosterAuto = true;
@@ -860,7 +872,9 @@ function bindWeylandEvents() {
             }
             const result = await fetchKeyFile(val);
             if (result === true) {
-                await refreshRoster(true);
+                // The new key changes which remote manifests are available; it does not
+                // require re-statting users' locally edited character files.
+                await refreshRoster();
             } else {
                 console.warn("[Weyland-Downloader] Invalid password or fetch failed:", result);
             }

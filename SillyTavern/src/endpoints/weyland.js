@@ -19,6 +19,7 @@ const BASE_URL = 'https://WeylandTavern.b-cdn.net';
 const EXTENSION_PATH = join(__dirname, '..', '..', 'public', 'scripts', 'extensions', 'Weyland-Downloader', 'Bunny');
 const KEY_FILE_PATH = join(EXTENSION_PATH, 'key.wtk');
 const LOCAL_MANIFEST_PATH = join(EXTENSION_PATH, 'local-manifest.json');
+const LOCAL_MANIFEST_VERSION = 2;
 
 /** @type {Manifest | string | null} */
 let localManifest = null;
@@ -124,6 +125,57 @@ function formatVersion(date) {
  */
 function sha224(input) {
     return createHash('sha224').update(input).digest('hex');
+}
+
+/**
+ * Treats manifest asset names as case-insensitive logical identifiers.
+ * Windows preserves existing filename casing when overwriting a path whose
+ * casing changed, so exact string comparisons can otherwise create permanent
+ * phantom updates for the same on-disk file.
+ * @param {string} value
+ * @returns {string}
+ */
+function manifestNameKey(value) {
+    return String(value).toLowerCase();
+}
+
+/**
+ * @param {string} left
+ * @param {string} right
+ * @returns {boolean}
+ */
+function manifestNamesEqual(left, right) {
+    return manifestNameKey(left) === manifestNameKey(right);
+}
+
+/**
+ * Gives Bunny CDN a new cache key whenever a manifest asset version changes.
+ * The Pull Zone must have Vary Cache enabled for the `v` query parameter.
+ * @param {string} url
+ * @param {number | string} version
+ * @returns {string}
+ */
+function withManifestVersion(url, version) {
+    return `${url}?v=${encodeURIComponent(String(version))}`;
+}
+
+/**
+ * Confirms Bunny returned the exact asset described by the manifest.
+ * Manifest versions currently represent file sizes in bytes.
+ * @param {Buffer} buffer
+ * @param {number | string} expectedVersion
+ * @param {string} assetName
+ * @returns {number}
+ */
+function validateDownloadedAsset(buffer, expectedVersion, assetName) {
+    const expectedSize = Number(expectedVersion);
+    if (!Number.isSafeInteger(expectedSize) || expectedSize < 0) {
+        throw new Error(`Invalid manifest version for ${assetName}: ${expectedVersion}`);
+    }
+    if (buffer.length !== expectedSize) {
+        throw new Error(`Downloaded size mismatch for ${assetName}: expected ${expectedSize}, received ${buffer.length}`);
+    }
+    return buffer.length;
 }
 
 /**
@@ -314,6 +366,7 @@ async function getCostumes(subcharacterPath) {
 
 /**
  * @typedef {Object} Manifest
+ * @property {number} [manifestCacheVersion]
  * @property {Character[]} characters
  */
 
@@ -370,7 +423,10 @@ async function buildLocalManifest(userPath, remoteManifest) {
         };
     }));
 
-    return { characters };
+    return {
+        manifestCacheVersion: LOCAL_MANIFEST_VERSION,
+        characters,
+    };
 }
 
 /**
@@ -401,9 +457,11 @@ async function getLocalManifest(userHandle, remoteManifest, rebuildManifest) {
     const userPath = join(__dirname, '..', '..', 'data', userHandle);
     if (!rebuildManifest) {
         try {
-            if (rebuildManifest) throw new Error();
             const content = await readFile(LOCAL_MANIFEST_PATH, 'utf-8');
-            return JSON.parse(content);
+            const parsedManifest = JSON.parse(content);
+            if (parsedManifest.manifestCacheVersion === LOCAL_MANIFEST_VERSION) {
+                return parsedManifest;
+            }
         } catch {}
     }
     try {
@@ -426,26 +484,26 @@ async function getLocalManifest(userHandle, remoteManifest, rebuildManifest) {
  * @returns {Manifest}
  */
 function computeDiff(remoteManifest, localManifest) {
-    const localCharMap = new Map(localManifest.characters.map(c => [c.name, c]));
+    const localCharMap = new Map(localManifest.characters.map(c => [manifestNameKey(c.name), c]));
 
     const diffCharacters = [];
 
     for (const remoteChar of remoteManifest.characters) {
-        const localChar = localCharMap.get(remoteChar.name);
+        const localChar = localCharMap.get(manifestNameKey(remoteChar.name));
 
         const updatePng = !localChar || localChar.version !== remoteChar.version;
         const diffSubcharacters = [];
 
         for (const remoteSub of remoteChar.subcharacters) {
-            const localSub = localChar?.subcharacters.find(s => s.name === remoteSub.name);
+            const localSub = localChar?.subcharacters.find(s => manifestNamesEqual(s.name, remoteSub.name));
             const diffCostumes = [];
 
             for (const remoteCostume of remoteSub.costumes) {
-                const localCostume = localSub?.costumes.find(c => c.name === remoteCostume.name);
+                const localCostume = localSub?.costumes.find(c => manifestNamesEqual(c.name, remoteCostume.name));
                 const diffExpressions = [];
 
                 for (const remoteExpr of remoteCostume.expressions) {
-                    const localExpr = localCostume?.expressions.find(e => e.filename === remoteExpr.filename);
+                    const localExpr = localCostume?.expressions.find(e => manifestNamesEqual(e.filename, remoteExpr.filename));
                     if (!localExpr || localExpr.version !== remoteExpr.version) {
                         diffExpressions.push({ filename: remoteExpr.filename, version: remoteExpr.version });
                     }
@@ -465,7 +523,7 @@ function computeDiff(remoteManifest, localManifest) {
         const diffLorebooks = [];
         if (remoteChar.lorebooks?.length) {
             for (const remoteLore of remoteChar.lorebooks) {
-                const localLore = localChar?.lorebooks?.find(l => l.filename === remoteLore.filename);
+                const localLore = localChar?.lorebooks?.find(l => manifestNamesEqual(l.filename, remoteLore.filename));
                 if (!localLore || localLore.version !== remoteLore.version) {
                     diffLorebooks.push({ filename: remoteLore.filename, version: remoteLore.version });
                 }
@@ -639,7 +697,7 @@ router.post('/download', async (request, response) => {
         }
         if (!localManifest || typeof localManifest === 'string') throw new Error (localManifest || `Failed to load Local Manifest`);
        
-        const localCharMap = new Map(localManifest.characters.map(c => [c.name, c]));
+        const localCharMap = new Map(localManifest.characters.map(c => [manifestNameKey(c.name), c]));
 
         /** @type {Character[] | null} */
         let diffChars = null;
@@ -665,19 +723,20 @@ router.post('/download', async (request, response) => {
             const zoneFolder = diffChar.zoneHash;
 
             // Ensure character exists in local manifest
-            if (!localCharMap.has(diffChar.name)) {
+            const characterKey = manifestNameKey(diffChar.name);
+            if (!localCharMap.has(characterKey)) {
                 const newChar = { name: diffChar.name, version: null, subcharacters: [] };
                 localManifest.characters.push(newChar);
-                localCharMap.set(diffChar.name, newChar);
+                localCharMap.set(characterKey, newChar);
             }
 
-            const localChar = localCharMap.get(diffChar.name);
+            const localChar = localCharMap.get(characterKey);
 
             // Stop JavaScript from complaining about potentially undefined entries
             if (localChar === undefined) continue;
 
             if (diffChar.updatePng) {
-                const url = `${BASE_URL}/Characters/${zoneFolder}/${diffChar.name}/${diffChar.name}.png`;
+                const url = withManifestVersion(`${BASE_URL}/Characters/${zoneFolder}/${diffChar.name}/${diffChar.name}.png`, diffChar.version);
                 const destPath = join(charactersPath, `${diffChar.name}.png`);
                 const characterName = diffChar.name;
 
@@ -688,10 +747,11 @@ router.post('/download', async (request, response) => {
                         if (!response) throw new Error('Failed after retry');
 
                         const buffer = Buffer.from(await response.arrayBuffer());
+                        const downloadedSize = validateDownloadedAsset(buffer, diffChar.version, `${diffChar.name}.png`);
                         await mkdir(dirname(destPath), { recursive: true });
                         await writeFile(destPath, buffer);
 
-                        localChar.version = diffChar.version;
+                        localChar.version = downloadedSize;
                         consecutiveFailures = 0;
 
                         const charProgress = charTotals.get(characterName);
@@ -715,14 +775,14 @@ router.post('/download', async (request, response) => {
             }
 
             for (const diffSub of diffChar.subcharacters) {
-                let localSub = localChar.subcharacters.find(s => s.name === diffSub.name);
+                let localSub = localChar.subcharacters.find(s => manifestNamesEqual(s.name, diffSub.name));
                 if (!localSub) {
                     localSub = { name: diffSub.name, costumes: [] };
                     localChar.subcharacters.push(localSub);
                 }
 
                 for (const diffCostume of diffSub.costumes) {
-                    let localCostume = localSub.costumes.find(c => c.name === diffCostume.name);
+                    let localCostume = localSub.costumes.find(c => manifestNamesEqual(c.name, diffCostume.name));
                     if (!localCostume) {
                         localCostume = { name: diffCostume.name, expressions: [] };
                         localSub.costumes.push(localCostume);
@@ -731,7 +791,7 @@ router.post('/download', async (request, response) => {
                     const costumePath = join(charactersPath, diffSub.name, diffCostume.name);
 
                     for (const diffExpr of diffCostume.expressions) {
-                        const url = `${BASE_URL}/Characters/${zoneFolder}/${diffChar.name}/${diffSub.name}/${diffCostume.name}/${diffExpr.filename}`;
+                        const url = withManifestVersion(`${BASE_URL}/Characters/${zoneFolder}/${diffChar.name}/${diffSub.name}/${diffCostume.name}/${diffExpr.filename}`, diffExpr.version);
                         const destPath = join(costumePath, diffExpr.filename);
                         const characterName = diffChar.name;
                         const costumeName = diffCostume.name;
@@ -745,14 +805,15 @@ router.post('/download', async (request, response) => {
                                 if (!response) throw new Error('Failed after retry');
 
                                 const buffer = Buffer.from(await response.arrayBuffer());
+                                const downloadedSize = validateDownloadedAsset(buffer, version, `${characterName}/${costumeName}/${filename}`);
                                 await mkdir(costumePath, { recursive: true });
                                 await writeFile(destPath, buffer);
 
-                                const localExpr = localCostume.expressions.find(e => e.filename === filename);
+                                const localExpr = localCostume.expressions.find(e => manifestNamesEqual(e.filename, filename));
                                 if (localExpr) {
-                                    localExpr.version = version;
+                                    localExpr.version = downloadedSize;
                                 } else {
-                                    localCostume.expressions.push({ filename, version });
+                                    localCostume.expressions.push({ filename, version: downloadedSize });
                                 }
 
                                 consecutiveFailures = 0;
@@ -786,7 +847,7 @@ router.post('/download', async (request, response) => {
                 }
 
                 for (const diffLore of diffChar.lorebooks) {
-                    const url = `${BASE_URL}/Characters/${zoneFolder}/${diffChar.name}/${diffLore.filename}`;
+                    const url = withManifestVersion(`${BASE_URL}/Characters/${zoneFolder}/${diffChar.name}/${diffLore.filename}`, diffLore.version);
                     const destPath = join(worldsPath, diffLore.filename);
                     const characterName = diffChar.name;
                     const loreName = diffLore.filename;
@@ -799,15 +860,16 @@ router.post('/download', async (request, response) => {
                             if (!response) throw new Error('Failed after retry');
 
                             const buffer = Buffer.from(await response.arrayBuffer());
+                            const downloadedSize = validateDownloadedAsset(buffer, loreVersion, loreName);
                             await mkdir(dirname(destPath), { recursive: true });
                             await writeFile(destPath, buffer);
 
                             if (localChar.lorebooks !== undefined) {
-                                const localLore = localChar.lorebooks.find(l => l.filename === loreName);
+                                const localLore = localChar.lorebooks.find(l => manifestNamesEqual(l.filename, loreName));
                                 if (localLore) {
-                                    localLore.version = loreVersion;
+                                    localLore.version = downloadedSize;
                                 } else {
-                                    localChar.lorebooks.push({ filename: loreName, version: loreVersion });
+                                    localChar.lorebooks.push({ filename: loreName, version: downloadedSize });
                                 }
                             }
 
