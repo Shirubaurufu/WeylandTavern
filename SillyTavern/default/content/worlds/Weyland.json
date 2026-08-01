@@ -14266,7 +14266,7 @@
             "probability": 100,
             "useProbability": true,
             "depth": 4,
-            "group": "Species Lore",
+            "group": "",
             "groupOverride": false,
             "groupWeight": 100,
             "scanDepth": 2,
@@ -18827,6 +18827,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         },
         "250": {
@@ -19674,6 +19679,11 @@
                 "sticky": 0,
                 "cooldown": 0,
                 "delay": 0
+            },
+            "characterFilter": {
+                "isExclude": false,
+                "names": [],
+                "tags": []
             }
         }
     },
