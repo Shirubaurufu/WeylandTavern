@@ -32,7 +32,7 @@ import {
 import { oai_settings } from '../../openai.js';
 import { SlashCommand } from '../../slash-commands/SlashCommand.js';
 import { SlashCommandParser } from '../../slash-commands/SlashCommandParser.js';
-import { getGlobalVariable } from "../../variables.js";
+import { getLocalVariable } from "../../variables.js";
 
 const ctx = SillyTavern.getContext();
 const {
@@ -529,7 +529,7 @@ function buildLTMPrompt(chatHistoryText, timeline = []) {
     const user = getUserName();
     const openWorld = isOpenWorldRun();
     const povMode = resolvePovMode();
-    const wtMemory = getGlobalVariable("WTMemory");
+    const wtMemory = getLocalVariable("WTMemory");
     const anchor = timeline.length ? timeline[timeline.length - 1] : null;
 
     const timelineBlock = timeline.length
