@@ -1,0 +1,11 @@
+{
+    "display_name": "Weyland KeyGuard",
+    "author": "Weyland",
+    "version": "1.0.0",
+    "description": "Keeps the working Weyland Tavern API key active and stops saved connection profiles (and Weyland Router) from reverting to an old key.",
+    "js": "index.js",
+    "loading_order": 900,
+    "requires": [],
+    "optional": [],
+    "auto_update": false
+}

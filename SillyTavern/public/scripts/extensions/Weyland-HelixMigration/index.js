@@ -1,12 +1,12 @@
 // Weyland Tavern API Migration Notice
 //
-// A one-time modal shown to EXISTING users after the API backend migration, telling them
-// their current key no longer works and offering to update it. New users (no HMKey yet)
-// never see it. Persistence uses extensionSettings + saveSettingsDebounced, mirroring the
-// house "show once" convention. User-facing copy never names the provider — to the user
-// it is simply "Weyland Tavern's API".
+// A one-time modal for the original migration cohort plus users whose stored Weyland key
+// is now provider-rejected. A cohort key can still work, so the copy deliberately says it
+// MAY need updating. New/current users without a positive historical hint remain silent
+// unless the provider rejects their stored key.
 
-import { eventSource, event_types, saveSettingsDebounced } from '../../../script.js';
+import { eventSource, event_types, saveSettingsDebounced, getRequestHeaders } from '../../../script.js';
+import { readSecretState } from '../../secrets.js';
 import { exchangeKey } from './lib/migrateKey.js';
 
 const MODULE_NAME = 'Weyland-HelixMigration';
@@ -29,8 +29,28 @@ function getSettings(ctx) {
     return ctx.extensionSettings[MODULE_NAME];
 }
 
+/**
+ * Preserve the original extension's positive rollout classification as a historical
+ * cohort hint. `false` is not evidence that a key is current: API-screen users never had
+ * HMKey and were therefore classified false even when they held a legacy key.
+ */
+function getLegacyCohortHint(settings) {
+    if (settings.legacyCohortHint === true) return true;
+    if (settings.migrationEligible === true) {
+        // KEYGUARD CONFLICT WATCH: only migrate the positive value. Do not infer anything
+        // from false, and keep the legacy property for rollback/production diagnostics.
+        settings.legacyCohortHint = true;
+        saveSettingsDebounced();
+        return true;
+    }
+    return false;
+}
+
 /** The popup was dismissed (bypass / already-redeemed) — don't auto-show it again. */
 function markSeen(ctx) {
+    // KEYGUARD CONFLICT WATCH: `seen` and `completed` are intentionally different.
+    // Bypass/already-redeemed stops the modal but must leave the API-screen converter
+    // available; only markCompleted retires both surfaces.
     getSettings(ctx).migrationNoticeSeen = true;
     saveSettingsDebounced();
 }
@@ -67,6 +87,107 @@ async function writeNewKey(ctx, newKey) {
     return Boolean(result?.pipe);
 }
 
+
+/**
+ * Ask the server to perform the exchange.
+ *
+ * WHY SERVER-SIDE: the browser cannot do this for most users. `allowKeysExposure` is
+ * false in the shipped install base, so findSecret() returns null and the key is masked
+ * — and users who set their key through SillyTavern's own API field never had the HMKey
+ * global the old client-side path depended on. Those two groups could never complete an
+ * automatic swap. The server reads the key straight from the secret store, so the path
+ * works regardless of how the key was originally entered.
+ *
+ * @returns {Promise<{ok:true,newKey:string}|{ok:false,status:number|null,error:string}|null>}
+ *          null means the endpoint is absent (older install) -> caller falls back.
+ */
+async function exchangeViaServer() {
+    let response;
+    try {
+        response = await fetch('/api/weyland-keyguard/exchange', {
+            method: 'POST',
+            headers: getRequestHeaders(),
+            body: JSON.stringify({}),
+        });
+    } catch {
+        return { ok: false, status: null, error: 'Could not reach the update service. Please check your connection and try again.' };
+    }
+
+    if (response.status === 404) return null;   // endpoint not mounted on this install
+
+    let body = null;
+    try { body = await response.json(); } catch { body = null; }
+
+    if (response.ok && body?.ok && typeof body.newKey === 'string' && body.newKey.trim()) {
+        return { ok: true, newKey: body.newKey.trim() };
+    }
+    return {
+        ok: false,
+        status: response.status,
+        error: (body && typeof body.message === 'string' && body.message.trim())
+            ? body.message.trim()
+            : 'The key update could not be completed. Please open a ticket for help.',
+    };
+}
+
+/**
+ * Run the automatic update. Prefers the server path; falls back to the original
+ * client-side exchange when the endpoint is missing AND an HMKey is available.
+ * @returns {Promise<{ok:true}|{ok:false,status:number|null,error:string}>}
+ */
+async function runAutomaticUpdate(ctx) {
+    // KEYGUARD CONFLICT WATCH: server-first is what makes migration work with the
+    // shipped allowKeysExposure:false setting and for API-screen users without HMKey.
+    // Fall back only when the endpoint is genuinely absent (exchangeViaServer returns
+    // null for 404), not after a server/swap failure, or one click could exchange twice.
+    const server = await exchangeViaServer();
+
+    if (server) {
+        if (!server.ok) return server;
+        // The server already wrote the secret. Only HMKey is left, which WeyPhone and the
+        // usage tracker read; writing the secret again here would append a duplicate.
+        await ctx.executeSlashCommandsWithOptions(`/setglobalvar key=HMKey ${server.newKey}`);
+        await readSecretState();
+        return { ok: true };
+    }
+
+    const oldKey = getHmKey(ctx);
+    if (!oldKey) {
+        return { ok: false, status: null, error: 'No existing key was found to update. Use "I have my new key" instead.' };
+    }
+    const result = await exchangeKey(oldKey);
+    if (!result.ok) return result;
+    return (await writeNewKey(ctx, result.newKey))
+        ? { ok: true }
+        : { ok: false, status: null, error: 'Your key could not be saved. Please open a ticket for help.' };
+}
+
+/**
+ * KeyGuard publishes whether the user's stored key actually works. We wait for it rather
+ * than guessing from HMKey, which is what previously locked out everyone who set their
+ * key through SillyTavern's own API field.
+ */
+async function waitForKeyGuard(timeoutMs = 15000) {
+    const deadline = Date.now() + timeoutMs;
+    let guard = globalThis.WeylandKeyGuard;
+
+    // KEYGUARD CONFLICT WATCH: extensions import concurrently. APP_READY can reach this
+    // module a fraction before KeyGuard publishes its global readiness promise. A single
+    // immediate lookup made that harmless ordering race suppress migration for the whole
+    // launch. This is a bounded startup wait only, not a background poll.
+    while (!guard?.ready && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        guard = globalThis.WeylandKeyGuard;
+    }
+    if (!guard?.ready) return null;
+
+    const remainingMs = Math.max(0, deadline - Date.now());
+    return Promise.race([
+        guard.ready,
+        new Promise(resolve => setTimeout(() => resolve(guard.getVerdict?.() ?? null), remainingMs)),
+    ]);
+}
+
 function closeOverlay() {
     document.getElementById(OVERLAY_ID)?.remove();
 }
@@ -83,8 +204,9 @@ function buildOverlay() {
             </div>
             <div class="whm-body">
                 <p>Weyland Tavern's API upgraded its backend for security.
-                   <strong>Your current API key no longer works.</strong></p>
-                <p class="whm-sub">Update it now to keep chatting — one click is usually all it takes.</p>
+                   <strong>Your API key may need updated.</strong></p>
+                <p class="whm-sub">Update it now to move to the current key system — one click is usually all it takes.</p>
+                <p class="whm-sub">If you already got your new API key, you can safely bypass this message.</p>
 
                 <div class="whm-status" id="whm-status" hidden></div>
 
@@ -112,7 +234,7 @@ function buildOverlay() {
                 <div class="whm-bypass-row" id="whm-bypass-row" hidden>
                     <p class="whm-warn">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        Messages can't be sent until your API key is updated. Bypass anyway?
+                        You can keep using Weyland Tavern for now. Bypass this reminder?
                     </p>
                     <div class="whm-bypass-actions">
                         <button class="menu_button" id="whm-bypass-cancel"><span>Go back</span></button>
@@ -162,23 +284,12 @@ function showMigrationPopup(ctx) {
 
     // 1) Automatic exchange (default path).
     overlay.querySelector('#whm-auto')?.addEventListener('click', async () => {
-        const oldKey = getHmKey(ctx);
-        if (!oldKey) {
-            setStatus(overlay, 'No existing key was found to update. Use "I have my new key" instead.', 'error');
-            return;
-        }
         setActionsDisabled(overlay, true);
         setStatus(overlay, 'Updating your key…', 'info');
 
-        const result = await exchangeKey(oldKey);
+        const result = await runAutomaticUpdate(ctx);
         if (result.ok) {
-            const wrote = await writeNewKey(ctx, result.newKey);
-            if (wrote) {
-                finishSuccess();
-            } else {
-                handleWriteFailure();
-                setActionsDisabled(overlay, false);
-            }
+            finishSuccess();
             return;
         }
 
@@ -238,27 +349,58 @@ function showMigrationPopup(ctx) {
     });
 }
 
-/** Decide, once, whether this user should see the migration notice. */
-function maybeShowMigrationPopup() {
+/**
+ * Cached KeyGuard verdict for this launch, so the popup and the converter agree and we
+ * never ask twice.
+ * @type {{hasKey:boolean,working:boolean,checked:boolean,reachable:boolean}|null}
+ */
+let cachedVerdict = null;
+
+/**
+ * Decide whether this user should see the migration notice.
+ *
+ * Eligibility combines the original extension's positive rollout-cohort record with a
+ * live server verdict. A rejected Weyland key is always a migration candidate. A working
+ * key is a candidate only when the historical value was positive. `false` is not trusted:
+ * API-screen users lacked HMKey and were incorrectly classified false regardless of key
+ * generation. Without a provider generation endpoint, those functional keys cannot be
+ * distinguished from functional current keys.
+ */
+async function maybeShowMigrationPopup() {
     if (handled) return;
     const ctx = SillyTavern?.getContext?.();
-    if (!ctx || !ctx.extensionSettings) return; // settings not ready yet — wait for a later trigger
+    if (!ctx || !ctx.extensionSettings) return; // settings not ready yet — a later trigger retries
     handled = true;
 
     const settings = getSettings(ctx);
-    const hasKey = getHmKey(ctx) !== null;
+    if (settings.migrationCompleted) return;
 
-    // Classify this install ONCE, on the extension's first-ever run here. A key already
-    // present means the install predates the migration (an existing user with an old key)
-    // → eligible. A fresh install has no key yet at first run, so it is marked ineligible
-    // forever: new subscribers get a working key at setup and must never see this notice,
-    // which lets the extension live in the repo permanently without nagging them later.
-    if (settings.migrationEligible === undefined) {
-        settings.migrationEligible = hasKey;
-        saveSettingsDebounced();
-    }
+    const legacyCohortHint = getLegacyCohortHint(settings);
 
-    if (settings.migrationEligible && hasKey && !settings.migrationNoticeSeen) {
+    cachedVerdict = await waitForKeyGuard();
+
+    // No verdict at all (KeyGuard absent or the endpoint is missing on an older install):
+    // stay silent. Nagging someone whose key might be perfectly fine is worse than
+    // showing nothing, and a false alarm here is what erodes trust in the notice.
+    if (!cachedVerdict?.checked) return;
+
+    // The provider was unreachable during the check (network blip, brief outage) — every
+    // key legitimately came back unconfirmed, not rejected. `working` is false here for a
+    // reason that has nothing to do with the user's key, so treating it as "genuinely
+    // dead" would tell someone to replace a perfectly good key over a transient failure.
+    // Stay silent; the next launch (or the next un-throttled check) tries again.
+    if (!cachedVerdict.reachable) return;
+
+    // No Weyland key stored at all → a brand-new user mid-setup. Never show.
+    if (!cachedVerdict.hasKey) return;
+
+    // KEYGUARD CONFLICT WATCH: a working key is not proof of the new key generation.
+    // Prompt working keys only when the original extension recorded a positive cohort
+    // classification. Independently, a confirmed rejected key is always a candidate.
+    const migrationCandidate = legacyCohortHint || !cachedVerdict.working;
+    if (!migrationCandidate) return;
+
+    if (!settings.migrationNoticeSeen) {
         showMigrationPopup(ctx);
     }
 }
@@ -278,7 +420,7 @@ function buildConverter() {
     row.innerHTML = `
         <div class="whm-converter-head">
             <i class="fa-solid fa-key"></i>
-            <span>Your Weyland Tavern API key needs updating.</span>
+            <span>Your API key may need updated.</span>
         </div>
         <div class="whm-converter-actions">
             <button class="menu_button whm-btn-primary" id="whm-conv-auto"><span>Update automatically</span></button>
@@ -315,21 +457,11 @@ function wireConverter(ctx, row) {
     };
 
     row.querySelector('#whm-conv-auto')?.addEventListener('click', async () => {
-        const oldKey = getHmKey(ctx);
-        if (!oldKey) {
-            showStatus('No existing key found. Use "I have a new key" to paste one.', 'error');
-            return;
-        }
         setDisabled(true);
         showStatus('Updating your key…', 'info');
-        const result = await exchangeKey(oldKey);
+        const result = await runAutomaticUpdate(ctx);
         if (result.ok) {
-            if (await writeNewKey(ctx, result.newKey)) {
-                finishSuccess();
-            } else {
-                showStatus('Your key could not be saved. Please open a ticket for help.', 'error');
-                setDisabled(false);
-            }
+            finishSuccess();
             return;
         }
         showStatus(result.error, 'error');
@@ -377,22 +509,34 @@ function injectConverter(ctx, retries = 20) {
     wireConverter(ctx, row);
 }
 
-/** Inject the API-screen converter once, for eligible installs that haven't migrated yet. */
+/**
+ * Inject the API-screen converter for the same hybrid candidate group as the popup. This
+ * keeps the backup path available after bypassing a working legacy-cohort notice.
+ */
 function maybeInjectConverter() {
     if (converterInjected) return;
     const ctx = SillyTavern?.getContext?.();
     if (!ctx || !ctx.extensionSettings) return;
     const settings = getSettings(ctx);
-    if (!settings.migrationEligible || settings.migrationCompleted) return;
+    if (settings.migrationCompleted) return;
+    // Same reasoning as the popup gate above: an unreachable check must not be read as
+    // "confirmed dead", or a network blip would tell the user to replace a working key.
+    if (!cachedVerdict?.checked || !cachedVerdict.reachable) return;
+    if (!cachedVerdict.hasKey) return;
+    const migrationCandidate = getLegacyCohortHint(settings) || !cachedVerdict.working;
+    if (!migrationCandidate) return;
     converterInjected = true;
     injectConverter(ctx);
 }
 
 jQuery(() => {
-    // APP_READY fires once settings + globals are loaded, so HMKey is trustworthy by then.
-    // Popup first (it also classifies the install), then the API-screen converter.
-    const run = () => { maybeShowMigrationPopup(); maybeInjectConverter(); };
-    eventSource.on(event_types.APP_READY, run);
-    // Backstop in case APP_READY fired before this handler registered; both calls are idempotent.
-    setTimeout(run, 5000);
+    // The popup decision now awaits KeyGuard's verdict, so this is async. The converter
+    // runs afterwards and reuses the same cached verdict.
+    const run = async () => {
+        await maybeShowMigrationPopup();
+        maybeInjectConverter();
+    };
+    eventSource.on(event_types.APP_READY, () => { void run(); });
+    // Backstop in case APP_READY fired before this handler registered; both are idempotent.
+    setTimeout(() => { void run(); }, 5000);
 });
