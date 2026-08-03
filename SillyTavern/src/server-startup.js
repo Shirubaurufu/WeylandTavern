@@ -50,6 +50,7 @@ import { router as minimaxRouter } from './endpoints/minimax.js';
 import { router as dataMaidRouter } from './endpoints/data-maid.js';
 
 import { router as weylandRouter } from './endpoints/weyland.js'; // WEYLAND-TAVERN ADDITION
+import { router as weylandKeyGuardRouter } from './endpoints/weyland-keyguard.js';
 
 /**
  * @typedef {object} ServerStartupResult
@@ -181,6 +182,7 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/data-maid', dataMaidRouter);
 
     app.use('/api/weyland', weylandRouter); // WEYLAND-TAVERN ADDITION
+    app.use('/api/weyland-keyguard', weylandKeyGuardRouter);
 }
 
 /**
