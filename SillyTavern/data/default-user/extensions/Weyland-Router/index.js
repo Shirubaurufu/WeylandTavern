@@ -716,6 +716,19 @@ function startGenerationTimeout(model, genId) {
     const timeoutMs = getModelTimeoutMs(model);
     generationTimeoutId = setTimeout(async () => {
         if (!currentlySelectedModel || watchingGenId !== genId) return;
+        // Background tabs freeze JS timers. If the user switched away mid-generation,
+        // this timer can be frozen and then fire a beat after they return - by which
+        // point the reply may already have finished (and ST's finalize can be delayed
+        // in a backgrounded tab, so the success path hasn't run yet). Never destroy a
+        // finished generation as a timeout: if it's no longer in progress, finalize it
+        // normally so it's judged on its actual content - kept on success, failed only
+        // if it's genuinely empty. This prevents a good reply from being deleted or
+        // duplicated when the user tabs back in.
+        if (!isGenerationLocked()) {
+            routerLog(`Timeout for ${model.id} fired after generation already ended; finalizing instead of failing`);
+            onGenerationEnded('late-timeout');
+            return;
+        }
         routerLog(`Timeout for: ${model.id}`);
         await stopActiveGenerationForRetry();
         failCurrentAttempt(model, 'timeout');
@@ -799,15 +812,13 @@ async function triggerRetry() {
             // last good swipe, then re-use ST's own swipe button to regenerate a new
             // slot - this keeps every earlier swipe intact and stays consistent with
             // whatever ST's swipe/Generate('swipe') internals expect.
-            // Trim the last swipe when it's a textbook blank OR when this attempt is
-            // what added it (swipe count grew past the pre-generation snapshot). The
-            // latter covers API-error / timeout rerolls whose failed swipe holds an
-            // unusable non-blank body - popping only the last slot keeps every earlier
-            // swipe intact.
+            // Only trim a textbook-blank swipe. If a false failure ever slips through
+            // (e.g. a stale timer firing on a good reply), a non-blank swipe is a real
+            // response - leave it rather than risk destroying it; a duplicate is
+            // recoverable, a deleted reply is not.
             const lastSwipeIdx = lastMsg.swipes.length - 1;
-            const attemptAddedSwipe = snapshot != null && lastMsg.swipes.length > snapshot.lastSwipeCount;
-            if (lastSwipeIdx >= 0 && (isPlaceholderOutput(lastMsg.swipes[lastSwipeIdx]) || attemptAddedSwipe)) {
-                routerLog('Removing failed swipe slot before retry');
+            if (lastSwipeIdx >= 0 && isPlaceholderOutput(lastMsg.swipes[lastSwipeIdx])) {
+                routerLog('Removing empty swipe slot before retry');
                 lastMsg.swipes.pop();
                 if (Array.isArray(lastMsg.swipe_info)) lastMsg.swipe_info.pop();
                 const restoredIdx = Math.max(0, lastMsg.swipes.length - 1);
@@ -833,15 +844,14 @@ async function triggerRetry() {
                 clearAttemptCleanly();
             }
         } else {
-            // Fresh generation that produced a failed bot message - remove it so
-            // /trigger can generate a clean replacement instead of a second message.
-            // Pop it when the body is a textbook placeholder OR when this attempt is
-            // what appended the trailing bot message (chat grew past the pre-generation
-            // snapshot): API-error / timeout / reasoning-only failures leave a non-empty
-            // but unusable body that must still be cleared to avoid a duplicate.
-            const attemptAppendedMessage = snapshot != null && ctx.chat.length > snapshot.chatLength;
-            if (lastMsg && !lastMsg.is_user && (isPlaceholderOutput(lastMsg.mes) || attemptAppendedMessage)) {
-                routerLog('Removing failed ghost message before retry');
+            // Fresh generation that produced an empty bot message - safe to remove the
+            // whole placeholder and let /trigger generate a clean new one. Only remove
+            // a textbook-blank message: if a false failure ever fires on a real reply
+            // (e.g. a stale timer firing after the tab is refocused), a non-blank body
+            // is genuine output and must not be deleted. Preferring a recoverable
+            // duplicate over a destroyed message is the whole point here.
+            if (lastMsg && !lastMsg.is_user && isPlaceholderOutput(lastMsg.mes)) {
+                routerLog('Removing empty ghost message before retry');
                 ctx.chat.pop();
                 const msgBlocks = document.querySelectorAll('.mes');
                 if (msgBlocks.length > 0) {
