@@ -1,4 +1,4 @@
-﻿const { extensionSettings, renderExtensionTemplateAsync, saveSettingsDebounced, eventSource, event_types } = SillyTavern.getContext();
+const { extensionSettings, renderExtensionTemplateAsync, saveSettingsDebounced, eventSource, event_types } = SillyTavern.getContext();
 import { stopGeneration } from '../../../../script.js';
 import { oai_settings } from '../../../openai.js';
 export const WT_ROUTER_MODULE_NAME = "Weyland-Router";
@@ -61,6 +61,12 @@ let currentlySelectedModel = null;
 let attemptedThisTurn = new Set();
 let generationTimeoutId = null;
 let isRetrying = false;
+// True while Router itself is stopping a stalled generation (timeout path) before a
+// retry. The GENERATION_STOPPED that our own stopGeneration() emits must NOT be
+// treated as a user stop - otherwise onGenerationStopped clears the attempt snapshot
+// before failCurrentAttempt can hand it to the retry, and a reroll degrades into a
+// brand-new message.
+let routerInitiatedStop = false;
 // One-shot token set by triggerRetry() and consumed by the next interceptor call.
 // Survives any /trigger delay, unlike isRetrying which auto-clears on a 1s timer.
 let pendingRetryAttempt = false;
@@ -70,6 +76,10 @@ let currentGenId = 0;       // increments each time we roll a model
 let watchingGenId = null;   // the genId we expect onGenerationEnded to validate against
 let lastFinalizedGenId = null; // genId of the most recent attempt that was finalized, so MESSAGE_RECEIVED can't re-run finalize
 let currentAttemptSnapshot = null;
+// Snapshot handed to triggerRetry. failCurrentAttempt clears currentAttemptSnapshot
+// as part of its cleanup, so the retry needs its own copy to decide swipe-vs-fresh
+// and to tell whether this attempt is what appended the trailing bot message.
+let retrySnapshot = null;
 let lastSelectedModel = null;
 let lastSelectedAt = 0;
 const ROUTER_ATTEMPT_LOCK_KEY = '__weylandRouterAttemptLock';
@@ -650,6 +660,8 @@ function failCurrentAttempt(failed, reason) {
     markModelFailed(failed, reason);
     currentlySelectedModel = null;
     watchingGenId = null;
+    // Preserve the snapshot for the retry before clearing the live one.
+    retrySnapshot = currentAttemptSnapshot;
     currentAttemptSnapshot = null;
     lastSelectedModel = failed;
     lastSelectedAt = now;
@@ -664,6 +676,7 @@ function clearAttemptCleanly() {
     lastSelectedModel = null;
     attemptedThisTurn.clear();
     currentAttemptSnapshot = null;
+    retrySnapshot = null;
 }
 
 function sleep(ms) {
@@ -683,6 +696,9 @@ async function waitForGenerationUnlock(timeoutMs = 5000) {
 }
 
 async function stopActiveGenerationForRetry() {
+    // Guard the whole stop-and-settle window so the GENERATION_STOPPED our own
+    // stopGeneration() emits is recognised as router-initiated, not a user stop.
+    routerInitiatedStop = true;
     try {
         if (stopGeneration()) {
             routerEvent('Stopped stalled generation before retry', 'warn');
@@ -690,6 +706,8 @@ async function stopActiveGenerationForRetry() {
         }
     } catch (err) {
         routerLog('Could not stop active generation before retry', err);
+    } finally {
+        routerInitiatedStop = false;
     }
 }
 
@@ -771,8 +789,9 @@ async function triggerRetry() {
         // These need very different cleanup: popping a whole message during a swipe
         // retry destroys every prior swipe on it; using /trigger for a swipe retry
         // creates a second, duplicate message instead of continuing the swipe.
+        const snapshot = retrySnapshot;
         const lastMsg = ctx.chat[ctx.chat.length - 1];
-        const wasSwipeAttempt = currentAttemptSnapshot != null && ctx.chat.length === currentAttemptSnapshot.chatLength
+        const wasSwipeAttempt = snapshot != null && ctx.chat.length === snapshot.chatLength
             && lastMsg && !lastMsg.is_user && Array.isArray(lastMsg.swipes) && lastMsg.swipes.length > 0;
 
         if (wasSwipeAttempt) {
@@ -780,9 +799,15 @@ async function triggerRetry() {
             // last good swipe, then re-use ST's own swipe button to regenerate a new
             // slot - this keeps every earlier swipe intact and stays consistent with
             // whatever ST's swipe/Generate('swipe') internals expect.
+            // Trim the last swipe when it's a textbook blank OR when this attempt is
+            // what added it (swipe count grew past the pre-generation snapshot). The
+            // latter covers API-error / timeout rerolls whose failed swipe holds an
+            // unusable non-blank body - popping only the last slot keeps every earlier
+            // swipe intact.
             const lastSwipeIdx = lastMsg.swipes.length - 1;
-            if (lastSwipeIdx >= 0 && isPlaceholderOutput(lastMsg.swipes[lastSwipeIdx])) {
-                routerLog('Removing empty swipe slot before retry');
+            const attemptAddedSwipe = snapshot != null && lastMsg.swipes.length > snapshot.lastSwipeCount;
+            if (lastSwipeIdx >= 0 && (isPlaceholderOutput(lastMsg.swipes[lastSwipeIdx]) || attemptAddedSwipe)) {
+                routerLog('Removing failed swipe slot before retry');
                 lastMsg.swipes.pop();
                 if (Array.isArray(lastMsg.swipe_info)) lastMsg.swipe_info.pop();
                 const restoredIdx = Math.max(0, lastMsg.swipes.length - 1);
@@ -808,10 +833,15 @@ async function triggerRetry() {
                 clearAttemptCleanly();
             }
         } else {
-            // Fresh generation that produced an empty bot message - safe to remove
-            // the whole placeholder and let /trigger generate a clean new one.
-            if (lastMsg && !lastMsg.is_user && isPlaceholderOutput(lastMsg.mes)) {
-                routerLog('Removing empty ghost message before retry');
+            // Fresh generation that produced a failed bot message - remove it so
+            // /trigger can generate a clean replacement instead of a second message.
+            // Pop it when the body is a textbook placeholder OR when this attempt is
+            // what appended the trailing bot message (chat grew past the pre-generation
+            // snapshot): API-error / timeout / reasoning-only failures leave a non-empty
+            // but unusable body that must still be cleared to avoid a duplicate.
+            const attemptAppendedMessage = snapshot != null && ctx.chat.length > snapshot.chatLength;
+            if (lastMsg && !lastMsg.is_user && (isPlaceholderOutput(lastMsg.mes) || attemptAppendedMessage)) {
+                routerLog('Removing failed ghost message before retry');
                 ctx.chat.pop();
                 const msgBlocks = document.querySelectorAll('.mes');
                 if (msgBlocks.length > 0) {
@@ -834,6 +864,7 @@ async function triggerRetry() {
     } catch (err) {
         console.error(`[${WT_ROUTER_MODULE_NAME}] Retry failed:`, err);
     } finally {
+        retrySnapshot = null;
         setTimeout(() => { isRetrying = false; }, 1000);
     }
 }
@@ -929,7 +960,9 @@ function onMessageReceivedForRouter() {
 function onGenerationStopped() {
     if (!settings?.enabled) return;
     clearGenerationTimeout();
-    if (isRetrying || !currentlySelectedModel) return;
+    // A stop that Router itself triggered to clear a stalled generation before a
+    // retry is not a user stop: let failCurrentAttempt keep the snapshot and reroll.
+    if (isRetrying || routerInitiatedStop || !currentlySelectedModel) return;
 
     // GENERATION_STOPPED only fires when something actually stopped the generation
     // (user clicked stop, pressed Esc, closed the tab mid-gen, etc). Router used to
