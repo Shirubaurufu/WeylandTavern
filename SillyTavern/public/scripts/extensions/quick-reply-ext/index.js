@@ -902,10 +902,6 @@ async function RosterSB(charName) {
         const mcyIsFreshman = getLocalVariable("MCY") === "Freshman";
         const startingMonth = getLocalVariable("StartingMonth");
 
-        if (charName === "Mirror Weyland") {
-            await quickReplyApi.executeQuickReply("WeylandUni", "Mirror");
-            return;
-        }
         setLocalVariable("WeylandSetting", strings.rsbWeyS, true);
         if (charName === "Weybot") {
             if (getLocalVariable("StartingYear") === "Freshman") {
@@ -1111,8 +1107,12 @@ Dated Nix at start of Freshman, but ended getting dumped.`, true);
         setLocalVariable("LENS", strings.rsbLENS, true);
         setLocalVariable("OKSA", strings.rsbOKSA, true);
         setLocalVariable("MONTE", strings.rsbMONTE, true);
-        setLocalVariable("BRIET", strings.rsbBRIET);
-        setLocalVariable("TORY", strings.rsbTORY);
+        setLocalVariable("BRIET", strings.rsbBRIET, true);
+        setLocalVariable("TORY", strings.rsbTORY, true);
+		
+		if (charName === "Mirror Weyland") {
+		    await quickReplyApi.executeQuickReply("WeylandUni", "Mirror");
+		}
 
         DebugLog(`[P] RosterSB: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
     } catch (error) {
