@@ -1277,7 +1277,7 @@ async function CostumeChangeBot(charMessage, charName) {
             setLocalVariable("CostmSave", "Phone");
             await setCostume("Phone");
             DebugLog(`Costume set to: Phone`);
-        } else if (/Weybot|Mirror Weyland|Kinsband Manor/.test(charName)) {
+        } else if (/Weybot|Mirror Weyland|Kinsbane Manor/.test(charName)) {
             await OpenWorldCostumes(charName, charMessage);
             openWorld = true;
         } else {
@@ -2350,6 +2350,9 @@ async function XXX(charName) {
         } else {
             setLocalVariable("ThoughtSet", "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]");
         }
+        if (/Weybot|Mirror Weyland|Kinsbane Manor/.test(charName)) {
+			setLocalVariable("ExpAltShow", "true");
+		}
         switch (pc) {
             default:
                 setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
