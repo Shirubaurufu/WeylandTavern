@@ -129,18 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "nurse",
-                "patient",
-                "medicine",
-                "care",
-                "appendicitis",
-                "appendectomy",
-                "wristband",
-                "monitor",
-                "call light",
-                "radio"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -546,7 +535,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 124,
+            "displayIndex": 125,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -803,7 +792,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 118,
+            "displayIndex": 119,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -877,6 +866,108 @@
             "matchCreatorNotes": false,
             "ignoreBudget": false,
             "triggers": []
+        },
+        "16": {
+            "uid": 16,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Sofya Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (cream blouse and ivory trousers)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Sofya",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 118,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Sofya"
+                ],
+                "tags": [
+                    "5ee96709-4dac-4e47-84ef-0a0a89d6a555"
+                ]
+            }
+        },
+        "17": {
+            "uid": 17,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Tawny Outfit Codes",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (cream sweater and brown skirt)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [XX] - No other code matches",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 4,
+            "position": 0,
+            "disable": false,
+            "ignoreBudget": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "matchPersonaDescription": false,
+            "matchCharacterDescription": false,
+            "matchCharacterPersonality": false,
+            "matchCharacterDepthPrompt": false,
+            "matchScenario": false,
+            "matchCreatorNotes": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "Tawny",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "triggers": [],
+            "displayIndex": 118,
+            "characterFilter": {
+                "isExclude": false,
+                "names": [
+                    "Tawny"
+                ],
+                "tags": [
+                    "4da46ac7-d4bf-4857-8642-127a73cee3fc"
+                ]
+            }
         },
         "18": {
             "uid": 18,
@@ -2107,7 +2198,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 126,
+            "displayIndex": 128,
             "characterFilter": {
                 "isExclude": false,
                 "names": [],
@@ -2146,7 +2237,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 119,
+            "displayIndex": 120,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2248,7 +2339,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 120,
+            "displayIndex": 121,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -2358,7 +2449,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 121,
+            "displayIndex": 122,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3605,7 +3696,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 122,
+            "displayIndex": 123,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -3831,7 +3922,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 123,
+            "displayIndex": 124,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5036,7 +5127,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 125,
+            "displayIndex": 127,
             "characterFilter": {
                 "isExclude": false,
                 "names": [
@@ -5187,7 +5278,7 @@
             "sticky": 0,
             "cooldown": 0,
             "delay": 0,
-            "displayIndex": 127,
+            "displayIndex": 129,
             "ignoreBudget": false,
             "triggers": [],
             "characterFilter": {
@@ -5291,7 +5382,7 @@
             "cooldown": 0,
             "delay": 0,
             "triggers": [],
-            "displayIndex": 124,
+            "displayIndex": 126,
             "characterFilter": {
                 "isExclude": false,
                 "names": [

@@ -1109,6 +1109,8 @@ Dated Nix at start of Freshman, but ended getting dumped.`, true);
         setLocalVariable("MONTE", strings.rsbMONTE, true);
         setLocalVariable("BRIET", strings.rsbBRIET, true);
         setLocalVariable("TORY", strings.rsbTORY, true);
+        setLocalVariable("ELOW", strings.rsbELOW, true);
+        setLocalVariable("BRAM", strings.rsbBRAM, true);
 		
 		if (charName === "Mirror Weyland") {
 		    await quickReplyApi.executeQuickReply("WeylandUni", "Mirror");
@@ -1178,6 +1180,18 @@ async function CharPer(charName) {
                     deleteLocalVariable("HannahV");
                 }
                 break;
+            case "Yue-Lin": {
+                // Third greeting uses an alternate personality
+                if (getFirstMessage("char")?.swipe_id === 2) {
+                    const config = charPer.get("Yue-Lin");
+                    if (config !== undefined) {
+                        setLocalVariable("M!ku", config.vars["M!kuAlt"]);
+                    }
+                    DebugLog(`[P] CharPer: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+                    return;
+                }
+                break;
+            }
         }
 
         //Standard
@@ -2351,8 +2365,8 @@ async function XXX(charName) {
             setLocalVariable("ThoughtSet", "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]");
         }
         if (/Weybot|Mirror Weyland|Kinsbane Manor/.test(charName)) {
-			setLocalVariable("ExpAltShow", "true");
-		}
+            setLocalVariable("ExpAltShow", "true");
+        }
         switch (pc) {
             default:
                 setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
