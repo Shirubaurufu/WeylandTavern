@@ -155,6 +155,19 @@
 }
 #wlm-settings-btn { font-size: 11.5px; }
 
+/* The model dropdown in the settings pane, matching the other field controls. */
+#wlm-set-model-select {
+    flex: 1;
+    min-width: 0;
+    background: rgba(8, 5, 7, 0.7);
+    border: 1px solid rgba(180, 38, 58, 0.3);
+    border-radius: 4px;
+    color: #f4e6ea;
+    padding: 4px 6px;
+    font-size: 11.5px;
+    cursor: pointer;
+}
+
 /* ── BODY LAYOUT ───────────────────────────────────── */
 
 #wlm-body {
@@ -181,16 +194,101 @@
     border-bottom: 1px solid rgba(180, 38, 58, 0.15);
 }
 
+/* Two stacked readouts: where the last memory ended / when the next is due, and
+   exactly which messages the next one will cover. Both rows keep their edit and
+   reset buttons hard right so the ✎ columns line up. */
 #wlm-progress-row {
     display: flex;
-    align-items: center;
-    gap: 6px;
+    flex-direction: column;
+    gap: 4px;
     padding-bottom: 8px;
     border-bottom: 1px solid rgba(180, 38, 58, 0.15);
     font-size: 11.5px;
     color: rgba(244, 230, 234, 0.65);
 }
-#wlm-progress-text { flex: 1; }
+.wlm-progress-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    /* The sidebar is narrow. The caption takes its own row (flex-basis 100%
+       below) so the numbers and their buttons get the full width underneath,
+       instead of the label squeezing the value into a two-line wrap. */
+    flex-wrap: wrap;
+    row-gap: 1px;
+}
+.wlm-progress-label {
+    flex: 0 0 100%;
+    color: rgba(244, 230, 234, 0.42);
+    text-transform: uppercase;
+    font-size: 9.5px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+.wlm-progress-slash { color: rgba(244, 230, 234, 0.3); }
+#wlm-last-ltm-text,
+#wlm-span-text {
+    font-family: 'JetBrains Mono', monospace;
+    color: rgba(244, 230, 234, 0.85);
+    white-space: nowrap;
+}
+/* Pushes the buttons to the right edge of whichever row they sit on. */
+#wlm-progress-text { flex: 1; font-family: 'JetBrains Mono', monospace; color: rgba(244, 230, 234, 0.85); }
+#wlm-span-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+#wlm-span-edit-fields { display: flex; align-items: center; gap: 4px; flex: 1; }
+#wlm-span-first, #wlm-span-last {
+    width: 60px;
+    background: rgba(8, 5, 7, 0.7);
+    border: 1px solid rgba(180, 38, 58, 0.3);
+    border-radius: 4px;
+    color: #f4e6ea;
+    padding: 2px 6px;
+    font-size: 11.5px;
+}
+#wlm-span-edit-btn, #wlm-span-reset-btn {
+    padding: 2px 7px;
+    font-size: 11px;
+}
+.wlm-span-warning {
+    color: #f0a23c;
+    font-size: 10.5px;
+    line-height: 1.35;
+    padding: 3px 6px;
+    background: rgba(240, 162, 60, 0.08);
+    border: 1px solid rgba(240, 162, 60, 0.25);
+    border-radius: 4px;
+}
+
+/* ── TITLEBAR MODEL CHIP ───────────────────────────── */
+/* Current LTM model, always visible next to the settings button so switching
+   models never requires opening the panel. */
+.wlm-model-chip-label {
+    color: rgba(244, 230, 234, 0.45);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+.wlm-model-chip-select {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(180, 38, 58, 0.1);
+    border: 1px solid rgba(180, 38, 58, 0.3);
+    border-radius: 4px;
+    color: #f4e6ea;
+    font-size: 10.5px;
+    padding: 2px 4px;
+    max-width: 190px;
+    cursor: pointer;
+}
+.wlm-model-chip-select:hover {
+    background: rgba(180, 38, 58, 0.2);
+}
+/* Inheriting the chat model rather than pinning one — read as a softer state. */
+.wlm-model-chip-select.wlm-model-chip-inherit {
+    opacity: 0.68;
+    font-style: italic;
+}
+
 #wlm-goal-input {
     width: 64px;
     background: rgba(8, 5, 7, 0.7);

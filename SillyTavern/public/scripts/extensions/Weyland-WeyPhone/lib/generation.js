@@ -1,4 +1,5 @@
 import { limitPhoneRequestMessages } from './requestBudget.js';
+import { withGeminiBypass } from './phonePromptPolicy.js';
 
 /**
  * Drops non-string / empty / whitespace-only sections and joins the rest with `sep`. The single
@@ -146,11 +147,26 @@ export function extractResponseText(result) {
 }
 
 /**
- * @param {{connectionProfileId: string}} settings WeyPhone settings
+ * Which Connection Profile a WeyPhone request goes through, in order of preference:
+ *   1. an explicit choice in WeyPhone settings
+ *   2. whatever SillyTavern currently has selected
+ *   3. the only profile that exists, if there is exactly one
+ *
+ * Step 3 exists because WeyPhone has no profile of its own by default and SillyTavern's
+ * active profile can silently become "" — at which point Sync threw "No Connection
+ * Profile available" even though the user had a perfectly good profile sitting right
+ * there. It deliberately does NOT guess when several profiles exist: picking the wrong
+ * provider is worse than a clear error, so that case still surfaces the message.
+ *
+ * @param {{connectionProfileId?: string}} settings WeyPhone settings
  * @param {string} activeProfileId extensionSettings.connectionManager.selectedProfile
+ * @param {{id: string}[]} [availableProfiles] extensionSettings.connectionManager.profiles
  */
-export function resolveProfileId(settings, activeProfileId) {
-    return settings.connectionProfileId || activeProfileId || '';
+export function resolveProfileId(settings, activeProfileId, availableProfiles = []) {
+    const explicit = settings.connectionProfileId || activeProfileId || '';
+    if (explicit) return explicit;
+    const profiles = Array.isArray(availableProfiles) ? availableProfiles : [];
+    return profiles.length === 1 ? (profiles[0]?.id || '') : '';
 }
 
 /**
@@ -173,5 +189,5 @@ export async function sendMessage({ sendRequest, profileId, messages }) {
     if (!profileId) {
         throw new Error('No Connection Profile available (none selected in WeyPhone settings and none active in SillyTavern)');
     }
-    return sendRequest(profileId, limitPhoneRequestMessages(messages));
+    return sendRequest(profileId, limitPhoneRequestMessages(withGeminiBypass(messages)));
 }

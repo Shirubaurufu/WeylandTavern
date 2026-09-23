@@ -172,7 +172,6 @@
     display: grid;
     gap: 8px;
     align-items: center;
-    min-width: 680px;
     padding: 8px 10px;
     background:
         linear-gradient(90deg, rgba(180, 38, 58, 0.03) 0%, rgba(180, 38, 58, 0.07) 100%);
@@ -183,12 +182,29 @@
     animation: wtr-fade-in-up 0.3s ease;
 }
 
+/* Fixed min-width was removed and the wide columns made flexible (minmax)
+   so rows fit the ~360px half-modal when the log panel is open, and phone
+   screens. Buttons and the status column stay fixed; only the name, weight
+   and timeout tracks compress under pressure. */
 .wtr-random-mode-row {
-    grid-template-columns: 42px minmax(240px, 1fr) 88px 20px 68px 32px 32px;
+    grid-template-columns: 42px minmax(0, 1fr) minmax(64px, 88px) 20px minmax(56px, 68px) 32px 32px;
 }
 
 .wtr-priority-mode-row {
-    grid-template-columns: 42px minmax(240px, 1fr) 58px 12px 68px 28px 28px 32px 32px;
+    grid-template-columns: 42px minmax(0, 1fr) minmax(40px, 58px) 12px minmax(56px, 68px) 28px 28px 32px 32px;
+}
+
+/* Explains why an enabled Random Hard Mode toggle isn't firing (wrong prompt
+   selected, or Hard Mode already pinned on manually). Amber, not red — nothing
+   is broken, the feature just has nothing to do. */
+.wtr-hardmode-note {
+    color: #f0a23c;
+    font-size: 10.5px;
+    line-height: 1.4;
+    padding: 5px 8px;
+    background: rgba(240, 162, 60, 0.08);
+    border: 1px solid rgba(240, 162, 60, 0.25);
+    border-radius: 5px;
 }
 
 .wtr-model-row:hover {
@@ -205,7 +221,9 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: #d8d8d8;
-    overflow-wrap: normal;
+    /* Provider model IDs are long single tokens ("org/model-name-405b...").
+       Without anywhere-wrapping they force the row wider than narrow panels. */
+    overflow-wrap: anywhere;
     word-break: normal;
     white-space: normal;
     line-height: 1.35;
@@ -304,13 +322,13 @@ select.wtr-text-input {
 }
 .wtr-text-input:hover, select.wtr-text-input:hover {
     border-color: rgba(180, 38, 58, 0.4);
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5);
 }
 .wtr-text-input:focus, select.wtr-text-input:focus {
     outline: none;
     border-color: rgba(180, 38, 58, 0.7);
     box-shadow: 0 0 0 2px rgba(180, 38, 58, 0.12);
-    background: rgba(0, 0, 0, 0.55);
+    background-color: rgba(0, 0, 0, 0.55);
 }
 .wtr-text-input::placeholder { color: #4a4a4a; font-style: italic; }
 
@@ -334,6 +352,19 @@ select.wtr-text-input {
     background-size: 5px 5px;
     background-repeat: no-repeat;
     padding-right: 24px;
+    transition: background-position 0.15s ease, background-color 0.15s ease,
+        border-color 0.15s ease, box-shadow 0.15s ease;
+}
+/* Keep both arrow halves together and move only through the right-hand gutter.
+   Background shorthands on hover/focus would reset their position to the left. */
+select.wtr-text-input:hover,
+select.wtr-text-input:focus {
+    background-position: calc(100% + 6px) 50%, calc(100% + 11px) 50%;
+}
+@media (prefers-reduced-motion: reduce) {
+    select.wtr-text-input {
+        transition: none;
+    }
 }
 select.wtr-text-input option {
     background: #14080d;

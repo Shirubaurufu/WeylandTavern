@@ -1521,6 +1521,30 @@ router.post('/bias', async function (request, response) {
 });
 
 
+/**
+ * Finds the first user turn that carries media (image/file/audio parts) but no
+ * usable text alongside it.
+ *
+ * Strict providers reject a multimodal turn with no prompt text, and the generic
+ * completion path hands `request.body.messages` straight to the upstream API - so
+ * without this check the user can resubmit the same doomed request over and over,
+ * each attempt costing them an upstream call (and, on metered backends, their
+ * allowance) for a guaranteed error.
+ *
+ * Only array-form content can be media-only; a plain string body is always text.
+ * @param {any[]} messages Chat completion messages
+ * @returns {number} Index of the offending message, or -1 when every turn is fine
+ */
+function findMediaOnlyUserMessage(messages) {
+    if (!Array.isArray(messages)) return -1;
+    return messages.findIndex(message => {
+        if (message?.role !== 'user' || !Array.isArray(message.content)) return false;
+        const hasMedia = message.content.some(part => part?.type && part.type !== 'text');
+        const hasText = message.content.some(part => part?.type === 'text' && String(part.text ?? '').trim() !== '');
+        return hasMedia && !hasText;
+    });
+}
+
 router.post('/generate', function (request, response) {
     if (!request.body) return response.status(400).send({ error: true });
 
@@ -1777,6 +1801,23 @@ router.post('/generate', function (request, response) {
         bodyParams['stop'] = request.body.stop;
     }
 
+    // Reject an image-without-text turn here rather than upstream. Text completion
+    // sources flatten everything to a prompt string, so this only applies to the
+    // chat-completion shape that actually forwards the message array as-is.
+    if (!isTextCompletion) {
+        const mediaOnlyIndex = findMediaOnlyUserMessage(request.body.messages);
+        if (mediaOnlyIndex !== -1) {
+            console.warn(`Blocked a media-only user message (index ${mediaOnlyIndex}) before it reached the provider.`);
+            return response.status(400).send({
+                error: {
+                    message: 'This message has an image or file attached but no text. Add a few words saying what you want done with it, then send again.',
+                    type: 'invalid_request_error',
+                    code: 'media_without_text',
+                },
+            });
+        }
+    }
+
     const textPrompt = isTextCompletion ? convertTextCompletionPrompt(request.body.messages) : '';
     const endpointUrl = isTextCompletion && request.body.chat_completion_source !== CHAT_COMPLETION_SOURCES.OPENROUTER ?
         `${apiUrl}/completions` :
@@ -1922,14 +1963,22 @@ router.post('/generate', function (request, response) {
             return;
         }
 
-        // Fallback to original behavior for other errors
+        // Fallback to original behavior for other errors. The upstream status is
+        // forwarded instead of being collapsed into a 200: a caller can only tell a
+        // provider outage from a malformed request if the status survives the hop,
+        // and Weyland Router's failover reads it to decide whether to reroll.
+        // The client handles both shapes - a non-ok response is parsed by
+        // tryParseStreamingError, which surfaces the same error.message toast.
         const message = errorData?.error?.message || errorResponse.statusText || 'Unknown error occurred';
-        const quota_error = errorResponse.status === 429;        
+        const quota_error = errorResponse.status === 429;
+        const status = Number.isInteger(errorResponse.status) && errorResponse.status >= 400 ? errorResponse.status : 500;
 
         if (!response.headersSent) {
-            response.send({ error: { message }, quota_error: quota_error });
+            response.status(status).send({ error: { message }, quota_error: quota_error });
         } else if (!response.writableEnded) {
-            response.write(errorResponse);
+            // Write the decoded body, not the Response object - the old form
+            // serialized to "[object Object]" on the wire.
+            response.write(responseText);
         } else {
             response.end();
         }

@@ -1,5 +1,5 @@
 import { MODULE_NAME, getSettings, resetSettings } from './lib/config.js';
-import { getRequestHeaders } from '../../../script.js';
+import { getRequestHeaders, showSwipeButtons } from '../../../script.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, applySpecialCase } from './lib/promptResolution.js';
 import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLorebookContactProfile, resolveWorldInfoTethered, resolveWorldInfoUntethered } from './lib/worldInfo.js';
 import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
@@ -40,7 +40,7 @@ import { initialState as calcInitialState, reduceKeypress } from './lib/calculat
 import { renderCalculatorScreen, renderCalculatorSettingsScreen, updateCalculatorDisplay } from './lib/ui/apps/calculator.js';
 import { createNote, getNotes, getNote, updateNote, deleteNote } from './lib/notesStorage.js';
 import { renderNotesScreen, renderNoteEditorScreen } from './lib/ui/apps/notes.js';
-import { renderComingSoonScreen } from './lib/ui/apps/comingSoon.js';
+import { createHostedRegistrar } from './lib/registrar.js';
 import { renderAppNamesScreen, renderCharacterWallpapersScreen, renderFolderWallpapersScreen, renderSettingsScreen, WALLPAPER_PRESETS } from './lib/ui/apps/settings.js';
 import { renderCommunityBooksScreen, renderCommunityPickScreen, renderCommunityDeleteScreen } from './lib/ui/apps/communityContacts.js';
 import { scanBookForCandidates, addCommunityContacts, getCommunityContacts, deleteCommunityContacts, communityLorebookNames, communityContactDirectoryEntry, communityPickableBookNames } from './lib/communityLorebook.js';
@@ -54,14 +54,34 @@ import { createWeyPhoneBackup, parseWeyPhoneBackup, restoreWeyPhoneBackup } from
 import { findMostRecentRpTime } from './lib/rpClock.js';
 import { getTier, appVisibleForTier } from './lib/tier.js';
 import { KRESSA_PALETTES, renderKressaSettingsScreen } from './lib/ui/apps/kressaSettings.js';
+import { renderDiscorgiSettingsScreen } from './lib/ui/apps/discorgiSettings.js';
+import { DISCORGI_CHANNELS } from './lib/discorgiChannels.js';
 import { renderPawXaiScreen } from './lib/ui/apps/pawxai.js';
+import { COPYCAT_PALETTES, renderUnderstudyScreen, renderUnderstudySettingsScreen, UNDERSTUDY_STATUS_LINES } from './lib/ui/apps/understudy.js';
+import {
+    UNDERSTUDY_SCOPES,
+    UNDERSTUDY_NARRATORS,
+    UNDERSTUDY_STRUCTURAL_VARS,
+    detectMessageModes as understudyDetectModes,
+    buildStageDirections as understudyBuildStageDirections,
+    splitMessage as understudySplitMessage,
+    joinMessage as understudyJoinMessage,
+    extractSpans as understudyExtractSpans,
+    spliceSpans as understudySpliceSpans,
+    parseSpanReplacements as understudyParseSpans,
+    cleanFullRewrite as understudyCleanFull,
+    buildUnderstudyMessages,
+} from './lib/understudy.js';
 import { PAWXAI_PALETTES, buildPawXaiMessages, deletePawXaiPrompt, findPawXaiSceneContext, normalizePawXaiSettings, parsePawXaiResponse, pawXaiSuffixEnabled, savePawXaiPrompt, togglePawXaiSuffix } from './lib/pawxai.js';
 import { renderOnboarding, clampOnboardingPage, ONBOARDING_PAGES } from './lib/ui/onboarding.js';
 import { renderAppHelpDialog, renderNoticeDialog } from './lib/ui/appHelp.js';
+import { createAppTutorial, shouldShowAppTutorial } from './lib/ui/appTutorials.js';
 import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster } from './lib/registrarLorebook.js';
 import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
 import { applyMienExpression, loadMienGallery, resolveMienCharacter, selectMienOutfit } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
+import { renderNarrativeSettingsScreen } from './lib/ui/apps/narrativeSettings.js';
+import { extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, mentalPresetValues, NARRATOR_OPTIONS, POV_OPTIONS, readNarrativeSnapshot } from './lib/narrativeSettings.js';
 import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, dedupeCapturedMessages, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './lib/roleplayMode.js';
 import { buildContactContextBlock, buildGroupContactContextBlock, buildPersonaContextBlock, resolveContactContext } from './lib/contactContext.js';
@@ -69,7 +89,7 @@ import { applySettingsPatch, createSettingsPatch, mergeWeyPhoneSettings, replace
 import { ravs } from '../quick-reply-ext/src/rav.js';
 import { charPer } from '../quick-reply-ext/src/charper.js';
 import { world_names } from '../../world-info.js';
-import { applyPhoneHardModePolicy } from './lib/phonePromptPolicy.js';
+import { applyPhoneHardModePolicy, stripAnalysisProcedure } from './lib/phonePromptPolicy.js';
 import { isGeneralMessagingContact } from './lib/contactVisibility.js';
 import { formatGenerationCooldown, generationAllowance, generationRateTier, recordGenerationRequest } from './lib/generationRateLimit.js';
 
@@ -94,8 +114,78 @@ const communityPickerState = { selectedBooks: new Set(), candidates: [], selecte
 let calcState = calcInitialState(); // session-only, like a real calculator
 let currentNoteId = null; // set when entering 'note-editor'
 let currentPawXaiTab = 'generate';
+let currentNarrativeTab = 'essentials';
+// Toggling a Storytelling Settings variable reruns a Quick Reply script, which can take several
+// seconds with nothing else on screen changing. This guards against a second click landing
+// mid-rebuild (which would read a stale "before" snapshot) while the busy spinner is showing.
+let narrativeActionPending = false;
 let currentPawXaiSavedCharacter = null;
 let pawxaiGenerating = false;
+// Understudy draft lives in module state, not settings: it is scratch work for one message
+// and must not survive a reload or follow the user into another chat.
+let understudyGenerating = false;
+let understudyDraft = '';
+let understudyError = '';
+let understudyApplied = false;
+let understudyTargetIndex = -1;
+// How many rewrites have been run against the CURRENT message. Resets when the target moves,
+// so a fresh reply starts at Copy 1 rather than continuing to climb forever.
+let understudyTake = 0;
+let understudyShowOriginal = false;
+let understudySection = 'stage';
+// The reading every take is derived from. Pinned when the target message changes, so
+// "Another take" always re-performs the ORIGINAL rather than rewriting the previous take
+// (which would drift further from the character with each pass).
+let understudySourceBody = '';
+// The reader's note for THIS message. Held in module state rather than read off the DOM at
+// send time, because the textarea is unmounted while a take is generating and must come back
+// with the note intact — it deliberately survives across takes on the same message.
+let understudyFeedback = '';
+// Immutable identity of the reading every piece of understudy state belongs to:
+// chat + message index + swipe. The index alone is not enough — swiping or regenerating the
+// last message leaves its index unchanged while replacing its content, so keying on the index
+// would leave the pinned source body describing a reading that is no longer on screen.
+let understudyTargetKey = '';
+// Which reading the note in the box was typed against. The note has to outlive a generation
+// (it guides every take on the same message) but must not follow the user to the next one, and
+// generation-time state cannot express that: by then the note has already been sent.
+let understudyFeedbackKey = '';
+// Last run, for debugging. Also mirrored to window.copycatDebug so the whole exchange can be
+// read from the console without shipping a UI for it.
+let understudyLastRun = null;
+
+/**
+ * The reasoning block from a raw model response, or ''.
+ *
+ * lib/understudy.js strips these before anything is used; this reads the same shapes back out
+ * for inspection. Kept local rather than exported from there, because that module's job is to
+ * destroy reasoning and it should not also be the place that preserves it.
+ *
+ * @param {string} responseText
+ * @returns {string}
+ */
+function understudyExtractReasoning(responseText) {
+    const text = String(responseText ?? '');
+    const closed = text.match(/<(?![^>]*\/)[^>]*(?:think|analysis)[^>]*>([\w\W]*?)<[^>]*\/[^>]*(?:think|analysis)[^>]*>/i);
+    if (closed) return closed[1].trim();
+    const open = text.match(/<(?![^>]*\/)[^>]*(?:think|analysis)[^>]*>([\w\W]*)$/i);
+    return open ? open[1].trim() : '';
+}
+// Which stored swipe the next take performs from. Null means "whatever the chat is showing".
+// Once a take is applied it becomes the displayed swipe, so without this the obvious next
+// action - hit Run again - would silently rewrite the rewrite and drift further each pass.
+let understudySourceSwipe = null;
+// The model that actually returned the current draft, which is not necessarily the configured
+// primary — a fallback retry would otherwise be recorded on the swipe under the wrong name.
+let understudyDraftModel = '';
+// Auto mode bookkeeping. lastIndex stops a message being processed twice — important
+// because applying a take mutates the message, and reprocessing it would compound.
+let understudyAutoLastIndex = -1;
+let understudyAutoCounter = 0;
+// Cycles the in-world status line while a rewrite is in flight. Safe to re-render on:
+// nothing on the generating screen holds user input.
+let understudyStatusIndex = 0;
+let understudyStatusTimer = null;
 let currentMienGallery = null;
 let currentMienIndex = 0;
 // Clock app state. currentClockTab picks the visible tab; the timer editor's draft is declared just
@@ -150,8 +240,8 @@ let mienFullscreen = false;
 let tetherPromptKeys = new Set();
 const phoneAppGeneratingIds = new Set(); // tracks which app keys currently have a generation in flight
 // Per-profile drill-down generations only (the unified sync has its own 4096 budget).
-const DEFAULT_PHONE_APP_MAX_TOKENS = 1024;
-const DEFAULT_PAWXAI_MAX_TOKENS = 4096;
+const DEFAULT_PHONE_APP_MAX_TOKENS = 8000;
+const DEFAULT_PAWXAI_MAX_TOKENS = 8000;
 
 // Phone-shell UI state — pure theater plus a couple of real switches. Session-scoped, resets on
 // reload. `locked` starts true so opening the phone always lands on the lock screen.
@@ -441,6 +531,11 @@ const contactLorebookState = {
     registrarContacts: [],
     communityBooks: new Map(),
 };
+const registrarApp = createHostedRegistrar(() => {
+    // Invalidate even when the managed book name is unchanged after an update/removal.
+    contactLorebookState.signature = '';
+    contactLorebookState.ready = false;
+});
 
 function contactLorebookSignature() {
     const settings = getSettings(SillyTavern.getContext().extensionSettings);
@@ -507,9 +602,12 @@ function maybeShowOnboarding() {
 // passed to ConnectionManagerRequestService.sendRequest's required maxTokens argument. 1024 is
 // still just a placeholder chosen to avoid visibly truncating conversational replies mid-
 // sentence — not a final tuned value; replace once a real user-facing setting exists.
-const DEFAULT_MAX_TOKENS = 1024;
+// Every WeyPhone reply cap is 8000 (Lucky, 2026-09-23). These are ceilings, not targets: each
+// app prompt still sets its own length. Thinking models (gemini-3.8-flash) spend hidden
+// reasoning out of the same budget, and a low cap is how a request comes back empty.
+const DEFAULT_MAX_TOKENS = 8000;
 // Memory entries are meant to be short (2-4 sentences) — a much smaller cap than regular replies.
-const DEFAULT_MEMORY_MAX_TOKENS = 256;
+const DEFAULT_MEMORY_MAX_TOKENS = 8000;
 
 /**
  * Resolves the character record generateReply/generateMemory need for a WeyPhone conversation —
@@ -571,6 +669,16 @@ function applyKressaPalette(panel, settings) {
     panel.dataset.kressaPalette = resolveKressaPaletteId(settings);
 }
 
+function resolveCopycatPaletteId(settings) {
+    return COPYCAT_PALETTES.some(palette => palette.id === settings.understudy?.palette)
+        ? settings.understudy.palette
+        : 'opening-night';
+}
+
+function applyCopycatPalette(panel, settings) {
+    panel.dataset.copycatPalette = resolveCopycatPaletteId(settings);
+}
+
 function resolvePawXaiPaletteId(settings) {
     return PAWXAI_PALETTES.some(palette => palette.id === settings.pawxai?.palette)
         ? settings.pawxai.palette
@@ -608,9 +716,20 @@ async function resolveCharacterPrompt(context, character, { lorebookContact = fa
         personalityText = applySpecialCase(character.name, basePersonality, {});
     }
 
+    // Beta bakes Hard Mode into its prompt at quick-reply-ext XXX() time instead of reading
+    // the Coach macro, so its raw teg has no Coach slot and the phone Hard Mode opt-ins
+    // (applyPhoneHardModePolicy keeps or strips that macro) would silently do nothing.
+    // Restore the slot where Beta used to carry it: directly ahead of the Welcome block,
+    // which is where Beta's teg now begins.
+    const systemPrompt = ravEntry === ravs.get('Beta Prompt')
+        ? `{{getglobalvar::Coach}}\n\n${ravEntry.teg}`
+        : ravEntry.teg;
+
+    // Phone requests never carry the analysis procedure (see stripAnalysisProcedure) - only the
+    // Coach/Hard Mode slot survives, and applyPhoneHardModePolicy decides whether it stays.
     return {
-        systemPrompt: ravEntry.teg,
-        postHistory,
+        systemPrompt: stripAnalysisProcedure(systemPrompt),
+        postHistory: stripAnalysisProcedure(postHistory),
         personalityText,
         descriptionText: character.description ?? '',
     };
@@ -958,7 +1077,7 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
         }
 
         const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-        const profileId = resolveProfileId(settings, activeProfileId);
+        const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
         // Same model precedence as texting: explicit Settings-app model (default minimax-m3)
         // > live main-chat model > the profile's own snapshot.
         const flavorModel = resolveModelOverride({
@@ -1012,14 +1131,17 @@ function runUnifiedRefresh() {
         trackingSet: phoneAppGeneratingIds,
         trackingKey: UNIFIED_SYNC_KEY,
         rerender: () => rerenderAfterSync(),
-        buildPromptText: async ({ context }) => {
+        buildPromptText: async ({ context, settings }) => {
             const directory = await ensureContactLorebooks(context);
             const importedRoster = directory.registrarContacts
                 .filter(contact => contact.profileText)
                 .map(registrarRosterEntry);
             const registrarGuests = sampleRegistrarRoster(importedRoster, 2);
             syncRoster = [...WEYLAND_ROSTER, ...registrarGuests];
-            return buildUnifiedPrompt({ registrarRoster: registrarGuests });
+            return buildUnifiedPrompt({
+                registrarRoster: registrarGuests,
+                excludedDiscorgiChannels: settings.discorgiExcludedChannels,
+            });
         },
         maxTokens: UNIFIED_REFRESH_MAX_TOKENS,
         commit: (rawText, { context, settings }) => {
@@ -1086,6 +1208,7 @@ function rerenderPhoneAppScreenIfVisible(appKey) {
         savedIds: savedIdSet(settings, appKey),
         generationAllowance: currentGenerationAllowance(context, settings),
         formatCooldown: formatGenerationCooldown,
+        discorgiExcludedChannels: settings.discorgiExcludedChannels,
     });
 }
 
@@ -1308,7 +1431,7 @@ async function generateMemory(conversationId, conversation, context, settings, o
         });
 
         const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-        const profileId = resolveProfileId({ connectionProfileId: conversation.memoryConnectionProfileId }, activeProfileId);
+        const profileId = resolveProfileId({ connectionProfileId: conversation.memoryConnectionProfileId }, activeProfileId, context.extensionSettings.connectionManager?.profiles);
         const result = await sendMemoryRequest({
             sendRequest: (id, msgs, model) => context.ConnectionManagerRequestService.sendRequest(
                 id, msgs, DEFAULT_MEMORY_MAX_TOKENS, undefined, model ? { model } : {},
@@ -1401,7 +1524,7 @@ async function generateGroupReply(conversationId, conversation, context, setting
         };
         const history = conversation.messages.slice(0, -1).map(message => ({ role: message.role, content: wire(message) }));
         const messages = buildMessages({ systemPromptText: substituted, history, userMessage: wire(conversation.messages.at(-1)) });
-        const profileId = resolveProfileId(settings, context.extensionSettings.connectionManager?.selectedProfile ?? '');
+        const profileId = resolveProfileId(settings, context.extensionSettings.connectionManager?.selectedProfile ?? '', context.extensionSettings.connectionManager?.profiles);
         const modelOverride = resolveModelOverride({ settingsModel: settings.textingModelOverride, liveModel: context.getChatCompletionModel?.() });
         const result = await sendMessage({
             sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(id, requestMessages, DEFAULT_MAX_TOKENS, undefined, modelOverride ? { model: modelOverride } : undefined),
@@ -1562,7 +1685,7 @@ async function generateReply(conversationId, conversation, context, settings) {
         });
 
         const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-        const profileId = resolveProfileId(settings, activeProfileId);
+        const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
         // Model precedence (see resolveModelOverride): the user's explicit Settings-app model
         // (default minimax-m3 — texting is a small generation, don't spend Sonnet on it)
         // beats the live main-chat model, which beats the profile's stale snapshot. Kressa is
@@ -2120,13 +2243,17 @@ async function runPawXaiGeneration() {
 
     const character = context.characters.find(candidate => candidate.name === source.characterName)
         ?? context.characters.find(candidate => candidate.name === context.name2);
-    const messages = buildPawXaiMessages({
-        source,
-        characterDescription: character?.description ?? '',
+    // Narrator cards (Weybot, Mirror Weyland) aren't people in the scene: their card is system
+    // instructions, not an appearance, so sending it as "character card visual context" only feeds
+    // the prompt writer noise. The scene's real characters come through the message text itself.
+    const isNarratorCard = /^(?:Weybot|Mirror Weyland)$/.test(character?.name ?? source.characterName ?? '');
+    const buildMessagesFor = requestSource => buildPawXaiMessages({
+        source: requestSource,
+        characterDescription: isNarratorCard ? '' : (character?.description ?? ''),
         settings: settings.pawxai,
     });
     const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-    const profileId = resolveProfileId(settings, activeProfileId);
+    const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
     const model = resolveModelOverride({
         settingsModel: settings.pawxai.modelOverride,
         liveModel: context.getChatCompletionModel?.() ?? '',
@@ -2140,19 +2267,52 @@ async function runPawXaiGeneration() {
             showGenerationCooldown(allowance);
             return;
         }
-        const response = await sendMessage({
-            sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(
-                id,
-                requestMessages,
-                DEFAULT_PAWXAI_MAX_TOKENS,
-                undefined,
-                model ? { model } : {},
-            ),
-            profileId,
-            messages,
-        });
-        const prompts = parsePawXaiResponse(extractResponseText(response), settings.pawxai.promptCount);
-        if (!prompts.length) throw new Error('The model did not return any usable prompts.');
+        const requestPrompts = async (requestModel, messages) => {
+            const response = await sendMessage({
+                sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(
+                    id,
+                    requestMessages,
+                    DEFAULT_PAWXAI_MAX_TOKENS,
+                    undefined,
+                    requestModel ? { model: requestModel } : {},
+                ),
+                profileId,
+                messages,
+            });
+            const parsed = parsePawXaiResponse(extractResponseText(response), settings.pawxai.promptCount);
+            if (!parsed.length) throw new Error('The model did not return any usable prompts.');
+            return parsed;
+        };
+        // Retry ladder. Gemini answers a request it refuses with an EMPTY response, which the
+        // backend reports as a 503 "provider returned an empty response" - and measured on real
+        // chats, what it refuses is usually the RECENT SCENE CONTEXT, not the target message: a
+        // Yue-Lin medical-emergency scene failed three times with context and succeeded (8 prompts)
+        // with the target message alone. So: (1) full request, (2) same model, target message only
+        // - the prompts are made from the target anyway, the context only disambiguates - then
+        // (3) PawXai's own fallback model, a setting that existed but was never read before.
+        // Unusable output (no <PROMPT> blocks) counts as a failure too, not just request errors.
+        const targetOnlySource = { ...source, omitContext: true };
+        const fallback = String(settings.pawxai.fallbackModel ?? '').trim();
+        const attempts = [
+            { label: 'full context', model, messages: buildMessagesFor(source) },
+            { label: 'target message only', model, messages: buildMessagesFor(targetOnlySource) },
+            ...(fallback && fallback !== model
+                ? [{ label: `fallback ${fallback}`, model: fallback, messages: buildMessagesFor(targetOnlySource) }]
+                : []),
+        ];
+        let prompts;
+        let lastError;
+        for (const attempt of attempts) {
+            try {
+                prompts = await requestPrompts(attempt.model, attempt.messages);
+                if (attempt !== attempts[0]) pushLogLine(`PawXai succeeded on retry (${attempt.label})`);
+                break;
+            } catch (error) {
+                lastError = error;
+                pushLogLine(`PawXai attempt failed (${attempt.label}): ${error.message}`);
+            }
+        }
+        if (!prompts) throw lastError;
         recordGenerationRequest(settings);
         settings.pawxai.lastRun = {
             characterName: source.characterName,
@@ -2169,6 +2329,793 @@ async function runPawXaiGeneration() {
     } finally {
         pawxaiGenerating = false;
         if (currentView === 'pawxai') renderPawXaiScreenNow();
+    }
+}
+
+// ---------------------------------------------------------------- Understudy
+//
+// Hands the last character reply to a second model and asks it to perform the character
+// better than the first one did. See lib/understudy.js for the header/footer protection and
+// span-splicing rules — everything safety-critical lives there and is unit tested.
+
+const DEFAULT_UNDERSTUDY_MAX_TOKENS = 8000;
+
+/** Index of the last non-system character message in the current chat, or -1. */
+function findUnderstudyTargetIndex(context) {
+    const chat = context.chat ?? [];
+    for (let i = chat.length - 1; i >= 0; i--) {
+        const message = chat[i];
+        if (!message || message.is_user || message.is_system) continue;
+        if (!String(message.mes ?? '').trim()) continue;
+        return i;
+    }
+    return -1;
+}
+
+/**
+ * The full character profile, same material the main model gets. `personality` on a Weyland
+ * card is a {{getvar}} shortcode that resolves to the big CharLD block, so it must be
+ * substituted rather than read raw — unresolved, it is literally the string "{{getvar::...}}".
+ */
+// Shared post-history boilerplate, by the variable that holds it. Almost every card's
+// post_history_instructions is `{{getvar::postrav}}` followed by a few lines of genuinely
+// character-specific instruction; postrav itself is ~2.1k chars of client protocol that tells
+// the model to run the WEYLAND RESPONSE ANALYSIS PROCEDURE from the main system prompt.
+//
+// Copycat does not send that procedure, so forwarding the reference actively harms the rewrite:
+// a model was observed reasoning "the standing rules say the six-section analysis runs first...
+// but I don't see the six-section analysis procedure defined at the top of the system prompt",
+// and spending its attention on a contradiction instead of the prose. Only the per-character
+// remainder is useful here, so the shared block is removed and the remainder kept.
+const SHARED_POST_HISTORY_VARS = ['postrav'];
+
+/**
+ * A character's OWN post-history instructions, with shared boilerplate removed.
+ *
+ * The macro is stripped from the raw text before substitution, so the shared block is never
+ * resolved at all; the fallback pass also subtracts it by value, for a card that pasted the
+ * boilerplate inline instead of referencing it.
+ *
+ * @param {object} character SillyTavern character record
+ * @param {(value: string) => string} substitute macro resolver
+ * @returns {string} the character-specific remainder, or ''
+ */
+function resolveCharacterPostHistory(character, substitute) {
+    const raw = String(character.data?.post_history_instructions ?? character.post_history_instructions ?? '');
+    if (!raw.trim()) return '';
+
+    let trimmed = raw;
+    for (const name of SHARED_POST_HISTORY_VARS) {
+        trimmed = trimmed.replace(new RegExp(`\\{\\{\\s*getvar\\s*::\\s*${name}\\s*\\}\\}`, 'gi'), '');
+    }
+
+    let resolved = substitute(trimmed);
+    for (const name of SHARED_POST_HISTORY_VARS) {
+        const shared = substitute(`{{getvar::${name}}}`);
+        // An unresolved macro comes back as its own source text, which is not boilerplate.
+        if (!shared || shared.startsWith('{{') || shared.length < 200) continue;
+        if (resolved.includes(shared)) resolved = resolved.split(shared).join('\n').trim();
+    }
+    return resolved.trim();
+}
+
+function resolveUnderstudyProfile(context, characterName) {
+    const character = context.characters?.find(candidate => candidate.name === characterName)
+        ?? context.characters?.find(candidate => candidate.name === context.name2);
+    if (!character) return '';
+    const substitute = (value) => {
+        const text = String(value ?? '').trim();
+        if (!text) return '';
+        try { return String(context.substituteParams?.(text) ?? text).trim(); } catch { return text; }
+    };
+    // Post-history instructions are where Weyland cards keep the behavioural rules that bind
+    // hardest: Yue-Lin's govern when Cantonese appears, that screen text must be SHOWN on its
+    // own line rather than described, and which words are banned about her body. The main model
+    // receives them after the chat history; a rewrite that never sees them will break rules the
+    // original was obeying. Only the character's OWN lines travel, never the shared boilerplate
+    // (see SHARED_POST_HISTORY_VARS). depth_prompt is the same kind of material and is included
+    // on the same grounds.
+    const postHistory = resolveCharacterPostHistory(character, substitute);
+    const depthPrompt = substitute(character.data?.extensions?.depth_prompt?.prompt ?? '');
+    const standingRules = [postHistory, depthPrompt].filter(Boolean).join('\n\n');
+
+    return [
+        substitute(character.description),
+        substitute(character.personality),
+        substitute(character.scenario),
+        standingRules
+            ? `STANDING RULES FOR THIS CHARACTER — these bind the rewrite exactly as they bound the original:\n\n${standingRules}`
+            : '',
+    ]
+        .filter(Boolean)
+        .join('\n\n');
+}
+
+/**
+ * Resolves the Weyland narrator persona text for a rewrite.
+ *
+ * The narrator personas live as GLOBAL variables (Default / Lucky / Lauren / Salem) written by
+ * the NewEntries quick reply, and the chat's active choice lives in the LOCAL var LocalNarrator
+ * (which holds the persona TEXT, not a name — that is why 'chat' reads the var rather than
+ * looking a name up). Everything is read live through substituteParams, so WeyPhone never keeps
+ * its own copy of prompt text that Lucky edits elsewhere.
+ *
+ * Returns '' whenever the var is missing or empty — a user without the Weyland quick replies
+ * loaded simply gets no modifier rather than an error.
+ *
+ * @param {object} context SillyTavern context
+ * @param {string} choice settings.understudy.narrator
+ * @returns {string} the persona text, or ''
+ */
+function resolveUnderstudyNarrator(context, choice) {
+    const pick = String(choice || 'off');
+    if (pick === 'off') return '';
+    const read = (macro) => {
+        try {
+            const value = String(context.substituteParams?.(macro) ?? '').trim();
+            // An unresolved macro comes back as its own source text; that is not a narrator.
+            return value.startsWith('{{') ? '' : value;
+        } catch { return ''; }
+    };
+    if (pick === 'chat') return read('{{getvar::LocalNarrator}}') || read('{{getglobalvar::Narrator}}');
+    if (!UNDERSTUDY_NARRATORS.some(narrator => narrator.key === pick)) return '';
+    return read(`{{getglobalvar::${pick}}}`);
+}
+
+/**
+ * Collects Weyland's live conditional prompt modifiers for a rewrite.
+ *
+ * All of them are global variables written by the Weyland quick replies and left EMPTY when the
+ * matching toggle is off, so this reads whatever is actually in force right now rather than
+ * WeyPhone keeping its own copy of any prompt text. An install without the Weyland quick
+ * replies resolves everything to '' and simply sends no modifiers.
+ *
+ * @param {object} context SillyTavern context
+ * @param {object} config settings.understudy
+ * @param {{header: string, footer: string}} target the message being performed
+ * @returns {string} the assembled block, or ''
+ */
+function resolveUnderstudyStageDirections(context, config, target) {
+    const read = (name) => {
+        try {
+            const value = String(context.substituteParams?.(`{{getglobalvar::${name}}}`) ?? '').trim();
+            // An unresolved macro comes back as its own source text, which is not a modifier.
+            return value.startsWith('{{') ? '' : value;
+        } catch { return ''; }
+    };
+
+    // Structural modifiers are never optional — a rewrite in the wrong language or the wrong
+    // POV is unusable no matter how well it is written.
+    const names = [...UNDERSTUDY_STRUCTURAL_VARS];
+    if (config.sendModes) names.push(...understudyDetectModes(target?.header, target?.footer));
+
+    return understudyBuildStageDirections(names.map(read));
+}
+
+/**
+ * Identity of one specific reading of one specific message.
+ *
+ * Any state derived from a message (the pinned source body, the draft, the note) is only valid
+ * while this string is unchanged. Chat id catches switching chats, index catches a different
+ * message, swipe id catches the same message being swiped or regenerated underneath us.
+ *
+ * @param {object} context SillyTavern context
+ * @param {number} index chat index
+ * @returns {string} the token, or '' when there is no such message
+ */
+function understudyIdentity(context, index) {
+    const message = context.chat?.[index];
+    if (!message) return '';
+    const swipeId = Number.isInteger(message.swipe_id) ? message.swipe_id : 0;
+    // The slot, plus a fingerprint of what is IN it. Chat/index/swipe alone miss an in-place
+    // edit: editing a message leaves all three unchanged while replacing the text the pinned
+    // source body and the draft were derived from.
+    const pick = understudyPickedReading(message);
+    const source = understudyReadings(message)[pick] ?? message.mes;
+    return `${understudySlot(context, index, swipeId)}@${pick}#${understudyHash(source)}`;
+}
+
+/** The slot half of an identity: which message, ignoring its content. */
+function understudySlot(context, index, swipeId) {
+    return `${context.chatId ?? ''}|${index}|${swipeId}`;
+}
+
+/** Everything in an identity except the content fingerprint. */
+function understudySlotOf(key) {
+    const cut = String(key ?? '').lastIndexOf('#');
+    return cut === -1 ? String(key ?? '') : key.slice(0, cut);
+}
+
+/**
+ * Cheap non-cryptographic fingerprint (FNV-1a). Only ever compared against another fingerprint
+ * of the same kind, so collision resistance beyond "different text differs" is not needed, and
+ * a full hash over a long message on every render would not be free.
+ * @param {string} text
+ * @returns {string}
+ */
+function understudyHash(text) {
+    const value = String(text ?? '');
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < value.length; i++) {
+        hash ^= value.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193);
+    }
+    return (hash >>> 0).toString(36);
+}
+
+// The chat index Copycat last rendered against. Everything per-message - the reading picker,
+// the draft, the director's note - belongs to THAT message and is meaningless once the scene
+// has moved on.
+let understudyRenderedIndex = -1;
+
+/**
+ * Drops per-message working state when the live target is no longer the message that state was
+ * built for.
+ *
+ * Without this the reading picker stayed pinned to, say, the 5th reroll of the previous reply,
+ * so a freshly generated message was presented as one more reading of the message the user had
+ * already answered - and the real new reply stayed invisible until they happened to step the
+ * picker onto it. Settings (scope, narrator, models) are untouched; only the work is cleared.
+ *
+ * @param {object} context SillyTavern context
+ * @returns {boolean} whether anything was cleared
+ */
+function syncUnderstudyToLiveTarget(context) {
+    const index = findUnderstudyTargetIndex(context);
+    if (index === understudyRenderedIndex) return false;
+    understudyRenderedIndex = index;
+    clearUnderstudyWorkingState();
+    return true;
+}
+
+/**
+ * Drops everything tied to one message: the pinned source, the draft, the note, the reading
+ * choice. Settings (scope, narrator, models, automation) are untouched, since those are the
+ * user's standing preferences rather than work in progress.
+ */
+function clearUnderstudyWorkingState() {
+    understudySourceSwipe = null;
+    understudySourceBody = '';
+    understudyTargetIndex = -1;
+    understudyTargetKey = '';
+    understudyDraft = '';
+    understudyDraftModel = '';
+    understudyTake = 0;
+    understudyShowOriginal = false;
+    understudyApplied = false;
+    understudyError = '';
+    understudyFeedback = '';
+    understudyFeedbackKey = '';
+}
+
+/**
+ * The Refresh button: re-point Copycat at whatever the newest character reply is now, and throw
+ * away anything left over from a previous one.
+ *
+ * Distinct from the automatic sync in one way that matters - it clears unconditionally. The
+ * automatic path only acts when the target index actually moved, which is right for a passive
+ * guard but wrong for a button: someone pressing Refresh is telling us the state on screen is
+ * wrong, and "the index looks the same to me" is not a useful answer to that.
+ */
+function refreshUnderstudyTarget() {
+    if (understudyGenerating) {
+        wpToast('info', 'Copycat is mid-rewrite. Let it finish first.', 'Copycat');
+        return;
+    }
+    const context = SillyTavern.getContext();
+    understudyRenderedIndex = findUnderstudyTargetIndex(context);
+    clearUnderstudyWorkingState();
+    understudySection = 'stage';
+    renderUnderstudyScreenNow();
+    wpToast('success', understudyRenderedIndex === -1
+        ? 'No character reply in this chat yet.'
+        : 'Copycat is now on the latest reply.', 'Copycat');
+}
+
+/** The N messages before the target, oldest first, for scene context. */
+function collectUnderstudyContext(context, targetIndex, count) {
+    const chat = context.chat ?? [];
+    const start = Math.max(0, targetIndex - Math.max(0, Number(count) || 0));
+    return chat.slice(start, targetIndex)
+        .filter(message => message && String(message.mes ?? '').trim())
+        .map(message => ({
+            name: message.is_user ? (context.name1 || 'User') : (message.name || context.name2 || 'Character'),
+            text: String(message.mes).trim(),
+        }));
+}
+
+/** Everything the screen needs about the message being rewritten. */
+function currentUnderstudyTarget(context, settings) {
+    const index = findUnderstudyTargetIndex(context);
+    if (index === -1) return null;
+    const message = context.chat[index];
+    const readings = understudyReadings(message);
+    const pick = understudyPickedReading(message);
+    const parts = understudySplitMessage(readings[pick] ?? message.mes);
+    const scope = UNDERSTUDY_SCOPES[settings.understudy?.scope] ?? UNDERSTUDY_SCOPES.full;
+    const spans = scope.spanKind ? understudyExtractSpans(parts.body, scope.spanKind) : [];
+    return {
+        index,
+        characterName: message.name || context.name2 || 'Character',
+        header: parts.header,
+        body: parts.body.trim(),
+        footer: parts.footer,
+        spanCount: spans.length,
+        readingIndex: pick,
+        readingCount: readings.length,
+        // Labelled in the picker so a take is distinguishable from the model's own reading.
+        readingIsTake: Boolean(message.swipe_info?.[pick]?.extra?.weyland_understudy
+            ?? (pick === message.swipe_id && message.extra?.weyland_understudy)),
+    };
+}
+
+/** Every stored reading of a message, oldest first. A never-swiped message has exactly one. */
+function understudyReadings(message) {
+    return Array.isArray(message?.swipes) && message.swipes.length
+        ? message.swipes
+        : [String(message?.mes ?? '')];
+}
+
+/** The reading the next take performs from: the explicit pick, else whatever the chat shows. */
+function understudyPickedReading(message) {
+    const readings = understudyReadings(message);
+    const shown = Number.isInteger(message?.swipe_id) ? message.swipe_id : 0;
+    const pick = understudySourceSwipe === null ? shown : understudySourceSwipe;
+    return Math.max(0, Math.min(readings.length - 1, pick));
+}
+
+/**
+ * Advances the in-world status line while a take is being performed.
+ *
+ * Deliberately swaps only the status line's text node rather than re-rendering the screen.
+ * A full render rebuilds the container's innerHTML, which made the whole app visibly flash
+ * every tick and restarted the stage-light sweep animation from zero each time. The full
+ * render is kept only as a fallback for the case where the stage element isn't on screen
+ * (a view change raced the timer), and that path re-checks the view before drawing.
+ */
+function startUnderstudyStatusTicker() {
+    stopUnderstudyStatusTicker();
+    understudyStatusIndex = Math.floor(Math.random() * UNDERSTUDY_STATUS_LINES.length);
+    understudyStatusTimer = setInterval(() => {
+        understudyStatusIndex++;
+        if (currentView !== 'understudy' || !understudyGenerating) return;
+        const line = UNDERSTUDY_STATUS_LINES[understudyStatusIndex % UNDERSTUDY_STATUS_LINES.length];
+        const node = document.querySelector('.wp-understudy-stage-text');
+        if (node) node.textContent = line;
+        else renderUnderstudyScreenNow();
+    }, 2600);
+}
+
+function stopUnderstudyStatusTicker() {
+    if (understudyStatusTimer !== null) {
+        clearInterval(understudyStatusTimer);
+        understudyStatusTimer = null;
+    }
+}
+
+/** A new target message means a new source: drop the old rewrite and reset the counter. */
+function resetUnderstudyForNewTarget(key, index, sourceBody) {
+    // Claim the index for the live-target sync as well, so a message event arriving while this
+    // rewrite is in flight cannot decide the scene moved and wipe the work underneath it.
+    understudyRenderedIndex = index;
+    if (key && key === understudyTargetKey) return;
+    understudyTargetKey = key;
+    understudyTargetIndex = index;
+    understudySourceBody = sourceBody ?? '';
+    understudyTake = 0;
+    understudySection = 'stage';
+    understudyDraft = '';
+    understudyError = '';
+    understudyApplied = false;
+    understudyShowOriginal = false;
+    understudyDraftModel = '';
+}
+
+function renderUnderstudyScreenNow() {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    // Before anything is drawn: if the scene moved on, the old work goes with it.
+    if (!understudyGenerating) syncUnderstudyToLiveTarget(context);
+    const target = currentUnderstudyTarget(context, settings);
+    // Retire the note when the message under it changes, so the box the user is looking at
+    // always shows the note that will actually be sent. Doing this on render rather than on
+    // generation is what lets a note survive "Another take" on the same message.
+    const shownKey = target ? understudyIdentity(context, target.index) : '';
+    // Slot comparison, deliberately: the note belongs to the MESSAGE, and the message's text
+    // changes under it whenever the formatter re-runs. Keying the note on content would make it
+    // disappear mid-typing for reasons the user cannot see.
+    if (understudySlotOf(shownKey) !== understudySlotOf(understudyFeedbackKey)) {
+        understudyFeedback = '';
+        understudyFeedbackKey = shownKey;
+    }
+    renderUnderstudyScreen(document.getElementById('wp-screen-body'), {
+        target,
+        draft: understudyDraft,
+        generating: understudyGenerating,
+        error: understudyError,
+        settings: settings.understudy,
+        applied: understudyApplied,
+        take: understudyTake,
+        showOriginal: understudyShowOriginal,
+        statusIndex: understudyStatusIndex,
+        feedback: understudyFeedback,
+        section: understudySection,
+    });
+}
+
+async function runUnderstudyRewrite() {
+    if (understudyGenerating) return;
+    if (phoneState.airplane) {
+        wpToast('warning', 'Turn off airplane mode before rewriting.', 'Copycat');
+        return;
+    }
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const config = settings.understudy;
+    const target = currentUnderstudyTarget(context, settings);
+    if (!target) {
+        wpToast('info', 'No character reply to rewrite yet.', 'Copycat');
+        return;
+    }
+
+    // Everything below belongs to this exact reading; if it is gone by the time the request
+    // comes back, the result is discarded rather than written into whatever replaced it.
+    const targetKey = understudyIdentity(context, target.index);
+    // Every take performs the same original reading, not the previous take.
+    const sourceBody = (targetKey === understudyTargetKey && understudySourceBody)
+        ? understudySourceBody
+        : target.body;
+    const scope = UNDERSTUDY_SCOPES[config.scope] ?? UNDERSTUDY_SCOPES.full;
+    const spans = scope.spanKind ? understudyExtractSpans(sourceBody, scope.spanKind) : [];
+    if (scope.spanKind && !spans.length) {
+        wpToast('info', 'Nothing matching that scope in this reply.', 'Copycat');
+        return;
+    }
+
+    const messages = buildUnderstudyMessages({
+        scope: config.scope,
+        characterName: target.characterName,
+        characterProfile: resolveUnderstudyProfile(context, target.characterName),
+        recentMessages: collectUnderstudyContext(context, target.index, config.contextMessages),
+        body: sourceBody,
+        spans,
+        userName: context.name1 || 'the user',
+        // Facts only. The header TEXT still never leaves the app; this is so the rewriter knows
+        // where and when the scene is rather than guessing from prose.
+        header: target.header,
+        narratorText: resolveUnderstudyNarrator(context, config.narrator),
+        stageDirections: resolveUnderstudyStageDirections(context, config, target),
+        feedback: understudySlotOf(understudyFeedbackKey) === understudySlotOf(targetKey) ? understudyFeedback : '',
+        allowDeviation: Boolean(config.allowDeviation),
+    });
+
+    const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
+    const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
+    const primaryModel = resolveModelOverride({
+        settingsModel: config.modelOverride,
+        liveModel: context.getChatCompletionModel?.() ?? '',
+    });
+
+    resetUnderstudyForNewTarget(targetKey, target.index, target.body);
+    understudyGenerating = true;
+    understudyError = '';
+    understudyApplied = false;
+    understudyShowOriginal = false;
+    startUnderstudyStatusTicker();
+    if (currentView === 'understudy') renderUnderstudyScreenNow();
+
+    const request = (model) => sendMessage({
+        sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(
+            id,
+            requestMessages,
+            DEFAULT_UNDERSTUDY_MAX_TOKENS,
+            undefined,
+            model ? { model } : {},
+        ),
+        profileId,
+        messages,
+    });
+
+    try {
+        let response;
+        // Recorded on the swipe, so diagnostics name the model that actually wrote the take
+        // rather than the one that was asked first.
+        let answeringModel = primaryModel;
+        try {
+            response = await request(primaryModel);
+        } catch (primaryError) {
+            // One retry on the fallback, same contract as the rest of the phone.
+            const fallback = String(config.fallbackModel ?? '').trim();
+            if (!fallback || fallback === primaryModel) throw primaryError;
+            pushLogLine('Copycat primary model failed, retrying on ' + fallback);
+            response = await request(fallback);
+            answeringModel = fallback;
+        }
+
+        // The request may have outlived its target: the user can change chat, swipe, or send
+        // another message while it is open. Writing the result into module state now would
+        // attach this take to whatever happens to be there instead.
+        const landedKey = understudyIdentity(SillyTavern.getContext(), target.index);
+        if (landedKey !== targetKey || understudyTargetKey !== targetKey) {
+            pushLogLine('Copycat discarded a rewrite whose message moved mid-generation');
+            return;
+        }
+
+        const text = extractResponseText(response);
+        if (!String(text ?? '').trim()) throw new Error('The model returned nothing.');
+
+        // Diagnostics. The reasoning block is normally destroyed on the way in, which is right
+        // for the chat and wrong for working out WHY a rewrite came back nearly identical to
+        // its source. Captured before anything is stripped.
+        understudyLastRun = {
+            at: new Date().toISOString(),
+            model: answeringModel,
+            scope: config.scope,
+            system: messages[0].content,
+            user: messages[1].content,
+            raw: text,
+            // Two places reasoning can hide: inline in the text as a <think> block, or in a
+            // sibling field on the response. extractResponseText only reads .content, so a
+            // provider that returns reasoning separately was being dropped silently.
+            reasoning: understudyExtractReasoning(text)
+                || String(response?.reasoning ?? response?.reasoning_content ?? '').trim(),
+            responseShape: response && typeof response === 'object' ? Object.keys(response) : typeof response,
+            response,
+            spansAsked: spans.length,
+        };
+        try {
+            window.copycatDebug = understudyLastRun;
+            window.copycatDebugHistory = (window.copycatDebugHistory ?? []).concat([understudyLastRun]).slice(-5);
+        } catch { /* no window in tests */ }
+
+        if (scope.spanKind) {
+            const replacements = understudyParseSpans(text);
+            if (!Object.keys(replacements).length) {
+                throw new Error('The model did not return any numbered fragments.');
+            }
+            understudyDraft = understudySpliceSpans(sourceBody, spans, replacements);
+            // How many fragments actually came back different. A scoped rewrite that returns
+            // its input verbatim is the failure mode worth naming out loud.
+            const unchanged = spans.filter((span, index) => {
+                const replacement = String(replacements[index + 1] ?? '').trim();
+                return !replacement || replacement === span.text.trim();
+            }).length;
+            understudyLastRun.unchangedSpans = unchanged;
+            if (unchanged) pushLogLine(`Copycat: ${unchanged} of ${spans.length} fragments came back unchanged`);
+        } else {
+            understudyDraft = understudyCleanFull(text);
+        }
+        if (!understudyDraft.trim()) throw new Error('The rewrite came back empty.');
+        understudyLastRun.final = understudyDraft;
+        // A whole-passage rewrite that matches its source is the same failure, one level up.
+        if (!scope.spanKind && understudyDraft.trim() === sourceBody.trim()) {
+            pushLogLine('Copycat: the rewrite came back identical to the original');
+        }
+        understudyDraftModel = answeringModel;
+        understudyTake++;
+        understudySection = 'stage';
+        pushLogLine('Copycat rewrote ' + target.characterName + "'s reply (" + scope.label + ')');
+    } catch (error) {
+        console.error('[WeyPhone] Understudy rewrite failed', error);
+        understudyError = error.message || 'Could not rewrite this reply.';
+        wpToast('error', understudyError, 'Copycat');
+    } finally {
+        understudyGenerating = false;
+        stopUnderstudyStatusTicker();
+        if (currentView === 'understudy') renderUnderstudyScreenNow();
+    }
+}
+
+/**
+ * Commits a take by appending it as a NEW SWIPE rather than overwriting the message.
+ *
+ * This is deliberately additive: the first model's reading stays at its original swipe and
+ * every take lands beside it, so the chat's own swipe arrows cycle between them and nothing
+ * the understudy does can destroy the original. The header/footer are taken from the stored
+ * message, never from the draft, so they cannot drift.
+ *
+ * @param {string} body the take's body text
+ * @param {number} index chat index of the message being performed
+ * @param {string} [expectedKey] identity the take was written for; the write is refused if the
+ *   message at `index` is no longer that reading (different chat, or swiped since)
+ * @returns {Promise<boolean>} whether the swipe landed
+ */
+async function appendUnderstudyTakeAsSwipe(body, index, expectedKey = '') {
+    const context = SillyTavern.getContext();
+    const message = context.chat?.[index];
+    if (!message || !String(body ?? '').trim()) return false;
+    // Last line of defence against a take landing on the wrong message. Cheap, and the failure
+    // it prevents — writing a swipe into someone else's chat — is not recoverable by the user.
+    if (expectedKey && understudyIdentity(context, index) !== expectedKey) {
+        pushLogLine('Copycat refused to apply a rewrite: the target message moved');
+        return false;
+    }
+
+    const original = understudySplitMessage(message.mes);
+    const rebuilt = understudyJoinMessage({ header: original.header, body: String(body).trim(), footer: original.footer });
+
+    // A message that has never been swiped has no swipes[] yet. Seed it with what is
+    // currently on screen so the existing reading keeps a slot of its own — otherwise the
+    // first take would become swipe 0 and the original would be gone.
+    if (!Array.isArray(message.swipes) || !message.swipes.length) {
+        message.swipes = [message.mes];
+        message.swipe_info = [{
+            send_date: message.send_date,
+            gen_started: message.gen_started,
+            gen_finished: message.gen_finished,
+            extra: structuredClone(message.extra ?? {}),
+        }];
+        message.swipe_id = 0;
+    }
+    if (!Array.isArray(message.swipe_info)) message.swipe_info = [];
+    // swipe_info must stay parallel to swipes or SillyTavern's swipe handling breaks.
+    while (message.swipe_info.length < message.swipes.length) message.swipe_info.push({});
+
+    const settings = getSettings(context.extensionSettings);
+    const extra = structuredClone(message.extra ?? {});
+    // Traceable the same way Weyland-Router tags the model that produced a message.
+    extra.weyland_understudy = true;
+    // The model that actually produced this text, which may be the fallback. Only falls back
+    // to the configured primary when the draft predates this bookkeeping.
+    extra.weyland_understudy_model = understudyDraftModel || resolveModelOverride({
+        settingsModel: settings.understudy.modelOverride,
+        liveModel: context.getChatCompletionModel?.() ?? '',
+    });
+
+    message.swipes.push(rebuilt);
+    message.swipe_info.push({
+        send_date: message.send_date,
+        gen_started: message.gen_started,
+        gen_finished: message.gen_finished,
+        extra,
+    });
+    message.swipe_id = message.swipes.length - 1;
+    message.mes = rebuilt;
+    message.extra = extra;
+
+    // Weyland-Formatter processes a message on MESSAGE_EDITED (formatMessage) — that pass is
+    // what strips leaked reasoning and turns the ¦¦ header into the styled header block.
+    // A take written straight into chat never went through it, so it rendered as raw text with
+    // an unformatted header. Emit the event the formatter already listens for, then redraw.
+    // Diagnostic, not decoration: a take that reaches the chat unformatted is hard to tell
+    // apart from one the formatter processed and left alone, and the difference decides whether
+    // the bug is here or in Weyland-Formatter. Recording whether mes actually changed makes the
+    // activity log answer that without a repro session.
+    const beforeFormat = message.mes;
+    try {
+        await context.eventSource.emit(context.eventTypes.MESSAGE_EDITED, index);
+    } catch (error) {
+        console.warn('[WeyPhone] Understudy: formatter pass failed', error);
+        pushLogLine('Copycat: the formatter pass threw - ' + (error?.message ?? error));
+    }
+    let afterFormat = context.chat?.[index]?.mes ?? '';
+    // Verify and retry once. The formatter normally repairs nested asterisk runs on the first
+    // pass ("*a *b* c*" becomes "*a ***b*** c*"), and it is idempotent, so a second pass over
+    // already-correct text costs nothing. But takes have reached the chat with raw asterisks
+    // intact, which means the pass occasionally does not run at all - and retrying is cheaper
+    // than shipping a message the user has to click Edit to fix.
+    if (afterFormat === beforeFormat && /\*/.test(afterFormat)) {
+        try {
+            await context.eventSource.emit(context.eventTypes.MESSAGE_EDITED, index);
+        } catch (error) {
+            console.warn('[WeyPhone] Copycat: formatter retry failed', error);
+        }
+        afterFormat = context.chat?.[index]?.mes ?? '';
+        // If the retry DID change it, the first pass genuinely did not run. Worth knowing.
+        let listeners = 'unknown';
+        try {
+            const bucket = context.eventSource?.events?.[context.eventTypes.MESSAGE_EDITED];
+            if (Array.isArray(bucket)) listeners = String(bucket.length);
+        } catch { /* emitter internals are not part of the public contract */ }
+        pushLogLine(`${afterFormat === beforeFormat
+            ? 'Copycat: formatter left the rewrite unchanged after two passes'
+            : 'Copycat: formatter needed a second pass (first one did not run)'}`
+            + ` [message ${index} of ${context.chat?.length ?? '?'}, MESSAGE_EDITED listeners: ${listeners}]`);
+    }
+    if (understudyLastRun) {
+        understudyLastRun.applied = {
+            index,
+            chatLength: context.chat?.length ?? 0,
+            messageName: context.chat?.[index]?.name ?? '',
+            beforeFormat,
+            afterFormat,
+            formatterChanged: afterFormat !== beforeFormat,
+        };
+    }
+    context.updateMessageBlock(index, message);
+    // updateMessageBlock redraws the text but not the swipe arrows or the "n/n" counter, so
+    // without this the chat still advertises the old swipe count and the arrows are stale.
+    try { showSwipeButtons(); } catch { /* not the last message, or swipes hidden - harmless */ }
+    // Keep the stored swipe in step with whatever the formatter rewrote mes to, or swiping
+    // away and back would restore the unformatted version.
+    if (Array.isArray(message.swipes) && message.swipes[message.swipe_id] !== undefined) {
+        message.swipes[message.swipe_id] = message.mes;
+    }
+    await context.saveChat();
+    return true;
+}
+
+async function applyUnderstudyDraft() {
+    const index = understudyTargetIndex;
+    const understudySourceReadingAtApply = understudyPickedReading(SillyTavern.getContext().chat?.[index] ?? {});
+    // understudyDraft is kept in step with the textarea on every keystroke, but read the live
+    // element first anyway: a paste or autofill can land without firing input in some browsers.
+    const edited = document.getElementById('wp-understudy-draft');
+    const body = String(edited?.value ?? understudyDraft).trim();
+    if (!body) return;
+
+    const landed = await appendUnderstudyTakeAsSwipe(body, index, understudyTargetKey);
+    if (!landed) {
+        wpToast('warning', 'That message has changed since this rewrite was written.', 'Copycat');
+        return;
+    }
+
+    understudyDraft = '';
+    understudyTake = 0;
+    understudyShowOriginal = false;
+    understudySection = 'stage';
+    understudyApplied = true;
+    // The take is now the displayed swipe. Pin the picker to the reading we just performed FROM,
+    // so hitting Run again produces another take of the original rather than a take of the take.
+    understudySourceSwipe = understudySourceReadingAtApply;
+    wpToast('success', 'Rewrite added as a swipe. Use the chat arrows to compare.', 'Copycat');
+    if (currentView === 'understudy') renderUnderstudyScreenNow();
+}
+
+/**
+ * Auto mode. Fires when a fresh character reply lands and the configured trigger says so.
+ *
+ * Mirrors Weyland-LTM's off / semi / full vocabulary: semi prepares a take and tells you,
+ * full also swipes it in. Guarded hard against reprocessing — applying a take mutates the
+ * message, so a second pass over the same index would perform a take of a take.
+ */
+async function maybeAutoUnderstudy() {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const config = settings.understudy;
+    if (!config || config.autoMode === 'off') return;
+    if (understudyGenerating) return;
+    if (phoneState.airplane) return;
+    if (!isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId })) return;
+
+    const index = findUnderstudyTargetIndex(context);
+    if (index === -1 || index === understudyAutoLastIndex) return;
+    // A take the understudy itself produced must never be re-performed.
+    if (context.chat[index]?.extra?.weyland_understudy) return;
+    understudyAutoLastIndex = index;
+
+    if (config.autoTrigger === 'always') {
+        // Every eligible reply. The guards above (already-generating, own-rewrite, same index)
+        // still apply, so this cannot compound on its own output.
+        understudyAutoCounter = 0;
+    } else if (config.autoTrigger === 'chance') {
+        const chance = Math.max(0, Math.min(100, Number(config.autoChance) || 0));
+        if (chance <= 0 || Math.random() * 100 >= chance) return;
+    } else {
+        understudyAutoCounter++;
+        const every = Math.max(1, Number(config.autoEvery) || 5);
+        if (understudyAutoCounter < every) return;
+        understudyAutoCounter = 0;
+    }
+
+    pushLogLine('Copycat auto-triggered on message ' + index);
+    await runUnderstudyRewrite();
+    if (!understudyDraft.trim()) return;
+
+    if (config.autoMode === 'full') {
+        // Announce only what actually happened: between the request starting and finishing the
+        // user may have changed chat or swiped, in which case the write is correctly refused.
+        const landed = await appendUnderstudyTakeAsSwipe(understudyDraft, understudyTargetIndex, understudyTargetKey);
+        if (!landed) {
+            pushLogLine('Copycat auto rewrite was dropped: the message moved mid-generation');
+            return;
+        }
+        understudyDraft = '';
+        understudyTake = 0;
+        wpToast('success', 'Copycat added a rewrite. Swipe to compare.', 'Copycat');
+        if (currentView === 'understudy') renderUnderstudyScreenNow();
+    } else {
+        wpToast('info', 'Copycat has a rewrite ready.', 'Copycat');
     }
 }
 
@@ -2423,6 +3370,33 @@ function handleScreenBodyClick(event) {
             appKey,
             appLabel: resolveAppLabel(settings, appKey),
         });
+        return;
+    }
+    // In-app header controls that replaced the shared app bar's buttons for these apps.
+    if (event.target.closest('[data-kressa-open-settings]')) {
+        showScreen('kressa-settings');
+        return;
+    }
+    if (event.target.closest('[data-discorgi-open-settings]')) {
+        showScreen('discorgi-settings');
+        return;
+    }
+    if (event.target.closest('[data-discorgi-action="all"]')) {
+        const context = SillyTavern.getContext();
+        getSettings(context.extensionSettings).discorgiExcludedChannels = [];
+        queueWeyPhoneSave(context);
+        showScreen('discorgi-settings');
+        return;
+    }
+    const narrativeTab = event.target.closest('[data-narrative-tab]');
+    if (narrativeTab) {
+        currentNarrativeTab = narrativeTab.dataset.narrativeTab;
+        renderNarrativeScreenNow();
+        return;
+    }
+    const narrativeAction = event.target.closest('[data-narrative-action]');
+    if (narrativeAction) {
+        void handleNarrativeAction(narrativeAction);
         return;
     }
     // --- Settings app controls ---
@@ -2976,6 +3950,76 @@ function handleScreenBodyClick(event) {
         wpToast('success', 'Latest character message checked.', 'PawXai');
         return;
     }
+    // Edits-panel choice buttons. They replace the old dropdowns, so they write the same
+    // settings keys and redraw in place - the blurb under the row is derived from the value.
+    const copycatChoice = event.target.closest('[data-copycat-choice]');
+    if (copycatChoice) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const key = copycatChoice.dataset.copycatChoice === 'scope' ? 'scope' : 'narrator';
+        settings.understudy[key] = String(copycatChoice.dataset.value ?? '');
+        queueWeyPhoneSave(context);
+        renderUnderstudyScreenNow();
+        return;
+    }
+    const copycatNav = event.target.closest('[data-copycat-view]');
+    if (copycatNav) {
+        const next = copycatNav.dataset.copycatView;
+        if (next === 'settings') {
+            showScreen('understudy-settings');
+        } else {
+            understudySection = next === 'edits' ? 'edits' : 'stage';
+            showScreen('understudy');
+        }
+        return;
+    }
+    if (event.target.closest('#wp-understudy-refresh')) {
+        refreshUnderstudyTarget();
+        return;
+    }
+    if (event.target.closest('#wp-understudy-run')) {
+        runUnderstudyRewrite();
+        return;
+    }
+    if (event.target.closest('#wp-understudy-apply')) {
+        applyUnderstudyDraft();
+        return;
+    }
+    if (event.target.closest('#wp-understudy-tab-original')) {
+        understudyShowOriginal = true;
+        renderUnderstudyScreenNow();
+        return;
+    }
+    if (event.target.closest('#wp-understudy-tab-take')) {
+        understudyShowOriginal = false;
+        renderUnderstudyScreenNow();
+        return;
+    }
+    const readingStep = event.target.closest('#wp-understudy-reading-prev, #wp-understudy-reading-next');
+    if (readingStep) {
+        const context = SillyTavern.getContext();
+        const message = context.chat?.[findUnderstudyTargetIndex(context)];
+        if (message) {
+            const readings = understudyReadings(message);
+            const delta = readingStep.id === 'wp-understudy-reading-next' ? 1 : -1;
+            understudySourceSwipe = Math.max(0, Math.min(readings.length - 1, understudyPickedReading(message) + delta));
+            // Changing the source invalidates any draft written from the previous one.
+            understudyDraft = '';
+            understudyTake = 0;
+            understudyShowOriginal = false;
+            understudyApplied = false;
+            renderUnderstudyScreenNow();
+        }
+        return;
+    }
+    if (event.target.closest('#wp-understudy-discard')) {
+        understudyDraft = '';
+        understudyError = '';
+        understudyApplied = false;
+        understudyShowOriginal = false;
+        renderUnderstudyScreenNow();
+        return;
+    }
     if (event.target.closest('#wp-pawxai-generate')) {
         runPawXaiGeneration();
         return;
@@ -3388,6 +4432,18 @@ function handleScreenBodyClick(event) {
         showScreen('kressa-settings');
         return;
     }
+    const copycatPaletteBtn = event.target.closest('.wp-copycat-palette-button');
+    if (copycatPaletteBtn) {
+        const palette = COPYCAT_PALETTES.find(option => option.id === copycatPaletteBtn.dataset.palette);
+        if (!palette) return;
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        settings.understudy.palette = palette.id;
+        queueWeyPhoneSave(context);
+        applyCopycatPalette(document.getElementById('wp-panel'), settings);
+        showScreen('understudy-settings');
+        return;
+    }
     const pawxaiPaletteBtn = event.target.closest('.wp-pawxai-palette-button');
     if (pawxaiPaletteBtn) {
         const palette = PAWXAI_PALETTES.find(option => option.id === pawxaiPaletteBtn.dataset.palette);
@@ -3534,7 +4590,49 @@ function handleTetherContextRangeInput(target) {
     return true;
 }
 
+/**
+ * Stage-screen controls. Kept out of handleScreenBodyChange's settings tables because these two
+ * live on the main screen: the note is per-message scratch state that is never persisted, and
+ * the deviation switch writes straight to settings without redrawing (a redraw mid-typing would
+ * drop focus and, for the note, the caret).
+ */
+function handleUnderstudyStageInput(event) {
+    if (event.target?.id === 'wp-understudy-draft') {
+        // The draft textarea is re-created by every render of this screen, so the edit has to
+        // live in module state rather than in the DOM or the next render discards it.
+        understudyDraft = String(event.target.value ?? '');
+        return true;
+    }
+    if (event.target?.id === 'wp-understudy-feedback') {
+        understudyFeedback = String(event.target.value ?? '');
+        const noteContext = SillyTavern.getContext();
+        understudyFeedbackKey = understudyIdentity(noteContext, findUnderstudyTargetIndex(noteContext));
+        return true;
+    }
+    if (event.target?.id === 'wp-understudy-deviate') {
+        const context = SillyTavern.getContext();
+        getSettings(context.extensionSettings).understudy.allowDeviation = Boolean(event.target.checked);
+        queueWeyPhoneSave(context);
+        return true;
+    }
+    return false;
+}
+
 function handleScreenBodyChange(event) {
+    if (handleUnderstudyStageInput(event)) return;
+    // Model dropdowns write into the text input they name and let that input's own
+    // change handler do the saving — same contract as the quick-fill buttons, so
+    // the field stays the single source of truth and remains hand-editable for ids
+    // the live connection doesn't advertise.
+    const modelSelectEl = event.target.closest?.('.wp-model-select');
+    if (modelSelectEl) {
+        const input = document.getElementById(modelSelectEl.dataset.inputId);
+        if (input) {
+            input.value = modelSelectEl.value;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        return;
+    }
     if (applyTimerFieldFromEvent(event.target)) return;
     // Alarm recurrence change re-renders the editor so the kind-specific fields swap in.
     if (event.target.classList?.contains('wp-alarm-field') && event.target.dataset.field === 'kind') {
@@ -3629,6 +4727,7 @@ function handleScreenBodyChange(event) {
     }
     const pawxaiSettingFields = {
         'wp-pawxai-model': ['modelOverride', 'string'],
+        'wp-pawxai-fallback': ['fallbackModel', 'string'],
         'wp-pawxai-count': ['promptCount', 'number'],
         'wp-pawxai-count-quick': ['promptCount', 'number'],
         'wp-pawxai-focus': ['focus', 'string'],
@@ -3724,6 +4823,50 @@ function handleScreenBodyChange(event) {
         queueWeyPhoneSave(context);
         return;
     }
+    // Fallback models and the connection-profile pin: same shape as the primary
+    // model handlers directly above, one settings key each.
+    // Understudy's own settings live under settings.understudy rather than at the top level.
+    const understudySettingFields = {
+        'wp-understudy-model': 'modelOverride',
+        'wp-understudy-fallback': 'fallbackModel',
+        'wp-understudy-narrator': 'narrator',
+        'wp-understudy-modes': 'sendModes',
+        'wp-understudy-scope': 'scope',
+        'wp-understudy-context': 'contextMessages',
+        'wp-understudy-automode': 'autoMode',
+        'wp-understudy-autotrigger': 'autoTrigger',
+        'wp-understudy-autoevery': 'autoEvery',
+        'wp-understudy-autochance': 'autoChance',
+    };
+    if (understudySettingFields[event.target.id]) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const key = understudySettingFields[event.target.id];
+        const numericBounds = { contextMessages: [0, 10], autoEvery: [1, 50], autoChance: [1, 100] };
+        const bounds = numericBounds[key];
+        if (event.target.type === 'checkbox') settings.understudy[key] = Boolean(event.target.checked);
+        else if (bounds) settings.understudy[key] = Math.max(bounds[0], Math.min(bounds[1], Number(event.target.value) || bounds[0]));
+        else settings.understudy[key] = String(event.target.value ?? '').trim();
+        queueWeyPhoneSave(context);
+        // A new automatic cadence should start counting fresh, not inherit the old tally.
+        if (key === 'autoMode' || key === 'autoTrigger' || key === 'autoEvery') understudyAutoCounter = 0;
+        // These selectors change which other fields are shown, so redraw the screen.
+        if (['scope', 'narrator', 'modelOverride', 'autoMode', 'autoTrigger'].includes(key)) showScreen('understudy-settings');
+        return;
+    }
+    const simpleSettingSelects = {
+        'wp-settings-fallback': 'fallbackModelOverride',
+        'wp-settings-texting-fallback': 'textingFallbackModel',
+        'wp-kressa-fallback': 'kressaFallbackModel',
+        'wp-settings-profile': 'connectionProfileId',
+    };
+    if (simpleSettingSelects[event.target.id]) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        settings[simpleSettingSelects[event.target.id]] = event.target.value.trim();
+        queueWeyPhoneSave(context);
+        return;
+    }
     if (event.target.id === 'wp-settings-hard-mode') {
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
@@ -3743,6 +4886,22 @@ function handleScreenBodyChange(event) {
         const settings = getSettings(context.extensionSettings);
         settings.kressaHardModeEnabled = event.target.checked;
         queueWeyPhoneSave(context);
+        return;
+    }
+    // Discorgi channel rotation. Rebuilt from the whole directory each time (rather than pushing /
+    // splicing) so stale or unknown names in an old saved list are dropped as a side effect. The
+    // screen re-renders so the last checked channel locks and the count stays accurate.
+    if (event.target.matches?.('[data-discorgi-channel]')) {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        const excluded = new Set(settings.discorgiExcludedChannels ?? []);
+        if (event.target.checked) excluded.delete(event.target.dataset.discorgiChannel);
+        else excluded.add(event.target.dataset.discorgiChannel);
+        const next = DISCORGI_CHANNELS.map(channel => channel.name).filter(name => excluded.has(name));
+        // Never let every channel be switched off - a Sync always needs somewhere to post.
+        if (next.length < DISCORGI_CHANNELS.length) settings.discorgiExcludedChannels = next;
+        queueWeyPhoneSave(context);
+        showScreen('discorgi-settings');
         return;
     }
     // Contact page "Prior history?" toggle — sets the per-character default for NEW threads.
@@ -3799,11 +4958,14 @@ function helpAppKeyForView(view, settings) {
     if (view === 'housing') return 'housing';
     if (view === 'clock' || view === 'timer-editor' || view === 'alarm-editor' || view === 'clock-picker') return 'clock';
     if (view === 'pawxai') return 'pawxai';
+    if (view === 'understudy' || view === 'understudy-settings') return 'understudy';
     if (view === 'mien') return 'mien';
+    if (view === 'narrative') return 'narrative';
     if (view === 'settings-app' || view === 'app-names' || view === 'character-wallpapers' ||
         view === 'community-contacts-books' || view === 'community-contacts-pick' || view === 'community-contacts-delete') return 'settings';
     if (view === 'kressa-settings') return 'kressa';
-    if (view === 'registrar-coming-soon') return 'registrar';
+    if (view === 'discorgi-settings') return 'chat';
+    if (view === 'registrar') return 'registrar';
     return null;
 }
 
@@ -4455,7 +5617,219 @@ function previewSound(url) {
     try { previewAudio = new Audio(url); previewAudio.play().catch(() => { /* blocked/bad url */ }); } catch { /* ignore */ }
 }
 
+let appTutorial;
+function openAppTutorial(appKey, replay = false) {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    if (!replay && !shouldShowAppTutorial(settings, appKey)) return;
+    appTutorial ??= createAppTutorial({
+        panel: document.getElementById('wp-panel'),
+        prepareStep(key, step) {
+            if (key === 'registrar') registrarApp.showTutorialStep(step);
+            else if (key === 'mien') {
+                mienFullscreen = false;
+                renderMienScreenNow();
+            }
+            else if (key === 'pawxai') {
+                currentPawXaiTab = step === 'saved' ? 'saved' : ['settings', 'ingredients'].includes(step) ? 'settings' : 'generate';
+                currentPawXaiSavedCharacter = null;
+                renderPawXaiScreenNow();
+            }
+            else {
+                understudySection = step === 'instincts' ? 'edits' : 'stage';
+                if (currentView !== 'understudy') showScreen('understudy');
+                else renderUnderstudyScreenNow();
+            }
+        },
+        onClose(key) { if (key === 'registrar') registrarApp.closeTutorial(); },
+        onFinish(key) {
+            const latestContext = SillyTavern.getContext();
+            const latest = getSettings(latestContext.extensionSettings);
+            latest.ui.appTutorials = { ...latest.ui.appTutorials, [key]: 1 };
+            queueWeyPhoneSave(latestContext);
+        },
+    });
+    appTutorial.open(appKey);
+}
+
+function narrativeQuickReplyScript() {
+    return String(globalThis.quickReplyApi?.getQrByLabel?.('Weyland', 'NarrativeSettings')?.message ?? '');
+}
+
+async function runWeylandQuickReply(label) {
+    if (typeof globalThis.executeQuickReplyByName !== 'function') {
+        throw new Error('Weyland Quick Replies are not ready.');
+    }
+    return globalThis.executeQuickReplyByName(`Weyland.${label}`);
+}
+
+async function rebuildNarrativePrompts(...labels) {
+    for (const label of labels) await runWeylandQuickReply(label);
+}
+
+function narrativeSnapshot(context = SillyTavern.getContext()) {
+    return readNarrativeSnapshot({
+        getGlobal: key => context.variables?.global?.get(key),
+        getLocal: key => context.variables?.local?.get(key),
+        hasChat: Boolean(context.chatId),
+    });
+}
+
+function renderNarrativeScreenNow() {
+    const context = SillyTavern.getContext();
+    renderNarrativeSettingsScreen(document.getElementById('wp-screen-body'), {
+        snapshot: narrativeSnapshot(context),
+        tab: currentNarrativeTab,
+    });
+}
+
+async function handleNarrativeAction(button) {
+    // Rebuilding the underlying prompt Quick Replies can take several seconds with the screen
+    // otherwise static — ignore a stray second click rather than let it race the first with a
+    // stale "before" snapshot, and give the clicked control an immediate spinner so a tap doesn't
+    // read as having done nothing for that whole stretch.
+    if (narrativeActionPending) return;
+    narrativeActionPending = true;
+    button.classList.add('wp-narrative-busy');
+    button.disabled = true;
+
+    const action = button.dataset.narrativeAction;
+    const value = button.dataset.value ?? '';
+    const variable = button.dataset.variable ?? '';
+    const context = SillyTavern.getContext();
+    const global = context.variables?.global;
+    const local = context.variables?.local;
+    const before = narrativeSnapshot(context);
+    const script = narrativeQuickReplyScript();
+
+    try {
+        if (action === 'school-year') {
+            await runWeylandQuickReply('School Year');
+        } else if (action === 'legacy-menu') {
+            await runWeylandQuickReply('NarrativeSettings');
+        } else if (action === 'set-prompt') {
+            global.set('PromptChoice', value);
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'toggle-hard') {
+            const next = !before.hardMode;
+            const coach = next ? extractHardModeDirective(script) : extractHardModeOffDirective(script);
+            if (!coach) throw new Error('The canonical Hard Mode text could not be found in Storytelling Settings.');
+            if (next && !['Current Prompt', 'Beta Prompt'].includes(before.prompt)) global.set('PromptChoice', 'Current Prompt');
+            global.set('HardToggle', next ? 'On' : 'Off');
+            global.set('Coach', coach);
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'toggle-analysis') {
+            global.set('AnalysisToggle', before.analysisEnabled ? 'Disabled' : 'Enabled');
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'toggle-gemini-bypass') {
+            global.set('GeminiBypassToggle', before.geminiBypass ? 'Disabled' : 'Enabled');
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'set-global-narrator') {
+            const option = NARRATOR_OPTIONS.find(item => item.id === value);
+            if (!option) return;
+            const narratorPrompt = global.get(option.globalKey);
+            if (!String(narratorPrompt ?? '').trim()) throw new Error(`The ${option.label} narrator prompt is not available.`);
+            global.set('Narrator', narratorPrompt);
+            if (!before.localNarratorOverride && before.hasChat) local.set('LocalNarrator', narratorPrompt);
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'set-local-narrator') {
+            const option = NARRATOR_OPTIONS.find(item => item.id === value);
+            if (!option || !before.hasChat) return;
+            const narratorPrompt = global.get(option.globalKey);
+            if (!String(narratorPrompt ?? '').trim()) throw new Error(`The ${option.label} narrator prompt is not available.`);
+            local.set('LocalNarrator', narratorPrompt);
+            local.set('LocalN', `- Set to ${option.id}`);
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'reset-local-narrator') {
+            if (!before.hasChat) return;
+            local.set('LocalN', '');
+            local.set('LocalNarrator', global.get('Narrator'));
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'set-thinking') {
+            global.set('ThinkingFramework', value);
+            await rebuildNarrativePrompts('Framework');
+        } else if (action === 'save-language') {
+            const language = String(document.getElementById('wp-narrative-language')?.value ?? '').trim() || 'English';
+            const directive = language.toLowerCase() === 'english' ? '' : extractLanguageDirective(script, language);
+            if (language.toLowerCase() !== 'english' && !directive) throw new Error('The canonical language prompt could not be found in Storytelling Settings.');
+            global.set('LanguageChoice', language);
+            global.set('Language', directive);
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'reset-language') {
+            global.set('LanguageChoice', 'English');
+            global.set('Language', '');
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'toggle-mode') {
+            const next = before.modes[variable] ? 'Disabled' : 'Enabled';
+            if (variable === 'ClothingTrack') {
+                const directive = next === 'Enabled' ? extractClothingDirective(script) : '';
+                if (next === 'Enabled' && !directive) throw new Error('The canonical clothing prompt could not be found in Storytelling Settings.');
+                global.set(variable, next);
+                global.set('ClothingTracker', directive);
+                await rebuildNarrativePrompts('XXX');
+            } else if (variable === 'HTML!') {
+                global.set(variable, next);
+                await rebuildNarrativePrompts('Framework');
+            } else {
+                global.set(variable, next);
+                await rebuildNarrativePrompts('NewEntries');
+            }
+        } else if (action === 'toggle-mental') {
+            global.set(variable, before.mental[variable] ? 'Disabled' : 'Enabled');
+            await rebuildNarrativePrompts('Framework', 'XXX');
+        } else if (action === 'mental-preset') {
+            for (const [key, setting] of Object.entries(mentalPresetValues(value))) global.set(key, setting);
+            await rebuildNarrativePrompts('Framework', 'XXX');
+        } else if (action === 'set-global-pov') {
+            const option = POV_OPTIONS.find(item => item.type === value);
+            if (!option) return;
+            const directive = extractPovDirective(script, option.id);
+            if (!directive) throw new Error('The canonical POV text could not be found in Storytelling Settings.');
+            global.set('RPPOV', directive);
+            global.set('POVType', option.type);
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'set-local-pov') {
+            if (!before.hasChat) return;
+            const option = POV_OPTIONS.find(item => item.id === value);
+            const directive = option && extractPovDirective(script, option.id);
+            if (!option || !directive) throw new Error('The canonical POV text could not be found in Storytelling Settings.');
+            local.set('RPPOVLocal', directive);
+            local.set('RPPOVLocalSet', option.id);
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'reset-local-pov') {
+            if (!before.hasChat) return;
+            local.set('RPPOVLocalSet', '');
+            local.set('RPPOVLocal', global.get('RPPOV'));
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'set-focus') {
+            if (!FOCUS_OPTIONS.some(item => item.id === value)) return;
+            global.set('Focus', value);
+            await rebuildNarrativePrompts('FocusTypes');
+        } else if (action === 'toggle-command-visibility') {
+            const hidden = !before.commandsHidden;
+            global.set('oochide1', hidden ? '<p style="display: none !important;">' : '<div class="mes_instruction">');
+            global.set('oochide2', hidden ? '</p>' : '</div>');
+            global.set('commandhide1', hidden ? '<p style="display: none;">' : '<div class="mes_command">');
+            global.set('commandhide2', hidden ? '</p>' : '</div>');
+            await context.executeSlashCommands?.('/chat-reload');
+        } else {
+            return;
+        }
+        if (!['school-year', 'legacy-menu'].includes(action)) wpToast('success', 'Storytelling settings updated.');
+    } catch (error) {
+        console.error('[WeyPhone] Narrative settings update failed:', error);
+        wpToast('error', error?.message || 'Could not update Storytelling Settings.');
+    } finally {
+        narrativeActionPending = false;
+        // A full re-render replaces this button's markup outright, so there's nothing to manually
+        // un-busy on the success path — this only matters if the screen was navigated away from
+        // mid-rebuild, in which case the stale button (now off-screen) is left alone.
+        if (currentView === 'narrative') renderNarrativeScreenNow();
+    }
+}
+
 function showScreen(view) {
+    appTutorial?.navigate(view);
     currentView = view;
     if (view !== 'mien') mienFullscreen = false;
     // Navigating anywhere (including re-entering the same conversation) exits select mode —
@@ -4498,8 +5872,12 @@ function showScreen(view) {
         : (view === 'notes' || view === 'note-editor') ? 'notes'
         : (view === 'clock' || view === 'timer-editor' || view === 'alarm-editor' || view === 'clock-alert' || view === 'clock-picker') ? 'clock'
         : view === 'pawxai' ? 'pawxai'
+        : (view === 'understudy' || view === 'understudy-settings') ? 'understudy'
         : view === 'mien' ? 'mien'
-        : view === 'registrar-coming-soon' ? 'registrar'
+        : view === 'registrar' ? 'registrar'
+        : view === 'narrative' ? 'narrative'
+        : view === 'housing' ? 'housing'
+        : view === 'discorgi-settings' ? 'chat'
         : null;
     panel.style.setProperty('--wp-app-accent', getApp(accentApp)?.accent ?? '#AA3F3F');
     // Per-app visual identity hook — CSS scopes fonts/palettes on [data-app] (see style.css's
@@ -4509,8 +5887,10 @@ function showScreen(view) {
     delete panel.dataset.kressaPalette;
     delete panel.dataset.pawxaiPalette;
     delete panel.dataset.calculatorPalette;
+    delete panel.dataset.copycatPalette;
     if (accentApp === 'pawxai') applyPawXaiPalette(panel, settings);
     if (accentApp === 'calculator') panel.dataset.calculatorPalette = settings.calculatorPalette ?? 'graphite';
+    if (accentApp === 'understudy') applyCopycatPalette(panel, settings);
 
     if (view === 'home') {
         title.textContent = 'Home';
@@ -4640,6 +6020,13 @@ function showScreen(view) {
         return;
     }
 
+    if (view === 'narrative') {
+        title.textContent = resolveAppLabel(settings, 'narrative');
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderNarrativeScreenNow();
+        return;
+    }
+
     if (view === 'community-contacts-books') {
         title.textContent = 'Community Contacts';
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
@@ -4675,8 +6062,13 @@ function showScreen(view) {
         title.textContent = resolveAppLabel(settings, 'housing');
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
         renderHousingScreen(screenBody, { registrarEnabled: settings.housingRegistrarEnabled });
-        const registrarCheckbox = document.getElementById('wp-registrar-checkbox');
-        if (registrarCheckbox) registrarCheckbox.checked = Boolean(settings.housingRegistrarEnabled);
+        return;
+    }
+
+    if (view === 'discorgi-settings') {
+        title.textContent = `${resolveAppLabel(settings, 'chat')} Channels`;
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderDiscorgiSettingsScreen(screenBody, { excludedChannels: settings.discorgiExcludedChannels });
         return;
     }
 
@@ -4707,13 +6099,11 @@ function showScreen(view) {
         return;
     }
 
-    if (view === 'registrar-coming-soon') {
+    if (view === 'registrar') {
         title.textContent = resolveAppLabel(settings, 'registrar');
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
-        renderComingSoonScreen(screenBody, {
-            label: resolveAppLabel(settings, 'registrar'),
-            note: 'The Weyland Registrar is on its way to WeyPhone.',
-        });
+        registrarApp.mount(screenBody);
+        openAppTutorial('registrar');
         return;
     }
 
@@ -4781,6 +6171,25 @@ function showScreen(view) {
         title.textContent = resolveAppLabel(settings, 'pawxai');
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
         renderPawXaiScreenNow();
+        openAppTutorial('pawxai');
+        return;
+    }
+
+    if (view === 'understudy') {
+        title.textContent = resolveAppLabel(settings, 'understudy');
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderUnderstudyScreenNow();
+        openAppTutorial('understudy');
+        return;
+    }
+
+    if (view === 'understudy-settings') {
+        title.textContent = 'Copycat Settings';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderUnderstudySettingsScreen(screenBody, {
+            settings: settings.understudy,
+            currentLiveModel: context.getChatCompletionModel?.() ?? '',
+        });
         return;
     }
 
@@ -4797,6 +6206,7 @@ function showScreen(view) {
         }
         renderMienScreenNow();
         if (!mienLoading && !currentMienGallery && !mienError) void refreshMienGallery();
+        openAppTutorial('mien');
         return;
     }
 
@@ -5879,7 +7289,9 @@ function initPanel() {
         if (phoneState.locked) setDimmed(true);
     });
     const goBack = () => {
-        if (currentView === 'twitter-following') {
+        if (currentView === 'registrar' && registrarApp.back()) {
+            return;
+        } else if (currentView === 'twitter-following') {
             showScreen('twitter-feed');
         } else if (currentView === 'twitter-profile') {
             showScreen('twitter-following');
@@ -5910,8 +7322,12 @@ function initPanel() {
             } else {
                 showScreen(pickerReturn || 'clock'); // back = cancel, keep the current value
             }
+        } else if (currentView === 'understudy-settings') {
+            showScreen('understudy');
         } else if (currentView === 'kressa-settings') {
             showScreen('conversation');
+        } else if (currentView === 'discorgi-settings') {
+            showScreen('phone-app');
         } else if (currentView === 'app-names') {
             showScreen('settings-app');
         } else if (currentView === 'character-wallpapers') {
@@ -5976,20 +7392,36 @@ function initPanel() {
         });
     });
     helpDialog.addEventListener('click', event => {
+        const replay = event.target.closest('[data-app-tutorial]');
+        if (replay) {
+            helpDialog.hidden = true;
+            helpDialog.innerHTML = '';
+            openAppTutorial(replay.dataset.appTutorial, true);
+            return;
+        }
         if (!event.target.closest('[data-help-close]')) return;
         helpDialog.hidden = true;
         helpDialog.innerHTML = '';
     });
     document.getElementById('wp-kressa-settings-button').addEventListener('click', () => showScreen('kressa-settings'));
-    // Housing's registrar toggle rebuilds the iframe with/without ?registrar=true (the map page
-    // gates the whole feature on that query param).
-    document.getElementById('wp-registrar-checkbox').addEventListener('change', (event) => {
+    // Housing's map header doubles as its app bar (see renderHousingScreen), so its help button and
+    // Registrar toggle report here. Only the live Housing iframe is trusted: same origin AND the
+    // message must come from that exact frame's window. The Registrar choice is saved without
+    // reloading the frame - the map has already applied it.
+    window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin || event.data?.source !== 'weyphone-housing') return;
+        const frame = document.querySelector('#wp-screen-body .wp-housing-iframe');
+        if (currentView !== 'housing' || !frame || event.source !== frame.contentWindow) return;
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
-        settings.housingRegistrarEnabled = event.target.checked;
-        queueWeyPhoneSave(context);
-        if (currentView === 'housing') {
-            renderHousingScreen(document.getElementById('wp-screen-body'), { registrarEnabled: settings.housingRegistrarEnabled });
+        if (event.data.type === 'help') {
+            renderAppHelpDialog(document.getElementById('wp-app-help'), {
+                appKey: 'housing',
+                appLabel: resolveAppLabel(settings, 'housing'),
+            });
+        } else if (event.data.type === 'community' && typeof event.data.on === 'boolean') {
+            settings.housingRegistrarEnabled = event.data.on;
+            queueWeyPhoneSave(context);
         }
     });
 
@@ -6000,6 +7432,13 @@ function initPanel() {
 
     // Status bar: tap toggles the notification shade (drag-down also works, below).
     const statusBar = document.getElementById('wp-status-bar');
+    // Reserve the actual clock row, including safe areas and text scaling, in the shade.
+    const statusSizeObserver = new ResizeObserver(() => {
+        if (statusBar.offsetHeight > 0) {
+            document.getElementById('wp-panel').style.setProperty('--wp-status-height', `${statusBar.offsetHeight}px`);
+        }
+    });
+    statusSizeObserver.observe(statusBar);
     statusBar.addEventListener('click', () => {
         if (!phoneState.locked) setShadeOpen(!phoneState.shadeOpen);
     });
@@ -6039,6 +7478,42 @@ function initPanel() {
     // their tick. Real-time timers are unaffected (they run off the wall-clock interval).
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpTimersOnMessage);
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpAlarmsOnMessage);
+    context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, () => { void maybeAutoUnderstudy(); });
+    // Copycat's screen is static markup: without these it keeps showing whichever message was
+    // current when it was last drawn, which is how a new reply came to look like one more
+    // reroll of the previous one. MESSAGE_SENT clears too - sending a reply is the clearest
+    // possible signal that the message being worked on is finished with.
+    for (const eventName of ['MESSAGE_SENT', 'MESSAGE_RECEIVED', 'MESSAGE_SWIPED', 'MESSAGE_DELETED']) {
+        const eventType = context.eventTypes[eventName];
+        if (!eventType) continue;
+        context.eventSource.on(eventType, () => {
+            if (understudyGenerating) return;
+            // Nothing on screen and nothing half-finished means there is nothing to invalidate,
+            // so a user who never opens Copycat pays one boolean per message instead of a chat
+            // scan. Opening the app re-syncs through renderUnderstudyScreenNow anyway.
+            const hasWorkToInvalidate = currentView === 'understudy'
+                || understudyDraft || understudyTargetKey || understudyFeedback || understudySourceSwipe !== null;
+            if (!hasWorkToInvalidate) return;
+            const moved = syncUnderstudyToLiveTarget(SillyTavern.getContext());
+            if (currentView === 'understudy' && (moved || eventName === 'MESSAGE_SWIPED')) renderUnderstudyScreenNow();
+        });
+    }
+    context.eventSource.on(context.eventTypes.CHAT_CHANGED, () => {
+        // A new chat is a new run: nothing carries over.
+        understudyAutoLastIndex = -1;
+        understudyAutoCounter = 0;
+        understudyTargetIndex = -1;
+        understudyTargetKey = '';
+        understudyDraftModel = '';
+        understudySourceBody = '';
+        understudySourceSwipe = null;
+        understudyFeedback = '';
+        understudyFeedbackKey = '';
+        understudyDraft = '';
+        understudyTake = 0;
+        understudySection = 'stage';
+        understudyRenderedIndex = -1;
+    });
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateRoleplayModeAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, refreshHomeScreenAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateLoreWarningAvailability);
@@ -6079,6 +7554,7 @@ function initPanel() {
     });
     // Notes editor — persist on every keystroke (saveSettingsDebounced coalesces the writes).
     screenBody.addEventListener('input', (event) => {
+        if (handleUnderstudyStageInput(event)) return;
         if (handleWallpaperRangeInput(event.target)) return;
         if (handleTetherContextRangeInput(event.target)) return;
         if (applyTimerFieldFromEvent(event.target)) return;

@@ -148,6 +148,16 @@ export const APP_REGISTRY = [
         inGrid: true,
     },
     {
+        key: 'understudy',
+        requiresRoleplay: true,
+        label: 'Copycat',
+        icon: `${ASSET_BASE_URL}/weyphone_copycat.webp`,
+        accent: '#FF747C',
+        syncSection: null,
+        screenView: 'understudy',
+        inGrid: true,
+    },
+    {
         key: 'mien',
         requiresRoleplay: true,
         label: 'Mien',
@@ -161,7 +171,7 @@ export const APP_REGISTRY = [
         key: 'weybooru',
         requiresRoleplay: false,
         label: 'Weybooru',
-        icon: `${ASSET_BASE_URL}/weyphone_weybooru.png`,
+        icon: `${ASSET_BASE_URL}/weyphone_weybooru.webp`,
         accent: '#D9A441',
         syncSection: null,
         screenView: 'weybooru', // routed specially in index.js — opens the Weybooru Viewer overlay via its /weybooru slash command, not an in-phone screen
@@ -171,10 +181,10 @@ export const APP_REGISTRY = [
         key: 'registrar',
         requiresRoleplay: false,
         label: 'Registrar',
-        icon: `${ASSET_BASE_URL}/weyphone_registrar.png`,
+        icon: `${ASSET_BASE_URL}/weyphone_registrar.webp`,
         accent: '#7A2323',
         syncSection: null,
-        screenView: 'registrar-coming-soon', // a static "coming soon" placeholder screen — no functionality yet
+        screenView: 'registrar', // community subbots, locations and curated collections
         inGrid: true,
     },
     {
@@ -186,6 +196,16 @@ export const APP_REGISTRY = [
         accent: '#9A9A9A',
         syncSection: null,
         screenView: 'settings-app',
+        inGrid: true,
+    },
+    {
+        key: 'narrative',
+        requiresRoleplay: false,
+        label: 'PromptOS',
+        icon: `${ASSET_BASE_URL}/weyphone_promptos_control-core.webp`,
+        accent: '#c23b3b',
+        syncSection: null,
+        screenView: 'narrative',
         inGrid: true,
     },
 ];

@@ -9,10 +9,10 @@ import { getRoleplayMode, isValidRoleplayMode, ROLEPLAY_MODES } from './roleplay
  * @property {number} lastActive
  */
 
-// HelixMind exposes both under these exact ids; "-thinking" enables reasoning effort, the plain
-// id doesn't. Defaults chosen by the operator: thinking GLM 4.7 as primary, Gemini 3 Pro as the
-// fallback if the primary model call fails.
-export const DEFAULT_MEMORY_PRIMARY_MODEL = 'glm-4.7-thinking';
+// Defaults chosen by the operator: Gemini 3.8 Flash as primary, Gemini 3.1 Pro as the fallback
+// if the primary model call fails. (GLM 4.7 was the original primary; retired below once Helix
+// lost access to it.)
+export const DEFAULT_MEMORY_PRIMARY_MODEL = 'gemini-3.8-flash';
 export const DEFAULT_MEMORY_BACKUP_MODEL = 'gemini-3.1-pro-preview';
 
 // HelixMind renamed this exact model id (2026-07-30) with no change to the underlying model.
@@ -20,7 +20,17 @@ export const DEFAULT_MEMORY_BACKUP_MODEL = 'gemini-3.1-pro-preview';
 // type-based backfills in migrateMemoryFields never touch them — this explicitly rewrites the
 // stale id wherever it's stored so already-created threads don't keep silently sending a model id
 // the provider no longer recognizes. Add future provider renames here.
-const STALE_MODEL_RENAMES = { 'gemini-3-pro-preview': 'gemini-3.1-pro-preview' };
+// gemini-3.6-flash is superseded by 3.8 (2026-09-14) and is now obsolete — same treatment, so
+// anyone still pinned to it moves across instead of quietly failing every phone/Kressa/PawXai call.
+const STALE_MODEL_RENAMES = {
+    'gemini-3-pro-preview': 'gemini-3.1-pro-preview',
+    'gemini-3.6-flash': 'gemini-3.8-flash',
+    'gemini-3.7-flash': 'gemini-3.8-flash',
+    // Helix lost access to GLM 4.7 entirely (2026-09-15) — both the thinking and plain ids now
+    // fail every request. Rewritten rather than left to error.
+    'glm-4.7-thinking': 'gemini-3.8-flash',
+    'glm-4.7': 'gemini-3.8-flash',
+};
 
 /**
  * Rewrites any stored model-id string that a provider has since renamed (see

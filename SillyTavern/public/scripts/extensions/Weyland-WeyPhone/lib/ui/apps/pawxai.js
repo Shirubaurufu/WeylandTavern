@@ -2,7 +2,7 @@
 
 import { PAWXAI_MAX_PROMPTS, PAWXAI_PALETTES, PAWXAI_SUFFIX_PRESETS, groupSavedPawXaiPrompts, pawXaiSuffixEnabled } from '../../pawxai.js';
 import { ASSET_BASE_URL } from '../../assetPaths.js';
-import { RECOMMENDED_PHONE_MODEL, ALTERNATE_PHONE_MODELS } from './settings.js';
+import { RECOMMENDED_PHONE_MODEL, ALTERNATE_PHONE_MODELS, modelSelect, fallbackModelSelect } from './settings.js';
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -126,7 +126,10 @@ function renderSettings(settings, currentLiveModel) {
             <div class="wp-settings-section-title">Generation</div>
             <label class="wp-settings-field wp-settings-field-column"><span>Default model <small>(blank = current chat model)</small></span>
                 <div class="wp-settings-inline"><input id="wp-pawxai-model" type="text" placeholder="${escapeHtml(currentLiveModel || 'model id')}" value="${escapeHtml(settings.modelOverride)}" /><button type="button" class="wp-btn-sm wp-settings-use-current-model" data-input-id="wp-pawxai-model">Use current</button></div>
+                ${modelSelect('wp-pawxai-model', settings.modelOverride ?? '')}
                 ${modelQuickfills()}
+                <span class="wp-settings-sublabel">Fallback if that model fails</span>
+                ${fallbackModelSelect('wp-pawxai-fallback', settings.fallbackModel)}
             </label>
             <label class="wp-settings-field"><span>Prompts per set <small>(max ${PAWXAI_MAX_PROMPTS})</small></span><input id="wp-pawxai-count" type="number" min="1" max="${PAWXAI_MAX_PROMPTS}" value="${settings.promptCount}" /></label>
             <label class="wp-settings-field"><span>Focus</span><select id="wp-pawxai-focus">
@@ -177,8 +180,9 @@ export function renderPawXaiScreen(container, { settings, activeTab = 'generate'
         : activeTab === 'settings'
             ? renderSettings(settings, currentLiveModel)
             : renderGenerate(settings, source, generating, generationAllowance, formatCooldown);
+    // Help sits in the masthead because the phone's shared app bar is hidden for PawXai.
     container.innerHTML = `<div class="wp-pawxai">
-        <header class="wp-pawxai-masthead"><span class="wp-pawxai-logo"><img src="${ASSET_BASE_URL}/weyphone_pawxai.webp" alt="" /></span><div><strong>PawXai</strong><small>Scene to SDXL prompt studio</small></div></header>
+        <header class="wp-pawxai-masthead"><span class="wp-pawxai-logo"><img src="${ASSET_BASE_URL}/weyphone_pawxai.webp" alt="" /></span><div><strong>PawXai</strong><small>Scene to SDXL prompt studio</small></div><button type="button" class="wp-inline-help wp-pawxai-help" data-app-key="pawxai" title="What is this?" aria-label="What is this?"><i class="fa-solid fa-circle-question"></i></button></header>
         ${tabs(activeTab, savedCount)}
         <div class="wp-pawxai-content">${content}</div>
     </div>`;

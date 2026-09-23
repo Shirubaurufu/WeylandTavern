@@ -37,6 +37,7 @@ import {
     verifySecuritySettings,
     loginPageMiddleware,
 } from './users.js';
+import { installWeylandDns, weylandDnsMiddleware } from './weyland-dns.js'; // WEYLAND-TAVERN ADDITION
 
 import getWebpackServeMiddleware from './middleware/webpack-serve.js';
 import basicAuthMiddleware from './middleware/basicAuth.js';
@@ -146,6 +147,11 @@ app.use(cookieSession({
 }));
 
 app.use(setUserDataMiddleware);
+
+// WEYLAND-TAVERN ADDITION: "Use 1.1.1.1 for HelixMind". Needs request.user, so it sits right
+// after setUserDataMiddleware; see src/weyland-dns.js for why and how.
+installWeylandDns();
+app.use(weylandDnsMiddleware);
 
 // CSRF Protection //
 if (!cliArgs.disableCsrf) {

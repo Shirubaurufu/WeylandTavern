@@ -65,6 +65,25 @@ export function flattenMonitorsFromSources(sources) {
 }
 
 /**
+ * The major, heavily used Bedrock regions (the ones cross-region inference routes Claude and other
+ * mix models through, across North and South America, Europe and Asia-Pacific). The AWS feed is
+ * global: in March 2026 AWS lost me-central-1 (UAE) and me-south-1 (Bahrain) for good, and those
+ * events stay "open" indefinitely, which painted Bedrock red for every user permanently. Small or
+ * niche regions are left out on purpose, so one of them failing does not alarm everyone.
+ */
+const WATCHED_BEDROCK_REGIONS = new Set([
+    // North America
+    'us-east-1', 'us-east-2', 'us-west-1', 'us-west-2', 'ca-central-1', 'mx-central-1',
+    // South America
+    'sa-east-1',
+    // Europe (Ireland, London, Paris, Frankfurt, Stockholm, Milan, Spain, Zurich)
+    'eu-west-1', 'eu-west-2', 'eu-west-3', 'eu-central-1', 'eu-north-1', 'eu-south-1', 'eu-south-2', 'eu-central-2',
+    // Asia-Pacific (Tokyo, Seoul, Osaka, Singapore, Sydney, Melbourne, Mumbai, Hyderabad, Jakarta)
+    'ap-northeast-1', 'ap-northeast-2', 'ap-northeast-3', 'ap-southeast-1', 'ap-southeast-2', 'ap-southeast-4',
+    'ap-south-1', 'ap-south-2', 'ap-southeast-3',
+]);
+
+/**
  * @param {string} key impacted_services map key, e.g. bedrock-us-east-1
  * @param {{ service_name?: string }} entry
  */
@@ -72,6 +91,27 @@ function impactedEntryIsBedrock(key, entry) {
     if (/^bedrock-/i.test(key)) return true;
     const name = (entry?.service_name || '').toLowerCase();
     return name.includes('bedrock');
+}
+
+/**
+ * @param {string} key impacted_services map key, e.g. bedrock-us-east-1
+ * @returns {boolean} true when the key names a watched region, or names no region at all
+ *   (a region-less entry could be global, so it still counts)
+ */
+function bedrockKeyIsWatched(key) {
+    const m = /^bedrock-(.+)$/i.exec(key);
+    if (!m) return true;
+    return WATCHED_BEDROCK_REGIONS.has(m[1].toLowerCase());
+}
+
+/**
+ * Region code of an event, from its top-level `service` (e.g. multipleservices-me-central-1).
+ * @param {Record<string, unknown>} event
+ * @returns {string | null}
+ */
+function eventRegion(event) {
+    const m = /([a-z]{2}(?:-gov)?-[a-z]+-\d)$/i.exec(String(event.service || ''));
+    return m ? m[1].toLowerCase() : null;
 }
 
 /**
@@ -178,6 +218,7 @@ export function evaluateAmazonBedrock(events) {
         for (const [key, val] of Object.entries(impacted)) {
             const svc = val && typeof val === 'object' ? /** @type {Record<string, unknown>} */ (val) : {};
             if (!impactedEntryIsBedrock(key, svc)) continue;
+            if (!bedrockKeyIsWatched(key)) continue;
             touchesBedrock = true;
             const cur = Number.parseInt(String(svc.current ?? '0'), 10);
             const max = Number.parseInt(String(svc.max ?? '0'), 10);
@@ -186,7 +227,9 @@ export function evaluateAmazonBedrock(events) {
 
         const svcTop = String(event.service || '').toUpperCase();
         const svcNameTop = String(event.service_name || '');
-        if (!touchesBedrock && (svcTop === 'BEDROCK' || /bedrock/i.test(svcNameTop))) {
+        const region = eventRegion(event);
+        const regionWatched = region === null || WATCHED_BEDROCK_REGIONS.has(region);
+        if (!touchesBedrock && regionWatched && (/^BEDROCK(-|$)/.test(svcTop) || /bedrock/i.test(svcNameTop))) {
             touchesBedrock = true;
             worst = worstLevel(worst, 'disrupted');
         }
@@ -194,7 +237,12 @@ export function evaluateAmazonBedrock(events) {
         if (touchesBedrock) {
             const started = eventStartedUnix(event);
             if (started !== null && (since === null || started < since)) since = started;
-            if (!headline) headline = String(event.summary || event.service_name || 'Amazon Bedrock incident');
+            // Name the region: with many regions watched, "Increased Error Rates (Tokyo)" tells a
+            // reader whether it is likely to touch them.
+            if (!headline) {
+                const where = event.region_name ? ` (${String(event.region_name)})` : '';
+                headline = String(event.summary || event.service_name || 'Amazon Bedrock incident') + where;
+            }
             if (!incidentArn && event.arn) incidentArn = String(event.arn);
         }
     }
@@ -745,6 +793,14 @@ export function evaluateCloudflare(payload) {
             const c = raw && typeof raw === 'object' ? /** @type {Record<string, unknown>} */ (raw) : null;
             if (!c) continue;
             if (!cloudflareComponentIsUnderGlobalSites(c, globalSitesGroupId)) continue;
+            // Skip the group row itself: its status is only a rollup of the children below, so
+            // counting it double-counts them, and its updated_at is never refreshed (it read
+            // 2020-11-11, which showed up as "Disrupted since 2020").
+            if (String(c.id || '') === globalSitesGroupId) continue;
+            // degraded_performance is Cloudflare's "minor" tier. Some niche product (R2, WARP,
+            // Zero Trust clients) is almost always degraded, which kept this card amber forever.
+            // Only partial or major outages of a product are worth warning users about.
+            if (String(c.status || '').toLowerCase() === 'degraded_performance') continue;
             const compLevel = levelFromCloudflareComponentStatus(String(c.status || ''));
             if (compLevel === 'ok') continue;
             level = worstLevel(level, compLevel);

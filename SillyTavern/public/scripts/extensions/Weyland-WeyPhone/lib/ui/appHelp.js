@@ -79,6 +79,22 @@ const APP_HELP = {
         intro: 'An SDXL-style prompt writer based on the latest roleplay scene.',
         bullets: ['Uses the latest three messages for context and depicts the final character message.', 'Generated prompts can be copied, deleted, or saved by character.', 'It writes prompts only. Image generation happens in the service of your choice.', 'A full prompt set uses one shared generation slot, whether it contains one prompt or ten. Paw Patrol tiers have shorter cooldown windows.'],
     },
+    understudy: {
+        intro: 'Copycat gives the latest character reply a fresh rewrite without replacing the original.',
+        bullets: [
+            'Useful when a reply is correct but flat, where the character reads too clean, too composed, or too polite for who they actually are.',
+            'Pick a model with a looser prose style than the one writing your roleplay. Handing the passage back to the same model usually returns the same tidy prose.',
+            'Pawpad holds the source reply, your Catnip note, and the rewrite once it arrives - compare it against the original, edit it, then use or discard it.',
+            'Instincts is where you set narrator, scope, scene context and message modes. Scope decides what changes: everything, unflinching, dialogue, thoughts, narration, or dialogue and thoughts together - a narrow scope cannot alter anything outside those fragments.',
+            'The Catnip note is the strongest instruction. It carries across rewrites of the same message.',
+            'Let it wander allows Copycat to change what happens instead of only rewording it. It is off by default and applies only to whole-passage rewrites.',
+            'The second model is told that anything it knows only from the character profile has not been revealed yet, so a rewrite should not spill backstory or secrets into the narration.',
+
+            'The date/time/location header and the closing expression codes are never sent to the second model and are restored exactly as they were.',
+            'The rewrite stays editable. Nothing touches your chat until you tap Use this rewrite.',
+            'Each rewrite consumes one message request.',
+        ],
+    },
     mien: {
         intro: 'A pocket expression gallery for the character in your active chat.',
         bullets: ['Choose among every installed outfit available for the character.', 'Browse sprites or open the immersive full-screen viewer without changing the chat portrait.', 'Tap Set in chat to apply one expression temporarily.', 'The next character message returns expression control to SillyTavern.', 'If local sprites are missing, Mien checks each Registrar outfit gallery.'],
@@ -92,8 +108,12 @@ const APP_HELP = {
         bullets: ['Opens the same standalone viewer as the picture-frame button on the chat bar.', 'Requires the separate Weybooru Viewer extension to be installed and enabled.', 'Nothing here calls a model or spends a message.'],
     },
     registrar: {
-        intro: 'A preview tile for the upcoming Weyland Registrar app.',
-        bullets: ['Not functional yet — this is a placeholder.', 'Nothing here calls a model or spends a message.'],
+        intro: 'A pocket field guide to the community’s Weyland: characters, locations and collections.',
+        bullets: ['Add to my world imports NPC subbots and location lore, not full character cards or greetings.', 'Imports are activated for all your Weyland roleplays. Encounters still depend on the story and World Info budget.', 'My world manages imports made here. Update deliberately, pause the app’s additions, or remove an import; overlapping collection members are kept once.', 'Existing manually imported lorebooks are separate. Avoid activating the same content twice.', 'Collections include their publicly available characters and locations. Scenarios and private Discord content stay on the website.', 'Phone contacts remain a separate choice under Settings → Community Contacts.', 'Browsing and importing never calls a model or spends a message.', 'Edit characters, locations, and other submissions on the Registrar website. This app downloads and manages them; Update this import fetches a newer version.'],
+    },
+    narrative: {
+        intro: 'PromptOS is an easy access panel for Weyland Tavern’s existing Storytelling Settings.',
+        bullets: ['Changes the same global and current-chat variables used by the classic menu.', 'Prompt text remains in the existing Weyland Quick Replies and prompt entries; this app does not keep a second copy.', 'School Year and character scenarios open the original character-aware picker.', 'Nothing here calls a model or spends a message.'],
     },
     settings: {
         intro: 'Controls for this WeyPhone.',
@@ -103,10 +123,11 @@ const APP_HELP = {
 
 const MESSAGE_BUDGET_BULLET = 'Budget rule: one generation request = one message spent. Actions that do not call a model spend nothing.';
 
-// Apps that never call a model on their own. The budget rule is noise on their help screens —
+// Apps with no model calls, plus Copycat which has its own concise message-cost bullet.
+// The generic budget rule is noise on these help screens —
 // either it restates a bullet they already carry ("Nothing here calls a model or spends a
 // message") or it implies a cost that app simply cannot incur. Keyed by app key.
-const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien']);
+const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien', 'registrar', 'understudy', 'narrative']);
 
 function escapeHtml(value) {
     return String(value)
@@ -174,6 +195,7 @@ export function renderAppHelpDialog(container, { appKey, appLabel }) {
         <button type="button" class="wp-app-help-close" data-help-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <p>${escapeHtml(help.intro)}</p>
+    ${['understudy', 'registrar', 'pawxai', 'mien'].includes(appKey) ? `<button type="button" class="wp-btn-sm" data-app-tutorial="${appKey}"><i class="fa-solid fa-compass" aria-hidden="true"></i> Replay walkthrough</button>` : ''}
     ${details}
 </section>`;
     container.hidden = false;

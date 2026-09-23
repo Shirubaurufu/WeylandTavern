@@ -1,0 +1,205 @@
+/* Burgundy, charcoal and antique gold salute the original Registrar. Rajdhani headings echo
+   the real site's own wordmark font; index-card composition gives its phone edition a separate
+   identity from the rest of WeyPhone. Body copy stays a plain sans — Rajdhani is a condensed
+   display face, not meant for paragraphs of character bio text. */
+@font-face { font-family: 'Rajdhani'; font-style: normal; font-weight: 400; font-display: swap; src: url('/webfonts/Rajdhani/Rajdhani-400.woff2') format('woff2'); }
+@font-face { font-family: 'Rajdhani'; font-style: normal; font-weight: 500; font-display: swap; src: url('/webfonts/Rajdhani/Rajdhani-500.woff2') format('woff2'); }
+@font-face { font-family: 'Rajdhani'; font-style: normal; font-weight: 600; font-display: swap; src: url('/webfonts/Rajdhani/Rajdhani-600.woff2') format('woff2'); }
+@font-face { font-family: 'Rajdhani'; font-style: normal; font-weight: 700; font-display: swap; src: url('/webfonts/Rajdhani/Rajdhani-700.woff2') format('woff2'); }
+/* A zero-offset transform on the phone widget itself (not the animated .rg-app content, which can
+   carry an incidental sub-pixel transform of its own) makes it the containing block for every
+   position:fixed descendant - so .rg-dialog-shade below is pinned to the phone's own rectangle
+   instead of escaping to the real browser viewport through #wp-portal. */
+#wp-panel[data-view="registrar"] { --wp-app-accent: #b68a48; transform: translateZ(0); }
+#wp-panel[data-view="registrar"] #wp-screen-body { padding: 0; background: #ece5d7; color: #302b27; }
+/* The `padding: 0` above wins over style.css's own #wp-screen-body rule (more specific selector)
+   and, on narrow/short viewports, that rule is the ONLY thing reserving space for #wp-nav-bar -
+   which goes position:absolute over the bottom of the screen there (see style.css's own comment
+   on that rule). Without restoring it here every Registrar screen's footer/buttons sit half
+   underneath the phone's own home-indicator nav bar. */
+@media (max-width: 768px), (max-height: 520px) {
+    #wp-panel[data-view="registrar"] #wp-screen-body { padding-bottom: calc(58px + var(--wp-safe-bottom)); }
+}
+/* The shared #wp-panel-header would just repeat "Registrar" under our own masthead title, so it's
+   dropped entirely in favor of the masthead's own help button — same pattern as chat/board hiding
+   it for their own custom headers (see panel.js's inlineHelpButton comment). The status bar above
+   it still needs its own opaque background (transparent by default, see style.css), continuing
+   the masthead's burgundy upward instead of showing the character wallpaper through it. */
+#wp-panel[data-app="registrar"] #wp-panel-header { display: none; }
+#wp-panel[data-app="registrar"] #wp-status-bar { background: #57171c; color: #f4e8d0; }
+/* SillyTavern themes commonly apply a glow through a global `* { text-shadow: ... }` rule (see the
+   same override on [data-app="kressa"]/[data-app="pawxai"]). Override every Registrar descendant
+   directly so its dark-ink-on-paper type stays crisp instead of picking up a light-on-dark glow. */
+#wp-panel[data-app="registrar"],
+#wp-panel[data-app="registrar"] * { text-shadow: none !important; }
+.rg-app { --rg-wine: #57171c; --rg-gold: #b88a48; --rg-paper: #f3eddf; --rg-ink: #302b27; --rg-muted: #716657; font: 14px/1.55 'Trebuchet MS', Arial, sans-serif; color: var(--rg-ink); background: #ece5d7; min-height: 100%; text-shadow: none; position: relative; isolation: isolate; overflow-wrap: anywhere; color-scheme: light; }
+.rg-app *, .rg-app *::before, .rg-app *::after { box-sizing: border-box; }
+.rg-app button, .rg-app input, .rg-app select { font: inherit; text-shadow: none; box-shadow: none; letter-spacing: normal; }
+.rg-app button { cursor: pointer; color: inherit; }
+.rg-app button:disabled { opacity: .45; cursor: default; }
+.rg-app button:focus-visible, .rg-app a:focus-visible, .rg-app input:focus-visible, .rg-app select:focus-visible, .rg-app summary:focus-visible { outline: 2px solid #956225; outline-offset: 3px; }
+.rg-app h1, .rg-app h2, .rg-app h3, .rg-app p { margin: 0; padding: 0; color: inherit; }
+.rg-app h1, .rg-app h2, .rg-app h3 { font-family: 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; font-weight: 600; text-shadow: none; border: 0; }
+.rg-masthead { position: relative; padding: 10px 52px 10px 14px; color: #f4e8d0; background: var(--rg-wine); border-bottom: 3px double #ba955c; }
+.rg-wordmark { display: flex; align-items: center; gap: 14px; }
+/* Seal and wordmark were bumped ~20% (100px -> 120px seal, type scaled to match) so the lockup
+   fills the masthead instead of floating in it. */
+.rg-seal { width: 120px; height: 120px; flex: 0 0 120px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.rg-seal img { width: 100%; height: 100%; object-fit: cover; }
+.rg-wordmark-text { min-width: 0; }
+.rg-app .rg-eyebrow { font: 700 9px/1.5 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; letter-spacing: .16em; text-transform: uppercase; display: block; }
+.rg-masthead .rg-eyebrow { color: #dbc195; font-size: 11px; }
+.rg-app .rg-masthead h1 { font-size: clamp(41px, 12cqi, 58px); line-height: 1; white-space: nowrap; margin-top: 2px; }
+.rg-masthead h1 > span { color: #d4aa6b; }
+.rg-edition { display: block; margin-top: 5px; letter-spacing: .2em; font-size: 11px; text-align: right; color: #d3b993; }
+.rg-masthead-actions { position: absolute; top: 6px; right: 6px; display: flex; flex-direction: column; gap: 0; }
+/* Self-sufficient sizing rather than relying on the shared .wp-inline-help base class: the
+   settings cog is registrar-only chrome and deliberately doesn't carry data-app-key, so it must
+   never pick up that class - index.js's global header-help click delegation matches on it and
+   would pop the (wrong, key-less) app-help dialog on top of this button's own settings panel. */
+.rg-masthead .rg-help { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: none; color: #dbc195; font-size: 1.2em; }
+.rg-masthead .rg-help:hover { background: rgba(255,255,255,0.1); }
+.rg-tabs { display: flex; background: #292725; color: #e5d9c7; padding: 0 8px; position: sticky; top: 0; z-index: 3; box-shadow: 0 3px 8px #24151120; }
+.rg-app .rg-tabs button { flex: 1; background: transparent; border: 0; border-bottom: 3px solid transparent; border-radius: 0; padding: 14px 3px 11px; font-size: 11px; white-space: nowrap; color: #d0c4b5; }
+.rg-app .rg-tabs button[aria-pressed="true"] { color: #e6c288; border-bottom-color: #cda05a; }
+.rg-tabs sup { font-size: 8px; padding-left: 3px; }
+.rg-page { padding: 16px 18px 24px; }
+.rg-app .rg-search { display: flex; align-items: center; gap: 8px; background: #f9f5ec; border: 1px solid #bbad97; border-radius: 2px; padding: 0 10px; margin: 0; }
+.rg-search > span { font: 27px Georgia, serif; color: #7a3932; }
+.rg-app .rg-search input { min-width: 0; width: 100%; color: #302b27; background: transparent; border: 0; outline: 0; padding: 12px 0; margin: 0; font-size: 12px; }
+.rg-search input::placeholder { color: #827463; opacity: 1; }
+.rg-app .rg-search button { border: 0; background: none; padding: 8px 2px; font-size: 21px; color: #6b2826; }
+.rg-list-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 14px 0 10px; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #736653; }
+.rg-list-heading > span:first-child { font-weight: 700; color: #4e3e2a; }
+.rg-app .rg-list-heading select { appearance: none; background: #f4ede0 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 6"><path d="M0 0l5 6 5-6z" fill="%236b5a42"/></svg>') no-repeat right 8px center / 8px 5px; color: #4e3e2a; border: 1px solid #bbad97; border-radius: 2px; padding: 4px 22px 4px 7px; font-size: 11px; font-weight: 600; width: auto; margin: 0; max-width: 55%; }
+.rg-cards { display: grid; gap: 12px; }
+.rg-app .rg-card { position: relative; display: flex; align-items: stretch; gap: 13px; width: 100%; text-align: left; padding: 12px; background: #f7f2e8; border: 1px solid #d1c6b3; border-radius: 2px; box-shadow: 2px 3px 0 #cfc2ab55; overflow: hidden; transition: border-color .15s, transform .15s; }
+.rg-card:hover { border-color: #96654b; transform: translateY(-1px); }
+.rg-card-wrap { position: relative; }
+.rg-card-paused { opacity: .5; }
+.rg-app .rg-load-toggle { position: absolute; bottom: 10px; right: 10px; z-index: 1; background: #302b27e0; color: #f3eddf; border: 1px solid #6f5e49; border-radius: 2px; padding: 4px 9px; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+.rg-art { position: relative; width: 75px; flex: 0 0 75px; min-height: 106px; background: repeating-linear-gradient(0deg, transparent, transparent 15px, #5b43310c 16px), #e2d6c1; overflow: hidden; display: grid; place-items: center; border: 1px solid #b9a58655; }
+.rg-art > span { font: 600 42px 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; color: #9b744d; }
+.rg-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+.rg-card-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; padding-top: 1px; }
+.rg-card-copy > .rg-eyebrow { font-size: 8px; color: #976039; padding-right: 15px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 6px; }
+.rg-card-meta { color: #6b5a42; text-transform: none; letter-spacing: 0; font-weight: 700; }
+.rg-card-copy > strong { font: 600 22px/1.12 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; color: #4e2020; padding-right: 6px; }
+.rg-summary { font-size: 11px; line-height: 1.55; color: #6c6256; margin: 7px 0 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.rg-card-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: 9px; color: #7c6d5a; }
+.rg-card-foot > span:last-child { font-size: 17px; color: #77392e; }
+.rg-index { position: absolute; right: 8px; top: 5px; font: 700 9px 'Courier New', monospace; color: #6b5a42; }
+.rg-stamp { display: inline-block; border: 1px solid #947255; padding: 1px 4px; color: #7b5336; font-size: 8px; letter-spacing: .06em; transform: rotate(-2deg); font-weight: normal; }
+.rg-app .rg-card-location { border-left: 3px solid #9c8356; }
+.rg-card-location .rg-art { width: 64px; flex-basis: 64px; }
+.rg-app .rg-card-collection { padding: 0; background: #432427; color: #f3e4cb; border-color: #5e3b31; min-height: 190px; box-shadow: 3px 4px 0 #b8a991; }
+.rg-card-collection .rg-art { width: 37%; flex-basis: 37%; min-height: 190px; border: 0; border-right: 4px double #bf9b60; background-color: #b79768; }
+.rg-card-collection .rg-card-copy { padding: 20px 12px 16px 0; }
+.rg-card-collection .rg-card-copy > strong { color: #f7e8cf; font-size: 25px; }
+.rg-card-collection .rg-summary, .rg-card-collection .rg-card-foot { color: #d3c2aa; }
+.rg-card-collection .rg-eyebrow, .rg-card-collection .rg-card-foot > span:last-child { color: #dab477; }
+.rg-card-collection .rg-stamp { color: #e4c58f; border-color: #bd935d; }
+.rg-pagination { display: flex; justify-content: space-between; align-items: center; margin: 20px 0; font-size: 11px; color: #6f5e49; }
+.rg-app .rg-pagination button, .rg-app .rg-world-switch button { background: transparent; border: 1px solid #a59175; padding: 8px 10px; border-radius: 1px; font-size: 11px; }
+.rg-footer { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: center; border-top: 1px solid #c9b99e; margin-top: 16px; padding-top: 10px; color: #86755e; font: 500 11px/1.3 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; }
+.rg-footer a { font: 10px 'Trebuchet MS', sans-serif; color: #783a2f; }
+.rg-app .rg-footer button { border: 0; background: none; font-size: 10px; color: #783a2f; }
+.rg-world-switch { padding: 12px; background: #e2d7c2; border: 1px solid #c5b290; display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.rg-world-switch > div { flex: 1; }
+.rg-world-switch strong { font-size: 12px; font-weight: normal; }
+.rg-world-switch small { display: block; font-size: 10px; color: #76664f; }
+.rg-notice { padding: 12px; margin-top: 15px; border: 1px solid #a6a589; background: #e1e4d4; color: #4b533c; font-size: 12px; }
+.rg-error { background: #f0dcd2; border-color: #c49a86; color: #733b2b; }
+.rg-app .rg-notice button { background: transparent; border: 0; text-decoration: underline; padding: 4px; }
+.rg-empty { padding: 32px 10px; text-align: center; color: #73634f; }
+.rg-empty > span { font-size: 44px; color: #a1855d; }
+.rg-app .rg-empty h3 { font-size: 22px; margin: 8px 0; }
+.rg-empty p { font-size: 12px; }
+.rg-app .rg-back { border: 0; border-bottom: 1px solid #bbae96; background: none; padding: 16px 0 12px; width: 100%; text-align: left; margin-bottom: 18px; font-size: 11px; color: #78382c; }
+.rg-art-large { width: 100%; height: 260px; min-height: 0; border: 5px solid #faf6ec; outline: 1px solid #c5b69b; box-shadow: 3px 4px 0 #c9b89b66; }
+.rg-art-large img { object-position: center 25%; }
+.rg-art-large > span { font-size: 90px; }
+.rg-detail-heading { margin: 24px 0 20px; display: flex; flex-wrap: wrap; column-gap: 14px; }
+.rg-detail-heading-name { flex: 1 1 110px; max-width: 42%; container-type: inline-size; }
+.rg-detail-heading > .rg-detail-heading-name > .rg-eyebrow { color: #946b3c; }
+/* A long title (e.g. a collection name) wrapping is fine; overflow-wrap:anywhere from .rg-app is
+   not - it lets the browser split mid-word ("Compendi/um"). Shrink to fit the name column via a
+   container query unit first (12cqi tracks this column's own width, not the phone's), and fall
+   back to word-boundary wrapping only, never a mid-word break, for whatever doesn't fit at 20px. */
+.rg-app .rg-detail-heading h2 { font-size: clamp(20px, 12cqi, 32px); line-height: 1.08; margin: 7px 0; color: #542126; letter-spacing: -.035em; overflow-wrap: normal; word-break: normal; }
+.rg-detail-summary { flex: 2 1 180px; font-size: 12px; line-height: 1.5; color: #6c6256; margin: 0; align-self: center; }
+.rg-detail-heading .rg-surname { font-style: italic; color: #8e7658; margin: -2px 0 0; }
+.rg-byline { flex: 0 0 100%; }
+.rg-byline { border-top: 1px solid #cabba3; margin-top: 17px; padding-top: 10px; font-size: 10px; color: #7a6d5d; }
+.rg-import-box { padding: 17px; border: 1px solid #cbb695; background: #f8f2e4; margin-bottom: 24px; box-shadow: inset 0 0 0 4px #ece2cf; }
+.rg-import-box > .rg-eyebrow { color: #8c592d; }
+.rg-import-box > p { font-size: 12px; color: #736047; margin: 9px 0 14px; }
+.rg-app .rg-primary { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; border: 1px solid #6f3430; border-radius: 2px; background: #57171c; color: #f3e4cb; padding: 13px 15px; font-size: 12px; }
+.rg-app .rg-text-button { border: 0; border-bottom: 1px solid #bda783; background: transparent; color: #815338; margin-top: 12px; padding: 3px 0; font-size: 11px; }
+.rg-app .rg-included { border-left: 2px solid #b68d54; padding-left: 8px; }
+.rg-fold { border-top: 1px solid #bcad93; padding: 13px 0; }
+.rg-fold summary { cursor: pointer; font: 600 19px 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; color: #57312a; }
+.rg-fold p { white-space: pre-wrap; font-size: 12px; color: #665a49; padding: 13px 0 2px; line-height: 1.8; }
+.rg-app .rg-members h3 { font-size: 24px; margin-bottom: 10px; }
+.rg-app .rg-members button { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; border: 0; border-top: 1px solid #c8b99e; border-radius: 0; background: transparent; padding: 12px 0; font: 500 17px 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; }
+.rg-members button > span:nth-child(2) { flex: 1; }
+.rg-members small { display: block; font: 9px 'Trebuchet MS', sans-serif; text-transform: uppercase; letter-spacing: .1em; color: #8c7658; margin-top: 4px; }
+.rg-site-link { display: block; margin: 24px 0 5px; color: #80422f; text-align: center; font-size: 11px; }
+.rg-dialog-shade { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 22px; background: #241514b8; }
+.rg-dialog { max-width: 360px; width: 100%; padding: 24px; border: 4px double #c7ab7e; background: #f4ead7; color: #422e24; box-shadow: 0 12px 40px #0005; }
+.rg-app .rg-dialog h2 { font-size: 28px; line-height: 1.1; margin: 10px 0 14px; }
+.rg-dialog p { font-size: 13px; margin-bottom: 20px; }
+.rg-dialog > div { display: flex; flex-direction: column; gap: 10px; }
+.rg-dialog > div > button { padding: 10px; border: 1px solid #b59c77; background: transparent; }
+.rg-dialog > div > .rg-primary { background: #57171c; color: #f3e4cb; }
+.rg-token-panel { max-width: 320px; }
+.rg-token-note { font-size: 11px; line-height: 1.55; color: #665a49; margin-bottom: 14px; }
+.rg-token-list { list-style: none; margin: 0 0 14px; padding: 0; max-height: 240px; overflow-y: auto; }
+.rg-token-list li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid #ddd0b8; font-size: 12px; }
+.rg-token-list li:first-child { border-top: 0; }
+.rg-token-list li > span:last-child { color: #7c6d5a; font-variant-numeric: tabular-nums; }
+.rg-settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #ddd0b8; margin-bottom: 6px; }
+.rg-settings-row strong { display: block; font-size: 13px; font-weight: 700; }
+.rg-settings-row small { display: block; font-size: 10px; color: #7c6d5a; margin-top: 2px; }
+.rg-settings-row button { flex: 0 0 auto; background: transparent; border: 1px solid #a59175; padding: 8px 12px; border-radius: 1px; font-size: 11px; }
+.rg-switch { flex: 0 0 auto; position: relative; display: inline-block; width: 38px; height: 22px; }
+.rg-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.rg-switch span { position: absolute; inset: 0; background: #cabb9c; border: 1px solid #a59175; border-radius: 11px; transition: background .15s; }
+.rg-switch span::before { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #f4ede0; border-radius: 50%; transition: transform .15s; }
+.rg-switch input:checked + span { background: #57171c; border-color: #6f3430; }
+.rg-switch input:checked + span::before { transform: translateX(16px); }
+.rg-switch input:focus-visible + span { outline: 2px solid #956225; outline-offset: 2px; }
+.rg-token-bar-wrap { margin-bottom: 10px; }
+.rg-token-bar { position: relative; height: 20px; background: #e2d7c2; border: 1px solid #c5b290; border-radius: 3px; overflow: hidden; }
+.rg-token-bar-fill { height: 100%; background: #57171c; }
+.rg-token-bar-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: #4e3e2a; }
+.rg-token-bar-scale { position: relative; height: 14px; font-size: 9px; color: #7c6d5a; }
+/* A right-anchored (left:100%) absolutely-positioned span with no explicit width has its
+   shrink-to-fit width capped at the sliver of space left before the container's own right edge,
+   not its actual text width - "24k" wrapped into a 3-line vertical column instead of overflowing
+   sideways. white-space:nowrap forces the intrinsic width so the translateX below can pull the
+   whole label back on-screen instead of a wrapped fragment of it. */
+.rg-token-bar-scale span { position: absolute; white-space: nowrap; transform: translateX(-50%); }
+.rg-token-bar-scale span:first-child { transform: none; }
+.rg-token-over { color: #a5432f; font-weight: 700; }
+.rg-token-total { margin-bottom: 4px; }
+.rg-token-limits { list-style: disc; margin: 0 0 14px; padding-left: 18px; font-size: 11px; line-height: 1.6; color: #7c6d5a; }
+@media (prefers-reduced-motion: reduce) { .rg-card { transition: none; } }
+
+.rg-wip-badge {
+    display: inline-flex; align-items: center; align-self: flex-start; gap: 5px;
+    width: fit-content; margin: 5px 0; padding: 3px 8px;
+    border: 1px solid #aa792c; border-radius: 4px;
+    background: repeating-linear-gradient(135deg, #f8e6bb, #f8e6bb 7px, #efdaa8 7px, #efdaa8 9px);
+    color: #62400f; font: 700 10px/1.4 sans-serif; letter-spacing: .08em;
+    box-shadow: 1px 2px 0 #aa792c25;
+}
+.rg-wip-note { margin: 5px 0 12px; padding-left: 10px; border-left: 2px solid #aa792c; color: #62400f; font-size: 12px; line-height: 1.5; }
+.rg-browse-filters { margin: 12px 0; font-size: 12px; line-height: 1.5; }
+.rg-browse-filters summary { cursor: pointer; font-weight: 700; }
+.rg-browse-filters fieldset { min-width: 0; margin: 12px 0; border: 1px solid #b5a58a; padding: 8px; }
+.rg-browse-filters input[type="search"] { width: 100%; min-width: 0; box-sizing: border-box; }
+.rg-filter-options { max-height: 150px; overflow-y: auto; margin-top: 8px; }
+.rg-filter-options label { display: flex; align-items: center; gap: 8px; padding: 5px 2px; overflow-wrap: anywhere; }
+.rg-filter-options label[hidden] { display: none; }
+.rg-filter-options input { flex: 0 0 auto; }

@@ -261,7 +261,7 @@ import { initBulkEdit } from './scripts/bulk-edit.js';
 import { getContext } from './scripts/st-context.js';
 import { extractReasoningFromData, initReasoning, parseReasoningInSwipes, PromptReasoning, ReasoningHandler, removeReasoningFromString, updateReasoningUI } from './scripts/reasoning.js';
 import { accountStorage } from './scripts/util/AccountStorage.js';
-import { initWelcomeScreen, openPermanentAssistantChat, openPermanentAssistantCard, getPermanentAssistantAvatar } from './scripts/welcome-screen.js';
+import { initWelcomeScreen, getPermanentAssistantAvatar } from './scripts/welcome-screen.js';
 import { initDataMaid } from './scripts/data-maid.js';
 import { clearItemizedPrompts, deleteItemizedPrompts, findItemizedPromptSet, initItemizedPrompts, itemizedParams, itemizedPrompts, loadItemizedPrompts, promptItemize, replaceItemizedPromptText, saveItemizedPrompts } from './scripts/itemized-prompts.js';
 import { getSystemMessageByType, initSystemMessages, SAFETY_CHAT, sendSystemMessage, system_message_types, system_messages } from './scripts/system-messages.js';
@@ -408,7 +408,8 @@ export const DEFAULT_SAVE_EDIT_TIMEOUT = debounce_timeout.relaxed;
 export const DEFAULT_PRINT_TIMEOUT = debounce_timeout.quick;
 
 export const saveSettingsDebounced = debounce((loopCounter = 0) => saveSettings(loopCounter), DEFAULT_SAVE_EDIT_TIMEOUT);
-export const saveCharacterDebounced = debounce(() => $('#create_button').trigger('click'), DEFAULT_SAVE_EDIT_TIMEOUT);
+// Long character prompts need room for ordinary pauses between words.
+export const saveCharacterDebounced = debounce(() => $('#create_button').trigger('click'), 2500);
 
 /**
  * Prints the character list in a debounced fashion without blocking, with a delay of 100 milliseconds.
@@ -1525,8 +1526,18 @@ export async function sendTextareaMessage() {
         generateType = 'continue';
     }
 
-    if (textareaText && !selected_group && this_chid === undefined && name2 !== neutralCharacterName) {
-        await newAssistantChat({ temporary: false });
+    // Weytav: there is no home-screen assistant. A cardless "Assistant"
+    // generation goes out through the subscriber API with the Weyland lorebook
+    // attached, and trips the QR card-authenticity kill switch (which treats
+    // any non-Weyland card as tampering). Block plain sends until a character
+    // or group is selected; slash commands still run (Generate executes them
+    // via processCommands before any prompt is built).
+    if (this_chid === undefined && !selected_group) {
+        if (textareaText.trim() && !textareaText.trim().startsWith('/')) {
+            // @ts-ignore
+            toastr.info(t`Pick a character to start chatting`);
+        }
+        return;
     }
 
     Generate(generateType);
@@ -8402,6 +8413,7 @@ async function createOrEditCharacter(e) {
 
             formData.delete('alternate_greetings');
             const chid = $('.open_alternate_greetings').data('chid');
+            const greetingChanged = characters[chid]?.first_mes !== formData.get('first_mes');
             if (characters[chid] && Array.isArray(characters[chid]?.data?.alternate_greetings)) {
                 for (const value of characters[chid].data.alternate_greetings) {
                     formData.append('alternate_greetings', value);
@@ -8433,6 +8445,9 @@ async function createOrEditCharacter(e) {
             const message = getFirstMessage();
             const shouldRegenerateMessage =
                 !isNewChat &&
+                // Prompt-only autosaves should not clear and render the chat or
+                // fire incoming-message hooks while the author is still typing.
+                (greetingChanged || chat.length === 0) &&
                 message.mes &&
                 !selected_group &&
                 !chat_metadata['tainted'] &&
@@ -9220,26 +9235,9 @@ async function removeCharacterFromUI() {
 }
 
 /**
- * Creates a new assistant chat.
- * @param {object} params - Parameters for the new assistant chat
- * @param {boolean} [params.temporary=false] I need a temporary secretary
- * @returns {Promise<void>} - A promise that resolves when the new assistant chat is created
- */
-export async function newAssistantChat({ temporary = false } = {}) {
-    await clearChat();
-    if (!temporary) {
-        return openPermanentAssistantChat();
-    }
-    chat.splice(0, chat.length);
-    chat_metadata = {};
-    setCharacterName(neutralCharacterName);
-    sendSystemMessage(system_message_types.ASSISTANT_NOTE);
-}
-
-/**
  * Event handler to open a navbar drawer when a drawer open button is clicked.
  * Handles click events on .drawer-opener elements.
- * Opens the drawer associated with the clicked button according to the data-target attribute.
+ * Opens the drawer associated with the clicked button according to the data-target attribute
  * @returns {void}
  */
 function doDrawerOpenClick() {
@@ -9885,9 +9883,6 @@ jQuery(async function () {
         });
 
         if (id == 'option_select_chat') {
-            if (this_chid === undefined && !is_send_press && !selected_group) {
-                await openPermanentAssistantCard();
-            }
             if ((selected_group && !is_group_generating) || (this_chid !== undefined && !is_send_press) || fromSlashCommand) {
                 await displayPastChats();
                 //this is just to avoid the shadow for past chat view when using /delchat
@@ -9918,8 +9913,10 @@ jQuery(async function () {
                 await doNewChat({ deleteCurrentChat: deleteCurrentChat });
             }
             if (!selected_group && this_chid === undefined && !is_send_press) {
-                const alreadyInTempChat = this_chid === undefined && name2 === neutralCharacterName;
-                await newAssistantChat({ temporary: alreadyInTempChat });
+                // Weytav: no assistant chat exists to start — direct users to
+                // the character list instead.
+                // @ts-ignore
+                toastr.info(t`Pick a character to start chatting`);
             }
         }
 

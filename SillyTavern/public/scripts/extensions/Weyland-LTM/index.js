@@ -30,6 +30,7 @@ import {
     world_names,
 } from '../../world-info.js';
 import { oai_settings } from '../../openai.js';
+import { main_api } from '../../../script.js';
 import { SlashCommand } from '../../slash-commands/SlashCommand.js';
 import { SlashCommandParser } from '../../slash-commands/SlashCommandParser.js';
 import { getLocalVariable } from "../../variables.js";
@@ -43,7 +44,7 @@ const {
 } = ctx;
 
 export const WLM_MODULE_NAME = 'Weyland-LTM';
-const EXT_VERSION = '1.5.5';
+const EXT_VERSION = '1.6.0';
 
 // Default LTM model out of the box for every fresh install. Lucky wants
 // Sonnet reserved for actual roleplay messaging rather than burned on LTM
@@ -52,15 +53,30 @@ const EXT_VERSION = '1.5.5';
 // (possibly blank) modelOverride are untouched — RECOMMENDED_LTM_MODEL only
 // applies as the default the first time the extension initializes for a
 // given install.
-const RECOMMENDED_LTM_MODEL = 'glm-4.7-thinking';
+const RECOMMENDED_LTM_MODEL = 'gemini-3.8-flash';
 // NOTE: LTM keeps its own list rather than sharing WeyPhone's ALTERNATE_PHONE_MODELS — the two
 // extensions are independently installable, so a model added to one must be added here too.
-const ALTERNATE_LTM_MODELS = ['minimax-m3', 'gemini-3.1-pro-preview', 'gemini-3.6-flash'];
+const ALTERNATE_LTM_MODELS = ['minimax-m3', 'gemini-3.1-pro-preview'];
+// Second choice when the chosen model errors out. MiniMax M3 is the house fallback
+// across WeyPhone/PawXai/Kressa too: cheap, fast, available, and never Sonnet.
+const FALLBACK_LTM_MODEL = 'minimax-m3';
 
 // The provider renamed this model in place (same model, new id string). Anyone who used the old
 // quick-fill button has the dead id saved in modelOverride, where every LTM summarization would
 // silently fail against it — so rewrite it on load rather than waiting for them to notice.
-const STALE_MODEL_RENAMES = { 'gemini-3-pro-preview': 'gemini-3.1-pro-preview' };
+// gemini-3.6-flash and 3.7-flash are both obsolete, superseded by 3.8. Neither id
+// appears as a literal anywhere any more — they only survive as values saved in
+// existing users' settings, which is exactly what this map is for.
+const STALE_MODEL_RENAMES = {
+    'gemini-3-pro-preview': 'gemini-3.1-pro-preview',
+    'gemini-3.6-flash': 'gemini-3.8-flash',
+    'gemini-3.7-flash': 'gemini-3.8-flash',
+    // Helix lost access to GLM 4.7 entirely (2026-09-15); a stored setting pointing at either id
+    // fails every LTM request, so both are rewritten to the recommended model rather than left
+    // to error.
+    'glm-4.7-thinking': 'gemini-3.8-flash',
+    'glm-4.7': 'gemini-3.8-flash',
+};
 
 // =====================================================================
 // SETTINGS
@@ -71,8 +87,12 @@ const STALE_MODEL_RENAMES = { 'gemini-3-pro-preview': 'gemini-3.1-pro-preview' }
  * @property {boolean} enabled
  * @property {boolean} debug
  * @property {string} modelOverride          // '' => use main chat model
+ * @property {string} connectionProfileId    // '' => use the live chat connection
  * @property {number} messagesBetweenLTMs    // suggestion cadence
- * @property {number} summarizeSpan          // max messages per LTM; 0 = auto (match cadence)
+ * @property {number} summarizeSpan          // legacy manual span; 0 = auto. Superseded by the
+ *                                           // per-chat span override in __chatState, kept so an
+ *                                           // existing install's saved value still applies.
+ * @property {boolean} allowOversizedSpans   // opt out of MAX_SUMMARIZE_MESSAGES
  * @property {number} activeLTMCount         // how many stay constant-loaded before demotion
  * @property {number} maxVersionsPerEntry    // cap version history
  * @property {number} maxResponseTokens      // generation budget
@@ -89,8 +109,15 @@ const defaultSettings = {
     enabled: true,
     debug: false,
     modelOverride: RECOMMENDED_LTM_MODEL,
+    // '' = use the live chat connection directly (the default, and what almost
+    // everyone wants — a Helix plan is one connection and this Just Works).
+    // Set to a Connection Profile id to route LTM through that profile instead,
+    // for the minority running several providers. See resolveLTMProfileId.
+    connectionProfileId: '',
+    fallbackModel: FALLBACK_LTM_MODEL,
     messagesBetweenLTMs: 50,
     summarizeSpan: 0,
+    allowOversizedSpans: false,
     activeLTMCount: 3,
     maxVersionsPerEntry: 10,
     maxResponseTokens: 2000,
@@ -181,6 +208,113 @@ function getCurrentModelId() {
 
 function resolveGenerationModel() {
     return (settings.modelOverride || '').trim() || getCurrentModelId();
+}
+
+// The <select> option lists used for the settings field and the titlebar quick
+// switcher. Sources: whatever the live connection actually offers, plus our own
+// recommended/alternate ids (which may not be in the dropdown if the user is on a
+// different provider) and whatever is currently saved — a saved id must always be
+// selectable, or opening settings would silently rewrite it to something else.
+const MODEL_SELECTORS_BY_SOURCE = {
+    openai: ['#model_openai_select option'],
+    claude: ['#model_claude_select option'],
+    openrouter: ['#model_openrouter_select option'],
+    makersuite: ['#model_google_select option'],
+    vertexai: ['#model_vertexai_select option'],
+    mistralai: ['#model_mistralai_select option'],
+    cohere: ['#model_cohere_select option'],
+    groq: ['#model_groq_select option'],
+    nanogpt: ['#model_nanogpt_select option'],
+    deepseek: ['#model_deepseek_select option'],
+    aimlapi: ['#model_aimlapi_select option'],
+    xai: ['#model_xai_select option'],
+    moonshot: ['#model_moonshot_select option'],
+    fireworks: ['#model_fireworks_select option'],
+    cometapi: ['#model_cometapi_select option'],
+    custom: ['#model_custom_select option', '#model_custom_select_fill option'],
+};
+
+function collectAvailableModelIds() {
+    const ids = new Set();
+    const add = (value) => {
+        const id = String(value || '').trim();
+        if (id && id !== 'none' && id !== 'None') ids.add(id);
+    };
+
+    add(RECOMMENDED_LTM_MODEL);
+    ALTERNATE_LTM_MODELS.forEach(add);
+
+    try {
+        const selectors = MODEL_SELECTORS_BY_SOURCE[getCurrentSource()] || MODEL_SELECTORS_BY_SOURCE.custom;
+        document.querySelectorAll(selectors.join(',')).forEach(opt => add(/** @type {HTMLOptionElement} */ (opt).value));
+        const modelIds = SillyTavern.getContext().chatCompletionSettings?.['model_ids'];
+        if (Array.isArray(modelIds)) modelIds.forEach(rec => add(typeof rec === 'string' ? rec : (rec?.id || rec?.name)));
+    } catch (err) {
+        ltmWarn('Could not read the available model list', err);
+    }
+
+    add(getCurrentModelId());
+    add(settings?.modelOverride);
+    return Array.from(ids).sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Builds the <option> markup shared by both model pickers.
+ * '' is a real, meaningful value here (follow the live chat model), so it is an
+ * option rather than a placeholder.
+ */
+function buildModelOptions(selectedId) {
+    const current = String(selectedId || '');
+    const options = [`<option value=""${current === '' ? ' selected' : ''}>Use current chat model${getCurrentModelId() ? ` (${escapeHtml(getCurrentModelId())})` : ''}</option>`];
+    for (const id of collectAvailableModelIds()) {
+        const label = id === RECOMMENDED_LTM_MODEL ? `${id} — recommended` : id;
+        options.push(`<option value="${escapeHtml(id)}"${id === current ? ' selected' : ''}>${escapeHtml(label)}</option>`);
+    }
+    return options.join('');
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// =====================================================================
+// CONNECTION PROFILE (opt-in)
+// =====================================================================
+// LTM normally posts straight to the live chat connection, which is correct for
+// almost every install — a Helix plan is a single connection and the chat model
+// and the LTM model live on the same endpoint. The exception is someone running
+// several providers: a bare model id like "glm-4.7-thinking" sent while an
+// OpenRouter profile is active is a model OpenRouter has never heard of (it
+// namespaces them, "z-ai/glm-4.6"), and the request just fails. Pinning a profile
+// keeps the model and the endpoint that serves it together.
+
+function getConnectionProfiles() {
+    const profiles = extensionSettings.connectionManager?.profiles;
+    return Array.isArray(profiles) ? profiles : [];
+}
+
+/** The profile to send through, or '' to use the live connection directly. */
+function resolveLTMProfileId() {
+    const wanted = String(settings.connectionProfileId || '').trim();
+    if (!wanted) return '';
+    // A profile can be deleted after being chosen here. Fall back to the default
+    // path rather than throwing — a memory that generates on the live connection
+    // beats one that does not generate at all.
+    if (!getConnectionProfiles().some(p => p.id === wanted)) {
+        ltmWarn(`Connection profile ${wanted} no longer exists; using the live chat connection instead`);
+        return '';
+    }
+    return wanted;
+}
+
+function buildProfileOptions(selectedId) {
+    const current = String(selectedId || '');
+    const options = [`<option value=""${current === '' ? ' selected' : ''}>Use my current chat connection (recommended)</option>`];
+    for (const profile of getConnectionProfiles()) {
+        const label = profile.api ? `${profile.name} (${profile.api})` : profile.name;
+        options.push(`<option value="${escapeHtml(profile.id)}"${profile.id === current ? ' selected' : ''}>${escapeHtml(label)}</option>`);
+    }
+    return options.join('');
 }
 
 // =====================================================================
@@ -285,10 +419,35 @@ function getUserName() {
 // third-person memories about "Weybot" itself instead of the NPCs actually in the scene, and auto
 // POV had to guess whose first person to write in, landing on the persona in one memory and an NPC
 // in the next. These runs are therefore always third person, and never name a viewpoint character.
-const OPEN_WORLD_CARDS = new Set(['weybot', 'mirror weyland']);
+const OPEN_WORLD_CARDS = new Set(['weybot', 'mirrorweyland']);
+
+/**
+ * Collapses a card name to letters and digits only, then drops a trailing copy
+ * number, so every spelling of the same card lands on one key.
+ *
+ * This used to be an exact match on the raw display name, which meant a card
+ * SillyTavern had named even slightly differently was not recognised as open
+ * world at all — and the most common way that happens is importing a second
+ * copy, which yields "Weybot_2". Both "Weybot" and "Weybot_2" exist in the
+ * shipped chats folder, so this was reachable on a normal install: the run
+ * silently fell through to 1st person and wrote WeyBot memories from the
+ * perspective of whichever NPC the model latched onto.
+ *
+ * Handles: "WeyBot", "weybot", "Weybot_2", "Weybot 2", "Weybot (2)",
+ * "Mirror Weyland", "Mirror-Weyland", "MirrorWeyland".
+ */
+function normalizeCardName(name) {
+    return String(name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '')
+        .replace(/\d+$/, '');
+}
 
 function isOpenWorldRun() {
-    return OPEN_WORLD_CARDS.has(getCurrentCharacterName().trim().toLowerCase());
+    const normalized = normalizeCardName(getCurrentCharacterName());
+    const isOpenWorld = OPEN_WORLD_CARDS.has(normalized);
+    ltmLog(`open-world check: "${getCurrentCharacterName()}" -> "${normalized}" -> ${isOpenWorld}`);
+    return isOpenWorld;
 }
 
 /**
@@ -373,28 +532,96 @@ function extractTimelineFromRange(firstMessageId, lastMessageId) {
 // a single memory, so the cadence doubles as the span; a manual
 // summarizeSpan overrides just that size, never the "skip what's already
 // covered" start point computed elsewhere.
+// Hard ceiling on how many messages go into one LTM. The chat context tops out
+// around 80 messages, so a user asking for 120 produces a request that simply
+// fails. 70 leaves headroom for the prompt scaffolding on top of the transcript.
+// Overridable per-install via the settings checkbox, with a warning.
+const MAX_SUMMARIZE_MESSAGES = 70;
+
+function getSpanCap() {
+    return settings.allowOversizedSpans ? Number.POSITIVE_INFINITY : MAX_SUMMARIZE_MESSAGES;
+}
+
 function resolveSummarizeSpan() {
     const manualSpan = Math.floor(Number(settings.summarizeSpan) || 0);
-    return manualSpan > 0
+    const span = manualSpan > 0
         ? Math.max(10, manualSpan)
         : Math.max(10, Number(settings.messagesBetweenLTMs) || 50);
+    return Math.min(span, getSpanCap());
+}
+
+/** The user's hand-set coverage window for this chat, if they edited it in the sidebar. */
+function getSpanOverride(chatId = getCurrentChatId()) {
+    const override = settings.__chatState[chatId]?.spanOverride;
+    if (!override || !Number.isInteger(override.first) || !Number.isInteger(override.last)) return null;
+    return override;
+}
+
+function setSpanOverride(chatId, first, last) {
+    settings.__chatState[chatId] ??= {};
+    settings.__chatState[chatId].spanOverride = {
+        first: Math.max(0, Math.floor(first)),
+        last: Math.max(0, Math.floor(last)),
+    };
+    persistSettings();
+}
+
+function clearSpanOverride(chatId) {
+    if (settings.__chatState[chatId]) {
+        delete settings.__chatState[chatId].spanOverride;
+        persistSettings();
+    }
 }
 
 function computeRangeFromCurrentChat() {
+    const chatId = getCurrentChatId();
     const chat = SillyTavern.getContext().chat || [];
     const last = chat.length - 1;
-    const state = settings.__chatState[getCurrentChatId()];
-    // Start after the last message covered by a previous LTM, capped at a
-    // span. The cap matters most when no coverage was ever recorded — a
-    // fresh install on a long-running chat, or a chat whose only LTMs are
-    // legacy entries from the old STscript system (which never wrote
-    // __chatState) — where an uncapped range would ship the ENTIRE chat
-    // history to the model.
-    const span = resolveSummarizeSpan();
+
+    // An explicit span the user set in the sidebar wins outright — that readout
+    // is a promise about what the next LTM will contain, so honour it literally.
+    // Both ends are clamped into the messages that actually exist, and ordered,
+    // so a stale or mistyped override can never produce an inverted range like
+    // "5 / 1 (0 msgs)" — it collapses to the closest real span instead.
+    const override = getSpanOverride(chatId);
+    if (override) {
+        const ceiling = Math.max(0, last);
+        const first = Math.min(Math.max(0, Math.min(override.first, override.last)), ceiling);
+        let lastId = Math.min(Math.max(0, Math.max(override.first, override.last)), ceiling);
+        lastId = Math.max(first, lastId);
+        // Trim the end to fit the cap rather than letting an over-limit span through
+        // with a warning. Message ranges are inclusive, so 70→140 is 71 messages, not
+        // 70 — a hand-typed round span would otherwise sit one over the limit and
+        // trip a warning the user can't make sense of ("140 minus 70 IS 70"). Pulling
+        // the end back to 139 keeps their arithmetic honest and the warning silent.
+        const cap = getSpanCap();
+        if (Number.isFinite(cap) && lastId - first + 1 > cap) lastId = first + cap - 1;
+        return { firstMessageId: first, lastMessageId: lastId };
+    }
+
+    const state = settings.__chatState[chatId];
+    // Cover everything since the last saved LTM. This used to be clamped to the
+    // CADENCE, which silently dropped the oldest uncovered messages whenever more
+    // than a cadence had piled up — 56 uncovered messages produced a 50-message
+    // memory and the 6 oldest were lost with no warning (Zoey's report). The cap
+    // is now the context-driven one, which is a real limit rather than a setting
+    // that happens to double as one.
+    //
+    // The cap still matters most when no coverage was ever recorded — a fresh
+    // install on a long-running chat, or a chat whose only LTMs are legacy entries
+    // from the old STscript system (which never wrote __chatState) — where an
+    // uncapped range would ship the ENTIRE chat history to the model.
+    const cap = getSpanCap();
     let first = (state?.lastLtmMessageId ?? -1) + 1;
-    if (last - first + 1 > span) first = last - span + 1;
-    if (first > last) first = Math.max(0, last - span + 1);
+    if (last - first + 1 > cap) first = last - cap + 1;
+    if (first > last) first = Math.max(0, last - Math.min(cap, resolveSummarizeSpan()) + 1);
     return { firstMessageId: Math.max(0, first), lastMessageId: Math.max(0, last) };
+}
+
+/** How many messages a range covers, inclusive. */
+function rangeSize(range) {
+    if (!range) return 0;
+    return Math.max(0, range.lastMessageId - range.firstMessageId + 1);
 }
 
 /**
@@ -784,12 +1011,12 @@ function displayName(text) {
  * @param {{role:string, content:string}[]} messages
  * @param {boolean} stream
  */
-function buildRequestPayload(messages, stream) {
+function buildRequestPayload(messages, stream, modelOverride = undefined) {
     const source = getCurrentSource();
     const payload = {
         stream,
         messages,
-        model: resolveGenerationModel(),
+        model: modelOverride !== undefined ? modelOverride : resolveGenerationModel(),
         chat_completion_source: source,
         max_tokens: Number(settings.maxResponseTokens) || 2000,
         // Ask the API to keep extended thinking minimal where the source
@@ -810,6 +1037,54 @@ function buildRequestPayload(messages, stream) {
     return payload;
 }
 
+/**
+ * One completion request for a given model. Two transports: a pinned Connection
+ * Profile (opt-in, for multi-provider setups) or the live chat connection (the
+ * default, and what a single-plan install wants).
+ * @returns {Promise<any>} extracted data, or an async generator factory when streaming
+ */
+async function requestLTMCompletion(messages, model, stream, signal) {
+    const profileId = resolveLTMProfileId();
+
+    // The unpinned default posts straight to ChatCompletionService using
+    // oai_settings.chat_completion_source — that object is Chat-Completion-only and
+    // stays populated with whatever it was last set to even while main_api is
+    // something else. Without this check, a user on Text Completion (Featherless,
+    // KoboldCpp, etc.) with no LTM profile pinned would silently get a request built
+    // from stale/unrelated chat-completion settings instead of their real connection —
+    // wrong backend, confusing failure. Fail loudly and tell them the fix instead.
+    if (!profileId && main_api !== 'openai') {
+        throw new Error(`LTM can't use your live connection (${main_api}) automatically — it only knows how to post to Chat Completion APIs by default. Open LTM settings and pin a Connection Profile for your Text Completion provider instead.`);
+    }
+
+    if (profileId) {
+        // sendRequest takes the model as an overridePayload, so one profile can
+        // serve any model its endpoint exposes — and unlike switching the profile
+        // outright (the Router's approach) this never touches the user's live
+        // connection, which matters because LTM drafts generate in the background
+        // while they keep chatting.
+        const service = SillyTavern.getContext().ConnectionManagerRequestService;
+        if (!service) throw new Error('ConnectionManagerRequestService not available in this SillyTavern version');
+        ltmLog('generating via connection profile', { profileId, model, stream });
+        return service.sendRequest(
+            profileId,
+            messages,
+            Number(settings.maxResponseTokens) || 2000,
+            { stream, signal, extractData: true },
+            model ? { model } : {},
+        );
+    }
+
+    const service = SillyTavern.getContext().ChatCompletionService;
+    if (!service) throw new Error('ChatCompletionService not available in this SillyTavern version');
+    const payload = buildRequestPayload(messages, stream, model);
+    // Messages logged in full on purpose — this is exactly what gets sent to the
+    // model, and that's the point of debug mode. proxy_password is redacted so a
+    // pasted console log can't leak it by accident.
+    ltmLog('generation payload', { ...payload, proxy_password: payload.proxy_password ? '(redacted)' : undefined });
+    return service.processRequest(payload, {}, true, signal);
+}
+
 async function generateDraft(job) {
     job.status = 'generating';
     job.draft = '';
@@ -826,16 +1101,22 @@ async function generateDraft(job) {
         );
 
     try {
-        const service = SillyTavern.getContext().ChatCompletionService;
-        if (!service) throw new Error('ChatCompletionService not available in this SillyTavern version');
-
-        const payload = buildRequestPayload(messages, !!settings.streamDrafts);
-        // Messages logged in full on purpose — this is exactly what gets sent
-        // to the model, and that's the point of debug mode. proxy_password is
-        // redacted so a pasted console log can't leak it by accident.
-        ltmLog('generation payload', { ...payload, proxy_password: payload.proxy_password ? '(redacted)' : undefined });
-
-        const result = await service.processRequest(payload, {}, true, job.abort.signal);
+        const stream = !!settings.streamDrafts;
+        let result;
+        try {
+            result = await requestLTMCompletion(messages, resolveGenerationModel(), stream, job.abort.signal);
+        } catch (primaryErr) {
+            // One retry on the fallback model. Only safe while nothing has been
+            // written yet — a mid-stream failure has already put partial text in
+            // the editor, and restarting would splice two models' output together.
+            const fallback = String(settings.fallbackModel || '').trim();
+            const usable = fallback && fallback !== resolveGenerationModel() && !job.abort?.signal?.aborted && !job.draft;
+            if (!usable) throw primaryErr;
+            ltmWarn(`primary model failed, retrying on fallback "${fallback}"`, primaryErr);
+            toast('info', `LTM model failed — retrying on ${fallback}`);
+            result = await requestLTMCompletion(messages, fallback, stream, job.abort.signal);
+            job.usedFallbackModel = fallback;
+        }
 
         if (typeof result === 'function') {
             // Streaming: result is an async generator factory.
@@ -1397,6 +1678,13 @@ function buildModalHtml() {
     <div id="wlm-titlebar">
       <span class="wlm-title">🧠 Long-Term Memory</span>
       <div class="wlm-titlebar-actions">
+        <!-- Quick model switcher: swapping the LTM model is the single most common
+             settings trip, so it lives here instead of behind the ⚙ panel.
+             This is a real <select> at all times rather than a button that swaps
+             itself for one — the swap version looked clickable but never opened,
+             because focus()ing a select does not open its native dropdown. -->
+        <span class="wlm-model-chip-label">Model:</span>
+        <select id="wlm-model-chip-select" class="wlm-model-chip-select" title="Which model writes your memories. This only affects LTM generation — your roleplay chat model is untouched."></select>
         <button id="wlm-settings-btn" title="Open LTM settings — model, cadence, point of view, and more">LTM Settings ⚙</button>
         <button id="wlm-close-btn" title="Close">✕</button>
       </div>
@@ -1409,10 +1697,27 @@ function buildModalHtml() {
           <button id="wlm-bulk-delete-btn" class="wlm-btn-sm wlm-btn-danger" disabled title="Check one or more entries below, then delete them">🗑 Delete Selected</button>
         </div>
         <div id="wlm-progress-row">
-          <span id="wlm-progress-text">— / —</span>
-          <input id="wlm-goal-input" type="number" min="0" style="display:none" title="Message # to make the next LTM at" />
-          <button id="wlm-goal-edit-btn" class="wlm-btn-sm" title="Set an exact message # for the next LTM">✎</button>
-          <button id="wlm-goal-reset-btn" class="wlm-btn-sm" style="display:none" title="Reset to the default cadence">↺</button>
+          <div class="wlm-progress-line" title="LEFT: the message number where your last saved memory stopped. Everything after it is not yet remembered.&#10;RIGHT: the message number where the next memory is due — when you reach it, LTM offers to make one. '(now N)' is the message you are on right now.">
+            <span class="wlm-progress-label">Last LTM / next at</span>
+            <span id="wlm-last-ltm-text">—</span>
+            <span class="wlm-progress-slash">/</span>
+            <span id="wlm-progress-text">—</span>
+            <input id="wlm-goal-input" type="number" min="0" style="display:none" title="Type the message number you want the next memory to be due at, then press Enter." />
+            <button id="wlm-goal-edit-btn" class="wlm-btn-sm" title="Change when the next memory is due. Useful if you want one sooner than the normal schedule.">✎</button>
+            <button id="wlm-goal-reset-btn" class="wlm-btn-sm" style="display:none" title="Back to the normal schedule (the 'suggest every N messages' setting).">↺</button>
+          </div>
+          <div class="wlm-progress-line" title="The exact stretch of chat the next memory will be written from: first message / last message, and how many that is.&#10;By default this is everything since your last memory. Edit it if you want the memory to cover a different stretch.">
+            <span class="wlm-progress-label" id="wlm-span-label">Span start / end</span>
+            <span id="wlm-span-text">—</span>
+            <span id="wlm-span-edit-fields" style="display:none">
+              <input id="wlm-span-first" type="number" min="0" title="First message to include. Message numbers are the counter shown on each message in chat." />
+              <span class="wlm-progress-slash">/</span>
+              <input id="wlm-span-last" type="number" min="0" title="Last message to include. Both ends are included in the memory." />
+            </span>
+            <button id="wlm-span-edit-btn" class="wlm-btn-sm" title="Pick exactly which messages go into the next memory.">✎</button>
+            <button id="wlm-span-reset-btn" class="wlm-btn-sm" style="display:none" title="Back to covering everything since your last memory.">↺</button>
+          </div>
+          <div id="wlm-span-warning" class="wlm-span-warning" style="display:none"></div>
         </div>
         <div id="wlm-entry-list"></div>
       </div>
@@ -1442,26 +1747,42 @@ function buildModalHtml() {
           <input id="wlm-set-enabled" type="checkbox" />
           <span>Enable LTM notifications <small>(drafts ready/failed, and suggestions below)</small></span>
         </label>
-        <label class="wlm-field" title="Model ID used only for LTM calls — never affects your actual chat connection. Leave blank to use whatever model your chat is currently connected to.">
-          <span>Model for LTM generation <small>(blank = current chat model)</small></span>
+        <label class="wlm-field" title="Model used only for LTM calls — never affects your actual chat connection. Pick from the models your connection offers, or choose Custom to type an id by hand.">
+          <span>Model for LTM generation</span>
           <div class="wlm-inline">
-            <input id="wlm-set-model" type="text" placeholder="${getCurrentModelId() || 'model id'}" />
+            <select id="wlm-set-model-select" title="Pick the model LTM generation runs on">
+              ${buildModelOptions(settings.modelOverride)}
+              <option value="__custom__">Custom — type an id…</option>
+            </select>
             <button id="wlm-use-current-model" class="wlm-btn-sm" title="Copy the active chat model">Use current</button>
           </div>
+          <!-- Kept for ids the dropdown can't know about (a provider the user isn't
+               currently connected to). Revealed by the Custom option above. -->
+          <input id="wlm-set-model" type="text" placeholder="${getCurrentModelId() || 'model id'}" style="display:none" title="Model id, typed by hand" />
           <div class="wlm-recommend-row">
             <span class="wlm-recommend-label">Recommended LTM Model:</span>
-            <button class="wlm-btn-sm wlm-model-quickfill" data-model="${RECOMMENDED_LTM_MODEL}" title="Fill the field above with ${RECOMMENDED_LTM_MODEL}">${RECOMMENDED_LTM_MODEL}</button>
-            ${ALTERNATE_LTM_MODELS.map(m => `<button class="wlm-btn-sm wlm-model-quickfill" data-model="${m}" title="Fill the field above with ${m}">${m}</button>`).join('')}
+            <button class="wlm-btn-sm wlm-model-quickfill" data-model="${RECOMMENDED_LTM_MODEL}" title="Switch to ${RECOMMENDED_LTM_MODEL}">${RECOMMENDED_LTM_MODEL}</button>
+            ${ALTERNATE_LTM_MODELS.map(m => `<button class="wlm-btn-sm wlm-model-quickfill" data-model="${m}" title="Switch to ${m}">${m}</button>`).join('')}
           </div>
-          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use glm-4.7-thinking and gemini-3.1-pro-preview whenever possible. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
+          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use gemini-3.8-flash whenever possible — minimax-m3 is a solid alternative. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
+        </label>
+        <label class="wlm-field" title="If the model above fails or is unavailable, LTM retries once with this one instead of giving up. Leave it on ${FALLBACK_LTM_MODEL} unless you have a reason to change it.">
+          <span>Fallback model <small>(used only if the model above fails)</small></span>
+          <select id="wlm-set-fallback-model" title="Second choice, tried once if the first model errors out">
+            <option value="">No fallback — fail instead of retrying</option>
+          </select>
+        </label>
+        <label class="wlm-field" title="Which saved connection LTM sends through. Leave this on your current chat connection unless you run more than one provider — if you do, pinning the provider that actually hosts your LTM model stops 'model not found' errors when your chat is connected somewhere else.">
+          <span>Connection for LTM <small>(almost everyone should leave this alone)</small></span>
+          <select id="wlm-set-profile" title="Leave as-is unless you run several providers"></select>
         </label>
         <label class="wlm-field" title="How many new messages should pass before the reminder banner suggests a new LTM. On Auto below, this also sets how many messages go into each memory.">
           <span>Suggest an LTM every N messages</span>
           <input id="wlm-set-cadence" type="number" min="10" step="10" />
         </label>
-        <label class="wlm-field" title="How many recent messages get summarized into a new LTM. Auto matches the cadence above. Messages already covered by a previous memory are always skipped either way.">
-          <span>Messages summarized per LTM <small>(blank or 0 = Auto, recommended)</small></span>
-          <input id="wlm-set-span" type="number" min="0" step="10" placeholder="Auto" />
+        <label class="wlm-field wlm-check" title="Each LTM is capped at ${MAX_SUMMARIZE_MESSAGES} messages because the chat context tops out around 80 — a longer request usually fails outright instead of producing a memory. Tick this only if you know your context window can take it.">
+          <input id="wlm-set-oversized" type="checkbox" />
+          <span>Allow LTMs longer than ${MAX_SUMMARIZE_MESSAGES} messages <small>(not recommended — larger spans often fail against the context limit)</small></span>
         </label>
         <label class="wlm-field" title="How many recent memories stay permanently loaded in context at once. Older ones switch to semantic-search-only (vectorized) instead of disappearing — pinned memories are always exempt.">
           <span>Active (always-loaded) LTMs — older ones get vectorized <small>(recommended: 3)</small></span>
@@ -1532,18 +1853,28 @@ function injectModal() {
     document.getElementById('wlm-save-btn').addEventListener('click', onSaveClicked);
     document.getElementById('wlm-editor-body').addEventListener('input', onEditorChanged);
     document.getElementById('wlm-version-picker').addEventListener('change', onVersionPicked);
-    document.getElementById('wlm-use-current-model').addEventListener('click', () => {
-        const input = /** @type {HTMLInputElement} */ (document.getElementById('wlm-set-model'));
-        input.value = getCurrentModelId();
-        input.dispatchEvent(new Event('change'));
-    });
+    document.getElementById('wlm-use-current-model').addEventListener('click', () => applyModelChoice(''));
     // One handler for the recommended model + every alternate quick-fill button.
     document.querySelectorAll('.wlm-model-quickfill').forEach((quickfillBtn) => {
         quickfillBtn.addEventListener('click', () => {
-            const input = /** @type {HTMLInputElement} */ (document.getElementById('wlm-set-model'));
-            input.value = /** @type {HTMLElement} */ (quickfillBtn).dataset.model;
-            input.dispatchEvent(new Event('change'));
+            applyModelChoice(/** @type {HTMLElement} */ (quickfillBtn).dataset.model);
         });
+    });
+    document.getElementById('wlm-set-model-select').addEventListener('change', (ev) => {
+        const value = /** @type {HTMLSelectElement} */ (ev.target).value;
+        const manual = /** @type {HTMLInputElement} */ (document.getElementById('wlm-set-model'));
+        if (value === '__custom__') {
+            // Reveal the free-text box and let its own change handler save.
+            manual.style.display = '';
+            manual.value = settings.modelOverride || '';
+            manual.focus();
+            return;
+        }
+        manual.style.display = 'none';
+        applyModelChoice(value);
+    });
+    document.getElementById('wlm-model-chip-select').addEventListener('change', (ev) => {
+        applyModelChoice(/** @type {HTMLSelectElement} */ (ev.target).value);
     });
     document.getElementById('wlm-goal-edit-btn').addEventListener('click', beginGoalEdit);
     document.getElementById('wlm-goal-input').addEventListener('keydown', (ev) => {
@@ -1556,12 +1887,37 @@ function injectModal() {
         renderProgress();
         updateChip();
     });
+    document.getElementById('wlm-span-edit-btn').addEventListener('click', beginSpanEdit);
+    ['wlm-span-first', 'wlm-span-last'].forEach((id) => {
+        const el = document.getElementById(id);
+        el.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') commitSpanEdit();
+            if (ev.key === 'Escape') cancelSpanEdit();
+        });
+    });
+    // Commit on blur, but not when focus simply moved to the OTHER span box —
+    // tabbing from start to end would otherwise save a half-edited range.
+    ['wlm-span-first', 'wlm-span-last'].forEach((id) => {
+        document.getElementById(id).addEventListener('blur', (ev) => {
+            const next = /** @type {FocusEvent} */ (ev).relatedTarget;
+            const movedWithinEditor = next instanceof HTMLElement
+                && (next.id === 'wlm-span-first' || next.id === 'wlm-span-last');
+            if (!movedWithinEditor) commitSpanEdit();
+        });
+    });
+    document.getElementById('wlm-span-reset-btn').addEventListener('click', () => {
+        clearSpanOverride(getCurrentChatId());
+        renderProgress();
+        updateChip();
+    });
     document.getElementById('wlm-mobile-expand-btn').addEventListener('click', toggleMobileExpand);
 
     // Settings inputs → live-save on change
     bindSetting('wlm-set-model', 'modelOverride', v => String(v || '').trim());
     bindSetting('wlm-set-cadence', 'messagesBetweenLTMs', v => Math.max(10, Number(v) || 50));
-    bindSetting('wlm-set-span', 'summarizeSpan', v => Math.max(0, Math.floor(Number(v) || 0)));
+    bindSetting('wlm-set-fallback-model', 'fallbackModel', v => String(v || '').trim());
+    bindSetting('wlm-set-profile', 'connectionProfileId', v => String(v || '').trim());
+    bindSetting('wlm-set-oversized', 'allowOversizedSpans', null, true);
     bindSetting('wlm-set-active', 'activeLTMCount', v => Math.max(0, Number(v) || 3));
     bindSetting('wlm-set-maxtokens', 'maxResponseTokens', v => Math.max(500, Number(v) || 2000));
     bindSetting('wlm-set-stream', 'streamDrafts', null, true);
@@ -1570,8 +1926,12 @@ function injectModal() {
     bindSetting('wlm-set-enabled', 'enabled', null, true);
     bindSetting('wlm-set-povmode', 'povMode', v => (['first', 'third'].includes(v) ? v : 'auto'));
     bindSetting('wlm-set-automode', 'autoLtmMode', v => (['semi', 'full'].includes(v) ? v : 'off'));
+    // The free-text box only appears via the Custom option; bindSetting saves the
+    // value, this refreshes both pickers so the typed id becomes a real option.
+    document.getElementById('wlm-set-model').addEventListener('change', () => syncModelPickers());
     document.getElementById('wlm-set-enabled').addEventListener('change', () => updateChip());
     document.getElementById('wlm-set-cadence').addEventListener('change', () => { renderProgress(); updateChip(); });
+    document.getElementById('wlm-set-oversized').addEventListener('change', () => { renderProgress(); updateChip(); });
     document.getElementById('wlm-set-automode').addEventListener('change', () => updateChip());
 
     setupDragging();
@@ -1599,8 +1959,7 @@ function loadSettingsIntoForm() {
     const check = (id, val) => { const el = /** @type {HTMLInputElement} */ (document.getElementById(id)); if (el) el.checked = !!val; };
     set('wlm-set-model', settings.modelOverride || '');
     set('wlm-set-cadence', settings.messagesBetweenLTMs);
-    // 0 means Auto — show the placeholder instead of a literal "0".
-    set('wlm-set-span', settings.summarizeSpan > 0 ? settings.summarizeSpan : '');
+    check('wlm-set-oversized', settings.allowOversizedSpans);
     set('wlm-set-active', settings.activeLTMCount);
     set('wlm-set-maxtokens', settings.maxResponseTokens);
     check('wlm-set-stream', settings.streamDrafts);
@@ -1609,6 +1968,9 @@ function loadSettingsIntoForm() {
     check('wlm-set-enabled', settings.enabled);
     set('wlm-set-povmode', settings.povMode || 'auto');
     set('wlm-set-automode', settings.autoLtmMode || 'off');
+    // Rebuilt every time the panel opens: the available models depend on the live
+    // connection, which can have changed since the modal was first injected.
+    syncModelPickers();
     applyOpenWorldPovLock();
 }
 
@@ -1653,10 +2015,144 @@ function renderProgress() {
     const chat = SillyTavern.getContext().chat || [];
     const current = Math.max(0, chat.length - 1);
     const goal = getEffectiveGoal(chatId);
-    textEl.textContent = `${current} / ${goal} messages`;
-    const hasOverride = Number.isInteger(settings.__chatState[chatId]?.goalOverride);
+    const lastLtm = settings.__chatState[chatId]?.lastLtmMessageId;
+
+    // Line 1 — where the last memory ended, and where the next one is due.
+    const lastEl = document.getElementById('wlm-last-ltm-text');
+    if (lastEl) lastEl.textContent = Number.isInteger(lastLtm) ? String(lastLtm) : 'none yet';
+    textEl.textContent = `${goal} (now ${current})`;
+    const hasGoalOverride = Number.isInteger(settings.__chatState[chatId]?.goalOverride);
     const resetBtn = document.getElementById('wlm-goal-reset-btn');
-    if (resetBtn) resetBtn.style.display = hasOverride ? '' : 'none';
+    if (resetBtn) resetBtn.style.display = hasGoalOverride ? '' : 'none';
+
+    renderSpanLine();
+}
+
+/**
+ * Line 2 — exactly which messages are in play. For a saved entry that's the range
+ * it was built from (so you can see what an old memory covers before rerolling
+ * it); otherwise it's what the NEXT generated LTM will contain.
+ */
+function renderSpanLine() {
+    const labelEl = document.getElementById('wlm-span-label');
+    const spanEl = document.getElementById('wlm-span-text');
+    const warnEl = document.getElementById('wlm-span-warning');
+    const editBtn = document.getElementById('wlm-span-edit-btn');
+    const resetBtn = document.getElementById('wlm-span-reset-btn');
+    if (!spanEl) return;
+
+    const chatId = getCurrentChatId();
+    const selected = selectedRef.current;
+    // A saved entry knows the range it came from; show that instead, read-only.
+    const savedRange = selected?.kind === 'entry' ? selected.entry?.sourceRange : null;
+    const showingSaved = Boolean(savedRange && Number.isInteger(savedRange.firstMessageId));
+
+    const range = showingSaved ? savedRange : computeRangeFromCurrentChat();
+    const size = rangeSize(range);
+
+    if (labelEl) labelEl.textContent = showingSaved ? 'This memory covers' : 'Span start / end';
+    spanEl.textContent = Number.isInteger(range?.firstMessageId)
+        ? `${range.firstMessageId} / ${range.lastMessageId}  (${size} msg${size === 1 ? '' : 's'})`
+        : '—';
+
+    if (editBtn) editBtn.style.display = showingSaved ? 'none' : '';
+    if (resetBtn) resetBtn.style.display = (!showingSaved && getSpanOverride(chatId)) ? '' : 'none';
+
+    if (warnEl) {
+        // Only ever a warning about the NEXT generation, never about a saved entry.
+        const over = !showingSaved && size > MAX_SUMMARIZE_MESSAGES;
+        warnEl.style.display = over ? '' : 'none';
+        warnEl.textContent = over
+            ? `⚠ ${size} messages exceeds the ${MAX_SUMMARIZE_MESSAGES}-message limit — this request may fail against the context window.`
+            : '';
+    }
+}
+
+/**
+ * Single entry point for changing the LTM model, whichever control was used —
+ * the settings dropdown, a quick-fill button, "Use current", or the titlebar
+ * chip. Keeps every picker showing the same value.
+ * @param {string} modelId '' means "follow the live chat model".
+ */
+function applyModelChoice(modelId) {
+    settings.modelOverride = String(modelId || '').trim();
+    persistSettings();
+    syncModelPickers();
+}
+
+function syncModelPickers() {
+    const current = settings.modelOverride || '';
+
+    const chipSelect = /** @type {HTMLSelectElement | null} */ (document.getElementById('wlm-model-chip-select'));
+    if (chipSelect) {
+        chipSelect.innerHTML = buildModelOptions(current);
+        chipSelect.classList.toggle('wlm-model-chip-inherit', !current);
+    }
+
+    // Rebuild rather than just setting .value: the available list changes with the
+    // connection, and a freshly-typed custom id has to become a real option.
+    const settingsSelect = /** @type {HTMLSelectElement | null} */ (document.getElementById('wlm-set-model-select'));
+    if (settingsSelect) {
+        settingsSelect.innerHTML = `${buildModelOptions(current)}<option value="__custom__">Custom — type an id…</option>`;
+    }
+    const manual = /** @type {HTMLInputElement | null} */ (document.getElementById('wlm-set-model'));
+    if (manual && manual.style.display === 'none') manual.value = current;
+
+    // Fallback model: same list, plus an explicit "no fallback" choice. Rebuilt
+    // alongside the others so a connection change refreshes every picker at once.
+    const fallbackSelect = /** @type {HTMLSelectElement | null} */ (document.getElementById('wlm-set-fallback-model'));
+    if (fallbackSelect) {
+        const fallback = String(settings.fallbackModel ?? '');
+        const options = [`<option value=""${fallback === '' ? ' selected' : ''}>No fallback — fail instead of retrying</option>`];
+        for (const id of collectAvailableModelIds()) {
+            const label = id === FALLBACK_LTM_MODEL ? `${id} — recommended fallback` : id;
+            options.push(`<option value="${escapeHtml(id)}"${id === fallback ? ' selected' : ''}>${escapeHtml(label)}</option>`);
+        }
+        fallbackSelect.innerHTML = options.join('');
+    }
+
+    const profileSelect = /** @type {HTMLSelectElement | null} */ (document.getElementById('wlm-set-profile'));
+    if (profileSelect) profileSelect.innerHTML = buildProfileOptions(settings.connectionProfileId || '');
+}
+
+function beginSpanEdit() {
+    const spanEl = document.getElementById('wlm-span-text');
+    const fields = document.getElementById('wlm-span-edit-fields');
+    const firstIn = /** @type {HTMLInputElement} */ (document.getElementById('wlm-span-first'));
+    const lastIn = /** @type {HTMLInputElement} */ (document.getElementById('wlm-span-last'));
+    if (!spanEl || !fields || !firstIn || !lastIn) return;
+    const range = computeRangeFromCurrentChat();
+    firstIn.value = String(range.firstMessageId);
+    lastIn.value = String(range.lastMessageId);
+    fields.style.display = '';
+    spanEl.style.display = 'none';
+    firstIn.focus();
+    firstIn.select();
+}
+
+function commitSpanEdit() {
+    const spanEl = document.getElementById('wlm-span-text');
+    const fields = document.getElementById('wlm-span-edit-fields');
+    const firstIn = /** @type {HTMLInputElement} */ (document.getElementById('wlm-span-first'));
+    const lastIn = /** @type {HTMLInputElement} */ (document.getElementById('wlm-span-last'));
+    if (!fields || fields.style.display === 'none') return; // already committed/cancelled
+    const first = Number(firstIn.value);
+    const last = Number(lastIn.value);
+    if (Number.isFinite(first) && Number.isFinite(last) && first >= 0 && last >= 0) {
+        setSpanOverride(getCurrentChatId(), Math.min(first, last), Math.max(first, last));
+    }
+    fields.style.display = 'none';
+    spanEl.style.display = '';
+    renderProgress();
+    updateChip();
+}
+
+function cancelSpanEdit() {
+    const spanEl = document.getElementById('wlm-span-text');
+    const fields = document.getElementById('wlm-span-edit-fields');
+    if (!spanEl || !fields) return;
+    fields.style.display = 'none';
+    spanEl.style.display = '';
 }
 
 function beginGoalEdit() {
@@ -1752,6 +2248,7 @@ async function openPanel() {
     overlay.style.display = 'block';
     overlay.style.pointerEvents = 'auto';
     toggleSettingsView(false);
+    syncModelPickers();
     await refreshSidebar();
 
     const chatId = getCurrentChatId();
@@ -1962,6 +2459,7 @@ function selectJob(job) {
     setEditorButtons({ kind: 'job', job });
     renderVersionPicker(job);
     updateTokenCount(job.draft);
+    renderSpanLine();
     autoExpandEditorOnMobile();
 }
 
@@ -1978,6 +2476,9 @@ function selectEntry(entry) {
     setEditorButtons({ kind: 'entry', entry });
     renderVersionPicker(null);
     updateTokenCount(resolvedContent);
+    // Shows this memory's own coverage range instead of the next-LTM span, so you
+    // can see what an old memory contains before deciding to reroll it.
+    renderSpanLine();
     autoExpandEditorOnMobile();
 }
 
@@ -2007,8 +2508,13 @@ function streamIntoEditor(jobId, text) {
     if (selectedRef.current?.kind !== 'job' || selectedRef.current.job.id !== jobId) return;
     const editor = editorEl();
     if (!editor) return;
+    // Deliberately does NOT follow the caret to the bottom. Being able to cancel a
+    // draft mid-stream is only useful if you can read what has arrived so far, and
+    // auto-scrolling yanked the view away on every token (Zoey's report). The
+    // scroll position is preserved across the value swap so the user stays put.
+    const { scrollTop } = editor;
     editor.value = text;
-    editor.scrollTop = editor.scrollHeight;
+    editor.scrollTop = scrollTop;
     updateTokenCount(text);
 }
 
@@ -2058,6 +2564,14 @@ async function onNewLTMClicked() {
     const chat = SillyTavern.getContext().chat || [];
     if (chat.length < 2) { toast('warning', 'Not enough messages to summarize yet'); return; }
     const range = computeRangeFromCurrentChat();
+    // An oversized span only gets here when the user explicitly ticked the override
+    // (computeRangeFromCurrentChat clamps otherwise) or hand-set a span that large.
+    // Warn rather than block — they asked for it, but the failure mode is opaque
+    // enough (the provider just errors) to be worth naming up front.
+    const size = rangeSize(range);
+    if (size > MAX_SUMMARIZE_MESSAGES) {
+        toast('warning', `Summarizing ${size} messages — past the ${MAX_SUMMARIZE_MESSAGES}-message limit, this may fail against the context window.`);
+    }
     const job = createJob(chatId, range, { isFreshSummary: true, sourceRangeForSave: range });
     await refreshSidebar();
     selectJob(job);

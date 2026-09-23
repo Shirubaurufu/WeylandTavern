@@ -21,6 +21,7 @@ import { scenarios, tails } from "./src/scenarios.js";
 import { charPer, specialChar } from "./src/charper.js";
 import { ravs } from "./src/rav.js";
 import { detector } from "./src/similarity.js";
+import { applyGeminiBypass } from "./src/promptModifiers.js";
 
 const debug = true;
 
@@ -752,7 +753,16 @@ async function Scenarios(userMessage) {
 
         const greeting = getFirstMessage("char");
         const greetingText = greeting?.mes;
-        const greetingSwipe = greeting?.swipe_id;
+        let greetingSwipe = greeting?.swipe_id;
+
+        // Mirror Weyland has a single greeting; MirrorStart picks the start location instead
+        if (getCurrentCharacterName() === "Mirror Weyland") {
+            greetingSwipe = {
+                "Lecture Hall": 0,
+                "Sakurai Cafe": 1,
+                "Dormitory Commons": 2,
+            }[getLocalVariable("MirrorStart")];
+        }
 
         if (!greetingText || greetingSwipe === undefined) {
             console.error(`[WQR] Missing greeting.`);
@@ -1111,6 +1121,9 @@ Dated Nix at start of Freshman, but ended getting dumped.`, true);
         setLocalVariable("TORY", strings.rsbTORY, true);
         setLocalVariable("ELOW", strings.rsbELOW, true);
         setLocalVariable("BRAM", strings.rsbBRAM, true);
+        setLocalVariable("SOF", strings.rsbSOF, true);
+        setLocalVariable("TAWN", strings.rsbTAWN, true);
+        setLocalVariable("SAM", strings.rsbSAM, true);
 		
 		if (charName === "Mirror Weyland") {
 		    await quickReplyApi.executeQuickReply("WeylandUni", "Mirror");
@@ -2353,6 +2366,7 @@ async function XXX(charName) {
         const pc = getGlobalVariable("PromptChoice");
         const rav = ravs.get(pc) || ravs.get("Current Prompt");
         if (!rav) throw new Error("No rav found");
+        const geminiBypassEnabled = String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled';
         if (["Summer","Loona","Belle","Hannah","Seth","Lentyl","Briar","Willow","Bap","Dash"].includes(charName) && rav.thinkYes) {
             setLocalVariable("ThoughtSet", rav.thinkYes);
         } else if (charName === "Vera" && getLocalVariable("Scenario") && rav.thinkYes) {
@@ -2370,9 +2384,35 @@ async function XXX(charName) {
         switch (pc) {
             default:
                 setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
-                setLocalVariable("ravteg", rav.teg);
+                setLocalVariable("ravteg", applyGeminiBypass(rav.teg, geminiBypassEnabled));
                 setLocalVariable("postrav", rav.post.replace("{{pipe}}", `${getLocalVariable("ExpAltShow") === "true" ? `${rav.expaltshow}` : "{{getglobalvar::RPFocus}}"}\n${getGlobalVariable("HTML!") === "Enabled" ? strings.whtml : "====="}`));
                 break;
+            case "Beta Prompt": {
+                // Beta's analysis section is assembled here instead of living pre-baked in rav.teg
+                // (which now holds only the sysprompt tail, starting at the Welcome block) so Hard
+                // Mode and the Analysis toggle can each be turned on or off independently without
+                // hand-syncing prose across every combination — see rav.js's frameTop/reason2Empirical/
+                // directive/objectionValve/bridgeLine/body for what each row below actually contains.
+                setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
+                const hardOn = getGlobalVariable("HardToggle") === "On";
+                const analysisOn = String(getGlobalVariable("AnalysisToggle") || "Enabled").trim().toLowerCase() === "enabled";
+                let ravteg;
+                if (analysisOn) {
+                    const reason2 = hardOn ? `2. FEEDBACK: User feedback may appear below:\n\n${rav.directive}` : rav.reason2Empirical;
+                    ravteg = `${rav.frameTop}\n\n${reason2}\n\n${rav.objectionValve}\n\n${rav.bridgeLine}\n\n${rav.body}\n\n${rav.teg}`;
+                } else if (hardOn) {
+                    ravteg = `${rav.directive}\n\n${rav.bridgeLine}\n\n${rav.teg}`;
+                } else {
+                    ravteg = rav.teg;
+                }
+                setLocalVariable("ravteg", applyGeminiBypass(ravteg, geminiBypassEnabled));
+                let postrav = rav.post.replace("{{pipe}}", `${getLocalVariable("ExpAltShow") === "true" ? `${rav.expaltshow}` : "{{getglobalvar::RPFocus}}"}\n${getGlobalVariable("HTML!") === "Enabled" ? strings.whtml : "====="}`);
+                // The client note only makes sense pointing back at an analysis that's actually in
+                // the prompt — drop it whenever the full analysis body was left out above.
+                if (!analysisOn) postrav = postrav.replace(/¦Weyland Tavern client note:[^¦]*¦\s*\n*/, "");
+                setLocalVariable("postrav", postrav);
+                break;
+            }
             case "Old Prompt 2025":
                 let replace = [];
                 if (charName !== "Muse") {
@@ -2385,7 +2425,7 @@ async function XXX(charName) {
                     }
                     replace.push('');
                 }
-                setLocalVariable("ravteg",rav.teg.replace("\n{{pipe}}\n", replace.join("\n")));
+                setLocalVariable("ravteg", applyGeminiBypass(rav.teg.replace("\n{{pipe}}\n", replace.join("\n")), geminiBypassEnabled));
                 setLocalVariable("postrav", rav.post);
                 break;
         }

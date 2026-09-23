@@ -434,7 +434,7 @@
         "wi_key_input_plaintext": true,
         "spoiler_free_mode": true
     },
-    "extension_settings": {
+    "extension_settings": {"weylandNetwork":{"cloudflareDns":true},
         "apiUrl": "http://localhost:5100",
         "apiKey": "",
         "autoConnect": false,
@@ -1264,7 +1264,7 @@
             ]
         }
     },
-    "tags": [
+    "tags": [{"id":"3b530486-b7fa-40c3-83b5-6a243dd0b289","name":"Sam","folder_type":"NONE","filter_state":"UNDEFINED","sort_order":null,"is_hidden_on_character_card":false,"color":"","color2":"","create_date":1790175160893},
         {
             "id": "c7210ada-96e5-4aa9-99b0-e377e8279fc4",
             "name": "Belle",

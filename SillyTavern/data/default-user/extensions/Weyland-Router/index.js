@@ -7,7 +7,7 @@ export const WT_ROUTER_MODULE_NAME = "Weyland-Router";
 // ========= SETUP =========
 // =========================
 
-const extensionVersion = "1.1.0";
+const extensionVersion = "1.2.0";
 
 /**
  * @typedef {Object} ModelEntry
@@ -32,6 +32,8 @@ const extensionVersion = "1.1.0";
  * @property {number} failureWindowMs         // rolling window for counting failures
  * @property {number} failureThreshold        // failures in window before extended CD kicks in
  * @property {boolean} suppressApiErrors
+ * @property {boolean} hardModeEnabled        // roll Hard Mode in at random
+ * @property {number} hardModeChance          // percent chance per generation
  */
 
 /** @type {WeylandRouterSettings} */
@@ -45,7 +47,9 @@ const defaultSettings = {
     extendedCooldownMs: 3 * 60 * 60 * 1000,   // 3 hours
     failureWindowMs: 30 * 60 * 1000,          // 30 min rolling window
     failureThreshold: 4,                       // 4 failures in window → extended CD
-    suppressApiErrors: true
+    suppressApiErrors: true,
+    hardModeEnabled: false,
+    hardModeChance: 15,                        // ~1 message in 7
 };
 
 // Hard floors for user-configurable timing. A sub-minute timeout or cooldown
@@ -60,7 +64,10 @@ let settings = undefined;
 let currentlySelectedModel = null;
 let attemptedThisTurn = new Set();
 let generationTimeoutId = null;
-let isRetrying = false;
+// Scheduled triggerRetry from failCurrentAttempt. Kept as an id so a genuine
+// generation stop can cancel it — otherwise a retry fires even after the user
+// said stop, which reads as "I hit stop and it keeps trying".
+let retryTimeoutId = null;
 // True while Router itself is stopping a stalled generation (timeout path) before a
 // retry. The GENERATION_STOPPED that our own stopGeneration() emits must NOT be
 // treated as a user stop - otherwise onGenerationStopped clears the attempt snapshot
@@ -68,7 +75,9 @@ let isRetrying = false;
 // brand-new message.
 let routerInitiatedStop = false;
 // One-shot token set by triggerRetry() and consumed by the next interceptor call.
-// Survives any /trigger delay, unlike isRetrying which auto-clears on a 1s timer.
+// Survives any /trigger delay. Cleared by clearAttemptCleanly / a genuine
+// generation stop so it can never make an unrelated later generation look like
+// a retry continuation.
 let pendingRetryAttempt = false;
 let originalCustomModel = null;
 let originalToastrError = null;
@@ -82,6 +91,11 @@ let currentAttemptSnapshot = null;
 let retrySnapshot = null;
 let lastSelectedModel = null;
 let lastSelectedAt = 0;
+// Output length (message + reasoning) seen when the current generation timeout
+// was armed. If output has GROWN past this mark by the time the timer fires,
+// the route is still writing and gets an extension instead of being killed —
+// see startGenerationTimeout.
+let generationProgressMark = 0;
 const ROUTER_ATTEMPT_LOCK_KEY = '__weylandRouterAttemptLock';
 const ROUTER_INSTANCE_ID = `${WT_ROUTER_MODULE_NAME}:${extensionVersion}:${Math.random().toString(36).slice(2)}`;
 
@@ -182,13 +196,20 @@ function getSettings() {
         }
     }
     settings = extensionSettings[WT_ROUTER_MODULE_NAME];
-    // Migrate the old 30s/60s defaults up to 180s. Reasoning models regularly spend
-    // 45s+ thinking before writing; the old defaults killed healthy generations.
-    // Users who set an explicit non-default value keep their setting.
-    if (settings.timeoutMs === 30000 || settings.timeoutMs === 60000) settings.timeoutMs = defaultSettings.timeoutMs;
-    // Migrate the old 10-minute default down to the new 5-minute default.
-    // Users who set an explicit non-default value keep their setting.
-    if (settings.cooldownMs === 10 * 60 * 1000) settings.cooldownMs = defaultSettings.cooldownMs;
+    // One-time migration off the old 30s/60s timeout and 10-minute cooldown
+    // defaults. Reasoning models regularly spend 45s+ thinking before writing;
+    // the old defaults killed healthy generations. Guarded by a persisted flag
+    // because the old default values collide with values users can legitimately
+    // pick today (60s is the documented minimum timeout) — re-running the
+    // migration on every load silently reverted deliberate choices back to the
+    // new defaults. Known-bad values stay impossible regardless: the floors
+    // below clamp anything under one minute back up.
+    if (!settings.timingDefaultsMigrated) {
+        settings.timingDefaultsMigrated = true;
+        if (settings.timeoutMs === 30000 || settings.timeoutMs === 60000) settings.timeoutMs = defaultSettings.timeoutMs;
+        if (settings.cooldownMs === 10 * 60 * 1000) settings.cooldownMs = defaultSettings.cooldownMs;
+        saveSettingsDebounced();
+    }
     if (!['random', 'priority'].includes(settings.routingMode)) settings.routingMode = defaultSettings.routingMode;
     // Enforce floors. Sub-minute timeouts/cooldowns cause every model to fail
     // continuously (e.g. a 1-second timeout kills any real generation), so clamp
@@ -249,9 +270,20 @@ function addModelToPool(modelId, profileName = getCurrentConnectionProfileName()
         toastr.warning(`Route "${getModelLabel(route)}" is already in the pool`);
         return false;
     }
-    settings.pool.push({ id: modelId, profileName, weight: 0, timeoutMs: null, cooldownUntil: null, extendedCooldownUntil: null, failureHistory: [] });
-    const equal = 100 / settings.pool.length;
-    settings.pool.forEach(m => m.weight = equal);
+    // The new route takes an even share and the existing routes are scaled down
+    // proportionally, so hand-tuned pull chances survive an add. Flattening every
+    // weight to 100/n (the old behaviour) silently destroyed that tuning.
+    // An untuned pool is unaffected: 3x33.3 + a new route still lands on 4x25.
+    const share = 100 / (settings.pool.length + 1);
+    const existingSum = settings.pool.reduce((sum, m) => sum + (m.weight || 0), 0);
+    if (existingSum > 0) {
+        const scale = (100 - share) / existingSum;
+        settings.pool.forEach(m => m.weight = (m.weight || 0) * scale);
+    } else {
+        // Nothing meaningful to preserve (empty pool, or every weight zeroed by hand).
+        settings.pool.forEach(m => m.weight = share);
+    }
+    settings.pool.push({ id: modelId, profileName, weight: share, timeoutMs: null, cooldownUntil: null, extendedCooldownUntil: null, failureHistory: [] });
     saveSettingsDebounced();
     return true;
 }
@@ -261,8 +293,17 @@ function removeModelFromPool(routeKey) {
     if (idx === -1) return;
     settings.pool.splice(idx, 1);
     if (settings.pool.length > 0) {
-        const equal = 100 / settings.pool.length;
-        settings.pool.forEach(m => m.weight = equal);
+        // Redistribute the removed share proportionally instead of flattening, so
+        // the surviving routes keep their relative pull chances (40/30/20 stays
+        // 44.4/33.3/22.2 rather than collapsing to 33.3 each).
+        const remainingSum = settings.pool.reduce((sum, m) => sum + (m.weight || 0), 0);
+        if (remainingSum > 0) {
+            const scale = 100 / remainingSum;
+            settings.pool.forEach(m => m.weight = (m.weight || 0) * scale);
+        } else {
+            const equal = 100 / settings.pool.length;
+            settings.pool.forEach(m => m.weight = equal);
+        }
     }
     saveSettingsDebounced();
 }
@@ -463,6 +504,71 @@ function isPlaceholderOutput(content) {
     return normalized === '' || normalized === '...' || normalized === '…';
 }
 
+// =========================
+// ==== HEADER VALIDITY ====
+// =========================
+
+// Weyland replies open with a date/location header, and several downstream
+// systems key off it. That makes the header the practical test for "did the
+// model actually start writing the reply, or did it get cut off while still
+// reasoning?" - a cut-off reply that HAS a header is real content the user can
+// answer; one without it never made it out of the reasoning block.
+//
+// The header is not one format. Real chats carry at least: bar-delimited V2
+// (`¦Location~Date~Time~Mode¦`), tilde-separated (`Monday 2:30 PM ~ Kinsbane
+// Manor ~ [DR]`), decorative (Aethel's `⋆｡°✩ 10:14 AM - 08/25 ✩°｡⋆`), Muse's
+// long-form date line, and parenthesised class codes like `(SM)`. These patterns
+// cover the formats observed across the shipped chat history; they are matched
+// against the opening of the message only, since that is where a header lives.
+const HEADER_PATTERNS = [
+    /¦/,                                                            // ¦ delimited (V2)
+    /~[^\n]{0,120}~/,                                                    // loc ~ date ~ time
+    /\b\d{1,2}:\d{2}\s*[AP]\.?M\.?/i,                                    // clock time
+    /\((?:SM|LM|LLM|TM|EM)\)/i,                                          // class code
+    /\[[A-Z]{2,4}\]/,                                                    // bracket code, e.g. [DR]
+    /^\s*(?:Mon|Tues?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?\b/i, // weekday opener
+];
+
+// How much of the message to search. A header sits at the top; scanning the whole
+// body would match a clock time in ordinary prose and call any reply valid.
+const HEADER_SCAN_CHARS = 300;
+
+function hasWeylandHeader(text) {
+    const opening = String(text || '').trimStart().split('\n').slice(0, 3).join('\n').slice(0, HEADER_SCAN_CHARS);
+    if (!opening) return false;
+    return HEADER_PATTERNS.some(pattern => pattern.test(opening));
+}
+
+// Whether the header rule may be applied to THIS chat at all.
+//
+// Not every character emits a header - Kressa is the known standing exception,
+// and any format these patterns don't recognise would look identical to "no
+// header". Treating those as failures would reroll every single reply until the
+// pool was exhausted, so the rule self-calibrates: it only engages for a chat
+// that has demonstrably produced headers before, judged by the same detector.
+// A detector blind spot therefore disables the rule instead of looping forever.
+function chatUsesHeaders(ctx = SillyTavern.getContext(), excludeIndex = -1) {
+    let checked = 0;
+    for (let i = ctx.chat.length - 1; i >= 0 && checked < 6; i--) {
+        if (i === excludeIndex) continue;
+        const msg = ctx.chat[i];
+        if (!msg || msg.is_user || isPlaceholderOutput(msg.mes)) continue;
+        checked++;
+        if (hasWeylandHeader(msg.mes)) return true;
+    }
+    return false;
+}
+
+// The full validity test for a piece of generated output.
+// Content with a header is a real reply, even if it was cut off mid-sentence.
+// Content without one, in a chat that normally uses headers, means the model was
+// still reasoning when it stopped - a failed generation, not a short reply.
+function isValidWeylandOutput(text, ctx = SillyTavern.getContext(), excludeIndex = -1) {
+    if (isPlaceholderOutput(text)) return false;
+    if (!chatUsesHeaders(ctx, excludeIndex)) return true;
+    return hasWeylandHeader(text);
+}
+
 function getAttemptContent(msg, lastIdx, snapshot) {
     if (!msg || msg.is_user) return null;
     if (!snapshot) return String(msg.mes || '') || getReasoningText(msg);
@@ -498,15 +604,180 @@ function releaseRouterAttemptLock() {
 }
 
 // =========================
+// ====== HARD MODE ========
+// =========================
+// Weyland's Hard Mode is not a prompt swap - it is a coaching directive. The
+// Current prompt injects it live through a {{getglobalvar::Coach}} macro, so
+// writing `Coach` is enough there. The Beta prompt does NOT read `Coach`: it bakes
+// the directive into its prompt text when quick-reply-ext's XXX() assembles it
+// from `HardToggle`, and XXX() only runs on its own triggers (new message, a
+// Storytelling/PromptOS change) - never on a swipe. So on Beta every Hard Mode
+// state change here must be followed by an explicit XXX rebuild, or the roll is a
+// silent no-op and a lifted roll stays stuck in the prompt.
+//
+// This feature rolls a die per generation and writes the same directive for that
+// one response, then puts the previous value back. Users are told to run Hard Mode
+// only for a few messages at a time because characters drift permanently rough;
+// sprinkling it randomly gives the same edge without that drift.
+
+const HARD_MODE_QR_SET = 'Weyland';
+const HARD_MODE_QR_LABEL = 'NarrativeSettings';
+// The directive's own bookends. Anchoring on these rather than on offsets into the
+// Quick Reply script means Lucky can rewrite or move the block and this still finds
+// it - and the text is read live, so there is no second copy here to fall stale.
+const HARD_MODE_OPEN = '[TEMPORARY SCENE DIRECTION]';
+const HARD_MODE_CLOSE = '[END TEMPORARY SCENE DIRECTION]';
+// Only these prompts carry the {{getglobalvar::Coach}} macro; on the others,
+// writing Coach is a silent no-op, so say so instead of pretending it worked.
+const COACH_AWARE_PROMPTS = new Set(['Current Prompt', 'Beta Prompt']);
+// If a generation never reports an end (crash, closed tab mid-stream), a stuck
+// Coach would make EVERY later message hard - the exact runaway the manual toggle
+// warns about. Anything older than this is restored on the next opportunity.
+const HARD_MODE_TTL_MS = 10 * 60 * 1000;
+
+/** @type {{coach: string, toggle: string, at: number} | null} */
+let hardModeSaved = null;
+
+function getGlobalVar(name) {
+    try { return SillyTavern.getContext().variables?.global?.get(name) ?? ''; }
+    catch (err) { routerLog(`Could not read global var ${name}`, err); return ''; }
+}
+
+function setGlobalVar(name, value) {
+    try { SillyTavern.getContext().variables?.global?.set(name, value); return true; }
+    catch (err) { routerLog(`Could not write global var ${name}`, err); return false; }
+}
+
+/** Pulls the canonical Hard Mode directive out of the Quick Reply that owns it. */
+function readHardModeDirective() {
+    try {
+        // @ts-ignore - provided by the quick-reply extension
+        const qr = globalThis.quickReplyApi?.getQrByLabel?.(HARD_MODE_QR_SET, HARD_MODE_QR_LABEL);
+        const message = String(qr?.message || '');
+        const start = message.indexOf(HARD_MODE_OPEN);
+        const end = message.indexOf(HARD_MODE_CLOSE);
+        if (start === -1 || end === -1 || end < start) return null;
+        return message.slice(start, end + HARD_MODE_CLOSE.length);
+    } catch (err) {
+        routerLog('Could not read the Hard Mode directive from Quick Replies', err);
+        return null;
+    }
+}
+
+function isCoachAwarePrompt() {
+    return COACH_AWARE_PROMPTS.has(String(getGlobalVar('PromptChoice') || '').trim());
+}
+
+/** Reasons Hard Mode can't roll right now, or '' when it can. */
+function hardModeBlockedReason() {
+    if (!settings?.hardModeEnabled) return 'disabled';
+    // Already on deliberately - leave the user's own setting completely alone.
+    if (String(getGlobalVar('HardToggle')).trim().toLowerCase() === 'on') return 'already on manually';
+    if (!isCoachAwarePrompt()) return `the "${getGlobalVar('PromptChoice')}" prompt ignores Hard Mode`;
+    if (!readHardModeDirective()) return 'the Hard Mode directive could not be found in Quick Replies';
+    return '';
+}
+
+/** @returns {boolean} true when a rolled directive was actually lifted */
+function restoreHardMode(reason) {
+    if (!hardModeSaved) return false;
+    const { coach, toggle } = hardModeSaved;
+    hardModeSaved = null;
+    setGlobalVar('Coach', coach);
+    setGlobalVar('HardToggle', toggle);
+    routerEvent(`Hard Mode lifted (${reason})`, 'info');
+    return true;
+}
+
+// Chained so a rebuild queued by GENERATION_ENDED is finished before the next
+// generation's interceptor reads or rebuilds the prompt (e.g. an immediate swipe).
+let betaPromptRebuild = Promise.resolve();
+
+/** Re-assembles the Beta prompt after a Hard Mode state change (see block comment above). */
+function rebuildBetaPromptIfNeeded() {
+    if (String(getGlobalVar('PromptChoice') || '').trim() !== 'Beta Prompt') return betaPromptRebuild;
+    betaPromptRebuild = betaPromptRebuild.then(async () => {
+        try {
+            // @ts-ignore - provided by the quick-reply extension
+            if (typeof globalThis.executeQuickReplyByName !== 'function') throw new Error('Quick Replies not ready');
+            // @ts-ignore
+            await globalThis.executeQuickReplyByName('Weyland.XXX');
+        } catch (err) {
+            routerLog('Could not rebuild the Beta prompt after a Hard Mode change', err);
+            routerEvent('Hard Mode change could not be applied to the Beta prompt', 'warn');
+        }
+    });
+    return betaPromptRebuild;
+}
+
+/**
+ * Rolls the die and, on a hit, swaps the directive in for this one generation.
+ * Runs on EVERY generation including swipes and Router retries - a reroll gets a
+ * fresh roll, which is also the user's escape hatch from a hard message.
+ * @returns {boolean} true when Hard Mode state changed (rolled in, or an expired roll lifted)
+ */
+function maybeRollHardMode() {
+    // Expired leftovers first: a previous generation that never reported an end
+    // must not keep the directive live forever.
+    let changed = false;
+    if (hardModeSaved && Date.now() - hardModeSaved.at > HARD_MODE_TTL_MS) {
+        changed = restoreHardMode('previous generation never finished');
+    }
+    if (!settings?.hardModeEnabled) return changed;
+
+    const blocked = hardModeBlockedReason();
+    if (blocked) {
+        if (blocked !== 'disabled' && blocked !== 'already on manually') {
+            routerEvent(`Hard Mode roll skipped - ${blocked}`, 'warn');
+        }
+        return changed;
+    }
+
+    const chance = Math.max(0, Math.min(100, Number(settings.hardModeChance) || 0));
+    if (chance <= 0) return changed;
+    if (Math.random() * 100 >= chance) return changed;
+
+    const directive = readHardModeDirective();
+    if (!directive) return changed;
+
+    // Save the EXACT previous values. Coach is shared with the reroll-feedback
+    // flow and is rarely empty, so restoring a default would clobber it.
+    hardModeSaved = {
+        coach: String(getGlobalVar('Coach') ?? ''),
+        toggle: String(getGlobalVar('HardToggle') ?? ''),
+        at: Date.now(),
+    };
+    setGlobalVar('Coach', directive);
+    setGlobalVar('HardToggle', 'On');
+    routerEvent(`Hard Mode rolled in for this response (${chance}% chance)`, 'warn');
+    return true;
+}
+
+// =========================
 // ===== INTERCEPTOR =======
 // =========================
 
 // @ts-ignore
 globalThis.weylandRouterInterceptor = async function (chat, contextSize, abort, type) {
     if (!settings) getSettings();
+    // Utility generations (summaries, impersonation) are not roleplay responses:
+    // neither routing nor Hard Mode should touch them.
+    if (type === 'quiet' || type === 'impersonate') { routerLog(`Skipping: ${type}`); return; }
+
+    // Hard Mode is deliberately evaluated BEFORE the routing gates below. It is a
+    // prompt modifier, not a routing feature, and someone who only wants the random
+    // Hard Mode sprinkle should not have to turn on model routing to get it.
+    // Restore-then-roll means a generation whose end event never arrived is cleaned
+    // up here too, so the directive can never leak into an unrelated later message.
+    // Macros like {{getvar::ravteg}} are resolved after interceptors run, so an
+    // awaited Beta rebuild here still lands in THIS generation's prompt.
+    await betaPromptRebuild;
+    const lifted = restoreHardMode('next generation started');
+    const rolled = maybeRollHardMode();
+    if (lifted || rolled) await rebuildBetaPromptIfNeeded();
+
     if (!settings.enabled) return;
     if (settings.pool.length === 0) return;
-    if (type === 'quiet' || type === 'impersonate') { routerLog(`Skipping: ${type}`); return; }
 
     if (!claimRouterAttemptLock()) return;
 
@@ -515,14 +786,17 @@ globalThis.weylandRouterInterceptor = async function (chat, contextSize, abort, 
         return;
     }
 
-    // Consume the one-shot retry token. This is more reliable than isRetrying
-    // (which auto-clears on a 1s timer and can flip back to false mid-cascade
-    // if /trigger takes its time).
+    // Consume the one-shot retry token. A token means "this generation is a
+    // continuation of the same user turn after a failure" — attemptedThisTurn
+    // is kept so a fully failed pass ends instead of looping forever.
     const isRetryAttempt = pendingRetryAttempt;
     pendingRetryAttempt = false;
 
     if (!isRetryAttempt) {
         attemptedThisTurn.clear();
+        // A fresh turn supersedes any earlier stop: the user is asking for output
+        // again, so nothing from the stopped turn should mute this one.
+        clearUserStopRequest();
         routerEvent('Generation started - rolling model die', 'info');
     } else {
         routerEvent('Rerolling after failure...', 'info');
@@ -567,12 +841,21 @@ globalThis.weylandRouterInterceptor = async function (chat, contextSize, abort, 
 // === TOASTR / ERROR ======
 // =========================
 
+// Phrases that identify a toastr as an error from the chat-completion request
+// itself. Deliberately NARROW: bare status codes ("500", "404", "429") and
+// vague wording ("timeout", "bad request", "something went wrong") were removed
+// because unrelated extension errors match those too — and any match here is
+// attributed to the in-flight route, strikes it, and stops a possibly healthy
+// generation to reroll. ST's own API failures are caught reliably by the
+// "Chat Completion API" toast title (checked separately in
+// installToastrSuppression) or by one of these provider-specific phrases; a
+// request that fails without either signal still gets caught by the router's
+// own generation timeout. Everything else passes through untouched.
 const API_ERROR_PATTERNS = [
     'not included in your plan','model not found','model_not_found','invalid model',
-    'rate limit','rate_limit','status 4','status 5','403','404','429',
-    '500','502','503','504','overloaded','unavailable','timeout',
-    'something went wrong','try again later','chat completion api','api returned an error',
-    'internal server error','bad request','invalid_request_error',
+    'rate limit','rate_limit','rate_limit_error','insufficient_quota',
+    'overloaded','invalid_request_error','api returned an error',
+    'chat completion api',
 ];
 
 function getActiveFailureModel() {
@@ -665,12 +948,16 @@ function failCurrentAttempt(failed, reason) {
     currentAttemptSnapshot = null;
     lastSelectedModel = failed;
     lastSelectedAt = now;
-    setTimeout(() => triggerRetry(), 200);
+    if (retryTimeoutId !== null) clearTimeout(retryTimeoutId);
+    retryTimeoutId = setTimeout(() => { retryTimeoutId = null; triggerRetry(); }, 200);
 }
 
-// Clean exit on success or user-initiated stop. Releases lock, no retry.
+// Clean exit on success or user-initiated stop. Releases lock, cancels any
+// scheduled retry, no new retry.
 function clearAttemptCleanly() {
     releaseRouterAttemptLock();
+    if (retryTimeoutId !== null) { clearTimeout(retryTimeoutId); retryTimeoutId = null; }
+    pendingRetryAttempt = false;
     currentlySelectedModel = null;
     watchingGenId = null;
     lastSelectedModel = null;
@@ -695,6 +982,40 @@ async function waitForGenerationUnlock(timeoutMs = 5000) {
     return !isGenerationLocked();
 }
 
+// Set when a genuine (non-router) stop arrives, and checked at every await
+// boundary inside triggerRetry. Cancelling retryTimeoutId only helps while the
+// retry is still SCHEDULED; once triggerRetry is running it has awaits that can
+// span seconds, and a stop landing in one of those was previously ignored.
+//
+// Deliberately NOT cleared by clearAttemptCleanly: the stop handler calls that
+// function, so clearing it there would wipe the flag the instant it was set.
+// It is cleared when a fresh (non-retry) generation begins, and by a TTL so a
+// stop can never mute a retry belonging to some later, unrelated turn.
+let userStopRequestedAt = 0;
+const USER_STOP_TTL_MS = 30 * 1000;
+
+function markUserStopRequested() {
+    userStopRequestedAt = Date.now();
+}
+
+function clearUserStopRequest() {
+    userStopRequestedAt = 0;
+}
+
+function wasUserStopRequested() {
+    return userStopRequestedAt > 0 && (Date.now() - userStopRequestedAt) < USER_STOP_TTL_MS;
+}
+
+// Bails out of an in-flight retry when the user has stopped in the meantime.
+// Returns true if the caller should return immediately.
+function abandonRetryIfStopped(where) {
+    if (!wasUserStopRequested()) return false;
+    routerEvent(`Retry abandoned (${where}) - generation was stopped`, 'info');
+    clearUserStopRequest();
+    clearAttemptCleanly();
+    return true;
+}
+
 async function stopActiveGenerationForRetry() {
     // Guard the whole stop-and-settle window so the GENERATION_STOPPED our own
     // stopGeneration() emits is recognised as router-initiated, not a user stop.
@@ -711,8 +1032,25 @@ async function stopActiveGenerationForRetry() {
     }
 }
 
-function startGenerationTimeout(model, genId) {
+// Total generated characters visible at the end of the chat right now. Used as
+// a coarse "is the route still producing output" signal for the timeout path.
+function measureAttemptOutput() {
+    const ctx = SillyTavern.getContext();
+    const msg = ctx.chat[ctx.chat.length - 1];
+    if (!msg || msg.is_user) return 0;
+    return String(msg.mes || '').length + getReasoningText(msg).length;
+}
+
+// Bounds on the "still writing, extend the timer" path below. Without them a
+// route that dribbles a single character per window is immortal - it would never
+// time out, where before it was killed at the configured timeout. Whichever
+// limit is reached first ends the attempt.
+const MAX_TIMEOUT_EXTENSIONS = 3;
+const MAX_ATTEMPT_MS = 10 * 60 * 1000;   // hard ceiling regardless of timeout setting
+
+function startGenerationTimeout(model, genId, extensions = 0, attemptStartedAt = Date.now()) {
     clearGenerationTimeout();
+    generationProgressMark = measureAttemptOutput();
     const timeoutMs = getModelTimeoutMs(model);
     generationTimeoutId = setTimeout(async () => {
         if (!currentlySelectedModel || watchingGenId !== genId) return;
@@ -728,6 +1066,29 @@ function startGenerationTimeout(model, genId) {
             routerLog(`Timeout for ${model.id} fired after generation already ended; finalizing instead of failing`);
             onGenerationEnded('late-timeout');
             return;
+        }
+        // Still flagged as running, but check whether the route actually produced
+        // (or added) output since this timer was armed. ST keeps the generating
+        // flag up through post-stream finalization, so a reply that landed just
+        // before the timeout would otherwise be failed here, KEPT (it is
+        // non-blank, and we never destroy real output), and retried on top of
+        // itself — the user then sees two messages for one turn (the reported
+        // "double send" from slow-but-healthy models). A route that is still
+        // writing is productive, not stalled: re-arm and let the normal
+        // end-of-generation path finalize it. Only a route with zero new output
+        // since the last check counts as stalled and gets failed over.
+        const outputNow = measureAttemptOutput();
+        const elapsed = Date.now() - attemptStartedAt;
+        const canExtend = extensions < MAX_TIMEOUT_EXTENSIONS && elapsed < MAX_ATTEMPT_MS;
+        if (outputNow > generationProgressMark && canExtend) {
+            routerEvent(`${getModelLabel(currentlySelectedModel)} still writing at timeout - extending (${extensions + 1}/${MAX_TIMEOUT_EXTENSIONS})`, 'info');
+            startGenerationTimeout(currentlySelectedModel, genId, extensions + 1, attemptStartedAt);
+            return;
+        }
+        if (outputNow > generationProgressMark) {
+            // Producing output, but it has run past the extension budget. A route
+            // trickling output forever is still a stuck route from the user's side.
+            routerEvent(`${getModelLabel(currentlySelectedModel)} still trickling output after ${Math.round(elapsed / 1000)}s - out of extensions, failing over`, 'warn');
         }
         routerLog(`Timeout for: ${model.id}`);
         await stopActiveGenerationForRetry();
@@ -760,7 +1121,7 @@ function markModelFailed(model, reason) {
     pruneFailureHistory(model, now);
     model.failureHistory.push(now);
 
-    const label = { 'timeout': `no response after ${Math.round(getModelTimeoutMs(model)/1000)}s`, 'blank': 'blank response', 'api-error': 'API error', 'unhandled-rejection': 'request failed', 'no-message': 'no message produced', 'stale-output': 'no new output detected', 'stopped': 'generation stopped' }[reason] || reason;
+    const label = { 'timeout': `no response after ${Math.round(getModelTimeoutMs(model)/1000)}s`, 'blank': 'blank response', 'api-error': 'API error', 'unhandled-rejection': 'request failed', 'no-message': 'no message produced', 'stale-output': 'no new output detected', 'no-header': 'cut off before writing a header', 'stopped': 'generation stopped' }[reason] || reason;
     routerLog(`"${getModelLabel(model)}" failed (${label}) [${model.failureHistory.length}/${settings.failureThreshold} in window]`);
 
     if (model.failureHistory.length >= settings.failureThreshold) {
@@ -782,14 +1143,18 @@ function markModelFailed(model, reason) {
 
 async function triggerRetry() {
     const ctx = SillyTavern.getContext();
-    isRetrying = true;
     try {
         if (isGenerationLocked()) {
             routerLog('Generation lock still active before retry; stopping stalled request');
             await stopActiveGenerationForRetry();
         }
+        if (abandonRetryIfStopped('before waiting for unlock')) return;
 
+        // This can block for several seconds. A stop landing inside that wait used
+        // to be unstoppable: cancelling the scheduled-retry timer does nothing once
+        // triggerRetry is already running, so the retry fired anyway.
         const unlocked = await waitForGenerationUnlock();
+        if (abandonRetryIfStopped('after waiting for unlock')) return;
         if (!unlocked) {
             routerEvent('Retry blocked - generation did not unlock', 'error');
             return;
@@ -806,6 +1171,28 @@ async function triggerRetry() {
         const lastMsg = ctx.chat[ctx.chat.length - 1];
         const wasSwipeAttempt = snapshot != null && ctx.chat.length === snapshot.chatLength
             && lastMsg && !lastMsg.is_user && Array.isArray(lastMsg.swipes) && lastMsg.swipes.length > 0;
+
+        // A failed attempt that still left a reply behind has already answered this
+        // turn. Retrying on top of it is the "double send": the reply is non-blank
+        // so nothing removes it, and /trigger then appends a SECOND message for the
+        // same user turn. A cut-off reply is still the character speaking - the user
+        // can answer half a message - so keep it and stand down.
+        //
+        // This is the structural backstop for failures decided WITHOUT looking at
+        // content: the generation timeout and the API-error handler. That is exactly
+        // how a slow-but-healthy route produced a duplicate.
+        //
+        // The test is "is there visible output", NOT the header rule - once deleting
+        // a real reply is off the table, retrying can only duplicate it, so any
+        // visible text is reason enough to stop. getAttemptContent returns null when
+        // the message did not change, so a stale earlier reply cannot suppress a
+        // legitimate retry.
+        const producedContent = getAttemptContent(lastMsg, ctx.chat.length - 1, snapshot);
+        if (producedContent && !isPlaceholderOutput(producedContent) && !isPlaceholderOutput(lastMsg?.mes)) {
+            routerEvent('Failed attempt had already written a reply - keeping it instead of generating a second message', 'warn');
+            clearAttemptCleanly();
+            return;
+        }
 
         if (wasSwipeAttempt) {
             // Trim the failed empty swipe off the end and restore the message to the
@@ -829,12 +1216,17 @@ async function triggerRetry() {
                 }
             }
 
+            if (abandonRetryIfStopped('before clicking swipe')) return;
             releaseRouterAttemptLock();
-            pendingRetryAttempt = true;
             const msgBlocks = document.querySelectorAll('.mes');
             const lastBlock = msgBlocks[msgBlocks.length - 1];
             const swipeRightBtn = lastBlock?.querySelector('.swipe_right');
             if (swipeRightBtn) {
+                // Arm the one-shot retry token only once we know we can actually
+                // retry. Arming before the button check left a stale token behind
+                // on the bail-out path, which made the NEXT user generation run
+                // as a retry continuation with a shrunken model pool.
+                pendingRetryAttempt = true;
                 swipeRightBtn.click();
             } else {
                 // No swipe button in the DOM (e.g. swipe arrows disabled in user settings).
@@ -866,6 +1258,7 @@ async function triggerRetry() {
             // this is a continuation of the same user turn, no matter how long
             // /trigger takes to actually fire it.
             if (ctx.executeSlashCommandsWithOptions) {
+                if (abandonRetryIfStopped('before /trigger')) return;
                 releaseRouterAttemptLock();
                 pendingRetryAttempt = true;
                 await ctx.executeSlashCommandsWithOptions('/trigger', { showOutput: false });
@@ -875,7 +1268,6 @@ async function triggerRetry() {
         console.error(`[${WT_ROUTER_MODULE_NAME}] Retry failed:`, err);
     } finally {
         retrySnapshot = null;
-        setTimeout(() => { isRetrying = false; }, 1000);
     }
 }
 
@@ -934,15 +1326,30 @@ function onGenerationEnded(messageId) {
 
     if (isPlaceholderOutput(content)) {
         // Some models put their entire reply inside the reasoning block and leave
-        // the visible body empty until downstream regex relocates it. Output is
-        // output - substantive reasoning counts as a successful generation.
+        // the visible body empty until downstream regex relocates it. That is real
+        // output and must still count - but only when it actually looks like a
+        // reply. A reasoning block with no header is a generation that stopped
+        // while the model was still thinking: nothing the user can answer.
         const reasoningText = getReasoningText(msg).trim();
         if (isPlaceholderOutput(reasoningText)) {
             failCurrentAttempt(currentlySelectedModel, 'blank');
             return;
         }
+        if (!isValidWeylandOutput(reasoningText, ctx, lastIdx)) {
+            routerEvent(`${getModelLabel(currentlySelectedModel)} stopped inside the reasoning block before writing a header - treating as a failed generation`, 'warn');
+            failCurrentAttempt(currentlySelectedModel, 'no-header');
+            return;
+        }
         routerEvent(`${getModelLabel(currentlySelectedModel)} produced output inside the reasoning block - counting as success`, 'info');
     }
+    // NOTE: the header rule deliberately stops here. It is applied only when the
+    // visible body is empty, where there is nothing to lose by rerolling. Visible
+    // text that simply lacks a header is NOT failed: measured against the shipped
+    // chat history, 2-10% of genuine replies on header-using characters open
+    // without a detectable one (OOC interjections, notification-style scenes,
+    // continuations), and failing those would mean deleting real replies to
+    // reroll them. See the retry guard in triggerRetry - it keeps any visible
+    // output rather than generating a second message on top of it.
 
     // Success
     if (!msg.extra) msg.extra = {};
@@ -972,14 +1379,23 @@ function onGenerationStopped() {
     clearGenerationTimeout();
     // A stop that Router itself triggered to clear a stalled generation before a
     // retry is not a user stop: let failCurrentAttempt keep the snapshot and reroll.
-    if (isRetrying || routerInitiatedStop || !currentlySelectedModel) return;
+    if (routerInitiatedStop) return;
 
-    // GENERATION_STOPPED only fires when something actually stopped the generation
-    // (user clicked stop, pressed Esc, closed the tab mid-gen, etc). Router used to
-    // try to guess whether the user did it via a timing window on the stop button's
-    // pointerdown - too fragile (misses keyboard shortcuts, slow clicks, ST builds
-    // where the selector doesn't match) and would misfire into a retry cascade.
-    // Any stop is treated as intentional: no penalty, no retry.
+    // Any other stop is intentional (user clicked stop, pressed Esc, closed the
+    // tab mid-gen...). Router must stand down completely: cancel a scheduled
+    // retry and disarm the retry token so generation never restarts after the
+    // user said stop. This used to early-return on a stale isRetrying flag that
+    // stayed true for 1s after every retry — a user stop landing in that window
+    // was swallowed, the follow-up GENERATION_ENDED then struck the model as
+    // failed and rolled the next one (the "I keep hitting stop and it keeps
+    // trying" report). GENERATION_STOPPED only ever fires from stopGeneration(),
+    // so there is no other producer to filter out beyond routerInitiatedStop.
+    if (retryTimeoutId !== null) { clearTimeout(retryTimeoutId); retryTimeoutId = null; }
+    pendingRetryAttempt = false;
+    // Also stand down a retry that is ALREADY running - it is past the point where
+    // cancelling the timer helps, and will otherwise swipe or /trigger anyway.
+    markUserStopRequested();
+    if (!currentlySelectedModel) return;
     routerEvent(`Generation stopped - ${getModelLabel(currentlySelectedModel)} not penalized`, 'info');
     clearAttemptCleanly();
 }
@@ -1142,6 +1558,26 @@ function refreshCooldownDisplays() {
     });
 }
 
+/**
+ * Surfaces the reasons a Hard Mode roll can't land, so an enabled toggle that
+ * will never fire explains itself instead of looking broken.
+ */
+function updateHardModeNote() {
+    const note = document.getElementById('wtr-hardmode-note');
+    if (!note) return;
+    if (!settings?.hardModeEnabled) { note.style.display = 'none'; return; }
+
+    const blocked = hardModeBlockedReason();
+    if (!blocked || blocked === 'disabled') { note.style.display = 'none'; return; }
+    if (blocked === 'already on manually') {
+        note.style.display = '';
+        note.textContent = 'Hard Mode is currently switched ON for every message in Storytelling settings, so there is nothing to roll. Turn it off there to use it randomly instead.';
+        return;
+    }
+    note.style.display = '';
+    note.textContent = `Random Hard Mode can't apply right now — ${blocked}.`;
+}
+
 function updateStatusBar() {
     const now = Date.now();
     const available = settings.pool.filter(m => !isOnCooldown(m, now)).length;
@@ -1227,8 +1663,20 @@ function buildModalHtml() {
           <label title="How long a failed model is skipped before Router allows it to be rolled again." style="color:#888;font-size:11px;display:flex;align-items:center;gap:5px;">
             Cooldown <input id="wtr-cooldown" title="Minutes a failed model stays out of rotation. Minimum 1." type="number" min="1" max="60" step="0.1" value="${(settings.cooldownMs/60000).toFixed(1)}" class="wtr-num-input"> min
           </label>
-          <button id="wtr-clear-all-cd" class="wtr-btn-sm" title="Clear every model cooldown immediately.">Reset CDs</button>
+          <button id="wtr-clear-all-cd" class="wtr-btn-sm" title="Clear every REGULAR cooldown immediately. Extended cooldowns (EXT) and strike counts are kept - clear those per-route with the ↻ button on the row.">Reset CDs</button>
         </div>
+
+        <div class="wtr-hardmode-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <label class="wtr-toggle-label" title="Randomly applies Weyland's Hard Mode coaching directive to individual responses, then removes it again as soon as that response is done.&#10;&#10;Hard Mode tells the model it is writing characters too softly. Left on permanently it makes characters drift permanently harsh - which is why the manual toggle warns you to use it briefly. Sprinkling it at random gives you the edge without the drift.&#10;&#10;Works whether or not model routing is switched on.">
+            <input type="checkbox" id="wtr-hardmode-enable" ${settings.hardModeEnabled ? 'checked' : ''}>
+            <span class="wtr-toggle-track"><span class="wtr-toggle-thumb"></span></span>
+          </label>
+          <span style="color:#ccc;font-size:12px;">Random Hard Mode</span>
+          <label title="How many of your responses get Hard Mode, on average. Every generation rolls separately - including swipes, so rerolling a harsh message gives you a fresh roll." style="color:#888;font-size:11px;display:flex;align-items:center;gap:5px;">
+            <input id="wtr-hardmode-chance" type="number" min="1" max="100" step="1" value="${settings.hardModeChance}" class="wtr-num-input"> % of messages
+          </label>
+        </div>
+        <div id="wtr-hardmode-note" class="wtr-hardmode-note" style="display:none;"></div>
 
         <div class="wtr-field-label" title="Choose how Router picks from your pool.">Routing Mode</div>
         <div class="wtr-control-row" style="display:flex;gap:8px;align-items:center;min-width:0;">
@@ -1533,9 +1981,30 @@ function injectModal() {
         /** @type {HTMLInputElement} */ (e.target).value = (settings.cooldownMs / 60000).toFixed(1);
     });
 
+    document.getElementById('wtr-hardmode-enable').addEventListener('change', e => {
+        settings.hardModeEnabled = /** @type {HTMLInputElement} */ (e.target).checked;
+        saveSettingsDebounced();
+        // Turning it off mid-generation must not strand the directive.
+        if (!settings.hardModeEnabled && restoreHardMode('Random Hard Mode switched off')) rebuildBetaPromptIfNeeded();
+        routerEvent(settings.hardModeEnabled ? `Random Hard Mode enabled (${settings.hardModeChance}% of messages)` : 'Random Hard Mode disabled', 'info');
+        updateHardModeNote();
+    });
+
+    document.getElementById('wtr-hardmode-chance').addEventListener('change', e => {
+        const input = /** @type {HTMLInputElement} */ (e.target);
+        const v = parseInt(input.value, 10);
+        if (Number.isFinite(v)) settings.hardModeChance = Math.max(1, Math.min(100, v));
+        input.value = String(settings.hardModeChance);
+        saveSettingsDebounced();
+        updateHardModeNote();
+    });
+
     // clear all cooldowns
     document.getElementById('wtr-clear-all-cd').addEventListener('click', () => {
-        clearAllCooldowns('All cooldowns cleared manually');
+        // No argument on purpose: clearAllCooldowns' own default message is the
+        // accurate one. Passing "All cooldowns cleared manually" logged a claim the
+        // function does not honour - extended cooldowns deliberately survive it.
+        clearAllCooldowns();
     });
 
     document.getElementById('wtr-profile-select').addEventListener('change', () => {
@@ -1635,6 +2104,9 @@ function openModal() {
     renderPoolList();
     rebuildLogPanel();
     updateStatusBar();
+    // Re-checked on every open: the active prompt and the manual Hard Mode toggle
+    // both live outside Router and can change between visits.
+    updateHardModeNote();
 }
 
 function closeModal() {
@@ -1646,31 +2118,49 @@ function closeModal() {
 // === TOOLBAR BUTTON ======
 // =========================
 
+// How long to hunt for a toolbar anchor, and when to settle for the legacy one.
+// The preferred anchor (#delete_connection_profile) belongs to the connection
+// manager, which can be slow to render on a cold start or a loaded profile.
+// These used to be 20 attempts and a flat 10s: the fallback unlocked on the same
+// tick the interval was killed, so the legacy anchor got at most one coin-flip
+// try and usually none at all. The fallback now has a real window before giving up.
+const TOOLBAR_FALLBACK_AFTER_ATTEMPTS = 20;   // 10s at 500ms/tick
+const TOOLBAR_GIVE_UP_AFTER_ATTEMPTS = 60;    // 30s total
+
 function injectToolbarButton() {
     let attempts = 0;
     const uiCheckInterval = setInterval(() => {
         attempts++;
         const connectionDeleteButton = document.getElementById('delete_connection_profile');
         const oldRosterTarget = document.getElementById('external_import_button');
-        const target = connectionDeleteButton || (attempts >= 20 ? oldRosterTarget : null);
-        if (target) {
-            clearInterval(uiCheckInterval);
-            if (!$('#wtr-toolbar-btn').length) {
-                const btn = document.createElement('div');
-                btn.id = 'wtr-toolbar-btn';
-                btn.className = connectionDeleteButton ? 'menu_button fa-solid fa-shuffle' : 'fa-solid fa-shuffle interactable';
-                btn.title = 'Open Weyland Router';
-                btn.style.cssText = 'color:var(--rb-accent,#b4263a);cursor:pointer;';
-                btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openModal(); });
-                if (connectionDeleteButton) {
-                    connectionDeleteButton.before(btn);
-                } else {
-                    oldRosterTarget.after(btn);
-                }
+        const target = connectionDeleteButton || (attempts >= TOOLBAR_FALLBACK_AFTER_ATTEMPTS ? oldRosterTarget : null);
+        if (!target) {
+            if (attempts >= TOOLBAR_GIVE_UP_AFTER_ATTEMPTS) {
+                clearInterval(uiCheckInterval);
+                // Previously this expired silently, leaving no button and no clue.
+                // Say so: the streamlined launcher may still be present, and a
+                // reload usually fixes it once the connection panel has rendered.
+                routerEvent('Could not find a toolbar anchor after 30s - the shuffle button was not added. Reload the page, or open Router from the Connection panel once it has loaded.', 'warn');
+                console.warn(`[${WT_ROUTER_MODULE_NAME}] No toolbar anchor found; launcher button not injected.`);
+            }
+            return;
+        }
+
+        clearInterval(uiCheckInterval);
+        if (!$('#wtr-toolbar-btn').length) {
+            const btn = document.createElement('div');
+            btn.id = 'wtr-toolbar-btn';
+            btn.className = connectionDeleteButton ? 'menu_button fa-solid fa-shuffle' : 'fa-solid fa-shuffle interactable';
+            btn.title = 'Open Weyland Router';
+            btn.style.cssText = 'color:var(--rb-accent,#b4263a);cursor:pointer;';
+            btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openModal(); });
+            if (connectionDeleteButton) {
+                connectionDeleteButton.before(btn);
+            } else {
+                oldRosterTarget.after(btn);
             }
         }
     }, 500);
-    setTimeout(() => clearInterval(uiCheckInterval), 10000);
 }
 
 // Cooldown refresh — ticks the displayed countdown for both regular and extended.
@@ -1706,6 +2196,11 @@ jQuery(async () => {
     eventSource.on(event_types.GENERATION_ENDED, onGenerationEnded);
     eventSource.on(event_types.MESSAGE_RECEIVED, onMessageReceivedForRouter);
     if (event_types.GENERATION_STOPPED) eventSource.on(event_types.GENERATION_STOPPED, onGenerationStopped);
+
+    // Hard Mode restore rides its own listeners rather than the routing lifecycle,
+    // because it must also work while model routing is switched off.
+    eventSource.on(event_types.GENERATION_ENDED, () => { if (restoreHardMode('response finished')) rebuildBetaPromptIfNeeded(); });
+    if (event_types.GENERATION_STOPPED) eventSource.on(event_types.GENERATION_STOPPED, () => { if (restoreHardMode('generation stopped')) rebuildBetaPromptIfNeeded(); });
 
     installToastrSuppression();
     setupUnhandledRejectionListener();

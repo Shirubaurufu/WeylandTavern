@@ -3,7 +3,7 @@
 import { WEYLAND_ROSTER, formatRosterAsText } from './weylandRoster.js';
 import { PSA_ACCOUNTS, formatPsaAccountsAsText } from './twitterPrompts.js';
 import { sampleRoster } from './rosterSampling.js';
-import { DISCORGI_CHANNELS, selectDiscorgiChannels } from './discorgiChannels.js';
+import { allowedDiscorgiChannels, selectDiscorgiChannels } from './discorgiChannels.js';
 
 // How many roster characters ride along in each sync prompt. All 31 used to go — and since every
 // roster first name is a Weyland lorebook key, the WI scan activated all of them and blew its
@@ -14,9 +14,10 @@ export const ROSTER_SAMPLE_SIZE = 20;
 
 // One generation request per sync — this constant is the tuning knob for how much content a
 // single sync may produce. Budget math: ~30-38 items across four apps at ~35-60 tokens each
-// ≈ 1,800-2,400 tokens of content plus headers; 4096 leaves headroom for reasoning-model
-// preambles without inviting unbounded rambling (the prompt itself caps per-app item counts).
-export const UNIFIED_REFRESH_MAX_TOKENS = 4096;
+// ≈ 1,800-2,400 tokens of content plus headers. Raised from 4096 to 8000 (the phone-wide reply
+// cap): thinking models spend hidden reasoning from this same budget, and the prompt itself still
+// caps per-app item counts, so the extra room is headroom, not longer content.
+export const UNIFIED_REFRESH_MAX_TOKENS = 8000;
 
 const WEYLAND_LOCATIONS = 'Weyland City, lecture halls, workshop, research, observatory, dorms, Senaka, Sakurai, Black Barrel Bar, Rustwood Cafe, Mama\'s Den, Exchange, Kodo Bowl, Kyomi, Brodlak, Tetsuya, Red Lantern, 7-Eleven, Somnia, Soft Pike, Moonvale, religion, kemeticism, seishism';
 
@@ -35,14 +36,16 @@ const WEYLAND_LOCATIONS = 'Weyland City, lecture halls, workshop, research, obse
  * Macro tokens ({{user}}, {{random::...}}, and any {{getvar::...}} inside roster bios) are left
  * literal here and resolved at send time by applyMacroSubstitution, same as every other WeyPhone
  * prompt.
- * @param {{sampleSize?: number, randomFn?: () => number, registrarRoster?: Array}} [options] sampling knobs — see
- *   ROSTER_SAMPLE_SIZE above; randomFn injectable for deterministic tests
+ * @param {{sampleSize?: number, randomFn?: () => number, registrarRoster?: Array, excludedDiscorgiChannels?: string[]}} [options] sampling knobs — see
+ *   ROSTER_SAMPLE_SIZE above; randomFn injectable for deterministic tests. excludedDiscorgiChannels
+ *   is the user's Discorgi settings choice: those channels are neither rolled nor listed in the
+ *   directory, so a switched-off channel (e.g. #nsfw-lounge) never reaches the model at all.
  * @returns {string}
  */
-export function buildUnifiedPrompt({ sampleSize = ROSTER_SAMPLE_SIZE, randomFn, registrarRoster = [] } = {}) {
+export function buildUnifiedPrompt({ sampleSize = ROSTER_SAMPLE_SIZE, randomFn, registrarRoster = [], excludedDiscorgiChannels = [] } = {}) {
     const rosterSample = sampleRoster(WEYLAND_ROSTER, sampleSize, { randomFn });
-    const selectedDiscorgiChannels = selectDiscorgiChannels(randomFn);
-    const discorgiDirectory = DISCORGI_CHANNELS
+    const selectedDiscorgiChannels = selectDiscorgiChannels(randomFn, excludedDiscorgiChannels);
+    const discorgiDirectory = allowedDiscorgiChannels(excludedDiscorgiChannels)
         .map(channel => `- ${channel.name} — ${channel.description}`)
         .join('\n');
     const selectedDiscorgiNames = selectedDiscorgiChannels.map(channel => channel.name).join(', ');

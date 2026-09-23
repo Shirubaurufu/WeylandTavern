@@ -1,6 +1,6 @@
 // lib/ui/apps/kressaSettings.js
 
-import { RECOMMENDED_PHONE_MODEL, ALTERNATE_PHONE_MODELS } from './settings.js';
+import { RECOMMENDED_PHONE_MODEL, ALTERNATE_PHONE_MODELS, modelSelect, fallbackModelSelect } from './settings.js';
 
 // Curated rather than free-form so every option keeps message contrast readable. The three colors
 // are also used by the settings swatches; the full surface mapping lives in style.css.
@@ -15,6 +15,10 @@ export const KRESSA_PALETTES = Object.freeze([
     { id: 'ember-plum', label: 'Golden Hour', colors: ['#fff5df', '#e7b75d', '#a74f23'] },
     { id: 'night-owl', label: 'Night Owl', colors: ['#17151a', '#4a2530', '#b4677a'] },
     { id: 'terminal-bloom', label: 'Terminal Bloom', colors: ['#10191a', '#263c3e', '#ff79bd'] },
+    // Assistant-app looks, on request: the warm cream + clay orange of a classic AI chat app, and
+    // the charcoal grey + the same orange of a coding-assistant terminal. Named neutrally.
+    { id: 'warm-clay', label: 'Warm Clay', colors: ['#f5f0e8', '#e8dccd', '#c96442'] },
+    { id: 'graphite-code', label: 'Graphite Code', colors: ['#262624', '#3a3935', '#d97757'] },
 ]);
 
 function escapeHtml(value) {
@@ -55,11 +59,14 @@ export function renderKressaSettingsScreen(container, { settings, currentLiveMod
             <div class="wp-settings-inline">
                 <input id="wp-kressa-model" type="text" placeholder="${escapeHtml(currentLiveModel || 'model id')}" value="${escapeHtml(settings.kressaModel ?? '')}" />
             </div>
+            ${modelSelect('wp-kressa-model', settings.kressaModel ?? '')}
             <div class="wp-settings-recommend-row">
                 <span class="wp-settings-recommend-label">Quick fill:</span>
                 <button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="wp-kressa-model" data-model="${RECOMMENDED_PHONE_MODEL}">${RECOMMENDED_PHONE_MODEL}</button>
                 ${ALTERNATE_PHONE_MODELS.map(m => `<button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="wp-kressa-model" data-model="${m}">${m}</button>`).join('')}
             </div>
+            <span class="wp-settings-sublabel">Fallback if that model fails</span>
+            ${fallbackModelSelect('wp-kressa-fallback', settings.kressaFallbackModel)}
             <small class="wp-settings-recommend-disclaimer">By default Kressa runs on your live chat model so her dedicated assistant app stays capable. Set a model here only if you want her on something cheaper.</small>
         </label>
     </div>

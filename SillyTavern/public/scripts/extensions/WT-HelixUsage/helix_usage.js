@@ -15,6 +15,7 @@ let countdownInterval = null;
 let expiryTimeMs = null;
 let lastSeenKey = null;
 let keyPollInterval = null;
+let refreshSequence = 0;
 
 function formatMillisecondsToTime(ms) {
     if (ms < 0) ms = 0;
@@ -48,6 +49,10 @@ async function fetchHelixUsageData(apiKey) {
     const used = Number(parsed?.used);
     const limit = Number(parsed?.limit);
 
+    if (parsed?.used == null || parsed.used === '' || !Number.isSafeInteger(used) || used < 0) {
+        throw new Error('Usage count is unavailable');
+    }
+
     const currentUsage = Number.isFinite(used) ? used : 0;
     // A non-positive/unknown limit is treated as "no finite cap": the display then shows the
     // running count instead of "remaining / limit".
@@ -59,6 +64,7 @@ async function fetchHelixUsageData(apiKey) {
         current_usage_count: currentUsage,
         total_limit: totalLimit,
         oldest_ms: null,
+        usageKeyId: typeof parsed.usageKeyId === 'string' ? parsed.usageKeyId : null,
     };
 }
 
@@ -98,21 +104,22 @@ function getHelixApiKey() {
 // ── Estimated Hour Breakdown (local tally) ──────────────────────────────────────
 
 /** Load the persisted tally store from extensionSettings (server-side, cross-device). */
-function getTallyStore() {
+function getTallyStore(usageKeyId) {
     const ctx = SillyTavern?.getContext?.();
     const bucket = ctx?.extensionSettings?.[MODULE_NAME];
     const tally = bucket && typeof bucket === 'object' ? bucket.tally : null;
-    return (tally && Array.isArray(tally.tallies)) ? tally : { lastUsed: null, tallies: [] };
+    return (usageKeyId && tally?.usageKeyId === usageKeyId && Array.isArray(tally.tallies))
+        ? tally : { lastUsed: null, tallies: [] };
 }
 
 /** Persist the tally store. */
-function saveTallyStore(store) {
+function saveTallyStore(store, usageKeyId) {
     const ctx = SillyTavern?.getContext?.();
     if (!ctx?.extensionSettings) return;
     if (!ctx.extensionSettings[MODULE_NAME] || typeof ctx.extensionSettings[MODULE_NAME] !== 'object') {
         ctx.extensionSettings[MODULE_NAME] = {};
     }
-    ctx.extensionSettings[MODULE_NAME].tally = { lastUsed: store.lastUsed, tallies: store.tallies };
+    ctx.extensionSettings[MODULE_NAME].tally = { version: store.version, usageKeyId, lastUsed: store.lastUsed, tallies: store.tallies };
     saveSettingsDebounced();
 }
 
@@ -132,14 +139,15 @@ function nextMidnightMs(now) {
  * Draw the per-hour usage bars. Rows are oldest-first (soonest to renew first); a "Tomorrow"
  * divider marks where a row's renewal (its hour + 24h) crosses the next midnight.
  */
-function renderBreakdown(tallies) {
+function renderBreakdown(tallies, used = 0) {
     const wrapEl = trackerEl?.querySelector('#hm-api-breakdown');
     const listEl = trackerEl?.querySelector('#hm-api-breakdown-list');
     if (!wrapEl || !listEl) return;
 
     const now = Date.now();
     const buckets = bucketByHour(tallies, now);
-    if (buckets.length === 0) {
+    const unknown = Math.max(0, used - buckets.reduce((sum, b) => sum + b.count, 0));
+    if (buckets.length === 0 && unknown === 0) {
         wrapEl.style.display = 'none';
         listEl.innerHTML = '';
         return;
@@ -158,7 +166,7 @@ function renderBreakdown(tallies) {
     const rowHtml = (b) => {
         const msgs = b.count === 1 ? '1 message' : `${b.count} messages`;
         return '<div class="hm-bd-row">'
-            + `<span class="hm-bd-hour">${formatHourLabel(b.hourStart)}</span> - `
+            + `<span class="hm-bd-hour">Around ${formatHourLabel(b.hourStart + WINDOW_MS)}</span> - `
             + `<span class="hm-bd-count">${msgs}</span>`
             + '</div>';
     };
@@ -166,12 +174,15 @@ function renderBreakdown(tallies) {
     let html = '';
     if (today.length) html += '<div class="hm-bd-daybreak">Today</div>' + today.map(rowHtml).join('');
     if (tomorrow.length) html += '<div class="hm-bd-daybreak">Tomorrow</div>' + tomorrow.map(rowHtml).join('');
+    if (unknown) html += `<div class="hm-bd-row">Return time unknown for ${unknown} ${unknown === 1 ? 'message' : 'messages'}.</div>`;
+    if (buckets.length) html += '<div class="hm-bd-row">Times are estimated from observed usage changes.</div>';
 
     wrapEl.style.display = '';
     listEl.innerHTML = html;
 }
 
 async function refreshUsage() {
+    const sequence = ++refreshSequence;
     if (!trackerEl) return;
     const messagesUsedText = trackerEl.querySelector('#hm-api-messages-used-text');
     const nextMessageTimeText = trackerEl.querySelector('#hm-api-next-message-time-text');
@@ -184,6 +195,7 @@ async function refreshUsage() {
         messagesUsedText.textContent = 'Key Error';
         nextMessageTimeText.textContent = 'Key Error';
         stopCountdown();
+        renderBreakdown([]);
         return;
     }
 
@@ -196,9 +208,10 @@ async function refreshUsage() {
 
     try {
         const data = await fetchHelixUsageData(apiKey);
+        if (sequence !== refreshSequence || apiKey !== getHelixApiKey()) return;
 
         if (typeof data.total_limit === 'number' && Number.isFinite(data.total_limit)) {
-            messagesUsedText.textContent = `${data.total_limit - data.current_usage_count} / ${data.total_limit}`;
+            messagesUsedText.textContent = `${Math.max(0, data.total_limit - data.current_usage_count)} / ${data.total_limit}`;
         } else {
             messagesUsedText.textContent = `${data.current_usage_count}`;
         }
@@ -206,9 +219,9 @@ async function refreshUsage() {
         // Estimated hour breakdown: reconcile the local tally to the authoritative used count,
         // persist it ONLY when it actually changed (saving re-emits SETTINGS_UPDATED, which
         // would re-trigger this refresh and loop), and redraw.
-        const store = reconcileTally(getTallyStore(), data.current_usage_count, Date.now());
-        if (store.changed) saveTallyStore(store);
-        renderBreakdown(store.tallies);
+        const store = reconcileTally(getTallyStore(data.usageKeyId), data.current_usage_count, Date.now());
+        if (store.changed && data.usageKeyId) saveTallyStore(store, data.usageKeyId);
+        renderBreakdown(store.tallies, data.current_usage_count);
 
         const finiteLimit = Number.isFinite(data.total_limit);
         const remaining = finiteLimit ? (data.total_limit - data.current_usage_count) : Infinity;
@@ -223,8 +236,8 @@ async function refreshUsage() {
 
         const oldest = oldestTallyMs(store.tallies, Date.now());
         if (oldest == null) {
-            nextMessageTimeText.textContent = 'Ready';
-            if (nextContainer) nextContainer.style.display = 'none';
+            nextMessageTimeText.textContent = 'Return time unknown';
+            if (nextContainer) nextContainer.style.display = 'inline';
             stopCountdown();
             return;
         }
@@ -237,10 +250,12 @@ async function refreshUsage() {
         if (nextContainer) nextContainer.style.display = 'inline';
         startCountdown(expiry);
     } catch (error) {
+        if (sequence !== refreshSequence || apiKey !== getHelixApiKey()) return;
         console.error(`${LOG} Error fetching Helix usage data:`, error);
         messagesUsedText.textContent = 'Error';
         nextMessageTimeText.textContent = 'Error';
         stopCountdown();
+        renderBreakdown([]);
     }
 }
 
@@ -257,6 +272,7 @@ function updateKeyVisibility() {
         if (unset) unset.style.display = 'none';
         if (set) set.style.display = '';
     } else {
+        ++refreshSequence;
         stopCountdown();
         if (unset) unset.style.display = '';
         if (set) set.style.display = 'none';

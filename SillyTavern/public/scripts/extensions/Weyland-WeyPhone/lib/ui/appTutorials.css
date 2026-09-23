@@ -1,0 +1,55 @@
+/* The app stays visible and usable above a docked guide. */
+#wp-panel .wp-tour { --tour-bg: #281823; --tour-ink: #fff1e6; --tour-muted: #d2b9c8; --tour-accent: #ff8f9e; --tour-line: #ffffff25; flex: 0 1 auto; max-height: 48%; min-height: 0; z-index: 51; color: var(--tour-ink); background: var(--tour-bg); border-top: 2px solid var(--tour-accent); text-align: left; overflow: hidden; display: flex; flex-direction: column; }
+#wp-panel .wp-tour-registrar { --tour-bg: #eee9dd; --tour-ink: #263c35; --tour-muted: #52665a; --tour-accent: #275843; --tour-line: #263c352b; }
+#wp-panel .wp-tour-welcome { max-height: 80%; }
+#wp-panel .wp-tour-pawxai { --tour-bg: #201729; --tour-ink: #f5ebff; --tour-muted: #c6b4d3; --tour-accent: #d4a5f4; }
+#wp-panel.wp-tour-active[data-app="pawxai"] { --wp-tour-focus: #d4a5f4; }
+#wp-panel .wp-tour-pawxai .wp-tour-welcome-art,
+#wp-panel .wp-tour-mien .wp-tour-welcome-art,
+#wp-panel .wp-tour-understudy .wp-tour-welcome-art { background: radial-gradient(ellipse, var(--tour-line), transparent 72%); }
+#wp-panel .wp-tour-control-px { background: #34243f; color: #f5ebff; border-color: #765a87; border-radius: 8px; }
+#wp-panel .wp-tour-control-px-primary { background: #d4a5f4; color: #201729; border-radius: 8px; }
+#wp-panel .wp-tour-card { padding: 6px 14px 8px; display: flex; flex-direction: column; min-height: 0; }
+#wp-panel .wp-tour header, #wp-panel .wp-tour footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
+#wp-panel .wp-tour header > span { font: 600 11px/1.3 sans-serif; letter-spacing: .03em; color: var(--tour-muted); }
+#wp-panel .wp-tour-copy { overflow: auto; min-height: 0; overscroll-behavior: contain; padding: 2px; }
+#wp-panel .wp-tour button { font: 600 12px/1.3 sans-serif; color: var(--tour-ink); background: transparent; border: 0; box-shadow: none; cursor: pointer; min-height: 34px; padding: 7px 9px; border-radius: 8px; }
+#wp-panel .wp-tour button:hover { background: var(--tour-line); }
+#wp-panel .wp-tour button:focus-visible { outline: 2px solid var(--tour-accent); outline-offset: 1px; }
+#wp-panel .wp-tour button:disabled { opacity: .3; cursor: default; }
+#wp-panel .wp-tour h2 { font: 600 19px/1.2 Georgia, serif; color: var(--tour-ink); margin: 2px 0 8px; text-shadow: none; outline: none; }
+#wp-panel .wp-tour p, #wp-panel .wp-tour li { font: 13px/1.5 sans-serif; color: var(--tour-ink); margin: 0 0 8px; }
+#wp-panel .wp-tour ul { margin: 0 0 8px; padding-left: 19px; }
+#wp-panel .wp-tour .wp-tour-indented { padding-left: 16px; }
+#wp-panel .wp-tour-welcome-art { display: grid; place-items: center; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: radial-gradient(ellipse, #dcc49b 0%, #eee9dd 72%); }
+#wp-panel .wp-tour-welcome-art img { width: 88px; height: 88px; object-fit: contain; animation: wp-registrar-welcome .9s ease-out both; }
+@keyframes wp-registrar-welcome { from { opacity: 0; transform: translateY(12px) scale(.85) rotate(-8deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
+#wp-panel .wp-tour-control { display: inline-block; vertical-align: baseline; padding: 3px 6px; margin: 1px 2px; border: 1px solid transparent; border-radius: 2px; font: 11px/1.35 sans-serif; white-space: nowrap; }
+#wp-panel .wp-tour-control-tab { background: #292723; color: #e6c288; border-bottom: 2px solid #cda05a; }
+#wp-panel .wp-tour-control-load { background: #302b27; color: #f3eddf; border-color: #6f5e49; text-transform: uppercase; letter-spacing: .08em; font-size: 9px; }
+#wp-panel .wp-tour-control-stamp { border-color: #947255; color: #7b5336; font-size: 9px; letter-spacing: .06em; transform: rotate(-2deg); }
+#wp-panel .wp-tour-control-outline { background: #ece5d7; color: #302b27; border-color: #a59175; }
+#wp-panel .wp-tour-control-primary { background: #552428; color: #f7eedb; }
+#wp-panel .wp-tour-control-gear { background: #551e23; color: #e6c288; }
+#wp-panel .wp-tour-control-cat { background: #36202d; color: #ffe7df; border-color: #785166; border-radius: 7px; }
+#wp-panel .wp-tour-control-cat-primary { background: #ff8f9e; color: #281823; border-radius: 7px; }
+#wp-panel .wp-tour-example { margin: 8px 0 12px; }
+#wp-panel .wp-tour-example figcaption { font: 10px/1.4 sans-serif; color: var(--tour-muted); margin-bottom: 5px; }
+#wp-panel .wp-tour-card-replica { min-height: 0; background: transparent; pointer-events: none; }
+#wp-panel .wp-tour-card-replica .rg-card { padding: 10px; min-height: 130px; color: #302b27; background: #f7f2e8; border: 1px solid #d1c6b3; border-radius: 2px; }
+#wp-panel .wp-tour-card-replica .rg-load-toggle { min-height: 0; padding: 4px 9px; border: 1px solid #6f5e49; border-radius: 2px; font-size: 9px; background: #302b27; color: #f3eddf; }
+#wp-panel .wp-tour .wp-tour-warning { border-left: 2px solid var(--tour-accent); padding-left: 8px; font-size: 12px; }
+#wp-panel .wp-tour .wp-tour-next { color: var(--tour-bg); background: var(--tour-accent); }
+#wp-panel .wp-tour-track { height: 3px; flex: 1; max-width: 75px; background: var(--tour-line); border-radius: 3px; overflow: hidden; }
+#wp-panel .wp-tour-track > span { display: block; height: 100%; background: var(--tour-accent); transition: width .2s ease; }
+#wp-panel.wp-tour-active { --wp-tour-focus: #ff8f9e; }
+#wp-panel.wp-tour-active[data-view="registrar"] { --wp-tour-focus: #347a59; }
+#wp-panel .wp-tour-target { outline: 2px solid var(--wp-tour-focus); outline-offset: -2px; border-radius: 6px; animation: wp-tour-point .45s ease-out; }
+#wp-panel.wp-tour-active #wp-screen-body { position: relative; min-height: 110px; padding-bottom: 8px; }
+/* Place the real Settings dialog in normal app flow while explaining its controls. */
+#wp-panel.wp-tour-active .rg-dialog-shade { position: relative; inset: auto; padding: 10px; background: transparent; }
+#wp-panel.wp-tour-active .rg-app:has(.rg-dialog-shade) > :not(.rg-dialog-shade):not(.rg-masthead) { display: none; }
+#wp-panel.wp-tour-active .rg-dialog { max-height: none; }
+#wp-panel.wp-tour-active #wp-nav-bar { position: relative; flex: 0 0 auto; }
+@keyframes wp-tour-point { from { outline-color: transparent; } to { outline-color: var(--wp-tour-focus); } }
+@media (prefers-reduced-motion: reduce) { #wp-panel .wp-tour *, #wp-panel .wp-tour-target { animation: none !important; transition: none !important; } }
