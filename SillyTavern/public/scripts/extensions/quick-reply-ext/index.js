@@ -2161,7 +2161,9 @@ async function OpenWorldCostumes(charName, charMessage) {
             }
         } else if (charName === "Weybot") {
             // No usable character: show the Weybot silhouette chosen at startup
-            const silhouette = getGlobalVariable("WeybotCostume") || "Other";
+            // Silhouette folders are lowercase; folder names are case-sensitive on Linux
+            const choice = getGlobalVariable("WeybotCostume") || "Other";
+            const silhouette = (await spriteFolderExists(`Weybot/${choice}`)) ? choice : choice.toLowerCase();
             if (getLocalVariable("CostmSave") !== `Weybot/${silhouette}`) {
                 setLocalVariable("CostmSave", `Weybot/${silhouette}`);
                 await setCostumeAndExpression("Weybot", silhouette, expression);

@@ -416,6 +416,31 @@ async function resolveRegistrarExpressionPath(name, outfit, emotion) {
     return '';
 }
 
+/** @type {Map<string, Promise<{label: string, path: string}[]>>} */
+const spriteListCache = new Map();
+
+/**
+ * Gets the sprites in a local sprite folder (e.g. "Kris/Regular Outfit") the same way ST's
+ * expressions extension does. The server lowercases labels, so matching is case-insensitive
+ * and works for any image type. Cached for the page load.
+ * @param {string} folder
+ * @returns {Promise<{label: string, path: string}[]>}
+ */
+function getSpriteList(folder) {
+    if (!spriteListCache.has(folder)) {
+        const request = fetch(`/api/sprites/get?name=${encodeURIComponent(folder)}`)
+            .then((res) => res.ok ? res.json() : [])
+            .then((list) => Array.isArray(list) ? list : [])
+            .catch(() => {
+                // Don't cache network failures
+                spriteListCache.delete(folder);
+                return [];
+            });
+        spriteListCache.set(folder, request);
+    }
+    return spriteListCache.get(folder);
+}
+
 async function resolveExpression(name){
     const isOfficial = isOfficialCharacter(name);
     const hideNsfw = isHideNsfwEnabled();
@@ -427,21 +452,16 @@ async function resolveExpression(name){
     if (isOfficial) {
         // Character folders are canonically cased
         const canonicalName = getCanonicalCharacterName(name);
-        const probe = (fit, lab) => {
-            const url = `/characters/${canonicalName}/${fit}/${lab}.avif`;
-            return fetch(url, { method: 'HEAD' })
-                .then(res => res.ok ? url : '')
-                .catch(() => '');
-        };
         // Try the requested emotion, then neutral, in the active outfit;
         // then repeat in the regular outfit if the active one has neither.
         const outfits = outfit === FALLBACK_OFFICIAL_OUTFIT ? [outfit] : [outfit, FALLBACK_OFFICIAL_OUTFIT];
         const emotions = emotion === 'neutral' ? [emotion] : [emotion, 'neutral'];
         for (const fit of outfits) {
+            const sprites = await getSpriteList(`${canonicalName}/${fit}`);
             for (const lab of emotions) {
-                const path = await probe(fit, lab);
-                if (path) {
-                    return { path: path, name: name, isOfficial: true, outfit: fit, emotion: lab };
+                const sprite = sprites.find((s) => s.label === lab);
+                if (sprite?.path) {
+                    return { path: sprite.path, name: name, isOfficial: true, outfit: fit, emotion: lab };
                 }
             }
         }
