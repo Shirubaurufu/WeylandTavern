@@ -348,7 +348,9 @@ async function main() {
     if (await yesNo('Re-download all installed characters too?', 'N')) {
       log('');
       log(`  ${DIM}›${R}  ${GRY}Starting a temporary local server for the re-download...${R}`);
-      const server = spawn(process.execPath, ['server.js', '--listen', 'false', '--port', '8000'], {
+      // --browserLaunchEnabled false: the shipped config opens a browser on startup, which popped a
+      // tab to this throwaway server mid-repair (and that tab dies when we kill the server below).
+      const server = spawn(process.execPath, ['server.js', '--listen', 'false', '--port', '8000', '--browserLaunchEnabled', 'false'], {
         cwd: STDirectory,
         stdio: 'ignore',
       });
