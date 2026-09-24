@@ -124,6 +124,9 @@ let pawxaiGenerating = false;
 // Understudy draft lives in module state, not settings: it is scratch work for one message
 // and must not survive a reload or follow the user into another chat.
 let understudyGenerating = false;
+// Aborts the in-flight rewrite request (the Cancel button). A thinking model can sit for minutes,
+// and without this the only way out was waiting or reloading the page.
+let understudyAbort = null;
 let understudyDraft = '';
 let understudyError = '';
 let understudyApplied = false;
@@ -2399,6 +2402,21 @@ function resolveCharacterPostHistory(character, substitute) {
     return resolved.trim();
 }
 
+/**
+ * The chat's thoughts on/off instruction (the ThoughtSet local var that quick-reply-ext's XXX()
+ * sets per character). It normally reaches the model inside postrav, which Copycat strips, so it
+ * is read out on its own and handed to the rewrite. '' when unset, so the rewrite falls back to
+ * the generic rule rather than being told something false.
+ */
+function resolveUnderstudyThoughtsSetting(context) {
+    try {
+        const text = String(context.substituteParams?.('{{getvar::ThoughtSet}}') ?? '').trim();
+        return text.startsWith('{{') ? '' : text;
+    } catch {
+        return '';
+    }
+}
+
 function resolveUnderstudyProfile(context, characterName) {
     const character = context.characters?.find(candidate => candidate.name === characterName)
         ?? context.characters?.find(candidate => candidate.name === context.name2);
@@ -2787,6 +2805,7 @@ async function runUnderstudyRewrite() {
         stageDirections: resolveUnderstudyStageDirections(context, config, target),
         feedback: understudySlotOf(understudyFeedbackKey) === understudySlotOf(targetKey) ? understudyFeedback : '',
         allowDeviation: Boolean(config.allowDeviation),
+        thoughtsSetting: resolveUnderstudyThoughtsSetting(context),
     });
 
     const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
@@ -2804,12 +2823,16 @@ async function runUnderstudyRewrite() {
     startUnderstudyStatusTicker();
     if (currentView === 'understudy') renderUnderstudyScreenNow();
 
+    const abort = new AbortController();
+    understudyAbort = abort;
     const request = (model) => sendMessage({
         sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(
             id,
             requestMessages,
             DEFAULT_UNDERSTUDY_MAX_TOKENS,
-            undefined,
+            // sendRequest merges this over its defaults and hands the signal to the fetch, so
+            // Cancel really stops the request instead of just hiding it.
+            { signal: abort.signal },
             model ? { model } : {},
         ),
         profileId,
@@ -2824,6 +2847,8 @@ async function runUnderstudyRewrite() {
         try {
             response = await request(primaryModel);
         } catch (primaryError) {
+            // A cancelled request must not fall through to the backup model.
+            if (abort.signal.aborted) throw primaryError;
             // One retry on the fallback, same contract as the rest of the phone.
             const fallback = String(config.fallbackModel ?? '').trim();
             if (!fallback || fallback === primaryModel) throw primaryError;
@@ -2895,11 +2920,20 @@ async function runUnderstudyRewrite() {
         understudyTake++;
         understudySection = 'stage';
         pushLogLine('Copycat rewrote ' + target.characterName + "'s reply (" + scope.label + ')');
+        return true;
     } catch (error) {
+        if (abort.signal.aborted) {
+            // The user asked for this; it is not an error.
+            pushLogLine('Copycat rewrite cancelled');
+            wpToast('info', 'Rewrite cancelled.', 'Copycat');
+            return false;
+        }
         console.error('[WeyPhone] Understudy rewrite failed', error);
         understudyError = error.message || 'Could not rewrite this reply.';
         wpToast('error', understudyError, 'Copycat');
+        return false;
     } finally {
+        if (understudyAbort === abort) understudyAbort = null;
         understudyGenerating = false;
         stopUnderstudyStatusTicker();
         if (currentView === 'understudy') renderUnderstudyScreenNow();
@@ -3099,8 +3133,10 @@ async function maybeAutoUnderstudy() {
     }
 
     pushLogLine('Copycat auto-triggered on message ' + index);
-    await runUnderstudyRewrite();
-    if (!understudyDraft.trim()) return;
+    // Only a run that actually succeeded may be swiped in: after a cancel or failure the draft
+    // can still hold an earlier take, and "full" mode would otherwise post that one instead.
+    const succeeded = await runUnderstudyRewrite();
+    if (!succeeded || !understudyDraft.trim()) return;
 
     if (config.autoMode === 'full') {
         // Announce only what actually happened: between the request starting and finishing the
@@ -3979,6 +4015,10 @@ function handleScreenBodyClick(event) {
     }
     if (event.target.closest('#wp-understudy-run')) {
         runUnderstudyRewrite();
+        return;
+    }
+    if (event.target.closest('#wp-understudy-cancel')) {
+        understudyAbort?.abort();
         return;
     }
     if (event.target.closest('#wp-understudy-apply')) {
