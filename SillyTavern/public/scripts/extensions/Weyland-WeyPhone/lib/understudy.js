@@ -562,6 +562,22 @@ If thoughts are enabled - THE BRACKET CHANNEL BELONGS TO {{char}}, AND ONLY TO {
 WRONG: [she is blowing this SO HARD. (thought continues)-]
 RIGHT: [Fucking hell, I am blowing this SO. HARD. (thought continues)]`;
 
+/**
+ * THOUGHTS_DIRECTIVE tells the model to "check whether thoughts are enabled", but the only thing
+ * that says so is the chat's ThoughtSet line, and that lives inside the shared postrav footer,
+ * which Copycat strips (see SHARED_POST_HISTORY_VARS in index.js). Without it the model had
+ * nothing to check and guessed, adding bracketed thoughts to characters that have them disabled
+ * (reported on Tawny). So the chat's real setting is handed over here, directly above the rule
+ * that asks about it. The rest of postrav still stays out.
+ * @param {string} [thoughtsSetting] resolved {{getvar::ThoughtSet}} for this chat, or '' if unknown
+ * @returns {string}
+ */
+export function buildThoughtsDirective(thoughtsSetting = '') {
+    const setting = String(thoughtsSetting ?? '').trim();
+    if (!setting) return THOUGHTS_DIRECTIVE;
+    return `[THOUGHTS SETTING FOR THIS CHAT - this is what the original reply was written under]\n${setting}\n\n${THOUGHTS_DIRECTIVE}`;
+}
+
 const VOICE_DIRECTIVE = `[VOICE IS MORE IMPORTANT THAN GRAMMAR]
 Sentence structure, punctuation and traditional grammar are tools. Break them - freely, roughly, completely - whenever the character's voice calls for it. Runtogethersentences and words that - whew fuck - are wayyyyytoomuch to keep up with! Fragments of sentences. Repeated letterrrrs to draw shit out. Mid-wORd capitals FuuUUck you!! S-stutters. Interruptions that never resolve. Exclamation points show energy!! ***Emphasis shows the character is saying a word more sharplY***. Capitals say SOMETHING IS BEING YELLED!
 - This is permission to write how the character would ACTUALLY sound, however wrong that looks written down.
@@ -881,6 +897,7 @@ ${text}`;
  * @param {{start:number,end:number,text:string}[]} [options.spans] for span-scoped rewrites
  * @param {string} [options.userName]
  * @param {string} [options.narratorText] a Weyland narrator persona to write in the style of
+ * @param {string} [options.thoughtsSetting] the chat's resolved ThoughtSet (thoughts on or off)
  * @returns {{role: string, content: string}[]}
  */
 export function buildUnderstudyMessages({
@@ -896,6 +913,7 @@ export function buildUnderstudyMessages({
     stageDirections = '',
     feedback = '',
     allowDeviation = false,
+    thoughtsSetting = '',
 }) {
     const isSpanScoped = isSpanScopedKind(UNDERSTUDY_SCOPES[scope]?.spanKind);
     const scopeDirective = SCOPE_DIRECTIVES[scope] ?? SCOPE_DIRECTIVES.full;
@@ -915,7 +933,7 @@ export function buildUnderstudyMessages({
         VOICE_DIRECTIVE,
         // Every scope: a full rewrite writes brackets, and the scoped ones can see them in the
         // surrounding passage even when they are not the spans being replaced.
-        THOUGHTS_DIRECTIVE,
+        buildThoughtsDirective(thoughtsSetting),
         SLOP_DIRECTIVE,
         // Last of the craft rules and deliberately so - it is the one that is a hard boundary
         // rather than a preference, and it directly counterweights the intensity push above.

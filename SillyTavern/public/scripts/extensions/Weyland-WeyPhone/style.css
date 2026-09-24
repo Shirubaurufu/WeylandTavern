@@ -5654,6 +5654,8 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 #wp-panel[data-app="understudy"] .wp-understudy-actions-secondary { order: 1; }
 #wp-panel[data-app="understudy"] .wp-understudy-again, #wp-panel[data-app="understudy"] .wp-understudy-discard { min-height: 35px; border-color: var(--en-line); border-radius: 10px; background: var(--en-surface); color: var(--en-muted); font-size: 9.5px; }
 #wp-panel[data-app="understudy"] .wp-understudy-again:hover, #wp-panel[data-app="understudy"] .wp-understudy-discard:hover { border-color: var(--en-accent); color: var(--en-text); background: var(--en-surface-2); }
+/* Cancel sits under the "working" status while a rewrite runs, full width like the other rows. */
+#wp-panel[data-app="understudy"] .wp-understudy-cancel { width: 100%; margin-top: 8px; }
 
 #wp-panel[data-app="understudy"] .wp-understudy-empty { min-height: 275px; padding: 35px 24px; color: var(--en-muted); }
 #wp-panel[data-app="understudy"] .wp-understudy-empty-compact { min-height: 310px; }

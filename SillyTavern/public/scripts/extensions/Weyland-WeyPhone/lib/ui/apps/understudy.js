@@ -157,7 +157,8 @@ function stageView({ target, draft, generating, error, settings, applied, take, 
         : `<div class="wp-understudy-draft-wrap"><label class="wp-understudy-draft-head" for="wp-understudy-draft"><span>Copycat's rewrite</span><small>Editable before use</small></label><textarea id="wp-understudy-draft" class="wp-understudy-draft" spellcheck="false">${escapeHtml(draft)}</textarea></div>`}` : ''}
 
     ${generating ? `
-    <div class="wp-understudy-stage" role="status" aria-live="polite"><span class="wp-understudy-stage-icon"><i class="fa-solid fa-rotate"></i></span><div><strong class="wp-understudy-stage-text">${escapeHtml(UNDERSTUDY_STATUS_LINES[statusIndex % UNDERSTUDY_STATUS_LINES.length])}</strong></div><div class="wp-understudy-stage-glow"></div></div>` : `
+    <div class="wp-understudy-stage" role="status" aria-live="polite"><span class="wp-understudy-stage-icon"><i class="fa-solid fa-rotate"></i></span><div><strong class="wp-understudy-stage-text">${escapeHtml(UNDERSTUDY_STATUS_LINES[statusIndex % UNDERSTUDY_STATUS_LINES.length])}</strong></div><div class="wp-understudy-stage-glow"></div></div>
+    <button type="button" id="wp-understudy-cancel" class="wp-understudy-discard wp-understudy-cancel"><i class="fa-solid fa-xmark"></i> Cancel</button>` : `
     <section class="wp-understudy-note-box">
         <label class="wp-understudy-note-head" for="wp-understudy-feedback"><span><i class="fa-solid fa-paw"></i> Catnip note</span><small>Optional · strongest instruction</small></label>
         <textarea id="wp-understudy-feedback" class="wp-understudy-feedback" rows="2" spellcheck="false" placeholder="Write custom instructions for your rewrite here.">${escapeHtml(feedback)}</textarea>
