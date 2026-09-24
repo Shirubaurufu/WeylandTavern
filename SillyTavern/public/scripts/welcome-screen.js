@@ -4,35 +4,29 @@ import {
     chat,
     deleteCharacterChatByName,
     displayVersion,
-    doNewChat,
     event_types,
     eventSource,
-    getCharacters,
     getCurrentChatId,
     getRequestHeaders,
     getSystemMessageByType,
     getThumbnailUrl,
-    is_send_press,
-    neutralCharacterName,
-    newAssistantChat,
     openCharacterChat,
-    printCharactersDebounced,
     renameGroupOrCharacterChat,
     saveSettingsDebounced,
     selectCharacterById,
     setActiveCharacter,
     setActiveGroup,
     system_avatar,
+    // Still required by sendWelcomePrompt() below. It was dropped alongside the
+    // assistant removal because sendAssistantMessage() also used it, but the
+    // welcome PROMPT is a separate message that survived — without this the
+    // whole welcome screen dies with "system_message_types is not defined".
     system_message_types,
-    this_chid,
-    unshallowCharacter,
     updateRemoteChatName,
 } from '../script.js';
-import { getRegexedString, regex_placement } from './extensions/regex/engine.js';
-import { deleteGroupChatByName, getGroupAvatar, groups, is_group_generating, openGroupById, openGroupChat } from './group-chats.js';
+import { deleteGroupChatByName, getGroupAvatar, groups, openGroupById, openGroupChat } from './group-chats.js';
 import { t } from './i18n.js';
 import { callGenericPopup, POPUP_TYPE } from './popup.js';
-import { getMessageTimeStamp } from './RossAscends-mods.js';
 import { renderTemplateAsync } from './templates.js';
 import { accountStorage } from './util/AccountStorage.js';
 import { sortMoments, timestampToMoment } from './utils.js';
@@ -88,62 +82,12 @@ export async function openWelcomeScreen({ force = false, expand = false } = {}) 
         $('#chat').empty();
     }
 
+    // Weytav: no assistant greeting message is pushed here. The cardless
+    // "Assistant" chat was removed — characters are the product, and an
+    // assistant generation went out through the subscriber API with the
+    // Weyland lorebook attached (tripping the QR card-authenticity checks).
     await sendWelcomePanel(recentChats, expand);
-    await unshallowPermanentAssistant();
-    sendAssistantMessage();
     sendWelcomePrompt();
-}
-
-/**
- * Makes sure the assistant character has all data loaded.
- * @returns {Promise<void>}
- */
-async function unshallowPermanentAssistant() {
-    const assistantAvatar = getPermanentAssistantAvatar();
-    const characterId = characters.findIndex(x => x.avatar === assistantAvatar);
-    if (characterId === -1) {
-        return;
-    }
-
-    await unshallowCharacter(String(characterId));
-}
-
-/**
- * Returns a greeting message for the assistant based on the character.
- * @param {import('./char-data.js').v1CharData} character Character data
- * @returns {string} Greeting message
-*/
-function getAssistantGreeting(character) {
-    const defaultGreeting = t`If you're connected to an API, try asking me something!` + '\n***\n' + t`**Hint:** Set any character as your welcome page assistant from their "More..." menu.`;
-
-    if (!character) {
-        return defaultGreeting;
-    }
-
-    return getRegexedString(character.first_mes || '', regex_placement.AI_OUTPUT) || defaultGreeting;
-}
-
-function sendAssistantMessage() {
-    const currentAssistantAvatar = getPermanentAssistantAvatar();
-    const character = characters.find(x => x.avatar === currentAssistantAvatar);
-    const name = character ? character.name : neutralCharacterName;
-    const avatar = character ? getThumbnailUrl('avatar', character.avatar) : system_avatar;
-    const greeting = getAssistantGreeting(character);
-
-    const message = {
-        name: name,
-        force_avatar: avatar,
-        mes: greeting,
-        is_system: false,
-        is_user: false,
-        send_date: getMessageTimeStamp(),
-        extra: {
-            type: system_message_types.ASSISTANT_MESSAGE,
-        },
-    };
-
-    chat.push(message);
-    addOneMessage(message, { scroll: false });
 }
 
 function sendWelcomePrompt() {
@@ -160,7 +104,6 @@ function sendWelcomePrompt() {
 async function sendWelcomePanel(chats, expand = false) {
     try {
         const chatElement = document.getElementById('chat');
-        const sendTextArea = document.getElementById('send_textarea');
         if (!chatElement) {
             console.error('Chat element not found');
             return;
@@ -220,14 +163,8 @@ async function sendWelcomePanel(chats, expand = false) {
                 button.setAttribute('title', rotate ? showRecentChatsTitle : hideRecentChatsTitle);
             });
         });
-        fragment.querySelectorAll('button.openTemporaryChat').forEach((button) => {
-            button.addEventListener('click', async () => {
-                await newAssistantChat({ temporary: true });
-                if (sendTextArea instanceof HTMLTextAreaElement) {
-                    sendTextArea.focus();
-                }
-            });
-        });
+        // Weytav: the "Temporary Chat" (assistant) button was removed along
+        // with the home-screen assistant feature.
         fragment.querySelectorAll('.recentChat.group').forEach((groupChat) => {
             const groupId = groupChat.getAttribute('data-group');
             const group = groups.find(x => x.id === groupId);
@@ -599,125 +536,19 @@ async function getRecentChats() {
     return data;
 }
 
-export async function openPermanentAssistantChat({ tryCreate = true, created = false } = {}) {
-    const avatar = getPermanentAssistantAvatar();
-    const characterId = characters.findIndex(x => x.avatar === avatar);
-    if (characterId === -1) {
-        if (!tryCreate) {
-            console.error(`Character not found for avatar ID: ${avatar}. Cannot create.`);
-            return;
-        }
-
-        try {
-            console.log(`Character not found for avatar ID: ${avatar}. Creating new assistant.`);
-            await createPermanentAssistant();
-            return openPermanentAssistantChat({ tryCreate: false, created: true });
-        }
-        catch (error) {
-            console.error('Error creating permanent assistant:', error);
-            toastr.error(t`Failed to create ${neutralCharacterName}. See console for details.`);
-            return;
-        }
-    }
-
-    try {
-        await selectCharacterById(characterId);
-        if (!created) {
-            await doNewChat({ deleteCurrentChat: false });
-        }
-        console.log(`Opened permanent assistant chat for ${neutralCharacterName}.`, getCurrentChatId());
-    } catch (error) {
-        console.error('Error opening permanent assistant chat:', error);
-        toastr.error(t`Failed to open permanent assistant chat. See console for details.`);
-    }
-}
-
-async function createPermanentAssistant() {
-    if (is_group_generating || is_send_press) {
-        throw new Error(t`Cannot create while generating.`);
-    }
-
-    const formData = new FormData();
-    formData.append('ch_name', neutralCharacterName);
-    formData.append('file_name', defaultAssistantAvatar.replace('.png', ''));
-    formData.append('creator_notes', t`Automatically created character. Feel free to edit.`);
-
-    try {
-        const avatarResponse = await fetch(system_avatar);
-        const avatarBlob = await avatarResponse.blob();
-        formData.append('avatar', avatarBlob, defaultAssistantAvatar);
-    } catch (error) {
-        console.warn('Error fetching system avatar. Fallback image will be used.', error);
-    }
-
-    const fetchResult = await fetch('/api/characters/create', {
-        method: 'POST',
-        headers: getRequestHeaders({ omitContentType: true }),
-        body: formData,
-        cache: 'no-cache',
-    });
-
-    if (!fetchResult.ok) {
-        throw new Error(t`Creation request did not succeed.`);
-    }
-
-    await getCharacters();
-}
-
-export async function openPermanentAssistantCard() {
-    const avatar = getPermanentAssistantAvatar();
-    const characterId = characters.findIndex(x => x.avatar === avatar);
-    if (characterId === -1) {
-        toastr.info(t`Assistant not found. Try sending a chat message.`);
-        return;
-    }
-
-    await selectCharacterById(characterId);
-}
-
-/**
- * Assigns a character as the assistant.
- * @param {string?} characterId Character ID
- */
-export function assignCharacterAsAssistant(characterId) {
-    if (characterId === undefined) {
-        return;
-    }
-    /** @type {import('./char-data.js').v1CharData} */
-    const character = characters[characterId];
-    if (!character) {
-        return;
-    }
-
-    const currentAssistantAvatar = getPermanentAssistantAvatar();
-    if (currentAssistantAvatar === character.avatar) {
-        if (character.avatar === defaultAssistantAvatar) {
-            toastr.info(t`${character.name} is a system assistant. Choose another character.`);
-            return;
-        }
-
-        toastr.info(t`${character.name} is no longer your assistant.`);
-        accountStorage.removeItem(assistantAvatarKey);
-        return;
-    }
-
-    accountStorage.setItem(assistantAvatarKey, character.avatar);
-    printCharactersDebounced();
-    toastr.success(t`Set ${character.name} as your assistant.`);
-}
+// Weytav: the assistant chat/card/assignment functions that used to live here
+// (openPermanentAssistantChat, createPermanentAssistant,
+// openPermanentAssistantCard, assignCharacterAsAssistant) were removed along
+// with the home-screen assistant feature. getPermanentAssistantAvatar remains
+// because existing installs may still have an assistant character assigned
+// (shown with a badge in the character list), and the rename handler below
+// keeps that assignment tracking consistent.
 
 export function initWelcomeScreen() {
     const events = [event_types.CHAT_CHANGED, event_types.APP_READY];
     for (const event of events) {
         eventSource.makeFirst(event, openWelcomeScreen);
     }
-
-    eventSource.on(event_types.CHARACTER_MANAGEMENT_DROPDOWN, (target) => {
-        if (target !== 'set_as_assistant') {
-            return;
-        }
-        assignCharacterAsAssistant(this_chid);
-    });
 
     eventSource.on(event_types.CHARACTER_RENAMED, (oldAvatar, newAvatar) => {
         if (oldAvatar === getPermanentAssistantAvatar()) {

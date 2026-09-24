@@ -131,42 +131,66 @@ header .headline .sub{
   border-color:#fff;font-weight:700;
 }
 
-/* Font style toggle */
-.switch{
+/* Font style toggle. Was an unlabeled slider beside a cursive/printed glyph, which read as a
+   switch that did nothing; the pill now spells out the style the resident cards are shown in.
+   Styled to sit in the same row as the floor tabs and Registrar button. */
+.fontPill{
   position:relative;
-  width:2.5em;
-  height:1.5em;
-  display:flex;
-  margin-left:2.5em;   /* leave room for the cursive/printed icon to its left */
+  display:inline-flex;align-items:center;
+  font-family:'Rajdhani',sans-serif;
+  font-weight:600;font-size:.9em;letter-spacing:.5px;
+  padding:.35em .8em;border-radius:3px;cursor:pointer;
+  background:rgba(0,0,0,.25);color:rgba(255,255,255,.8);
+  border:1px solid rgba(255,255,255,.25);
+  transition:background-color .15s,color .15s,border-color .15s;
+  white-space:nowrap;user-select:none;
 }
-.switch input{opacity:0;width:0;height:0}
-.switch .icon{
-  background-image:url('https://cast.weybooru.com/images/icons/cursive.png');
-  background-size:cover;
-  width:1.5em;height:1.5em;
-  position:absolute;left:-2em;top:0;
+.fontPill:hover{color:#fff;border-color:rgba(255,255,255,.6);background:rgba(0,0,0,.45)}
+.fontPill input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.fontPill input:focus-visible ~ span{outline:2px solid #FFCC66;outline-offset:3px}
+.fontPill{min-width:2.6em;justify-content:center;font-size:1em;line-height:1}
+.fontPill .fp-script{font-family:'Mynerve',cursive;font-weight:400;letter-spacing:0}
+.fontPill .fp-print{display:none;font-family:'Open Sans',sans-serif;font-weight:700;letter-spacing:0}
+body.altFont .fontPill .fp-script{display:none}
+body.altFont .fontPill .fp-print{display:inline}
+
+.embedHelp{
+  width:2em;height:2em;flex:0 0 auto;
+  border-radius:50%;cursor:pointer;
+  font:700 1em/1 'Rajdhani',sans-serif;
+  background:rgba(0,0,0,.25);color:#e6c8a0;
+  border:1px solid rgba(255,255,255,.25);
 }
-body.altFont .switch .icon{
-  background-image:url('https://cast.weybooru.com/images/icons/printed.png');
+.embedHelp:hover{color:#fff;background:rgba(0,0,0,.45)}
+.embedHelp[hidden]{display:none}
+
+/* ── WeyPhone embed (?embed=weyphone) ──
+   Inside the phone this header IS the app bar (the phone drops its own), so it gets the phone's
+   proportions: a smaller logo, a two-row layout (title, then every control in one row) and
+   controls sized to fit a ~360px screen without wrapping. The standalone page is untouched. */
+body.embed-weyphone header{
+  height:auto;font-size:14px;
+  padding:.55em .8em .6em;
+  flex-wrap:wrap;row-gap:.5em;
 }
-.slider{
-  position:absolute;cursor:pointer;
-  top:0;left:0;right:0;bottom:0;
-  background-color:#444;
-  transition:.4s;
-  border-radius:1em;
-  border:.1em solid #666;
+body.embed-weyphone header .logo{height:2.4em;flex-shrink:0}
+body.embed-weyphone header .headline{flex:1 1 0;min-width:0;flex-wrap:wrap;white-space:normal;font-size:1.25em}
+body.embed-weyphone header .headline .sub{margin-left:0;flex-basis:100%;font-size:.62em}
+body.embed-weyphone .hctrls{
+  margin-left:0;width:100%;
+  display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:.4em;
 }
-.slider:before{
-  position:absolute;content:"";
-  height:1em;width:1em;
-  left:.25em;bottom:.18em;
-  background-color:#888;
-  transition:.4s;
-  border-radius:50%;
-}
-.switch input:checked + .slider{background-color:#555}
-.switch input:checked + .slider:before{transform:translateX(.88em)}
+body.embed-weyphone .ftab,
+body.embed-weyphone .registrarToggle,
+body.embed-weyphone .fontPill{padding:.3em .6em;font-size:.85em;min-height:32px}
+body.embed-weyphone .registrarToggle{margin-left:auto}
+/* Docked under the map, the handwritten note card otherwise stretches to the full screen width,
+   and its card.png background (sized for a ~340px card) stretches into a banner that no longer
+   reads as a note card. Keep it card-shaped and centered. Printed mode stays full width. */
+body.embed-weyphone:not(.altFont) #tip{max-width:420px;margin-left:auto;margin-right:auto}
+/* The ≤760px rules let .ftabs wrap, which stacked F1/F2/F3 vertically on a ~310px phone. */
+body.embed-weyphone .ftabs{flex-wrap:nowrap}
+body.embed-weyphone .ftab{padding:.3em .5em}
 
 /* Tooltip typography switches with altFont; room labels stay Rajdhani. */
 body.altFont .rnm{font-family:'Rajdhani',sans-serif;font-weight:600}
@@ -202,8 +226,12 @@ body.altFont .rs{font-family:'Open Sans',sans-serif;font-weight:600}
 .map-viewport{width:100%;max-height:78dvh;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;scrollbar-width:thin;border-radius:8px}
 .map-viewport.is-zoomed{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .map-viewport.is-panning{cursor:grabbing}
-.map-tools{position:absolute;z-index:70;top:8px;right:8px;display:flex;gap:4px;padding:4px;border-radius:8px;background:rgba(42,36,26,.86);box-shadow:0 2px 8px rgba(0,0,0,.35)}
-.map-tools button{width:34px;height:34px;border:1px solid #6b5d3a;border-radius:5px;background:#efe4c6;color:#3a2f1a;font:700 17px 'Open Sans',sans-serif;cursor:pointer}
+/* Zoom controls live in their own toolbar row under the map rather than floating over it:
+   overlaid on the plan they covered the east-wing rooms and the legend. */
+.map-tools{display:flex;justify-content:flex-end;align-items:center;gap:4px;width:100%;max-width:1180px;margin-top:-8px}
+.map-tools-label{margin-right:auto;color:#c8b890;font:600 11px 'Open Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.map-tools button{width:30px;height:28px;border:1px solid #6b5d3a;border-radius:5px;background:#efe4c6;color:#3a2f1a;font:700 16px 'Open Sans',sans-serif;cursor:pointer}
+.map-tools button:hover{background:#fff6dc}
 .map-tools button:last-child{width:auto;padding:0 9px;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
 .map-gesture-hint{display:none;margin:7px 0 0;text-align:center;color:#c8b890;font:600 11px 'Open Sans',sans-serif;letter-spacing:.02em}
 .legend-overlay{
@@ -263,6 +291,17 @@ body.altFont .rs{font-family:'Open Sans',sans-serif;font-weight:600}
 .room.w:hover .rb{fill:#fbd6cf;stroke:#7a1a14;stroke-width:2}
 /* Pinned room highlight: stronger stroke, no glow bleed. */
 .room.stuck .rb{stroke:#143812 !important;stroke-width:3 !important}
+/* The player's default room (Sterling 271): a gold outline on top of its normal occupancy fill,
+   so it reads as "you live here" without hiding that someone else is listed in it too. */
+.room.you .rb{stroke:#c9961e;stroke-width:3.5}
+.room.you.stuck .rb{stroke:#8a6410 !important}
+.ls.ls-you{background:var(--pl-room);border:2.5px solid #c9961e}
+.you-badge{
+  display:inline-block;margin-left:8px;padding:1px 7px;border-radius:3px;
+  background:#c9961e;color:#2a1f0a;
+  font:700 10px/1.5 'Open Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle;
+}
+body:not(.altFont) .you-badge{background:rgba(201,150,30,.85)}
 /* Shared bath overlay */
 .pb{fill:var(--pl-bath);stroke:#7a4a8a;stroke-width:1;pointer-events:none}
 .rn{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;text-anchor:middle;dominant-baseline:middle;pointer-events:none;fill:#3a2f1a}
@@ -633,9 +672,6 @@ body:not(.altFont) .act.alt:hover{
     column-gap:.5em;
   }
   .ftabs{flex-wrap:wrap}
-  /* Tighten the cursive-icon room on phones; the icon sits at left:-2em on the
-     switch, so 2em of left margin keeps it from overlapping its neighbours. */
-  header .switch{margin-left:1.7em}
   /* The Registrar toggle padding stays a touch tighter on mobile so the
      three header groups (floor tabs, +Registrar, font toggle) fit on one
      row at 390 px. Floor labels are now "F1/F2/F3" everywhere — no
@@ -726,7 +762,10 @@ body:not(.altFont) .act.alt:hover{
 <body>
 <header>
   <img class="logo" src="https://cast.weybooru.com/images/icons/weyland-logo.png" alt="Weyland"/>
-  <a class="headline" href=""><span id="bldgName">Sterling Hall</span><span class="sub">Weyland University · Residence Directory</span></a>
+  <!-- "Residence Directory" is the title and the building rides in the subtitle: led by
+       "Sterling Hall", new players read the app as one dorm's page, not a campus directory.
+       #bldgName is still the element setCommunity/setBuilding rewrite. -->
+  <a class="headline" href=""><span>Residence Directory</span><span class="sub">Weyland University · <span id="bldgName">Sterling Hall</span></span></a>
   <div class="hctrls">
     <div class="ftabs" id="ftabs">
       <button class="ftab" data-floor="1">F1</button>
@@ -735,11 +774,15 @@ body:not(.altFont) .act.alt:hover{
     </div>
     <button class="registrarToggle" id="commToggle"
             title="Show community-contributed characters from registrar.weybooru.com">+ Registrar</button>
-    <label class="switch" title="Toggle between hand-written and simplified font styles for character names and descriptions">
-      <span class="icon"></span>
-      <input id="fontToggle" type="checkbox"/>
-      <span class="slider"></span>
+    <!-- Shows the current resident-card font itself ("Aa" drawn in it) instead of naming it:
+         cleaner, and the sample explains the control. Checked = printed (body.altFont). -->
+    <label class="fontPill" title="Switch resident cards between handwritten notes and plain printed text">
+      <input id="fontToggle" type="checkbox" aria-label="Printed font for resident cards"/>
+      <span class="fp-script" aria-hidden="true">Aa</span><span class="fp-print" aria-hidden="true">Aa</span>
     </label>
+    <!-- WeyPhone embed only: the phone hides its own app bar for Housing, so its help button lives
+         here and asks the parent phone to open the Housing help sheet. -->
+    <button type="button" class="embedHelp" id="embedHelp" title="What is this?" aria-label="What is this?" hidden>?</button>
   </div>
 </header>
 
@@ -754,11 +797,6 @@ body:not(.altFont) .act.alt:hover{
         <div class="status" id="statusMsg">Loading residents from cast.weybooru.com…</div>
       </div>
     </div>
-    <div class="map-tools" aria-label="Map zoom controls">
-      <button type="button" id="mapZoomOut" title="Zoom out" aria-label="Zoom out">−</button>
-      <button type="button" id="mapZoomIn" title="Zoom in" aria-label="Zoom in">+</button>
-      <button type="button" id="mapZoomReset" title="Reset map view">Reset</button>
-    </div>
     <div class="panel leg legend-overlay">
       <div class="li"><div class="ls" style="background:var(--pl-room-occ)"></div>Occupied</div>
       <div class="li"><div class="ls" style="background:var(--pl-room)"></div>Vacant</div>
@@ -766,6 +804,7 @@ body:not(.altFont) .act.alt:hover{
       <div class="li"><div class="ls" style="background:var(--pl-laundry)"></div>Laundry</div>
       <div class="li"><div class="ls" style="background:var(--pl-bath)"></div>Bathroom</div>
       <div class="li"><div class="ls" style="background:var(--pl-public)"></div>Public</div>
+      <div class="li"><div class="ls ls-you"></div>Your room</div>
       <div class="stat">
         <span id="statLine">Loading roster…</span>
       </div>
@@ -778,6 +817,12 @@ body:not(.altFont) .act.alt:hover{
         <button class="ftab" data-bldg="osee">O&rsquo;See</button>
       </div>
     </div>
+  </div>
+  <div class="map-tools" aria-label="Map zoom controls">
+    <span class="map-tools-label">Zoom</span>
+    <button type="button" id="mapZoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+    <button type="button" id="mapZoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+    <button type="button" id="mapZoomReset" title="Reset map view">Reset</button>
   </div>
   <div class="map-gesture-hint">Pinch to zoom · drag to pan</div>
 
@@ -1554,6 +1599,14 @@ function status(id){
   return 'o';
 }
 
+// Weyland starts every player in Sterling Hall room 271 (Blake's room). Marked on the map and in
+// its card so a new player can find "their" room. The building check keeps the marker from
+// landing on a same-numbered room in O'See when the community layer is showing that hall.
+const USER_ROOM = '271';
+function isUserRoom(id){
+  return String(id) === USER_ROOM && currentBldg === 'sterling';
+}
+
 function svg(floor){
   const items = layout(floor);
   const parts = [];
@@ -1605,7 +1658,8 @@ function svg(floor){
       inner += `<text class="rnm" x="${it.resCx}" y="${it.resCy - 7}">${res[0].firstName}</text>`;
       inner += `<text class="rnm" x="${it.resCx}" y="${it.resCy + 7}">+${res.length-1} more</text>`;
     }
-    parts.push(`<g class="room ${st}" data-id="${it.id}">${shape}${inner}</g>`);
+    const you = isUserRoom(it.id) ? ' you' : '';
+    parts.push(`<g class="room ${st}${you}" data-id="${it.id}">${shape}${inner}</g>`);
   }
 
   for(const it of items){
@@ -1668,7 +1722,8 @@ function esc(s){
 function fillTip(id){
   const res = R[id] || [];
   if(!res.length) return false;
-  document.getElementById('tipRN').textContent = 'Room ' + id;
+  document.getElementById('tipRN').innerHTML = 'Room ' + esc(id)
+    + (isUserRoom(id) ? '<span class="you-badge" title="New players start in this room">Your default room</span>' : '');
   document.getElementById('tipCT').textContent = res.length === 1 ? '1 Resident' : res.length + ' Residents';
   // Over-capacity warning row — sticky banner above the (scrollable) resident
   // list. Sterling/O'See rooms are 2-bed; anything more means players have
@@ -1848,14 +1903,10 @@ function cancelHide(){ clearTimeout(hideTimer); }
 tip.addEventListener('mouseenter', cancelHide);
 tip.addEventListener('mouseleave', scheduleHide);
 
-// Click outside the tooltip / outside any populated room dismisses the pin
-document.addEventListener('mousedown', e => {
-  if(!stuck) return;
-  if(tip.contains(e.target)) return;
-  const room = e.target.closest && e.target.closest('.room');
-  if(room && (R[room.dataset.id] || []).length) return;  // handled by room click
-  unpin();
-});
+// A pinned room stays pinned until its own room is clicked again or another populated room is
+// clicked (Escape also clears it). Clicks elsewhere - the zoom buttons, empty rooms, the page -
+// deliberately leave it alone: the cards sit below the map, so reaching them or the controls
+// used to dismiss the very thing being read.
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && stuck) unpin(); });
 
 // ── RENDER ───────────────────────────────────────────────────
@@ -1888,8 +1939,8 @@ function render(floor){
     el.addEventListener('click', function(e){
       e.stopPropagation();
       const id = this.dataset.id;
-      if(!(R[id] || []).length) { unpin(); return; }
-      if(stuck && stuckId === id) { unpin(); return; }   // toggle off
+      if(!(R[id] || []).length) return;                  // empty room: nothing to show, keep any pin
+      if(stuck && stuckId === id) { unpin(); return; }   // same room again: toggle off
       pinTip(id);
     });
   });
@@ -1943,11 +1994,16 @@ function pointerDistance(points){
   const [a,b] = points;
   return Math.hypot(a.x-b.x,a.y-b.y);
 }
+// Pointer capture is taken only once a gesture really starts (a second finger, or a drag past the
+// 4px threshold below) - never on a plain press. Capturing on every pointerdown retargeted the
+// resulting click to #mapViewport, so a room's own click handler never ran: clicking a room never
+// pinned it, and just moving the mouse on across the map kept swapping the cards to whatever room
+// it crossed.
 mapViewport.addEventListener('pointerdown', event => {
   if(event.pointerType === 'mouse' && event.button !== 0) return;
   mapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
-  mapViewport.setPointerCapture(event.pointerId);
   if(mapPointers.size === 2){
+    for(const id of mapPointers.keys()){ try { mapViewport.setPointerCapture(id); } catch {} }
     const points = [...mapPointers.values()];
     mapPinch = {distance:Math.max(1,pointerDistance(points)),zoom:mapZoom};
     mapPan = null;
@@ -1977,6 +2033,7 @@ mapViewport.addEventListener('pointermove', event => {
   const dx = event.clientX - mapPan.x;
   const dy = event.clientY - mapPan.y;
   if(!mapPan.moved && Math.hypot(dx, dy) < 4) return;
+  if(!mapPan.moved){ try { mapViewport.setPointerCapture(event.pointerId); } catch {} }
   mapPan.moved = true;
   mapViewport.classList.add('is-panning');
   mapViewport.scrollLeft = mapPan.left - dx;
@@ -2054,6 +2111,22 @@ if(!REGISTRAR_FEATURE_ENABLED){
   btabs.classList.add('hidden');
 }
 
+// WeyPhone embed (?embed=weyphone): the phone hides its own app bar for this app, so this header
+// takes over its jobs. The phone's saved Registrar preference arrives as ?community=1|0 and is the
+// source of truth (not this page's localStorage), and every toggle is reported back so the phone
+// can persist it. Messages only ever go to the same-origin parent.
+const EMBED_PARAMS = new URLSearchParams(window.location.search);
+const WEYPHONE_EMBED = EMBED_PARAMS.get('embed') === 'weyphone' && window.parent !== window;
+function postToPhone(message){
+  if(WEYPHONE_EMBED) window.parent.postMessage({ source:'weyphone-housing', ...message }, window.location.origin);
+}
+if(WEYPHONE_EMBED){
+  document.body.classList.add('embed-weyphone');
+  const help = document.getElementById('embedHelp');
+  help.hidden = false;
+  help.addEventListener('click', () => postToPhone({ type:'help' }));
+}
+
 async function setCommunity(on){
   if(!REGISTRAR_FEATURE_ENABLED) return;
   if(showCommunity === on) return;
@@ -2097,6 +2170,7 @@ async function setCommunity(on){
   buildR();
   render(currentFloor);
   localStorage.setItem('commToggle', on);
+  postToPhone({ type:'community', on });
 }
 if(REGISTRAR_FEATURE_ENABLED){
   commToggle.addEventListener('click', () => setCommunity(!showCommunity));
@@ -2122,7 +2196,12 @@ fontToggle.addEventListener('change', () => {
     render(2);
     // With ?registrar=true, default to ON unless explicitly persisted OFF.
     // setCommunity handles fetch + re-render.
-    if(REGISTRAR_FEATURE_ENABLED && localStorage.getItem('commToggle') !== 'false'){
+    // Embedded in WeyPhone, the phone's own saved preference decides instead (default off, so
+    // registrar.weybooru.com is only fetched after the user asks for it).
+    const communityDefault = WEYPHONE_EMBED
+      ? EMBED_PARAMS.get('community') === '1'
+      : localStorage.getItem('commToggle') !== 'false';
+    if(REGISTRAR_FEATURE_ENABLED && communityDefault){
       setCommunity(true);
     }
   } catch(err){

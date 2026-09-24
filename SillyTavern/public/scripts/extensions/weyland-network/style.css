@@ -1,0 +1,31 @@
+/* The shield icon turns green while 1.1.1.1 is on, so its state is visible at a glance. The button is
+   the <i> itself (icon-only, like its neighbours in the Connection Profile row). */
+#weyland_network_button.weyland-network-on { color: #5cb85c; }
+
+.weyland-network-popup { text-align: left; max-width: 34em; margin: 0 auto; }
+.weyland-network-popup p { margin: 0 0 10px; line-height: 1.5; }
+
+.weyland-network-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.weyland-network-head i { font-size: 1.5em; color: #5cb85c; }
+.weyland-network-head h3 { margin: 0; }
+
+.weyland-network-link { font-size: 0.95em; }
+.weyland-network-link i { font-size: 0.8em; opacity: 0.7; margin-right: 2px; }
+.weyland-network-link a { text-decoration: underline; }
+
+/* The toggle is the one decision on this screen, so it gets a framed row of its own. */
+.weyland-network-toggle {
+    margin: 14px 0 8px;
+    padding: 10px 12px;
+    font-weight: 600;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 8px;
+    background: var(--black30a);
+}
+
+.weyland-network-reassure { opacity: 0.85; font-size: 0.92em; }
+.weyland-network-status { opacity: 0.7; font-size: 0.88em; }
+
+.weyland-network-note { opacity: 0.75; font-size: 0.88em; }
+.weyland-network-note summary { cursor: pointer; }
+.weyland-network-note p { margin: 6px 0 0; }

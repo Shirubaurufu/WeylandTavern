@@ -6,7 +6,7 @@
     "js": "index.js",
     "css": "style.css",
     "author": "Weyland University",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "homePage": "https://github.com/SillyTavern/SillyTavern",
     "auto_update": false,
     "generate_interceptor": "weylandRouterInterceptor"

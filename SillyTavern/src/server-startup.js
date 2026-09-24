@@ -33,6 +33,7 @@ import { router as settingsRouter } from './endpoints/settings.js';
 import { router as backgroundsRouter } from './endpoints/backgrounds.js';
 import { router as spritesRouter } from './endpoints/sprites.js';
 import { router as weyPhoneRouter } from './endpoints/weyphone.js';
+import { router as registrarRouter } from './endpoints/registrar.js';
 import { router as stableDiffusionRouter } from './endpoints/stable-diffusion.js';
 import { router as hordeRouter } from './endpoints/horde.js';
 import { router as vectorsRouter } from './endpoints/vectors.js';
@@ -50,6 +51,7 @@ import { router as minimaxRouter } from './endpoints/minimax.js';
 import { router as dataMaidRouter } from './endpoints/data-maid.js';
 
 import { router as weylandRouter } from './endpoints/weyland.js'; // WEYLAND-TAVERN ADDITION
+import { weylandDnsStatusHandler } from './weyland-dns.js'; // WEYLAND-TAVERN ADDITION
 import { router as weylandKeyGuardRouter } from './endpoints/weyland-keyguard.js';
 
 /**
@@ -163,6 +165,7 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/backgrounds', backgroundsRouter);
     app.use('/api/sprites', spritesRouter);
     app.use('/api/weyphone', weyPhoneRouter);
+    app.use('/api/registrar', registrarRouter);
     app.use('/api/content', contentManagerRouter);
     app.use('/api/settings', settingsRouter);
     app.use('/api/sd', stableDiffusionRouter);
@@ -181,6 +184,7 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/minimax', minimaxRouter);
     app.use('/api/data-maid', dataMaidRouter);
 
+    app.get('/api/weyland/dns-status', weylandDnsStatusHandler); // WEYLAND-TAVERN ADDITION (1.1.1.1 for HelixMind)
     app.use('/api/weyland', weylandRouter); // WEYLAND-TAVERN ADDITION
     app.use('/api/weyland-keyguard', weylandKeyGuardRouter);
 }

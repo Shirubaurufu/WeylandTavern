@@ -1,5 +1,6 @@
 import { reconstructHistoryAsPhoneFormat, joinNonEmptySections } from './generation.js';
 import { limitPhoneRequestMessages } from './requestBudget.js';
+import { withGeminiBypass } from './phonePromptPolicy.js';
 
 /**
  * Builds the request messages for a background memory-summarization call: a system message
@@ -73,7 +74,7 @@ export async function sendMemoryRequest({ sendRequest, profileId, messages, prim
     if (!primaryModel) {
         throw new Error('No primary model configured for memory generation.');
     }
-    const boundedMessages = limitPhoneRequestMessages(messages);
+    const boundedMessages = limitPhoneRequestMessages(withGeminiBypass(messages));
     try {
         return await sendRequest(profileId, boundedMessages, primaryModel);
     } catch (primaryError) {

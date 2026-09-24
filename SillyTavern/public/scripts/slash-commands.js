@@ -30,7 +30,6 @@ import {
     name1,
     name2,
     neutralCharacterName,
-    newAssistantChat,
     online_status,
     reloadCurrentChat,
     removeMacros,
@@ -470,27 +469,8 @@ export function initDefaultSlashCommands() {
         },
         helpString: 'Closes the current chat.',
     }));
-    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
-        name: 'tempchat',
-        callback: () => {
-            return new Promise((resolve, reject) => {
-                const eventCallback = async (chatId) => {
-                    if (chatId) {
-                        return reject('Not in a temporary chat');
-                    }
-                    await newAssistantChat({ temporary: true });
-                    return resolve('');
-                };
-                eventSource.once(event_types.CHAT_CHANGED, eventCallback);
-                $('#option_close_chat').trigger('click');
-                setTimeout(() => {
-                    reject('Failed to open temporary chat');
-                    eventSource.removeListener(event_types.CHAT_CHANGED, eventCallback);
-                }, debounce_timeout.relaxed);
-            });
-        },
-        helpString: 'Opens a temporary chat with Assistant.',
-    }));
+    // Weytav: /tempchat (temporary Assistant chat) removed along with the
+    // home-screen assistant — Weytav has no cardless assistant by design.
     SlashCommandParser.addCommandObject(SlashCommand.fromProps({
         name: 'panels',
         callback: function () {
@@ -1984,6 +1964,18 @@ export function initDefaultSlashCommands() {
                 description: 'text for the ok button',
                 typeList: [ARGUMENT_TYPE.STRING],
                 defaultValue: 'Ok',
+            }),
+            SlashCommandNamedArgument.fromProps({
+                name: 'skipButton',
+                description: 'optional button that closes the input without submitting its contents',
+                typeList: [ARGUMENT_TYPE.STRING],
+            }),
+            SlashCommandNamedArgument.fromProps({
+                name: 'scroll',
+                description: 'allow the prompt text to scroll inside the popup on small screens',
+                typeList: [ARGUMENT_TYPE.BOOLEAN],
+                defaultValue: 'off',
+                enumList: commonEnumProviders.boolean('onOff')(),
             }),
             SlashCommandNamedArgument.fromProps({
                 name: 'rows',
@@ -3537,6 +3529,10 @@ async function inputCallback(args, prompt) {
         large: isTrueBoolean(args?.large),
         wide: isTrueBoolean(args?.wide),
         okButton: args?.okButton !== undefined && typeof args?.okButton === 'string' ? args.okButton : 'Ok',
+        customButtons: typeof args?.skipButton === 'string' && args.skipButton.trim()
+            ? [{ text: args.skipButton, result: POPUP_RESULT.NEGATIVE, classes: ['popup-button-skip'] }]
+            : null,
+        allowVerticalScrolling: isTrueBoolean(args?.scroll),
         rows: args?.rows !== undefined && typeof args?.rows === 'string' ? isNaN(Number(args.rows)) ? 4 : Number(args.rows) : 4,
     };
     // Do not remove this delay, otherwise the prompt will not show up

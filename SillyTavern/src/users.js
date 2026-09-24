@@ -510,6 +510,10 @@ export async function initUserStorage(dataRoot) {
     await storage.init({
         dir: path.join(dataRoot, '_storage'),
         ttl: false, // Never expire
+        // ttl:false means no entry can ever expire, so the default 2-minute expiredInterval sweep
+        // is a pure no-op that still does a full-storage disk read every cycle. See the matching
+        // note on DiskCache in endpoints/characters.js.
+        expiredInterval: 0,
     });
 
     const keys = await getAllUserHandles();

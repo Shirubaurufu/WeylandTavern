@@ -618,8 +618,9 @@ router.get('/helix-usage', async (request, response) => {
             if (r.ok) {
                 const payload = await r.json();
                 const row = Array.isArray(payload?.data) ? payload.data[0] : null;
-                const n = Number(row?.total_requests);
-                if (Number.isFinite(n)) used = n;
+                const value = row?.total_requests;
+                const n = Number(value);
+                if (value != null && value !== '' && Number.isSafeInteger(n) && n >= 0) used = n;
             }
         } catch { /* leave used null */ }
 
@@ -638,7 +639,10 @@ router.get('/helix-usage', async (request, response) => {
             ? Math.max(0, limit - used)
             : null;
 
-        return response.status(200).json({ used, limit, remaining: messagesLeft });
+        // Identify the effective key without exposing it; native secret changes must
+        // not reuse the hourly estimate belonging to a previous key.
+        const usageKeyId = createHash('sha256').update(key).digest('hex');
+        return response.status(200).json({ used, limit, remaining: messagesLeft, usageKeyId });
     } catch (error) {
         console.error('/weyland/helix-usage: lookup failed:', error);
         return response.status(500).json({ error: `/weyland/helix-usage: ${error.message}` });

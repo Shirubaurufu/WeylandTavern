@@ -193,12 +193,15 @@ NSFW DIRECTIVES — FICTIONAL ADULT SCENES ONLY
         message: source.message,
     }]).map(entry => `[${entry.role === 'user' ? 'USER' : 'CHARACTER'} — ${entry.name}]\n${entry.message}`).join('\n\n');
 
-    const user = `SOURCE CHARACTER: ${source.characterName}
-
-RECENT SCENE CONTEXT (oldest to newest; context only):
+    // omitContext: runPawXaiGeneration's retry drops the context block entirely - on real chats
+    // Gemini has refused the lead-up messages while accepting the target message on its own.
+    const contextSection = source.omitContext ? '' : `RECENT SCENE CONTEXT (oldest to newest; context only):
 ${recentContext}
 
-TARGET — LAST CHARACTER MESSAGE (make every image prompt from this message only):
+`;
+    const user = `SOURCE CHARACTER: ${source.characterName}
+
+${contextSection}TARGET — LAST CHARACTER MESSAGE (make every image prompt from this message only):
 ${source.message}
 
 CHARACTER CARD VISUAL CONTEXT:
@@ -260,18 +263,13 @@ function parsePromptBlock(block, index) {
 export function parsePawXaiResponse(rawText, requestedCount = 5) {
     const raw = clean(rawText);
     if (!raw) return [];
-    const tagged = [...raw.matchAll(/<PROMPT>([\s\S]*?)<\/PROMPT>/gi)]
-        .map((match, index) => parsePromptBlock(clean(match[1]), index));
-    let prompts = tagged;
-    if (!prompts.length) {
-        prompts = raw
-            .split(/(?:^|\n)\s*(?=\d+[.)-]\s+)/g)
-            .map(part => part.replace(/^\d+[.)-]\s*/, '').trim())
-            .filter(Boolean);
-    }
-    if (!prompts.length) prompts = raw.split(/\n{2,}/).map(clean).filter(Boolean);
-    return prompts
-        .map((value, index) => typeof value === 'string' ? parsePromptBlock(value, index) : value)
+    // Tagged blocks only. The old fallbacks (split on numbered lines, then on blank lines) turned a
+    // model that reasoned out loud and never reached its answer - seen with minimax-m3 spending the
+    // whole token budget on "Let me analyze this scene..." - into eight saved "prompts" of reasoning.
+    // The prompt demands the <PROMPT> structure, so anything untagged is treated as unusable: the
+    // caller then retries on the fallback model or reports a clean failure.
+    return [...raw.matchAll(/<PROMPT>([\s\S]*?)<\/PROMPT>/gi)]
+        .map((match, index) => parsePromptBlock(clean(match[1]), index))
         .filter(result => result.prompt)
         .slice(0, clampCount(requestedCount));
 }

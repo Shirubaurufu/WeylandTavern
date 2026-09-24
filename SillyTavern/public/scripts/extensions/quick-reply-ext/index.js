@@ -21,6 +21,7 @@ import { scenarios, tails } from "./src/scenarios.js";
 import { charPer, specialChar } from "./src/charper.js";
 import { ravs } from "./src/rav.js";
 import { detector } from "./src/similarity.js";
+import { applyGeminiBypass } from "./src/promptModifiers.js";
 
 const debug = true;
 
@@ -752,7 +753,16 @@ async function Scenarios(userMessage) {
 
         const greeting = getFirstMessage("char");
         const greetingText = greeting?.mes;
-        const greetingSwipe = greeting?.swipe_id;
+        let greetingSwipe = greeting?.swipe_id;
+
+        // Mirror Weyland has a single greeting; MirrorStart picks the start location instead
+        if (getCurrentCharacterName() === "Mirror Weyland") {
+            greetingSwipe = {
+                "Lecture Hall": 0,
+                "Sakurai Cafe": 1,
+                "Dormitory Commons": 2,
+            }[getLocalVariable("MirrorStart")];
+        }
 
         if (!greetingText || greetingSwipe === undefined) {
             console.error(`[WQR] Missing greeting.`);
@@ -1109,6 +1119,11 @@ Dated Nix at start of Freshman, but ended getting dumped.`, true);
         setLocalVariable("MONTE", strings.rsbMONTE, true);
         setLocalVariable("BRIET", strings.rsbBRIET, true);
         setLocalVariable("TORY", strings.rsbTORY, true);
+        setLocalVariable("ELOW", strings.rsbELOW, true);
+        setLocalVariable("BRAM", strings.rsbBRAM, true);
+        setLocalVariable("SOF", strings.rsbSOF, true);
+        setLocalVariable("TAWN", strings.rsbTAWN, true);
+        setLocalVariable("SAM", strings.rsbSAM, true);
 		
 		if (charName === "Mirror Weyland") {
 		    await quickReplyApi.executeQuickReply("WeylandUni", "Mirror");
@@ -1178,6 +1193,18 @@ async function CharPer(charName) {
                     deleteLocalVariable("HannahV");
                 }
                 break;
+            case "Yue-Lin": {
+                // Third greeting uses an alternate personality
+                if (getFirstMessage("char")?.swipe_id === 2) {
+                    const config = charPer.get("Yue-Lin");
+                    if (config !== undefined) {
+                        setLocalVariable("M!ku", config.vars["M!kuAlt"]);
+                    }
+                    DebugLog(`[P] CharPer: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+                    return;
+                }
+                break;
+            }
         }
 
         //Standard
@@ -1560,6 +1587,20 @@ async function BG(charMessage, charName) {
                 // Observation Room
                 if (checkMessage("Observation Room")) return "observe.avif";
 
+                // Aquarium
+                if (checkMessage("Aquarium")) return "Aquarium.avif";
+
+                // Boba
+                if (checkMessage("Boba")) return "Boba Shop.avif";
+				
+                // Auto Shop
+                if (checkMessage(["Car Shop", "Auto Shop"])) return "Auto Shop.avif";
+				
+                // Costco
+                if (checkMessage("Costco")) return "Costco.avif";
+                if (checkMessage(["Walmart", "Wal-Mart", "Weymart"])) return "Walmart.avif";
+                if (checkMessage("Warehouse")) return "Warehouse.avif";
+				
                 // Blake / 271 / user's room
                 if (checkMessage(["271", "Blake", userName])) return "blake room 3.avif";
 
@@ -1587,11 +1628,14 @@ async function BG(charMessage, charName) {
                 if (checkMessage("Mama")) return "Mamas Den.avif";
                 if (checkMessage("Barcade")) return "Barcade.avif";
                 if (checkMessage(["Bar", "Dive"])) return "Dive Bar.avif";
-                if (checkMessage("Diner")) return exterior ? "Diner Exterior.avif" : "Diner Interior.avif";
+                if (checkMessage("Diner")) return exterior ? "Diner Exterior.avif" : "Diner-Interior.avif";
                 if (checkMessage(["Bakery", "Pastry"])) return "Bakery.avif";
                 if (checkMessage(["Meadery", "Winery"])) return "Meadery.avif";
                 if (checkMessage("Vineyard")) return "Vineyard.avif";
-                if (checkMessage("Restaurant")) return "Restaurant.avif";
+                if (checkMessage("Restaurant")) {
+					if (checkMessage(["Fancy", "Upscale", "Bellucci"])) return "Fancy Restaurant.avif";
+					return "Restaurant.avif";
+				}
 
                 // Civic / Misc
                 if (checkMessage(["Hospital", "Medical", "Nurse", "Doctor", "Treatment", "Patient"])) {
@@ -1599,17 +1643,25 @@ async function BG(charMessage, charName) {
                 }
                 if (checkMessage(["Tetsuya", "Grocery"])) return "Tetsuya_Aisle_FIn-1.avif";
                 if (checkMessage(["Ramen", "Red Lantern"])) return "ramen.avif";
-                if (checkMessage(["Church", "Chapel", "Wedding", "Altar"])) return "chapel.avif";
+                if (checkMessage("Sushi")) return "Sushi Bar.avif";
+                if (checkMessage("Wedding Reception")) return "Wedding Reception.avif";
+                if (checkMessage(["Church", "Chapel", "Wedding", "Altar"])) return "Church Wedding.avif";
                 if (checkMessage("Farm")) return "farm.avif";
                 if (checkMessage(["Cell", "Jail", "Prison"])) return "cell.avif";
 
                 // Specific dorm rooms
                 if (checkMessage("Serra")) return "serra room 2.avif";
+				if (checkMessage("Ahset")) return "Ahset_s Room.avif";
+				if (checkMessage("Khepri")) return "Khepri_s Room.avif";
+				if (checkMessage("Miu")) return "Miu_s Room.avif";
+				if (checkMessage("Nefara")) return "Nefara_s Room.avif";
+				if (checkMessage("Shani")) return "Shani_s Room.avif";
+				if (checkMessage("Sobek")) return "Sobek_s Room.avif";
                 if (checkMessage(["292", "Vera", "Fasti"])) return "vera room 1.avif";
                 if (checkMessage(["273", "Kai", "Kiera"])) return "kai room.avif";
                 if (checkMessage(["279", "Summer"])) return "summer room 3.avif";
                 if (checkMessage(["309", "Briar"])) return "briar room.avif";
-                if (checkMessage(["383", "Willow"])) return "Willow room.avif";
+                if (checkMessage(["383", "Willow"])) return "willow room.avif";
                 if (checkMessage(["280", "Koshizu"])) return "koshizu room.avif";
                 if (checkMessage(["284", "Indigo"])) return "indigo room 2.avif";
                 if (checkMessage(["281", "Belle"])) return "belle room 2.avif";
@@ -1626,7 +1678,7 @@ async function BG(charMessage, charName) {
                     if (checkMessage("Seth")) return "Seth_s Bedroom.avif";
                     if (checkMessage("Warren")) return "Warren_s Bedroom.avif";
                     if (checkMessage("Jericho")) return "Jericho Bedroom.avif";
-                    if (checkMessage(["Mark", "Rein"])) return "Rein and Mark Bedroom_Bedroom.avif";
+                    if (checkMessage(["Mark", "Rein"])) return "Rein and Mark Bedroom.avif";
                     if (checkMessage("Gemini")) return "Gemini_Bedroom.avif";
                     return "Generic Bedroom.avif";
                 }
@@ -1651,7 +1703,7 @@ async function BG(charMessage, charName) {
                 if (checkMessage("Lounge")) return "lounge.avif";
 
                 // Forest sub-types first (more specific), then forest fallback
-                if (checkMessage(["Firefly", "Fireflies"])) return "Field of Fireflies.avif";
+                if (checkMessage(["Firefly", "Fireflies"])) return "Field-of-Fireflies.avif";
                 if (checkMessage("Clearing")) return "Forest Clearing.avif";
                 if (checkMessage(["Trail", "Trails", "Path", "Pathway"])) {
                     const num = getRandomInt(1, 4);
@@ -1669,7 +1721,7 @@ async function BG(charMessage, charName) {
                     "Trailer[^~\n]*Interior"
                 ])) return "cerberus.avif";
                 if (checkMessage(["Trailer", "Soft Pike"])) {
-                    if (checkMessage("Entrance")) return "Soft Pike Entrance.avif";
+                    if (checkMessage("Entrance")) return "Soft-Pike-Entrance.avif";
                     return isNight ? "Soft Pike Night.avif" : "Soft Pike Day.avif";
                 }
                 
@@ -1731,7 +1783,7 @@ async function BG(charMessage, charName) {
                     return checkMessage("Bonfire") ? "Backyard Bonfire.avif" : "Empty Backyard.avif";
                 }
                 if (checkMessage("Tent")) {
-                    return isNight ? "Solo Campground Night.avif" : "Solo Campground Day.avif";
+                    return isNight ? "Solo Campground night.avif" : "Solo Campground day.avif";
                 }
                 if (checkMessage(["Camp ", "Campsite", "Campgrounds"])) return "Campground.avif";
 
@@ -1761,11 +1813,19 @@ async function BG(charMessage, charName) {
                 if (checkMessage(["Icecream", "Ice Cream"])) return "Icecream Shop.avif";
                 if (checkMessage("Record")) return "Record Store.avif";
                 if (checkMessage("Game")) return "Game Store.avif";
+                if (checkMessage("Karaoke")) return "Karaoke Bar.avif";
+                if (checkMessage("Tattoo")) return "Tattoo Parlor.avif";
                 if (checkMessage(["Book", "Bookstore"])) return "Bookstore.avif";
+                if (checkMessage(["Pet", "Animal"])) return "Pet Store.avif";
+                if (checkMessage(["Roller Skate", "Roller Skating", "Roller Rink"])) return "Roller Skating Rink.avif";
                 if (checkMessage(["Skate", "Skatepark"])) return "Empty Skatepark.avif";
+                if (checkMessage(" Ski ")) return "Ski Resort.avif";
 
                 // Park / Outdoor
-                if (checkMessage("Lake")) return "lake.avif";
+                if (checkMessage("Lake")) {
+					if (checkMessage("Mountain")) return "Mountain Lake.avif";
+					return "Lake.avif";
+				}
                 if (checkMessage("Playground")) return "Empty Playground.avif";
                 if (checkMessage("Trampoline")) return "Indoor Trampoline.avif";
                 if (checkMessage(["River", "Riverside"])) return "River Walk.avif";
@@ -1773,7 +1833,7 @@ async function BG(charMessage, charName) {
                 if (checkMessage("Park")) return isNight ? "Parc_8_Night.avif" : "Park.avif";
 
                 // Transit / Stairs / Alley
-                if (checkMessage("Bus")) return checkMessage("Stop") ? "Bus Stop.avif" : "Bus Interior.avif";
+                if (checkMessage("Bus")) return checkMessage("Stop") ? "Bus-Stop.avif" : "Bus Interior.avif";
                 if (checkMessage(["Stairwell", "Staircase", "Stairs"])) return "Stairwell.avif";
                 if (checkMessage("Bowling")) return "Bowling Alley.avif";
                 if (checkMessage("Alley")) return "Alley.avif";
@@ -1785,13 +1845,18 @@ async function BG(charMessage, charName) {
                 if (checkMessage("Basketball")) return "Basketball Court.avif";
                 if (checkMessage("Volleyball")) return "Volleyball Court.avif";
                 if (checkMessage("Football")) return "Football Field.avif";
+                if (checkMessage("Ice Rink")) return "Ice Rink.avif";
                 if (checkMessage(["Sports", "Tennis"])) return "Sports Complex.avif";
 
                 // Haunted / Construction
                 if (checkMessage("Haunted")) {
-                    return exterior ? "Haunted House.avif" : "Haunted House Interior.avif";
+                    return exterior ? "Haunted House.avif" : "Haunted-House-Interior.avif";
                 }
-                if (checkMessage(["Construction", "Observatory"])) return "construction.avif";
+                if (checkMessage("Observatory")) {
+					if (checkMessage(["Construction", "Jobsite", "Job Site", "Worksite"])) return "construction.avif";
+					return "Observatory.avif";
+				}
+                if (checkMessage(["Construction", "Jobsite", "Job Site", "Worksite"])) return "construction.avif";
 
                 // Classrooms
                 // Art and Workshop are checked before generic Class because they have their
@@ -1817,7 +1882,10 @@ async function BG(charMessage, charName) {
                 }
                 if (checkMessage(["Hallway", "Corridor"])) return "hallway.avif";
                 if (checkMessage(["Bathroom", "Restroom", "Toilet", "Washroom"])) return "shared bathroom 2.avif";
-                if (checkMessage("Mall")) return "mall 2.avif";
+                if (checkMessage("Mall")) {
+					if (checkMessage("Closed")) return "Mall Night.avif";
+					return "Mall Day.avif";
+				}
 
                 // Theater / Tavern / Habitat
                 if (checkMessage(["Movie", "Theatre", "Theater", "Cinema"])) return "Theater.avif";
@@ -1845,7 +1913,7 @@ async function BG(charMessage, charName) {
                 // Beach
                 if (checkMessage("Beach")) {
                     if (checkMessage("Bonfire")) return "Beach Bonfire.avif";
-                    if (checkMessage(["Cove", "Hidden"])) return "Beach Hidden Beach Cove.avif";
+                    if (checkMessage(["Cove", "Hidden"])) return "Hidden Beach Cove.avif";
                     if (isNight) return "Beach_Night.avif";
                     if (isAlone) return "Beach_Day.avif";
                     return Math.random() < 0.5 ? "Beach_1.avif" : "Beach_2.avif";
@@ -1882,7 +1950,7 @@ async function BG(charMessage, charName) {
                     return "Japanese Estate Bedroom.avif";
                 }
 
-                if (checkMessage("Torii")) return "Mountian Tori Gates.avif";
+                if (checkMessage("Torii")) return "Mountain Tori Gates.avif";
 
                 if (checkMessage("Europe")) {
                     return checkMessage("City") ? "Large European City.avif" : "Small European Town.avif";
@@ -1896,20 +1964,61 @@ async function BG(charMessage, charName) {
 
                 // Somnia 
                 if (checkMessage("Somnia")) {
-                    if (exterior) return "somnia 1.avif";
+                    if (exterior) {
+						if (isNight) return "Beach_Night.avif";
+						return "somnia 1.avif";
+					}
                     if (checkMessage(["Front Desk", "Reception"])) return "somnia 2.avif";
                     if (checkMessage("Bar")) return "somnia 3.avif";
                     if (checkMessage("Kiosk")) return "somnia 5.avif";
                     return "somnia 4.avif";
                 }
 
-                if (checkMessage(["7-Eleven", "Seven-Eleven"])) return "seven eleven.avif";
-
+                if (checkMessage(["7-Eleven", "Seven-Eleven"])) {
+                    if (exterior) return isNight ? "711 Night.avif" : "711 Day.avif";
+					return "seven eleven.avif";
+                }
+				
+                // Cave
+                if (checkMessage("Cave")) return "Cave.avif";
+                if (checkMessage("Sea Cove")) return "Sea Cove.avif";
+				
+                // Graveyard
+                if (checkMessage("Graveyard")) return "Graveyard.avif";
+				
+                // Farmer Market
+                if (checkMessage(["Farmer Market", "Farmer's Market"])) return "Farmers Market.avif";
+				
+                // Desert
+                if (checkMessage("Desert")) return "Desert.avif";
+				
+                // Egypt
+                if (checkMessage("Egypt")) return "Egyptian City.avif";
+				
+                // Lighthouse
+                if (checkMessage("Lighthouse")) return "Lighthouse.avif";
+                if (checkMessage("Shipyard")) return "Shipyard.avif";
+				
+                // Laundry
+                if (checkMessage("Laundromat")) return "Laundromat.avif";
+                if (checkMessage("Laundry")) return "Laundry.avif";
+				
+                // Massage Parlor
+                if (checkMessage(["Massage", "Masseuse"])) return "Massage Parlor.avif";
+				
+                // Trainyard
+                if (checkMessage(" Train ")) return "Trainyard.avif";
+				
+                // Space
+                if (checkMessage("Outer Space")) return "Space.avif";			
+				
                 // Festivals
                 if (checkMessage("Moonlight")) return "festival.avif";
                 if (checkMessage("Sunrise")) return "sunrise.avif";
                 if (checkMessage(["Harvest", "Autumn", "Fall"])) return "Autumn Festival.avif";
                 if (checkMessage(["Festival", "Lantern"])) return "Lantern Festival.avif";
+                if (checkMessage("Christmas")) return "Christmas Party.avif";
+                if (checkMessage("Halloween")) return "Halloween Party.avif";
 
                 // Caravan
                 if (checkMessage("Caravan")) {
@@ -1919,10 +2028,11 @@ async function BG(charMessage, charName) {
                     return isNight ? "caravan ring night.avif" : "caravan ring day.avif";
                 }
 
-                // Pavilions / Christmas
-                if (checkMessage("Sunstone")) return "sunstone.avif";
-                if (checkMessage("Moonstone")) return "moonstone.avif";
-                if (checkMessage(["Christmas", "Santa", "Holiday"])) return "Sterling_Hall_Christmas_1.avif";
+                // Pavilions
+                if (checkMessage("Sunstone")) return "Sunstone Pavilion Throne Room.avif";
+                if (checkMessage("Moonstone")) return "Moonstone Pavilion Sitting Area.avif";
+                if (checkMessage("Anubis")) return "Temple of Anubis.avif";
+                if (checkMessage("Temple of Bast")) return "Temple of Bastet.avif";
             } catch {}
         })();
 
@@ -2339,6 +2449,7 @@ async function XXX(charName) {
         const pc = getGlobalVariable("PromptChoice");
         const rav = ravs.get(pc) || ravs.get("Current Prompt");
         if (!rav) throw new Error("No rav found");
+        const geminiBypassEnabled = String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled';
         if (["Summer","Loona","Belle","Hannah","Seth","Lentyl","Briar","Willow","Bap","Dash"].includes(charName) && rav.thinkYes) {
             setLocalVariable("ThoughtSet", rav.thinkYes);
         } else if (charName === "Vera" && getLocalVariable("Scenario") && rav.thinkYes) {
@@ -2351,14 +2462,40 @@ async function XXX(charName) {
             setLocalVariable("ThoughtSet", "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]");
         }
         if (/Weybot|Mirror Weyland|Kinsbane Manor/.test(charName)) {
-			setLocalVariable("ExpAltShow", "true");
-		}
+            setLocalVariable("ExpAltShow", "true");
+        }
         switch (pc) {
             default:
                 setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
-                setLocalVariable("ravteg", rav.teg);
+                setLocalVariable("ravteg", applyGeminiBypass(rav.teg, geminiBypassEnabled));
                 setLocalVariable("postrav", rav.post.replace("{{pipe}}", `${getLocalVariable("ExpAltShow") === "true" ? `${rav.expaltshow}` : "{{getglobalvar::RPFocus}}"}\n${getGlobalVariable("HTML!") === "Enabled" ? strings.whtml : "====="}`));
                 break;
+            case "Beta Prompt": {
+                // Beta's analysis section is assembled here instead of living pre-baked in rav.teg
+                // (which now holds only the sysprompt tail, starting at the Welcome block) so Hard
+                // Mode and the Analysis toggle can each be turned on or off independently without
+                // hand-syncing prose across every combination — see rav.js's frameTop/reason2Empirical/
+                // directive/objectionValve/bridgeLine/body for what each row below actually contains.
+                setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
+                const hardOn = getGlobalVariable("HardToggle") === "On";
+                const analysisOn = String(getGlobalVariable("AnalysisToggle") || "Enabled").trim().toLowerCase() === "enabled";
+                let ravteg;
+                if (analysisOn) {
+                    const reason2 = hardOn ? `2. FEEDBACK: User feedback may appear below:\n\n${rav.directive}` : rav.reason2Empirical;
+                    ravteg = `${rav.frameTop}\n\n${reason2}\n\n${rav.objectionValve}\n\n${rav.bridgeLine}\n\n${rav.body}\n\n${rav.teg}`;
+                } else if (hardOn) {
+                    ravteg = `${rav.directive}\n\n${rav.bridgeLine}\n\n${rav.teg}`;
+                } else {
+                    ravteg = rav.teg;
+                }
+                setLocalVariable("ravteg", applyGeminiBypass(ravteg, geminiBypassEnabled));
+                let postrav = rav.post.replace("{{pipe}}", `${getLocalVariable("ExpAltShow") === "true" ? `${rav.expaltshow}` : "{{getglobalvar::RPFocus}}"}\n${getGlobalVariable("HTML!") === "Enabled" ? strings.whtml : "====="}`);
+                // The client note only makes sense pointing back at an analysis that's actually in
+                // the prompt — drop it whenever the full analysis body was left out above.
+                if (!analysisOn) postrav = postrav.replace(/¦Weyland Tavern client note:[^¦]*¦\s*\n*/, "");
+                setLocalVariable("postrav", postrav);
+                break;
+            }
             case "Old Prompt 2025":
                 let replace = [];
                 if (charName !== "Muse") {
@@ -2371,7 +2508,7 @@ async function XXX(charName) {
                     }
                     replace.push('');
                 }
-                setLocalVariable("ravteg",rav.teg.replace("\n{{pipe}}\n", replace.join("\n")));
+                setLocalVariable("ravteg", applyGeminiBypass(rav.teg.replace("\n{{pipe}}\n", replace.join("\n")), geminiBypassEnabled));
                 setLocalVariable("postrav", rav.post);
                 break;
         }

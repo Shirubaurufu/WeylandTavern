@@ -379,8 +379,9 @@ body.streamlined-ui #rm_button_back
 /* Home Screen */
 div.mes[ch_name=Assistant],
 #chat:has(.welcomePanel) + #form_sheld,
-button.openTemporaryChat,
-span.welcomeShortcutsSeparator,
+/* button.openTemporaryChat and span.welcomeShortcutsSeparator were dropped here:
+   both elements were removed with the home-screen assistant, and .welcomeShortcuts
+   below already hides the whole row regardless. */
 a[href="https://docs.sillytavern.app/"],
 div.showRecentChats,
 div.hideRecentChats,

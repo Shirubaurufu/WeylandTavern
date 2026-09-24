@@ -1,0 +1,28 @@
+/* Chat-bar quick replies, non-condensed UI (the condensed UI is streamlined-ui, which styles
+   this bar itself). Stock Quick Reply lets the bar wrap, so on phone-width screens the eighth
+   button dropped onto a second row by itself. Keep every button on one row instead: no wrapping,
+   buttons are allowed to shrink, and they run a little smaller than stock so eight fit at ~360px. */
+body:not(.streamlined-ui) #qr--bar > .qr--buttons {
+    flex-wrap: nowrap;
+    gap: 4px;
+}
+
+body:not(.streamlined-ui) #qr--bar > .qr--buttons .qr--button {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 2px 4px;
+    font-size: 0.9em;
+}
+
+body:not(.streamlined-ui) #qr--bar > .qr--buttons .qr--button .qr--button-icon {
+    margin: 0 0.4em;
+}
+
+/* Stock Quick Reply reserves 2.5em on the right (#qr--bar.popoutVisible) for its pop-out button,
+   but hides that button below 1000px - leaving the empty reservation behind, so the centered
+   row sat visibly left of center on phones. Release it whenever the button is hidden. */
+@media screen and (max-width: 1000px) {
+    body:not(.streamlined-ui) #qr--bar.popoutVisible {
+        padding-right: 0;
+    }
+}

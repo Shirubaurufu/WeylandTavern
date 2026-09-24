@@ -25,13 +25,46 @@ function tetherContextSliderMarkup(settings) {
 }
 
 // Same UI format as Weyland-LTM's model selection (input + "Use current" + quickfill preset
-// buttons + disclaimer), with WeyPhone's own values. minimax-m3 is the default per Lucky;
-// deepseek-v4-pro is his other tested favorite. Both keep Sonnet supply for actual messaging.
-export const RECOMMENDED_PHONE_MODEL = 'minimax-m3';
+// buttons + disclaimer), with WeyPhone's own values. gemini-3.8-flash is the default per Lucky;
+// minimax-m3 and deepseek-v4-pro are his other tested favorites. All keep Sonnet supply for
+// actual messaging.
+export const RECOMMENDED_PHONE_MODEL = 'gemini-3.8-flash';
+// Second choice, tried once when the chosen model errors out. MiniMax M3 across the board:
+// cheap, fast, reliably available, and never Sonnet.
+export const FALLBACK_PHONE_MODEL = 'minimax-m3';
 // This one list feeds the quickfill buttons on WeyPhone's own model fields, Kressa's model field,
 // and PawXai's — all three import it from here, so a model added below shows up in all of them.
 // (Weyland-LTM keeps a separate list of its own; new models need adding there too.)
-export const ALTERNATE_PHONE_MODELS = ['deepseek-v4-pro', 'glm-4.7-thinking', 'gemini-3.1-pro-preview', 'gemini-3.6-flash'];
+export const ALTERNATE_PHONE_MODELS = ['minimax-m3', 'deepseek-v4-pro', 'gemma-4-31b-it', 'gemini-3.1-pro-preview'];
+
+/**
+ * Fallback-model dropdown. Same option list as the primary picker plus an explicit
+ * "no fallback" choice, so a user can opt out of the retry entirely.
+ */
+export function fallbackModelSelect(id, currentValue, recommended = FALLBACK_PHONE_MODEL) {
+    const current = String(currentValue ?? recommended);
+    const options = [`<option value=""${current === '' ? ' selected' : ''}>No fallback, fail instead of retrying</option>`]
+        .concat(collectPhoneModelIds(current).map((modelId) => {
+            const label = modelId === recommended ? `${modelId} (recommended fallback)` : modelId;
+            return `<option value="${escapeHtml(modelId)}"${modelId === current ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+        }));
+    return `<select id="${id}" class="wp-fallback-select" title="If the model above fails or is unavailable, WeyPhone retries once with this one instead of giving up.">${options.join('')}</select>`;
+}
+
+/** Connection Profile picker. Blank = follow whatever SillyTavern is connected to. */
+export function connectionProfileSelect(id, currentValue) {
+    const current = String(currentValue || '');
+    let profiles = [];
+    try {
+        profiles = SillyTavern.getContext().extensionSettings?.connectionManager?.profiles ?? [];
+    } catch { /* none available */ }
+    const options = [`<option value=""${current === '' ? ' selected' : ''}>Use my current chat connection (recommended)</option>`]
+        .concat((Array.isArray(profiles) ? profiles : []).map((profile) => {
+            const label = profile.api ? `${profile.name} (${profile.api})` : profile.name;
+            return `<option value="${escapeHtml(profile.id)}"${profile.id === current ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+        }));
+    return `<select id="${id}" class="wp-profile-select" title="Which saved connection WeyPhone sends through. Leave this alone unless you run more than one provider.">${options.join('')}</select>`;
+}
 
 // Wallpaper presets — pure-CSS background values applied to #wp-wallpaper, each themed to a
 // corner of Weyland. Anything not in this map is treated as a custom image URL.
@@ -110,7 +143,7 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-function toggleRowMarkup({ id, label, sub, checked }) {
+export function toggleRowMarkup({ id, label, sub, checked }) {
     return `
 <label class="wp-settings-toggle-row">
     <span class="wp-settings-toggle-label">${escapeHtml(label)}${sub ? `<span class="wp-settings-sub">${escapeHtml(sub)}</span>` : ''}</span>
@@ -126,12 +159,76 @@ function clampPercent(value, fallback) {
     return Number.isFinite(number) ? Math.min(100, Math.max(0, number)) : fallback;
 }
 
-function modelQuickfills(inputId) {
+// Which ST model <select> holds the live model list, per connection source. Only the
+// sources HelixMind/Weyland actually ship against need to resolve; anything else falls
+// through to the custom pair, which is what a proxy connection uses.
+const MODEL_SELECTORS_BY_SOURCE = {
+    openai: ['#model_openai_select option'],
+    claude: ['#model_claude_select option'],
+    openrouter: ['#model_openrouter_select option'],
+    makersuite: ['#model_google_select option'],
+    deepseek: ['#model_deepseek_select option'],
+    xai: ['#model_xai_select option'],
+    groq: ['#model_groq_select option'],
+    mistralai: ['#model_mistralai_select option'],
+    cohere: ['#model_cohere_select option'],
+    custom: ['#model_custom_select option', '#model_custom_select_fill option'],
+};
+
+/**
+ * Model ids offered by the live connection, plus our own presets and whatever is
+ * already saved. A saved id must always be selectable or simply opening a settings
+ * screen would rewrite it to something else.
+ * @param {string} [currentValue] the value this particular field currently holds
+ */
+export function collectPhoneModelIds(currentValue = '') {
+    const ids = new Set();
+    const add = (value) => {
+        const id = String(value || '').trim();
+        if (id && id !== 'none' && id !== 'None') ids.add(id);
+    };
+    add(RECOMMENDED_PHONE_MODEL);
+    ALTERNATE_PHONE_MODELS.forEach(add);
+    try {
+        const source = SillyTavern.getContext().chatCompletionSettings?.chat_completion_source || 'custom';
+        const selectors = MODEL_SELECTORS_BY_SOURCE[source] || MODEL_SELECTORS_BY_SOURCE.custom;
+        document.querySelectorAll(selectors.join(',')).forEach(opt => add(opt.value));
+    } catch { /* no live list available; presets still work */ }
+    add(currentValue);
+    return Array.from(ids).sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Dropdown that writes into the paired text input (same contract as the quick-fill
+ * buttons, so the existing wp-model-quickfill change handler covers saving). The
+ * input stays the source of truth and remains editable for ids the live connection
+ * doesn't advertise.
+ */
+export function modelSelect(inputId, currentValue = '') {
+    const current = String(currentValue || '');
+    const options = [`<option value=""${current === '' ? ' selected' : ''}>Use current chat model</option>`]
+        .concat(collectPhoneModelIds(current).map((id) => {
+            const label = id === RECOMMENDED_PHONE_MODEL ? `${id} (recommended)` : id;
+            return `<option value="${escapeHtml(id)}"${id === current ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+        }));
+    return `<select class="wp-model-select" data-input-id="${inputId}" title="Pick from the models this connection offers">${options.join('')}</select>`;
+}
+
+/**
+ * One-tap model buttons that write into the named text input.
+ *
+ * `models` defaults to WeyPhone's house list, but an app whose best models differ from the
+ * phone's general-purpose picks can pass its own — Understudy does, because it is casting for
+ * loose prose rather than for cheap reliable structure.
+ *
+ * @param {string} inputId the text input these buttons fill
+ * @param {string[]} [models] ordered, first is presented as the recommendation
+ */
+export function modelQuickfills(inputId, models = [RECOMMENDED_PHONE_MODEL, ...ALTERNATE_PHONE_MODELS]) {
     return `
         <div class="wp-settings-recommend-row">
             <span class="wp-settings-recommend-label">Recommended:</span>
-            <button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="${inputId}" data-model="${RECOMMENDED_PHONE_MODEL}">${RECOMMENDED_PHONE_MODEL}</button>
-            ${ALTERNATE_PHONE_MODELS.map(model => `<button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="${inputId}" data-model="${model}">${model}</button>`).join('')}
+            ${models.map(model => `<button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="${inputId}" data-model="${escapeHtml(model)}">${escapeHtml(model)}</button>`).join('')}
         </div>`;
 }
 
@@ -326,7 +423,10 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
             <input id="wp-settings-model" type="text" placeholder="${escapeHtml(currentLiveModel || 'model id')}" value="${escapeHtml(settings.modelOverride ?? '')}" />
             <button type="button" class="wp-btn-sm wp-settings-use-current-model" data-input-id="wp-settings-model" title="Copy the active chat model">Use current</button>
         </div>
+        ${modelSelect('wp-settings-model', settings.modelOverride ?? '')}
         ${modelQuickfills('wp-settings-model')}
+        <span class="wp-settings-sublabel">Fallback if that model fails</span>
+        ${fallbackModelSelect('wp-settings-fallback', settings.fallbackModelOverride)}
     </label>
     <label class="wp-settings-field wp-settings-field-column" title="Model ID used when requesting replies in Messages. It never affects Sync or your main chat connection.">
         <span>Texting model <small>(blank = current chat model)</small></span>
@@ -334,7 +434,14 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
             <input id="wp-settings-texting-model" type="text" placeholder="${escapeHtml(currentLiveModel || 'model id')}" value="${escapeHtml(settings.textingModelOverride ?? '')}" />
             <button type="button" class="wp-btn-sm wp-settings-use-current-model" data-input-id="wp-settings-texting-model" title="Copy the active chat model">Use current</button>
         </div>
+        ${modelSelect('wp-settings-texting-model', settings.textingModelOverride ?? '')}
         ${modelQuickfills('wp-settings-texting-model')}
+        <span class="wp-settings-sublabel">Fallback if that model fails</span>
+        ${fallbackModelSelect('wp-settings-texting-fallback', settings.textingFallbackModel)}
+    </label>
+    <label class="wp-settings-field wp-settings-field-column" title="Which saved connection WeyPhone sends through. Leave this on your current chat connection unless you run more than one provider.">
+        <span>Connection for WeyPhone <small>(almost everyone should leave this alone)</small></span>
+        ${connectionProfileSelect('wp-settings-profile', settings.connectionProfileId)}
         <small class="wp-settings-recommend-disclaimer"><strong>Lucky strongly recommends Minimax M3 or DeepSeek V4</strong> for WeyPhone generation. He asks that users avoid Sonnet here so Sonnet capacity stays available to the wider community.</small>
     </label>
 </div>`;

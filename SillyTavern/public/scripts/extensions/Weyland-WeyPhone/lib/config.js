@@ -17,6 +17,13 @@ export const defaultSettings = Object.freeze({
     castDirectory: null,
     // Optional per-appKey display-name overrides (owner renames without a code change)
     appLabels: {},
+    registrar: {
+        // Off starts every newly-installed member of a collection already unloaded, so a big
+        // collection can be added without touching the current constant token cost - the user
+        // then loads individual members from My World at their own pace.
+        autoActivateNewImports: true,
+        browseFilters: { gender: [], species: [], tags: [] },
+    },
     // Per-character override for whether NEW threads start assuming prior history — set from the
     // contact page's "Prior history?" toggle. Existing threads carry their own hasHistory flag.
     contactHistoryDefaults: {},
@@ -26,20 +33,59 @@ export const defaultSettings = Object.freeze({
     // Model every WeyPhone generation runs on (texting + sync). Deliberately defaults to
     // minimax-m3 — Lucky discourages spending Sonnet on what amounts to a small text.
     // Empty string = follow the live main-chat model. Kressa has her own setting (kressaModel).
-    modelOverride: 'minimax-m3',
+    modelOverride: 'gemini-3.8-flash',
     // Texting is deliberately independent from the social-app Sync model. Existing installs are
     // migrated to their prior modelOverride below so this split does not silently change DMs.
-    textingModelOverride: 'minimax-m3',
+    textingModelOverride: 'gemini-3.8-flash',
     kressaModel: '', // '' = live main-chat model (default per Lucky)
+    // Second choice, tried once when the model above errors out. Blank = no retry.
+    fallbackModelOverride: 'minimax-m3',
+    textingFallbackModel: 'minimax-m3',
+    kressaFallbackModel: 'minimax-m3',
     // Weyland's global Hard Mode is deliberately isolated from WeyPhone. These independent
     // opt-ins only take effect while the global HardToggle is actually On.
     phoneHardModeEnabled: false,
     kressaHardModeEnabled: false,
     kressaPalette: 'twilight',
     calculatorPalette: 'graphite',
+    // Understudy: second-model rewrite pass over the last reply. gemini-3.8-flash is the default
+    // on measured results - it rewrites properly where others polish. deepseek-v4-pro-thinking is
+    // the backup; its NON-thinking sibling returned near-identical text and is not offered.
+    understudy: {
+        // Visible Copycat theme. The internal object name is retained for saved-setting compatibility.
+        palette: 'opening-night',
+        modelOverride: 'gemini-3.8-flash',
+        // Deliberately NOT the house minimax-m3 fallback: this app needs a strong rewriter, and a
+        // weak-prose backup defeats the point of the retry. The fallback stays inside the
+        // gemini-3.8-flash / deepseek-v4-pro-thinking pair.
+        fallbackModel: 'deepseek-v4-pro-thinking',
+        scope: 'full',
+        contextMessages: 5,
+        // Weyland narrator persona to write the rewrite in the style of. 'off' = no modifier,
+        // 'chat' = whichever narrator this chat is already running (local var LocalNarrator),
+        // or a narrator name to pin one for rewrites only, independent of the chat's own.
+        narrator: 'off',
+        // Message-mode instruction blocks (ONYX/RUBY/OPAL) for a message already tagged with
+        // one. ON by default, and the reasoning is the opposite of the obvious one: these blocks
+        // are what tells the rewriter which REGISTER the scene is in, not permission to escalate.
+        // A model handed a romantic ONYX scene with no mode block sees sex, writes porn, and the
+        // main model then follows it up into RUBY, so the scene escalates precisely BECAUSE the
+        // framing was withheld. ONYX's own text says being in ONYX is not escalation to sex.
+        sendModes: true,
+        // License to discard the original's choice of beat entirely rather than reword it.
+        // Off by default because it changes what happens in the scene, not just how it reads.
+        allowDeviation: false,
+        // off = manual only. semi = prepare a rewrite and say so. full = also swipe it in.
+        // Same vocabulary as Weyland-LTM's autoLtmMode so the two read alike.
+        autoMode: 'off',
+        autoTrigger: 'every',   // 'always' every reply, 'every' N replies, or 'chance' per reply
+        autoEvery: 5,
+        autoChance: 25,
+    },
     pawxai: {
         promptCount: 5,
-        modelOverride: 'minimax-m3',
+        modelOverride: 'gemini-3.8-flash',
+        fallbackModel: 'minimax-m3',
         palette: 'orchid-night',
         focus: 'balanced',
         framing: 'auto',
@@ -56,6 +102,9 @@ export const defaultSettings = Object.freeze({
     contactRenames: { Loona: '[REDACTED]' },
     // Housing map: also show community characters from registrar.weybooru.com (?registrar=true).
     housingRegistrarEnabled: false,
+    // Discorgi channels the user switched off in Discorgi's settings; Sync only rolls from the rest.
+    // An exclusion list (not an allowlist) so channels added later join the rotation automatically.
+    discorgiExcludedChannels: [],
     // Experimental round-trip roleplay texting. Both switches default off so updating never
     // changes an existing user's roleplay transcript or prompt without explicit opt-in.
     bidirectionalTetheringEnabled: false,
@@ -84,6 +133,7 @@ export const defaultSettings = Object.freeze({
         wallpaperDim: 20,
         wallpaperLightWash: 0,
         onboarded: false,
+        appTutorials: {},
         batteryTracker: true,
     },
 });
@@ -167,6 +217,12 @@ export function getSettings(extensionSettings) {
     if (!settings.ui || typeof settings.ui !== 'object' || Array.isArray(settings.ui)) settings.ui = {};
     for (const [key, value] of Object.entries(defaultSettings.ui)) {
         if (!(key in settings.ui)) settings.ui[key] = structuredClone(value);
+    }
+    // Same reason as `ui` above: the top-level backfill cannot see fields added inside
+    // `understudy` later, so an install that already has the object keeps missing them.
+    if (!settings.understudy || typeof settings.understudy !== 'object' || Array.isArray(settings.understudy)) settings.understudy = {};
+    for (const [key, value] of Object.entries(defaultSettings.understudy)) {
+        if (!(key in settings.understudy)) settings.understudy[key] = structuredClone(value);
     }
     if (!settings.pawxai || typeof settings.pawxai !== 'object' || Array.isArray(settings.pawxai)) settings.pawxai = {};
     for (const [key, value] of Object.entries(defaultSettings.pawxai)) {

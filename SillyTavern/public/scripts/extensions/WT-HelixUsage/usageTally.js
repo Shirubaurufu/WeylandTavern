@@ -8,16 +8,14 @@
 //
 // Design notes:
 // - No backfill: the first observation only snapshots `used` as the baseline; it does not
-//   invent tallies for history it never saw. The breakdown builds forward and is fully
-//   accurate once 24h have elapsed (by then all pre-baseline usage has aged out anyway).
+//   invent tallies for history it never saw. Observations remain estimates, not a request log.
 // - Age-outs are handled by our own clock: any tally older than 24h is dropped.
-// - Reliable use+age-out: a new request that coincides with an age-out leaves the server's
-//   `used` unchanged (net zero). We recover it by adding back the count of tallies we just
-//   expired: newUses = (used - lastUsed) + expiredThisRound. So the age-out (which we removed
-//   by timestamp) doesn't hide the new use.
+// - Aggregate counts cannot establish exact request times. Only observed increases are
+//   attributed; locally expired estimates must never create new requests.
 
 export const HOUR_MS = 60 * 60 * 1000;
 export const WINDOW_MS = 24 * HOUR_MS;
+export const TALLY_VERSION = 2;
 
 // If `used` leaps by more than this in a single observation (e.g. the user switched to a
 // different key), we treat it as a re-baseline rather than spraying a huge fake spike into
@@ -25,12 +23,12 @@ export const WINDOW_MS = 24 * HOUR_MS;
 export const REBASELINE_JUMP = 200;
 
 /**
- * @typedef {{ lastUsed: number|null, tallies: number[] }} TallyStore
+ * @typedef {{ version: number, lastUsed: number|null, tallies: number[] }} TallyStore
  */
 
 /** A fresh, empty store. */
 export function emptyTally() {
-    return { lastUsed: null, tallies: [] };
+    return { version: TALLY_VERSION, lastUsed: null, tallies: [] };
 }
 
 /**
@@ -41,40 +39,40 @@ export function emptyTally() {
  * @returns {TallyStore} the new store (never mutates the input)
  */
 export function reconcileTally(store, serverUsed, now = Date.now()) {
-    const lastUsed = (store && typeof store.lastUsed === 'number') ? store.lastUsed : null;
+    const compatible = store?.version === TALLY_VERSION;
+    const lastUsed = compatible && Number.isSafeInteger(store.lastUsed) && store.lastUsed >= 0 ? store.lastUsed : null;
     const windowStart = now - WINDOW_MS;
 
-    const prior = Array.isArray(store?.tallies) ? store.tallies.filter(ts => Number.isFinite(ts)) : [];
-    const tallies = prior.filter(ts => ts >= windowStart); // drop aged-out
+    const prior = compatible && Array.isArray(store?.tallies) ? store.tallies : [];
+    const tallies = prior.filter(ts => Number.isFinite(ts) && ts > windowStart && ts <= now);
     const expired = prior.length - tallies.length;
 
-    if (!Number.isFinite(serverUsed) || serverUsed < 0) {
-        // Nothing trustworthy to reconcile to; just keep the expired-pruned list.
-        return { lastUsed, tallies, changed: expired > 0 };
+    if (!Number.isSafeInteger(serverUsed) || serverUsed < 0) {
+        // Do not persist or render an estimate based on an unavailable count.
+        return { ...emptyTally(), changed: false };
     }
 
     // `changed` lets callers skip persisting a no-op reconcile. That matters because saving
     // re-emits SETTINGS_UPDATED, which re-triggers a refresh — so saving on every steady-state
     // refresh would loop. A changed count or any age-out is worth persisting; nothing else is.
-    const changed = serverUsed !== lastUsed || expired > 0;
+    const changed = !compatible || serverUsed !== lastUsed || expired > 0;
 
     if (lastUsed === null) {
         // First observation: baseline only, no backfilled tallies.
-        return { lastUsed: serverUsed, tallies, changed };
+        return { version: TALLY_VERSION, lastUsed: serverUsed, tallies: [], changed: true };
     }
 
-    const newUses = (serverUsed - lastUsed) + expired;
+    const newUses = serverUsed - lastUsed;
 
-    if (newUses > REBASELINE_JUMP) {
-        // Implausible single-step jump (likely a key switch) — re-baseline, don't spike.
-        return { lastUsed: serverUsed, tallies, changed };
+    if (newUses < 0 || newUses > REBASELINE_JUMP || tallies.length + newUses > serverUsed) {
+        // A reset, correction or inconsistent history makes its timestamps unreliable.
+        return { version: TALLY_VERSION, lastUsed: serverUsed, tallies: [], changed: true };
     }
     for (let i = 0; i < newUses; i++) {
         tallies.push(now);
     }
-    // newUses <= 0 means an age-out we didn't have a tally for (pre-baseline usage) — nothing
-    // to add; the updated lastUsed simply tracks the server down.
-    return { lastUsed: serverUsed, tallies, changed };
+    // Net-zero use plus expiry cannot be recovered from aggregate counts alone.
+    return { version: TALLY_VERSION, lastUsed: serverUsed, tallies, changed };
 }
 
 /**
@@ -87,7 +85,7 @@ export function bucketByHour(tallies, now = Date.now()) {
     const windowStart = now - WINDOW_MS;
     const counts = new Map();
     for (const ts of tallies) {
-        if (!Number.isFinite(ts) || ts < windowStart) continue;
+        if (!Number.isFinite(ts) || ts <= windowStart || ts > now) continue;
         const hourStart = Math.floor(ts / HOUR_MS) * HOUR_MS;
         counts.set(hourStart, (counts.get(hourStart) ?? 0) + 1);
     }
@@ -107,7 +105,7 @@ export function oldestTallyMs(tallies, now = Date.now()) {
     const windowStart = now - WINDOW_MS;
     let oldest = null;
     for (const ts of tallies) {
-        if (!Number.isFinite(ts) || ts < windowStart) continue;
+        if (!Number.isFinite(ts) || ts <= windowStart || ts > now) continue;
         if (oldest === null || ts < oldest) oldest = ts;
     }
     return oldest;

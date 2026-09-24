@@ -5,7 +5,7 @@ import { Buffer } from 'node:buffer';
 
 import express from 'express';
 import sanitize from 'sanitize-filename';
-import { sync as writeFileAtomicSync } from 'write-file-atomic';
+import writeFileAtomic, { sync as writeFileAtomicSync } from 'write-file-atomic';
 import yaml from 'yaml';
 import _ from 'lodash';
 import mime from 'mime-types';
@@ -107,6 +107,11 @@ class DiskCache {
         this.#instance = storage.create({
             dir: this.cachePath,
             ttl: false,
+            // ttl:false means no entry can ever be expired (see node-persist's isExpired), so the
+            // default 2-minute expiredInterval sweep is a pure no-op that still does a full-cache
+            // disk read every cycle. Disabling it removes that redundant read with zero behavior
+            // change; the mtime-keyed cache is actually pruned by DiskCache.verify() instead.
+            expiredInterval: 0,
             forgiveParseErrors: true,
             // @ts-ignore
             maxFileDescriptors: 100,
@@ -213,9 +218,10 @@ async function readCharacterData(inputFile, inputFormat = 'png') {
  * @param {string} outputFile - Target image file name
  * @param {import('express').Request} request - Express request obejct
  * @param {Crop|undefined} crop - Crop parameters
+ * @param {boolean} [preserveImage=false] Reuse the existing PNG for metadata-only edits.
  * @returns {Promise<boolean>} - True if the operation was successful
  */
-async function writeCharacterData(inputFile, data, outputFile, request, crop = undefined) {
+async function writeCharacterData(inputFile, data, outputFile, request, crop = undefined, preserveImage = false) {
     try {
         // Reset the cache
         for (const key of memoryCache.keys()) {
@@ -248,13 +254,17 @@ async function writeCharacterData(inputFile, data, outputFile, request, crop = u
             }
         }
 
-        const inputImage = await getInputImage();
+        // Text autosaves must not decode and recompress the avatar on the server's
+        // event loop. Replacing PNG metadata preserves the original image chunks.
+        const inputImage = preserveImage
+            ? await fs.promises.readFile(inputFile)
+            : await getInputImage();
 
         // Get the chunks
         const outputImage = write(inputImage, data);
         const outputImagePath = path.join(request.user.directories.characters, `${outputFile}.png`);
 
-        writeFileAtomicSync(outputImagePath, outputImage);
+        await writeFileAtomic(outputImagePath, outputImage);
         return true;
     } catch (err) {
         
@@ -1049,13 +1059,15 @@ router.post('/edit', validateAvatarUrlMiddleware, async function (request, respo
     try {
         if (!request.file) {
             const avatarPath = path.join(request.user.directories.characters, request.body.avatar_url);
-            await writeCharacterData(avatarPath, char, targetFile, request);
+            const saved = await writeCharacterData(avatarPath, char, targetFile, request, undefined, true);
+            if (!saved) return response.sendStatus(500);
         } else {
             const crop = tryParse(request.query.crop);
             const newAvatarPath = path.join(request.file.destination, request.file.filename);
             invalidateThumbnail(request.user.directories, 'avatar', request.body.avatar_url);
-            await writeCharacterData(newAvatarPath, char, targetFile, request, crop);
+            const saved = await writeCharacterData(newAvatarPath, char, targetFile, request, crop);
             fs.unlinkSync(newAvatarPath);
+            if (!saved) return response.sendStatus(500);
 
             // Bust cache to reload the new avatar
             cacheBuster.bust(request, response);

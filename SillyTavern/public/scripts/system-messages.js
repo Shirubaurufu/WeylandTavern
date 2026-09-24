@@ -25,7 +25,6 @@ export const system_message_types = {
     MACROS: 'macros',
     WELCOME_PROMPT: 'welcome_prompt',
     ASSISTANT_NOTE: 'assistant_note',
-    ASSISTANT_MESSAGE: 'assistant_message',
 };
 
 export async function initSystemMessages() {

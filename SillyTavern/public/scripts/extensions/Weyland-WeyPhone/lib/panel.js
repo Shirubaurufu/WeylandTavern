@@ -6,6 +6,7 @@ import { createStatusBarMarkup } from './ui/statusBar.js';
 import { createLockScreenMarkup } from './ui/lockScreen.js';
 import { createShadeMarkup } from './ui/shade.js';
 import { DISCORGI_CHANNELS } from './discorgiChannels.js';
+import { renderMessageImages } from './messageImages.js';
 
 export function createPanelMarkup() {
     return `
@@ -29,13 +30,6 @@ export function createPanelMarkup() {
             <button type="button" id="wp-lore-warning-button" class="wp-header-btn wp-lore-warning-button" title="Lore not fully loaded" aria-label="Lore not fully loaded"><i class="fa-solid fa-triangle-exclamation"></i></button>
             <button type="button" id="wp-phone-app-saved-button" class="wp-header-btn" title="Saved posts" aria-label="Saved posts"><i class="fa-solid fa-bookmark"></i></button>
             <button id="wp-help-button" class="wp-header-btn" title="What is this?" aria-label="What is this?"><i class="fa-solid fa-circle-question"></i></button>
-            <label id="wp-registrar-toggle-label" class="wp-toggle-label" title="Also show community characters from the registrar on the map">
-                <span class="wp-toggle-switch">
-                    <input type="checkbox" id="wp-registrar-checkbox" class="wp-toggle-input" />
-                    <span class="wp-toggle-track"><span class="wp-toggle-thumb"></span></span>
-                </span>
-                <span class="wp-toggle-text">Registrar</span>
-            </label>
             <button type="button" id="wp-kressa-settings-button" class="wp-header-btn" title="Kressa settings" aria-label="Kressa settings"><i class="fa-solid fa-gear"></i></button>
             <button type="button" id="wp-group-compose-button" class="wp-header-btn" title="New Group Chat" aria-label="New group chat"><i class="fa-solid fa-user-group"></i></button>
             <button type="button" id="wp-compose-button" class="wp-header-btn" title="New Message" aria-label="New message"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -118,14 +112,16 @@ export function firstNameForSpeaker(speaker) {
  * The Housing app is a static, self-contained interactive floor-map tool (maps/weyland_dorms.html,
  * ported from aerosplat-dev's own follow-up release) — not roleplay-content dependent like the
  * flavor apps, so it renders as an iframe, isolating its full-page CSS/JS/font-imports/live
- * cast.weybooru.com fetches from the phone's own styles. The map page gates its whole "Registrar"
- * (community-character) feature behind a ?registrar=true query param, so `registrarEnabled`
- * controls the iframe's src itself.
+ * cast.weybooru.com fetches from the phone's own styles. The phone hides its own app bar for this
+ * app: with ?embed=weyphone the map's header becomes the app bar, carrying the help button and the
+ * map's own "+ Registrar" toggle (so there is one Registrar control, not two). `registrarEnabled`
+ * is the saved preference, handed over as ?community=1|0 for the initial state; the map reports
+ * changes back via postMessage (see index.js's housing message listener).
  * @param {HTMLElement} container #wp-screen-body
  * @param {{registrarEnabled: boolean}} state
  */
 export function renderHousingScreen(container, { registrarEnabled }) {
-    const src = registrarEnabled ? `${MAPS_BASE_URL}/weyland_dorms.html?registrar=true` : `${MAPS_BASE_URL}/weyland_dorms.html`;
+    const src = `${MAPS_BASE_URL}/weyland_dorms.html?registrar=true&embed=weyphone&community=${registrarEnabled ? 1 : 0}`;
     container.innerHTML = `<iframe class="wp-housing-iframe" src="${src}" title="Housing Directory"></iframe>`;
 }
 
@@ -252,11 +248,15 @@ function chitterHeaderMarkup(activeTab = 'feed', generationAllowance = null) {
 </div>`;
 }
 
-function discorgiHeaderMarkup(activeChannelNames = [], generationAllowance = null) {
+function discorgiHeaderMarkup(activeChannelNames = [], generationAllowance = null, excludedChannels = []) {
     const activeChannels = new Set(activeChannelNames.map(name => String(name).trim().toLowerCase()));
+    const excluded = new Set(excludedChannels);
     const channelDirectory = DISCORGI_CHANNELS.map(channel => {
         const activeClass = activeChannels.has(channel.name) ? ' wp-active' : '';
-        return `<span class="wp-discorgi-channel-option${activeClass}" title="${escapeHtml(channel.description)}">${escapeHtml(channel.name)}</span>`;
+        // Channels switched off in Discorgi settings stay listed (they still exist on the server)
+        // but read as muted, so the strip also shows what the next Sync can land on.
+        const offClass = excluded.has(channel.name) ? ' wp-off' : '';
+        return `<span class="wp-discorgi-channel-option${activeClass}${offClass}" title="${escapeHtml(channel.blurb)}${offClass ? ' (off in settings)' : ''}">${escapeHtml(channel.name)}</span>`;
     }).join('');
     return `
 <div class="wp-discorgi-header">
@@ -265,6 +265,7 @@ function discorgiHeaderMarkup(activeChannelNames = [], generationAllowance = nul
         <span class="wp-discorgi-server-name"></span>
         ${generationRateCounterMarkup(generationAllowance)}
         ${inlineSavedButton()}
+        <button type="button" class="wp-app-header-btn" data-discorgi-open-settings title="Channel settings" aria-label="Channel settings"><i class="fa-solid fa-gear"></i></button>
         ${inlineHelpButton('chat')}
     </div>
     <div class="wp-discorgi-channel-list" aria-label="Discorgi channels">${channelDirectory}</div>
@@ -278,7 +279,7 @@ function discorgiHeaderMarkup(activeChannelNames = [], generationAllowance = nul
  * @param {{text: string, timestamp?: string, boldPrefix?: string}} item
  * @param {string} [saveButtonHtml]
  */
-function phoneAppItemMarkup(appKey, item, saveButtonHtml = '') {
+function phoneAppItemMarkup(appKey, item, saveButtonHtml = '', extraClass = '') {
     if (appKey === 'chat') {
         const decorated = decorateDiscordItem(item);
         const serverClass = decorated.isServerPost ? ' wp-discord-server-post' : '';
@@ -300,39 +301,101 @@ function phoneAppItemMarkup(appKey, item, saveButtonHtml = '') {
         ${decorated.voteCount !== null ? `<span class="wp-yikyak-vote-pill">+${decorated.voteCount}</span>` : ''}${saveButtonHtml}
     </div>`;
     }
+    const extra = extraClass ? ` ${extraClass}` : '';
     if (appKey === 'chronicle' && item.boldPrefix && item.text.startsWith(item.boldPrefix)) {
         const rest = item.text.slice(item.boldPrefix.length).trim();
         return `
-    <div class="wp-phone-app-item wp-chronicle-item">
+    <div class="wp-phone-app-item wp-chronicle-item${extra}">
         ${item.timestamp ? `<span class="wp-phone-app-timestamp">${escapeHtml(item.timestamp)}</span>` : ''}
         <span class="wp-chronicle-headline">${escapeHtml(item.boldPrefix)}</span>
         <span class="wp-phone-app-item-text">${escapeHtml(rest)}</span>${saveButtonHtml}
     </div>`;
     }
     return `
-    <div class="wp-phone-app-item">
+    <div class="wp-phone-app-item${extra}">
         ${item.timestamp ? `<span class="wp-phone-app-timestamp">${escapeHtml(item.timestamp)}</span>` : ''}
         <span class="wp-phone-app-item-text">${escapeHtml(item.text)}</span>${saveButtonHtml}
     </div>`;
 }
 
 /**
+ * The Chronicle's own nameplate, standing in for the phone's generic app bar (hidden for this app,
+ * so its rate counter / saved / help controls ride here instead, same as Yip Yap's header). The
+ * dateline deliberately shows how fresh the edition is rather than a calendar date: the phone's
+ * real clock and the roleplay's in-world date usually disagree, and a newspaper dated "wrong" for
+ * the scene would be worse than none.
+ * @param {{generationAllowance?: object|null, freshness?: string}} [state]
+ */
+function chronicleHeaderMarkup({ generationAllowance = null, freshness = '' } = {}) {
+    return `
+<header class="wp-chronicle-masthead">
+    <div class="wp-chronicle-tools wp-chronicle-tools-left">${generationRateCounterMarkup(generationAllowance)}${inlineSavedButton()}</div>
+    <div class="wp-chronicle-tools wp-chronicle-tools-right">${inlineHelpButton('chronicle')}</div>
+    <div class="wp-chronicle-nameplate"><small>The</small><span>Weyland Chronicle</span></div>
+    <div class="wp-chronicle-dateline"><span>Weyland City</span><span aria-hidden="true">✦</span><span>${escapeHtml(freshness || 'Campus Edition')}</span></div>
+</header>`;
+}
+
+/**
+ * Front-page layout for a Chronicle edition: the WEYLAND ALERTS section becomes a boxed bulletin,
+ * the first story of the first news section runs as the lead (larger head, drop cap), and the rest
+ * sit in ruled columns. Section/item order and the save-toggle data attributes are unchanged, so
+ * index.js's bookmark delegation still resolves each item by its original indexes.
+ */
+function chronicleSectionsMarkup(sections, savedIds) {
+    let leadUsed = false;
+    return sections.map((section, sectionIndex) => {
+        const isAlerts = /ALERT/i.test(section.title);
+        const items = section.items.map((item, itemIndex) => {
+            let extraClass = isAlerts ? 'wp-chronicle-alert' : 'wp-chronicle-story';
+            if (!isAlerts && !leadUsed) {
+                extraClass += ' wp-chronicle-lead';
+                leadUsed = true;
+            }
+            return phoneAppItemMarkup('chronicle', item, saveToggleMarkup({
+                saved: savedIds.has(postIdFor('chronicle', item)),
+                attrs: `data-section-index="${sectionIndex}" data-item-index="${itemIndex}"`,
+            }), extraClass);
+        }).join('');
+        return `
+<section class="wp-phone-app-section ${isAlerts ? 'wp-chronicle-alerts' : 'wp-chronicle-section'}">
+    <div class="wp-phone-app-section-title">${isAlerts ? '<i class="fa-solid fa-bell" aria-hidden="true"></i> ' : ''}${escapeHtml(section.title)}</div>
+    ${items}
+</section>`;
+    }).join('');
+}
+
+/**
  * @param {HTMLElement} container #wp-screen-body
  * @param {{appKey: string, appLabel: string, emptyCopy: string, entry: {content: {sections: Array<{title: string, items: Array<{text: string, timestamp?: string}>}>}, generatedAt: number} | undefined, isGenerating: boolean, formatRelativeTime: (epochMs: number) => string, savedIds?: Set<string>}} state
  */
-export function renderPhoneAppScreen(container, { appKey, appLabel, emptyCopy, entry, isGenerating, formatRelativeTime, savedIds = new Set(), generationAllowance = null, formatCooldown }) {
+export function renderPhoneAppScreen(container, { appKey, appLabel, emptyCopy, entry, isGenerating, formatRelativeTime, savedIds = new Set(), generationAllowance = null, formatCooldown, discorgiExcludedChannels = [] }) {
     const refreshButton = refreshButtonMarkup(isGenerating);
     const activeDiscorgiChannels = entry?.content?.sections
         ?.map(section => String(section.title).trim().toLowerCase())
         .filter(title => title.startsWith('#')) ?? [];
+    const hasContent = Boolean(entry?.content?.sections?.length);
     const appHeader = appKey === 'board' ? boardHeaderMarkup(generationAllowance)
-        : appKey === 'chat' ? discorgiHeaderMarkup(activeDiscorgiChannels, generationAllowance)
+        : appKey === 'chat' ? discorgiHeaderMarkup(activeDiscorgiChannels, generationAllowance, discorgiExcludedChannels)
+        : appKey === 'chronicle' ? chronicleHeaderMarkup({
+            generationAllowance,
+            freshness: hasContent ? `Updated ${formatRelativeTime(entry.generatedAt)}` : '',
+        })
         : '';
 
     if (!entry || !entry.content || entry.content.sections.length === 0) {
         container.innerHTML = `
 ${appHeader}
 ${emptyStateMarkup(emptyCopy ?? 'No connection.')}
+<div id="wp-phone-app-actions">${refreshButton}</div>`;
+        return;
+    }
+
+    // The Chronicle carries its freshness in its own dateline, so it skips the shared meta line.
+    if (appKey === 'chronicle') {
+        container.innerHTML = `
+${appHeader}
+<div id="wp-phone-app-content">${chronicleSectionsMarkup(entry.content.sections, savedIds)}</div>
 <div id="wp-phone-app-actions">${refreshButton}</div>`;
         return;
     }
@@ -595,10 +658,17 @@ export function renderGroupComposeScreen(container, { contacts, selectedNames = 
  * @param {HTMLElement} container #wp-screen-body
  */
 export function renderConversationScreen(container, { appKey = null } = {}) {
+    // Kressa's chat hides the phone's shared app bar (it only ever held her help and settings
+    // buttons), so both live here in her own header instead. The cog is NOT a .wp-inline-help: that
+    // class is claimed by the help-sheet click delegation.
     const kressaHeader = appKey === 'kressa' ? `
-<div class="wp-kressa-chat-header" aria-hidden="true">
-    <span class="wp-kressa-spark">✦</span>
-    <span><strong>Kressa</strong><small>Wolfgirl Assistant</small></span>
+<div class="wp-kressa-chat-header">
+    <span class="wp-kressa-spark" aria-hidden="true">✦</span>
+    <span class="wp-kressa-chat-title"><strong>Kressa</strong><small>Wolfgirl Assistant</small></span>
+    <span class="wp-kressa-chat-actions">
+        ${inlineHelpButton('kressa')}
+        <button type="button" class="wp-app-header-btn" data-kressa-open-settings title="Kressa settings" aria-label="Kressa settings"><i class="fa-solid fa-gear"></i></button>
+    </span>
 </div>` : '';
     container.innerHTML = `
 ${kressaHeader}
@@ -752,7 +822,7 @@ export function renderMemoryScreen(container, memories, editingMemoryId = null, 
         <input type="text" id="wp-memory-primary-model-input" placeholder="gemini-3.1-pro-preview" />
     </label>
     <label class="wp-memory-settings-label">Backup model (used if primary fails)
-        <input type="text" id="wp-memory-backup-model-input" placeholder="glm-4.7" />
+        <input type="text" id="wp-memory-backup-model-input" placeholder="minimax-m3" />
     </label>
     <div id="wp-memory-actions">
         <button id="wp-memory-generate-now-button" class="menu_button"${generateNowDisabled ? ' disabled' : ''}>${isGenerating ? 'Generating…' : 'Generate memory now'}</button>
@@ -815,7 +885,7 @@ export function renderMessages(container, messages, editingIndex = -1, isTyping 
             checkbox.tabIndex = -1;
             const textSpan = document.createElement('span');
             textSpan.className = 'wp-message-text';
-            textSpan.textContent = message.content;
+            renderMessageImages(textSpan, message.content, { selectable: true });
             bubble.appendChild(checkbox);
             bubble.appendChild(textSpan);
         } else if (index === editingIndex) {
@@ -835,7 +905,7 @@ export function renderMessages(container, messages, editingIndex = -1, isTyping 
             }
             const textSpan = document.createElement('span');
             textSpan.className = 'wp-message-text';
-            textSpan.textContent = message.content;
+            renderMessageImages(textSpan, message.content);
             bubble.appendChild(textSpan);
             // Only the user's own messages are editable — a character's reply can only be
             // changed by regenerating it (see the Regenerate control), not hand-edited in place,

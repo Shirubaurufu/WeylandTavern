@@ -774,10 +774,33 @@ class PromptManager {
             this.saveServiceSettings().then(() => this.renderDebounced());
         });
 
+        // A character autosave is not a reason to run the full generation dry-run
+        // while its author is typing. Coalesce updates until they leave the fields.
+        let characterRenderPending = false;
+        const isEditingCharacter = () => {
+            const active = document.activeElement;
+            if (!active?.matches('textarea, input, select')) return false;
+            // Expanded editors live in a separate popup and point to the original field.
+            const field = active.matches('.maximized_textarea')
+                ? document.getElementById(active.getAttribute('data-for')) : active;
+            return Boolean(field?.closest('#rm_ch_create_block, #character_popup'));
+        };
+        document.addEventListener('focusout', () => {
+            if (!characterRenderPending) return;
+            setTimeout(() => {
+                if (!characterRenderPending || isEditingCharacter()) return;
+                characterRenderPending = false;
+                this.renderDebounced();
+            }, 0);
+        });
+
         // Re-render when the character gets edited.
         eventSource.on(event_types.CHARACTER_EDITED, (event) => {
             this.handleCharacterUpdated(event);
-            this.saveServiceSettings().then(() => this.renderDebounced());
+            this.saveServiceSettings().then(() => {
+                characterRenderPending = Boolean(isEditingCharacter());
+                if (!characterRenderPending) this.renderDebounced();
+            });
         });
 
         // Re-render when the group changes.
