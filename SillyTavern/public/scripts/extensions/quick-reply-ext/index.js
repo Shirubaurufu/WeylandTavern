@@ -22,6 +22,7 @@ import { charPer, specialChar } from "./src/charper.js";
 import { ravs } from "./src/rav.js";
 import { detector } from "./src/similarity.js";
 import { applyGeminiBypass } from "./src/promptModifiers.js";
+import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
 
 const debug = true;
 
@@ -318,7 +319,7 @@ async function OnSwipe(messageID) {
 
         if (charName && !newSwipe) {
             if (charName === "Cerberus Sisters" && messageID === 0 && charMessage.swipe_id < 4) {
-                setLocalVariable("CerberusSister", ["Fawne", "Neshe", "Astrid"][charMessage.swipe_id])
+                setLocalVariable("CerberusSister", ["Fawne", "Neshe", "Astrid", "3rd"][charMessage.swipe_id])
             }
             await CostumeChangeBot(charMessage);
             await AutoBG(charMessage);
@@ -635,6 +636,41 @@ async function Expressions(charName, charMessage, disableSetting=false) {
     }
 }
 
+/** @type {Map<string, Promise<boolean>>} */
+const spriteFolderCache = new Map();
+
+/**
+ * Checks whether a sprite folder (e.g. "Neshe/Naked") contains any sprites.
+ * Results are cached for the page load; newly uploaded folders need a reload.
+ * @param {string} folder
+ * @returns {Promise<boolean>}
+ */
+function spriteFolderExists(folder) {
+    if (!spriteFolderCache.has(folder)) {
+        const check = fetch(`/api/sprites/get?name=${encodeURIComponent(folder)}`)
+            .then(res => res.ok ? res.json() : [])
+            .then(sprites => Array.isArray(sprites) && sprites.length > 0)
+            .catch(() => {
+                // Don't cache network failures
+                spriteFolderCache.delete(folder);
+                return false;
+            });
+        spriteFolderCache.set(folder, check);
+    }
+    return spriteFolderCache.get(folder);
+}
+
+/**
+ * Keeps only the names whose sprite folder exists.
+ * @param {string[]} names
+ * @param {(name: string) => string} getFolder Maps a name to the sprite folder it would use
+ * @returns {Promise<string[]>}
+ */
+async function filterBySpriteFolder(names, getFolder) {
+    const exists = await Promise.all(names.map(name => spriteFolderExists(getFolder(name))));
+    return names.filter((_, i) => exists[i]);
+}
+
 /**
  * SideCharacters Script
  * OnChatChanged & OnSwipe
@@ -667,9 +703,14 @@ async function SideCharacters(charName, charMessage) {
             g.output === charName || g.display === charName
         );
 
-        const excluded = new Set(group ? group.members : [charName]);
+        // Members of a multi-character card always show combined on the left, never on the right
+        const excluded = new Set([...(group ? group.members : [charName]), ...getGroupCardMembers(charName)]);
 
-        const availableCharacters = foundCharacters.filter(name => !excluded.has(name));
+        // Drop anyone without a sprite folder for the costume they would use
+        const availableCharacters = await filterBySpriteFolder(
+            foundCharacters.filter(name => !excluded.has(name)),
+            name => `${name}/${getCharacterCostumeFromText(charMessage.mes, name, false)}`
+        );
 
         if (!availableCharacters.length) {
             DebugLog(`SideCharacters: No valid side-character found.`);
@@ -1352,13 +1393,7 @@ async function GetCharacterNamesAndAliases(charName) {
     if (!charName) charName = getCurrentCharacterName();
     /** @type {string[]} */
     const charactersWithExpressions = [
-        "Aiko", "Ava", "Bap", "Bastet", "Belle", "Bianca", "Blake", "Briar", "Cairo", "Dash", "Ellie", "Eve", "Fasti",
-        "Gemini", "Hannah", "Indigo", "Jenn", "Kai", "Karmen", "Khepri", "Kiera", "Koshizu", "Kressa", "Kris", "Lentyl",
-        "Loona", "Lucy", "Luna", "Lurkle", "Lyris", "Mika", "Muse", "Ṇ̶̰̼͘a̶͍̅́̒r̵̓̏̉̈́ā̸͒̔̄", "Nathan", "Nefara", "Nix", "Professor Akiyama",
-        "Rein", "Rivera", "Rivet", "Rosa", "Serra", "Seth", "Shani", "Sofya", "Summer", "Sunny", "Vera", "Vesper", "Vindica", 
-        "Warren", "Willow",
-        // Cerberus Sisters
-        "Astrid", "Neshe", "Fawne",
+        ...CHARACTERS_WITH_EXPRESSIONS,
         ...[
             getGlobalVariable("OCPick1"),
             getGlobalVariable("OCPick2"),
@@ -1371,6 +1406,7 @@ async function GetCharacterNamesAndAliases(charName) {
         // Groups of two
         { output: "BlakeSerra", display: "Blake & Serra", members: ["Blake", "Serra"] },
         { output: "LyrisVesper", display: "Lyris & Vesper", members: ["Lyris", "Vesper"] },
+        { output: "JennLucy", display: "Jenn & Lucy", members: ["Jenn", "Lucy"] },
         // Cerberus Sisters
         { output: "AstridNeshe", display: "Cerberus Sisters", members: ["Astrid", "Neshe"] }
     ];
@@ -1441,15 +1477,7 @@ async function GetCharacterNamesAndAliases(charName) {
         "Thorne", "Tom", "Travis", "Vera", "Vesper", "Vindica", "Warren", "Willow", "Mr. Wolfy", "Yue-Lin", "Zora"
     ].filter(name => !charName?.includes(name));
 
-    const characterAliases = {
-        "Professor Akiyama": ["Professor Akiyama", "Akiyama", "Sayori"],
-        "Ṇ̶̰̼͘a̶͍̅́̒r̵̓̏̉̈́ā̸͒̔̄": ["Nara"],
-        "Yue-Lin": ["YueLin"],
-        "Nix": ["Nicole"],
-        "Dash": ["Dakota", "D. Ash"],
-        "Mr. Wolfy": ["Wolfy"],
-        "Thorne": ["Aris"]
-    };
+    const characterAliases = CHARACTER_ALIASES;
 
     const aliasLookup = new Map();
 
@@ -2088,58 +2116,68 @@ async function OpenWorldCostumes(charName, charMessage) {
             ));
         }
 
-        if (!foundCharacters?.length) {
-            DebugLog(`OpenWorldCostumes: No characters found.`);
-            // TODO: Add Weybot Male/Female/Other costumes here
-            await setExpression('#reset');
-            updateSideCharacter({clear: 'true'});
-            return;
+        // Kinsbane Manor: the Ghost is Aiko before her reveal, so it only joins the pool when Aiko isn't named
+        const isKinsbane = charName === "Kinsbane Manor";
+        const aikoPresent = isKinsbane && foundCharacters.includes("Aiko");
+        const ghostRegex = /\b(?:ghost(?:s|ly)?|spirits?|phantoms?|apparitions?|spect(?:er|re)s?|wraiths?)\b/i;
+        if (isKinsbane && !aikoPresent && ghostRegex.test(charMessage.mes)) {
+            foundCharacters.push("Kinsbane Manor");
         }
 
-        DebugLog(`OpenWorldCostumes: Discovered: ${foundCharacters.length}`, foundCharacters);
-        
-        const { pickedCharMain, pickedCharSide } = (() => {
+        /** @param {string} name */
+        const getCostume = (name) => name === "Kinsbane Manor" ? "Ghost" : getCharacterCostumeFromText(charMessage.mes, name, false);
+
+        // Drop anyone without a sprite folder for the costume they would use
+        const pool = await filterBySpriteFolder(foundCharacters, name => `${name}/${getCostume(name)}`);
+        DebugLog(`OpenWorldCostumes: Discovered: ${foundCharacters.length}, usable: ${pool.length}`, pool);
+
+        let pickedCharMain = "";
+        if (pool.length) {
             let firstPick = 0;
-            let charOverride = "";
-            if (charName === "Kinsbane Manor") {
-                const aikoIndex = foundCharacters.indexOf("Aiko");
-                if (aikoIndex !== undefined) {
-                    firstPick = aikoIndex;
-                } else if (/ghost/i.test(charMessage.mes)) {
-                    charOverride = "Kinsbane Manor";
-                }
-            } else if (foundCharacters.length > 2) {
-                firstPick = Math.floor(Math.random() * foundCharacters.length);
+            if (aikoPresent && pool.includes("Aiko")) {
+                // Aiko is always the main heroine of Kinsbane Manor
+                firstPick = pool.indexOf("Aiko");
+            } else if (pool.length > 2) {
+                firstPick = Math.floor(Math.random() * pool.length);
             }
+            pickedCharMain = pool.splice(firstPick, 1)[0];
+        }
+        const pickedCharSide = lookForSide && pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
 
-            const pickedCharMain = charOverride || foundCharacters.splice(firstPick, 1)[0];
-            const pickedCharSide = lookForSide ? foundCharacters[Math.floor(Math.random() * foundCharacters.length)] : undefined;
-
-            return { pickedCharMain, pickedCharSide };
-        })();
-
-        const mainCostume = pickedCharMain === "Kinsbane Manor" ? (() => {
+        if (pickedCharMain === "Kinsbane Manor") {
             setLocalVariable("ExpSave", "neutral");
-            return "Ghost"
-        })() : getCharacterCostumeFromText(charMessage.mes, pickedCharMain, false);
-        const sideCostume = getCharacterCostumeFromText(charMessage.mes, pickedCharSide, false);
-
+        }
         if (getLocalVariable("ExpSave") === "") {
             await Expressions(charName, charMessage, true);
         }
         const expression = getLocalVariable("ExpSave");
-        
-        if (mainCostume && getLocalVariable("CostmSave") !== `${pickedCharMain}/${mainCostume}`) {
-            setLocalVariable("CostmSave", `${pickedCharMain}/${mainCostume}`);
-            await setCostumeAndExpression(pickedCharMain, mainCostume, expression);
-            DebugLog(`OpenWorldCostumes: Set left-side to "${pickedCharMain}/${mainCostume}"`);
+
+        if (pickedCharMain) {
+            const mainCostume = getCostume(pickedCharMain);
+            if (getLocalVariable("CostmSave") !== `${pickedCharMain}/${mainCostume}`) {
+                setLocalVariable("CostmSave", `${pickedCharMain}/${mainCostume}`);
+                await setCostumeAndExpression(pickedCharMain, mainCostume, expression);
+                DebugLog(`OpenWorldCostumes: Set left-side to "${pickedCharMain}/${mainCostume}"`);
+            }
+        } else if (charName === "Weybot") {
+            // No usable character: show the Weybot silhouette chosen at startup
+            const silhouette = getGlobalVariable("WeybotCostume") || "Other";
+            if (getLocalVariable("CostmSave") !== `Weybot/${silhouette}`) {
+                setLocalVariable("CostmSave", `Weybot/${silhouette}`);
+                await setCostumeAndExpression("Weybot", silhouette, expression);
+                DebugLog(`OpenWorldCostumes: Set left-side to silhouette "Weybot/${silhouette}"`);
+            }
+        } else {
+            DebugLog(`OpenWorldCostumes: No usable characters, keeping left-side.`);
         }
+
+        const sideFolder = pickedCharSide ? `${pickedCharSide}/${getCostume(pickedCharSide)}` : "";
         if (lookForSide) {
-            if (pickedCharSide && getLocalVariable("CostmSaveSide") !== `${pickedCharSide}/${sideCostume}`) {
-                setLocalVariable("CostmSaveSide", `${pickedCharSide}/${sideCostume}`);
-                await updateSideCharacter({character: `${pickedCharSide}/${sideCostume}`, expression: getLocalVariable("ExpSave")});
-                DebugLog(`OpenWorldCostumes: Set right-side to "${pickedCharSide}/${sideCostume}"`);
-            } else if (getLocalVariable("CostmSaveSide") !== "") {
+            if (sideFolder && getLocalVariable("CostmSaveSide") !== sideFolder) {
+                setLocalVariable("CostmSaveSide", sideFolder);
+                await updateSideCharacter({character: sideFolder, expression: expression});
+                DebugLog(`OpenWorldCostumes: Set right-side to "${sideFolder}"`);
+            } else if (!sideFolder && getLocalVariable("CostmSaveSide") !== "") {
                 setLocalVariable("CostmSaveSide", "");
                 updateSideCharacter({clear: "true"});
                 DebugLog(`OpenWorldCostumes: Cleared right-side.`);
@@ -2165,6 +2203,8 @@ async function GroupCostumes(charName, charMessage) {
 
         const mainRegex = /_{0,2}(?:Mirror )?(.+?):_{1,2}/g;
         const altRegex = /\b([A-Z][A-Za-z\-]{0,16})\b(?= (?:[A-Za-z]{2,}(?:s|[ie]d)\b|is[^.,!?\n]+[A-Za-z]+ing\b))/g;
+        // Sisters without a sprite folder yet are dropped by the folder check below
+        const cerberusSisters = GROUP_CARD_MEMBERS["Cerberus Sisters"];
 
         const {charactersWithExpressions, resolveCharacterOverride, aliasLookup} = await GetCharacterNamesAndAliases("Weybot");
 
@@ -2181,15 +2221,46 @@ async function GroupCostumes(charName, charMessage) {
             ));
         }
 
+        /** @param {string} name */
+        const folderFor = (name) => `${name}/${getCharacterCostumeFromText(charMessage.mes, name)}`;
+
         let pickedChar = foundCharacters.length ? foundCharacters[Math.floor(Math.random() * foundCharacters.length)] : "";
+        // Single member to fall back to if the combined sprite lacks this costume
+        let singleChar = "";
         DebugLog(`Default picked char: ${pickedChar}`, foundCharacters);
         if (charName.includes("&")) {
-            pickedChar = resolveCharacterOverride(charName.replaceAll(/ & /g, ""), foundCharacters);
+            // Dual card: both members in the scene use the combined sprite, one uses that member,
+            // and neither picks a random member
+            const members = getGroupCardMembers(charName);
+            const present = members.filter(name => foundCharacters.includes(name));
+            const pool = await filterBySpriteFolder(present.length ? present : members, folderFor);
+            singleChar = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
+            pickedChar = present.length === members.length
+                ? resolveCharacterOverride(charName.replaceAll(/ & /g, ""), foundCharacters)
+                : singleChar;
         } else if (charName === "Cerberus Sisters") {
             const sister = getLocalVariable("CerberusSister");
-            if (sister && sister !== "3rd") pickedChar = resolveCharacterOverride(sister, foundCharacters);
+            if (sister && sister !== "3rd") {
+                singleChar = sister;
+                pickedChar = resolveCharacterOverride(sister, foundCharacters);
+            } else {
+                // Open-ended greeting: pick a random sister in the scene, or any sister if none were detected
+                const sistersFound = foundCharacters.filter(name => cerberusSisters.includes(name));
+                const pool = await filterBySpriteFolder(sistersFound.length ? sistersFound : cerberusSisters, folderFor);
+                singleChar = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
+                pickedChar = singleChar ? resolveCharacterOverride(singleChar, foundCharacters) : "";
+            }
+        }
+        if (pickedChar && singleChar && pickedChar !== singleChar && !(await spriteFolderExists(folderFor(pickedChar)))) {
+            pickedChar = singleChar;
         }
         DebugLog(`Overwrite picked char: ${pickedChar}`);
+
+        // Keep the current sprite rather than switching to a missing folder
+        if (!pickedChar || !(await spriteFolderExists(folderFor(pickedChar)))) {
+            DebugLog(`GroupCostumes: No sprite folder for "${pickedChar}", keeping current costume.`);
+            return;
+        }
 
         const costume = getCharacterCostumeFromText(charMessage.mes, pickedChar);
         const charCostume = `${pickedChar}/${costume}`;
@@ -2216,9 +2287,7 @@ async function AutoCostumes(charName, charMessage) {
         charName = charName || charMessage.name || getCurrentCharacterName();
         if (!charName) return "{{char}} undefined";
         if (getGlobalVariable("AutoCostume") !== "No") {
-            const groupCharacter = [
-                "Blake & Serra", "Lyris & Vesper", "Cerberus Sisters"
-            ].includes(charName);
+            const groupCharacter = getGroupCardMembers(charName).length > 0;
             const openWorld = [
                 "Weybot", "Mirror Weyland", "Kinsbane Manor"
             ].includes(charName);
@@ -2228,7 +2297,8 @@ async function AutoCostumes(charName, charMessage) {
             } else {
                 const costume = getCharacterCostumeFromText(charMessage.mes, charName);
                 const charCostume = `${charName}/${costume}`;
-                if (costume && getLocalVariable("CostmSave") !== charCostume) {
+                // Keep the current sprite rather than switching to a missing folder
+                if (costume && getLocalVariable("CostmSave") !== charCostume && await spriteFolderExists(charCostume)) {
                     setLocalVariable("CostmSave", charCostume);
                     setCostume(charCostume);
                     DebugLog(`Set new costume: ${charCostume}`);

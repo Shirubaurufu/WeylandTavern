@@ -1,6 +1,7 @@
 import { eventSource, event_types } from '../../events.js';
 import { isMobile } from '../../RossAscends-mods.js';
 import { getExpressionLabel } from '../expressions/index.js';
+import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, getGroupCardMembers } from '../quick-reply-ext/src/expressionCharacters.js';
 
 const DEBUG = false;
 const LOGGING_PREFIX = '[Registrar-Expressions]';
@@ -43,6 +44,8 @@ const MAX_NAME_LENGTH = 32;
 const MAX_NAME_WORDS = 3;
 const REGISTRAR_EXPRESSIONS_MANIFEST_BASE = 'https://registrar.weybooru.com/expressions/';
 
+const FALLBACK_OFFICIAL_OUTFIT = 'Regular Outfit';
+
 const DEFAULT_EXPRESSION_LABELS = [
     'admiration', 'amusement', 'anger', 'annoyance', 'approval', 'caring', 'confusion',
     'curiosity', 'desire', 'disappointment', 'disapproval', 'disgust', 'embarrassment',
@@ -84,6 +87,24 @@ function isSideCharacterExpressionsEnabled() {
     return true;
 }
 
+let aliasMap = null; // lowercase alias to lowercase canonical name
+/**
+ * @param {string} name Speaker name as written in the message.
+ * @returns {string} Normalized (lowercase) name, redirected to its canonical name if it is an alias.
+ */
+function resolveAlias(name) {
+    if (!aliasMap) {
+        aliasMap = new Map();
+        for (const [canonical, aliases] of Object.entries(CHARACTER_ALIASES)) {
+            for (const alias of aliases) {
+                aliasMap.set(alias.toLowerCase(), canonical.toLowerCase());
+            }
+        }
+    }
+    const normalized = String(name || '').trim().toLowerCase();
+    return aliasMap.get(normalized) ?? normalized;
+}
+
 function extractPathSpeakerName(path) {
     if (!path) return null;
     const match = path.match(PATH_CHARACTER_PATTERN);
@@ -102,13 +123,18 @@ function getSpeakerNames() {
     const rightSpeaker = extractPathSpeakerName(rightBasePath);
     if (rightSpeaker) seen.add(rightSpeaker);
 
+    // Members of a multi-character card always show combined on the left
+    for (const member of getGroupCardMembers(context.name2)) {
+        seen.add(member.toLowerCase());
+    }
+
     if (DEBUG) {
         console.log(`${LOGGING_PREFIX} Seen speakers (excluded from side list):`, { leftSpeaker, rightSpeaker });
     }
 
     // Push with de-duplication and blank avoidance
     const pushUnique = (name) => {
-        name = String(name || '').trim().toLowerCase();
+        name = resolveAlias(name);
         if (!name) return;
         if (seen.has(name)) return;
         if (name.length > MAX_NAME_LENGTH) return;
@@ -174,6 +200,10 @@ function ensureOfficialCharacterMap() {
         for (const c of chars) {
             const n = String(c?.name || '').trim();
             if (n) officialCharacterMap.set(n.toLowerCase(), n);
+        }
+        // Include official characters that have sprites but no installed card
+        for (const n of CHARACTERS_WITH_EXPRESSIONS) {
+            if (!officialCharacterMap.has(n.toLowerCase())) officialCharacterMap.set(n.toLowerCase(), n);
         }
     }
 }
@@ -295,7 +325,7 @@ async function getSpeakerEmotion(name) {
     for (const match of matches) {
         let nameTag = (match[1] ?? match[2]).trim(); // SPEAKER_NAME_PATTERN could match group 1 or 2
         if (nameTag) {
-            nameTag = String(nameTag || '').trim().toLowerCase();
+            nameTag = resolveAlias(nameTag);
             if (nameTag !== name) continue;
             if (nameTag.length > MAX_NAME_LENGTH) continue;
             if (nameTag.split(/\s+/).length > MAX_NAME_WORDS) continue;
@@ -397,17 +427,25 @@ async function resolveExpression(name){
     if (isOfficial) {
         // Character folders are canonically cased
         const canonicalName = getCanonicalCharacterName(name);
-        const url = `/characters/${canonicalName}/${outfit}/${emotion}.avif`;
-        return {
-            path: (await fetch(url, { method: 'HEAD' })
+        const probe = (fit, lab) => {
+            const url = `/characters/${canonicalName}/${fit}/${lab}.avif`;
+            return fetch(url, { method: 'HEAD' })
                 .then(res => res.ok ? url : '')
-                .catch(() => '')
-            ),
-            name: name,
-            isOfficial: true,
-            outfit: outfit,
-            emotion: emotion,
+                .catch(() => '');
+        };
+        // Try the requested emotion, then neutral, in the active outfit;
+        // then repeat in the regular outfit if the active one has neither.
+        const outfits = outfit === FALLBACK_OFFICIAL_OUTFIT ? [outfit] : [outfit, FALLBACK_OFFICIAL_OUTFIT];
+        const emotions = emotion === 'neutral' ? [emotion] : [emotion, 'neutral'];
+        for (const fit of outfits) {
+            for (const lab of emotions) {
+                const path = await probe(fit, lab);
+                if (path) {
+                    return { path: path, name: name, isOfficial: true, outfit: fit, emotion: lab };
+                }
+            }
         }
+        return { path: '', name: name, isOfficial: true, outfit: outfit, emotion: emotion };
     }
     return {
         path: await resolveRegistrarExpressionPath(name, outfit, emotion),
