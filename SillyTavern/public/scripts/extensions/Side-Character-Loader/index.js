@@ -79,43 +79,20 @@ async function getSpritesList(name) {
 //#endregion
 
 const findImage = async (character, expression) => {
+    // Match against the folder's sprite list like ST's expressions extension does.
+    // The server lowercases labels, so file names match case-insensitively on every OS.
     const spriteList = await getSpritesList(character);
-    const images = spriteList.find(sprite => sprite.label === expression)?.files;
-    const path = images && images?.length > 1 ? images?.[Math.floor(Math.random() * images.length)].filePath  : images?.[0].filePath;
-    if (path) return path;
+    const labels = expression === 'neutral' ? ['neutral'] : [expression, 'neutral'];
+    for (const label of labels) {
+        const images = spriteList.find(sprite => sprite.label === label)?.files;
+        if (images?.length) {
+            if (label !== expression) {
+                console.log(`${CONSOLE_PREFIX} Expression '${expression}' not found, using neutral`);
+            }
+            return images[Math.floor(Math.random() * images.length)].filePath;
+        }
+    }
 
-    const extensions = ['avif', 'png', 'webp'];
-    const basePath = `characters/${character}`;
-    
-    // Try the requested expression first
-    for (const ext of extensions) {
-        const testUrl = `${basePath}/${expression}.${ext}`;
-        try {
-            const response = await fetch(testUrl, { method: 'HEAD' });
-            if (response.ok) {
-                return testUrl;
-            }
-        } catch (e) {
-            // Continue to next extension
-        }
-    }
-    
-    // If expression not found and it's not already 'neutral', try neutral
-    if (expression !== 'neutral') {
-        for (const ext of extensions) {
-            const testUrl = `${basePath}/neutral.${ext}`;
-            try {
-                const response = await fetch(testUrl, { method: 'HEAD' });
-                if (response.ok) {
-                    console.log(`${CONSOLE_PREFIX} Expression '${expression}' not found, using neutral`);
-                    return testUrl;
-                }
-            } catch (e) {
-                // Continue to next extension
-            }
-        }
-    }
-    
     // Nothing found
     console.log(`${CONSOLE_PREFIX} Image not found.`);
     return null;
