@@ -6,9 +6,7 @@ export const CHARACTERS_WITH_EXPRESSIONS = Object.freeze([
     "Gemini", "Hannah", "Indigo", "Jade", "Jenn", "Kai", "Karmen", "Khepri", "Kiera", "Koshizu", "Kressa", "Kris", "Lentyl",
     "Loona", "Lucy", "Luna", "Lurkle", "Lyris", "Mika", "Muse", "Ṇ̶̰̼͘a̶͍̅́̒r̵̓̏̉̈́ā̸͒̔̄", "Nathan", "Nefara", "Nix", "Professor Akiyama",
     "Rein", "Rivera", "Rivet", "Rosa", "Serra", "Seth", "Shani", "Sofya", "Summer", "Sunny", "Vera", "Vesper", "Vindica",
-    "Warren", "Willow",
-    // Cerberus Sisters
-    "Astrid", "Neshe", "Fawne",
+    "Warren", "Willow", "Yue-Lin", "Astrid", "Neshe", "Fawne", "Tawny", "Chaska", "Gem"
 ]);
 
 // Alternate names that redirect to a canonical name (the key must match the sprite folder).
