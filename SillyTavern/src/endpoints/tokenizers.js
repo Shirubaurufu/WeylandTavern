@@ -13,7 +13,6 @@ import { SentencePieceProcessor } from '@agnai/sentencepiece-js';
 import tiktoken from 'tiktoken';
 
 import { convertClaudePrompt } from '../prompt-converters.js';
-import { calibrateClaudeTokenCount } from '../../public/scripts/claude-token-calibration.js';
 import { TEXTGEN_TYPES } from '../constants.js';
 import { setAdditionalHeaders } from '../additional-headers.js';
 import { getConfigValue, isValidUrl } from '../util.js';
@@ -688,9 +687,7 @@ function createWebTokenizerEncodingHandler(tokenizer) {
             if (!instance) throw new Error('Failed to load the Web tokenizer');
             const tokens = Array.from(instance.encode(text));
             const chunks = getWebTokenizersChunks(instance, tokens);
-            // Preserve real token IDs/chunks; only the budget estimate changes.
-            const count = tokenizer === claude_tokenizer ? calibrateClaudeTokenCount(tokens.length) : tokens.length;
-            return response.send({ ids: tokens, count, chunks });
+            return response.send({ ids: tokens, count: tokens.length, chunks });
         } catch (error) {
             
             return response.send({ ids: [], count: 0, chunks: [] });
@@ -919,7 +916,7 @@ router.post('/openai/count', async function (req, res) {
         if (model === 'claude') {
             const instance = await claude_tokenizer.get();
             if (!instance) throw new Error('Failed to load the Claude tokenizer');
-            num_tokens = calibrateClaudeTokenCount(countWebTokenizerTokens(instance, req.body));
+            num_tokens = countWebTokenizerTokens(instance, req.body);
             return res.send({ 'token_count': num_tokens });
         }
 

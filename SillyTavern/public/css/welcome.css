@@ -74,12 +74,6 @@ body.hideChatAvatars .welcomePanel .recentChatList .recentChat .avatar {
     gap: 5px;
 }
 
-.welcomePanel .welcomeShortcuts .welcomeShortcutsSeparator {
-    margin: 0 2px;
-    color: var(--SmartThemeBorderColor);
-    font-size: calc(var(--mainFontSize) * 1.1);
-}
-
 .welcomeRecent .recentChatList {
     display: flex;
     flex-direction: column;

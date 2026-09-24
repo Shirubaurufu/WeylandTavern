@@ -1,5 +1,4 @@
 import { localforage } from '../lib.js';
-import { TOKEN_COUNT_CACHE_VERSION } from './claude-token-calibration.js';
 import { characters, main_api, nai_settings, online_status, this_chid } from '../script.js';
 import { power_user, registerDebugFunction } from './power-user.js';
 import { chat_completion_sources, model_list, oai_settings } from './openai.js';
@@ -470,7 +469,7 @@ export async function getTokenCountAsync(str, padding = undefined) {
 
     const cacheObject = getTokenCacheObject();
     const hash = getStringHash(str);
-    const cacheKey = `${TOKEN_COUNT_CACHE_VERSION}-${tokenizerType}-${hash}${modelHash}+${padding}`;
+    const cacheKey = `${tokenizerType}-${hash}${modelHash}+${padding}`;
 
     if (typeof cacheObject[cacheKey] === 'number') {
         return cacheObject[cacheKey];
@@ -526,7 +525,7 @@ export function getTokenCount(str, padding = undefined) {
 
     const cacheObject = getTokenCacheObject();
     const hash = getStringHash(str);
-    const cacheKey = `${TOKEN_COUNT_CACHE_VERSION}-${tokenizerType}-${hash}${modelHash}+${padding}`;
+    const cacheKey = `${tokenizerType}-${hash}${modelHash}+${padding}`;
 
     if (typeof cacheObject[cacheKey] === 'number') {
         return cacheObject[cacheKey];
@@ -735,7 +734,7 @@ export function countTokensOpenAI(messages, full = false) {
         }
 
         const hash = getStringHash(JSON.stringify(message));
-        const cacheKey = `${TOKEN_COUNT_CACHE_VERSION}-${model}-${hash}`;
+        const cacheKey = `${model}-${hash}`;
         const cachedCount = cacheObject[cacheKey];
 
         if (typeof cachedCount === 'number') {
@@ -787,7 +786,7 @@ export async function countTokensOpenAIAsync(messages, full = false) {
         }
 
         const hash = getStringHash(JSON.stringify(message));
-        const cacheKey = `${TOKEN_COUNT_CACHE_VERSION}-${model}-${hash}`;
+        const cacheKey = `${model}-${hash}`;
         const cachedCount = cacheObject[cacheKey];
 
         if (typeof cachedCount === 'number') {

@@ -158,6 +158,14 @@ body.no-blur .popup[open]::backdrop {
     gap: 20px;
 }
 
+@media (max-width: 600px) {
+    .popup-controls:has(.popup-button-skip) {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+}
+
 .menu_button.menu_button_default {
     box-shadow: 0 0 5px var(--white20a);
 }

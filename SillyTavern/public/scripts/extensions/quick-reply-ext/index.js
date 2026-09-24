@@ -2071,7 +2071,7 @@ async function OpenWorldCostumes(charName, charMessage) {
         charName = charName || charMessage.name || getCurrentCharacterName();
 
         const mainRegex = /_{0,2}(?:Mirror )?(.+?):_{1,2}/g;
-        const altRegex = /\b([A-Z][A-Za-z\-]{,16})\b(?= (?:[A-Za-z]{2,}(?:s|[ie]d)\b|is[^.,!?\n]+[A-Za-z]+ing\b))/g;
+        const altRegex = /\b([A-Z][A-Za-z\-]{0,16})\b(?= (?:[A-Za-z]{2,}(?:s|[ie]d)\b|is[^.,!?\n]+[A-Za-z]+ing\b))/g;
 
         const {charactersWithExpressions, aliasLookup} = await GetCharacterNamesAndAliases("Weybot");
 
@@ -2164,7 +2164,7 @@ async function GroupCostumes(charName, charMessage) {
         if (!charName) return;
 
         const mainRegex = /_{0,2}(?:Mirror )?(.+?):_{1,2}/g;
-        const altRegex = /\b([A-Z][A-Za-z\-]{,16})\b(?= (?:[A-Za-z]{2,}(?:s|[ie]d)\b|is[^.,!?\n]+[A-Za-z]+ing\b))/g;
+        const altRegex = /\b([A-Z][A-Za-z\-]{0,16})\b(?= (?:[A-Za-z]{2,}(?:s|[ie]d)\b|is[^.,!?\n]+[A-Za-z]+ing\b))/g;
 
         const {charactersWithExpressions, resolveCharacterOverride, aliasLookup} = await GetCharacterNamesAndAliases("Weybot");
 
