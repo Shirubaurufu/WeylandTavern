@@ -15,6 +15,7 @@ import { TEXTING_MODE_INSTRUCTIONS, TEXTING_THOUGHTS_DISABLED } from './lib/text
 import { FIRST_CONTACT_BLOCK } from './lib/firstContact.js';
 import { isKnownByDefault } from './lib/knownContacts.js';
 import { buildMemoryGenerationMessages, joinMemoriesForInjection, sendMemoryRequest } from './lib/memoryGeneration.js';
+import { createSettledTrigger } from './lib/settledTrigger.js';
 import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText, KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS, KRESSA_POST_CHATLOG_ORIENTATION } from './lib/tetheredContext.js';
 import { getPhoneAppContent, setPhoneAppContent } from './lib/phoneApps.js';
 import { toggleLike } from './lib/twitterLikes.js';
@@ -2761,7 +2762,12 @@ function renderUnderstudyScreenNow() {
     });
 }
 
-async function runUnderstudyRewrite() {
+/**
+ * @param {{ auto?: boolean }} [options] auto = started by automatic mode, which owns its own pop-ups
+ *   and honours the "Pop-up notifications" switch; a manual run is watched in the app itself.
+ * @returns {Promise<'ok'|'cancelled'|'failed'|'discarded'|undefined>} undefined = never started
+ */
+async function runUnderstudyRewrite({ auto = false } = {}) {
     if (understudyGenerating) return;
     if (phoneState.airplane) {
         wpToast('warning', 'Turn off airplane mode before rewriting.', 'Copycat');
@@ -2863,7 +2869,9 @@ async function runUnderstudyRewrite() {
         const landedKey = understudyIdentity(SillyTavern.getContext(), target.index);
         if (landedKey !== targetKey || understudyTargetKey !== targetKey) {
             pushLogLine('Copycat discarded a rewrite whose message moved mid-generation');
-            return;
+            // Used to be silent, which read as "auto mode does nothing" to anyone who kept chatting.
+            if (copycatToastsAllowed(auto, config)) wpToast('info', 'The chat moved on while Copycat was working, so that rewrite was dropped.', 'Copycat');
+            return 'discarded';
         }
 
         const text = extractResponseText(response);
@@ -2920,18 +2928,20 @@ async function runUnderstudyRewrite() {
         understudyTake++;
         understudySection = 'stage';
         pushLogLine('Copycat rewrote ' + target.characterName + "'s reply (" + scope.label + ')');
-        return true;
+        return 'ok';
     } catch (error) {
         if (abort.signal.aborted) {
             // The user asked for this; it is not an error.
             pushLogLine('Copycat rewrite cancelled');
-            wpToast('info', 'Rewrite cancelled.', 'Copycat');
-            return false;
+            if (copycatToastsAllowed(auto, config)) wpToast('info', 'Rewrite cancelled.', 'Copycat');
+            return 'cancelled';
         }
         console.error('[WeyPhone] Understudy rewrite failed', error);
         understudyError = error.message || 'Could not rewrite this reply.';
+        // In the log too, not only a toast: a failure used to leave no trace a user could report.
+        pushLogLine('Copycat rewrite failed: ' + understudyError);
         wpToast('error', understudyError, 'Copycat');
-        return false;
+        return 'failed';
     } finally {
         if (understudyAbort === abort) understudyAbort = null;
         understudyGenerating = false;
@@ -3133,10 +3143,20 @@ async function maybeAutoUnderstudy() {
     }
 
     pushLogLine('Copycat auto-triggered on message ' + index);
+    const toasts = copycatToastsAllowed(true, config);
+    // Not awaited yet: the run reaches its "generating" state synchronously, so the working
+    // pop-up can go up now and its Cancel link already has a live request to abort.
+    const pending = runUnderstudyRewrite({ auto: true });
+    if (toasts && understudyGenerating) showCopycatWorkingToast(context.chat?.[index]?.name || context.name2);
+    let outcome;
+    try {
+        outcome = await pending;
+    } finally {
+        clearCopycatWorkingToast();
+    }
     // Only a run that actually succeeded may be swiped in: after a cancel or failure the draft
     // can still hold an earlier take, and "full" mode would otherwise post that one instead.
-    const succeeded = await runUnderstudyRewrite();
-    if (!succeeded || !understudyDraft.trim()) return;
+    if (outcome !== 'ok' || !understudyDraft.trim()) return;
 
     if (config.autoMode === 'full') {
         // Announce only what actually happened: between the request starting and finishing the
@@ -3144,15 +3164,47 @@ async function maybeAutoUnderstudy() {
         const landed = await appendUnderstudyTakeAsSwipe(understudyDraft, understudyTargetIndex, understudyTargetKey);
         if (!landed) {
             pushLogLine('Copycat auto rewrite was dropped: the message moved mid-generation');
+            if (toasts) wpToast('info', 'The chat moved on while Copycat was working, so that rewrite was dropped.', 'Copycat');
             return;
         }
         understudyDraft = '';
         understudyTake = 0;
-        wpToast('success', 'Copycat added a rewrite. Swipe to compare.', 'Copycat');
+        if (toasts) wpToast('success', 'Copycat added a rewrite. Swipe to compare.', 'Copycat');
         if (currentView === 'understudy') renderUnderstudyScreenNow();
-    } else {
+    } else if (toasts) {
         wpToast('info', 'Copycat has a rewrite ready.', 'Copycat');
     }
+}
+
+/**
+ * Copycat's non-error pop-ups. Manual runs always show them (the user is watching the app);
+ * automatic runs follow the "Pop-up notifications" switch. Errors bypass this entirely, and
+ * wpToast still applies Do Not Disturb on top.
+ */
+function copycatToastsAllowed(auto, config) {
+    return !auto || config?.autoToasts !== false;
+}
+
+// The "rewriting…" pop-up for an automatic run. It stays up (no timeout) until the run ends,
+// because an automatic rewrite can take minutes and nothing else on screen says it is happening.
+let copycatWorkingToast = null;
+
+function showCopycatWorkingToast(characterName) {
+    if (phoneState.dnd) return;
+    clearCopycatWorkingToast();
+    const name = String(characterName || 'the character').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    // escapeHtml off for this toast only, so the Cancel link renders; the name is escaped above.
+    copycatWorkingToast = toastr.info(
+        `Copycat is rewriting ${name}'s reply… <a href="#" class="wp-copycat-toast-cancel">Cancel</a>`,
+        'Copycat',
+        { timeOut: 0, extendedTimeOut: 0, tapToDismiss: false, closeButton: false, escapeHtml: false },
+    );
+}
+
+function clearCopycatWorkingToast() {
+    if (!copycatWorkingToast) return;
+    toastr.clear(copycatWorkingToast);
+    copycatWorkingToast = null;
 }
 
 function renderMienScreenNow() {
@@ -4877,6 +4929,7 @@ function handleScreenBodyChange(event) {
         'wp-understudy-autotrigger': 'autoTrigger',
         'wp-understudy-autoevery': 'autoEvery',
         'wp-understudy-autochance': 'autoChance',
+        'wp-understudy-autotoasts': 'autoToasts',
     };
     if (understudySettingFields[event.target.id]) {
         const context = SillyTavern.getContext();
@@ -7518,7 +7571,19 @@ function initPanel() {
     // their tick. Real-time timers are unaffected (they run off the wall-clock interval).
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpTimersOnMessage);
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpAlarmsOnMessage);
-    context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, () => { void maybeAutoUnderstudy(); });
+    // Copycat auto mode waits for the reply to SETTLE, not just arrive: SillyTavern emits
+    // MESSAGE_RECEIVED before it finishes storing the swipe, and starting then made every automatic
+    // rewrite look stale and get discarded. See lib/settledTrigger.js.
+    const copycatAutoTrigger = createSettledTrigger({ run: () => { void maybeAutoUnderstudy(); } });
+    context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, copycatAutoTrigger.onMessageReceived);
+    context.eventSource.on(context.eventTypes.GENERATION_ENDED, copycatAutoTrigger.onGenerationEnded);
+    // The working pop-up's Cancel link. Toasts live outside the phone panel, so this listens on
+    // the document; the link only exists while an automatic rewrite is running.
+    document.addEventListener('click', (event) => {
+        if (!event.target?.closest?.('.wp-copycat-toast-cancel')) return;
+        event.preventDefault();
+        understudyAbort?.abort();
+    });
     // Copycat's screen is static markup: without these it keeps showing whichever message was
     // current when it was last drawn, which is how a new reply came to look like one more
     // reroll of the previous one. MESSAGE_SENT clears too - sending a reply is the clearest

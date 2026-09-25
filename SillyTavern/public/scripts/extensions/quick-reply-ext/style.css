@@ -26,3 +26,9 @@ body:not(.streamlined-ui) #qr--bar > .qr--buttons .qr--button .qr--button-icon {
         padding-right: 0;
     }
 }
+
+/* "Add to group" in the hamburger menu (src/groupMenuItem.js) is for the full UI only.
+   Streamlined UI hides ST's "Convert to group", which that item depends on. */
+body.streamlined-ui #option_weyland_group_add {
+    display: none !important;
+}

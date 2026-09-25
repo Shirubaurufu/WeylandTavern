@@ -10,17 +10,36 @@
 // - No backfill: the first observation only snapshots `used` as the baseline; it does not
 //   invent tallies for history it never saw. Observations remain estimates, not a request log.
 // - Age-outs are handled by our own clock: any tally older than 24h is dropped.
-// - Aggregate counts cannot establish exact request times. Only observed increases are
-//   attributed; locally expired estimates must never create new requests.
+// - `used` is a ROLLING 24h count (the proxy asks HelixMind for requests since now-24h), so it
+//   goes down every time an old request ages out. New requests between two observations are
+//   therefore (increase in used) + (tallies we just aged out): a request sent while another
+//   aged out leaves `used` flat and would otherwise be invisible.
+// - Hard invariant: never more tallies than `used`. The excess is trimmed, oldest first.
+//
+// History (2026-09-24): the first version counted increases + expiries with no cap, so any
+// mismatch (the tracker's key drifting between two keys, clock skew at the 24h edge) invented
+// requests that never went away: "1AM - 57" on a 50-message key, climbing forever. The
+// 2026-09-23 rewrite stopped that by trusting only increases and wiping history on any
+// decrease, but on a rolling count every age-out is a decrease, so a daily user's history was
+// wiped and then never rebuilt ("Return time unknown for 49 messages", permanently). This
+// version restores the expiry accounting and makes the cap do the protecting instead.
 
 export const HOUR_MS = 60 * 60 * 1000;
 export const WINDOW_MS = 24 * HOUR_MS;
+// Unchanged on purpose: stores written by the 2026-09-23 version carry the same fields and
+// stay valid, so bumping this would wipe everyone's history a second time for nothing.
 export const TALLY_VERSION = 2;
 
 // If `used` leaps by more than this in a single observation (e.g. the user switched to a
 // different key), we treat it as a re-baseline rather than spraying a huge fake spike into
 // the current hour.
 export const REBASELINE_JUMP = 200;
+
+// How far the surviving tallies may exceed `used` before the history is treated as corrupt and
+// wiped rather than trimmed. A small excess is normal: HelixMind's clock and the browser's
+// clock disagree by seconds, so a request can age out on one side a moment before the other.
+// A large one (178 tallies against a used of 11) means the history itself is wrong.
+export const CORRUPT_EXCESS = 5;
 
 /**
  * @typedef {{ version: number, lastUsed: number|null, tallies: number[] }} TallyStore
@@ -62,17 +81,29 @@ export function reconcileTally(store, serverUsed, now = Date.now()) {
         return { version: TALLY_VERSION, lastUsed: serverUsed, tallies: [], changed: true };
     }
 
-    const newUses = serverUsed - lastUsed;
+    // Grossly more surviving timestamps than requests: the history is wrong, not just skewed.
+    if (tallies.length - serverUsed > CORRUPT_EXCESS) {
+        return { version: TALLY_VERSION, lastUsed: serverUsed, tallies: [], changed: true };
+    }
 
-    if (newUses < 0 || newUses > REBASELINE_JUMP || tallies.length + newUses > serverUsed) {
-        // A reset, correction or inconsistent history makes its timestamps unreliable.
+    // A drop in `used` is NOT an error on a rolling window (an old request aged out, whether we
+    // had a timestamp for it or not). Adding back our own expiries recovers a request that was
+    // sent while another aged out, which leaves `used` unchanged.
+    const newUses = (serverUsed - lastUsed) + expired;
+
+    if (newUses > REBASELINE_JUMP) {
+        // Implausible single-step jump (likely a key switch): re-baseline, don't spike.
         return { version: TALLY_VERSION, lastUsed: serverUsed, tallies: [], changed: true };
     }
     for (let i = 0; i < newUses; i++) {
         tallies.push(now);
     }
-    // Net-zero use plus expiry cannot be recovered from aggregate counts alone.
-    return { version: TALLY_VERSION, lastUsed: serverUsed, tallies, changed };
+    // The cap. Whatever the cause (a request aging out on HelixMind's clock a moment before
+    // ours, a lagging count), we never show more returning than were actually used, and the
+    // oldest are the likeliest to already be gone upstream.
+    const trimmed = Math.max(0, tallies.length - serverUsed);
+    if (trimmed) tallies.sort((a, b) => a - b).splice(0, trimmed);
+    return { version: TALLY_VERSION, lastUsed: serverUsed, tallies, changed: changed || trimmed > 0 };
 }
 
 /**

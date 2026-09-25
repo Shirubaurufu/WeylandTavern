@@ -385,25 +385,50 @@ function getDefaultMessageEmotion() {
     return "neutral";
 }
 
+// Manifest results per URL for this page load, misses included. Every reply re-resolves every
+// labeled speaker, and most labels (official cast, NPCs like "Dr. Montenegro") are not Registrar
+// characters, so without this each reply re-requested the same 404s.
+/** @type {Map<string, Promise<any[]|null>>} */
+const registrarManifestCache = new Map();
+
 async function fetchRegistrarManifest(name, outfit) {
     const url = `${REGISTRAR_EXPRESSIONS_MANIFEST_BASE}${encodeURIComponent(name)}/${encodeURIComponent(outfit)}`;
-    try {
-        const res = await fetch(url, { method: 'GET', credentials: 'omit' });
-        if (!res.ok) return null;
-        return JSON.parse(await res.text());
-    } catch (e) {
-        if (DEBUG) {
-            console.log(`${LOGGING_PREFIX} Registrar manifest fetch/parse failed`, { url, e });
-        }
-        return null;
+    if (!registrarManifestCache.has(url)) {
+        registrarManifestCache.set(url, (async () => {
+            try {
+                const res = await fetch(url, { method: 'GET', credentials: 'omit' });
+                if (!res.ok) return null;
+                return JSON.parse(await res.text());
+            } catch (e) {
+                if (DEBUG) {
+                    console.log(`${LOGGING_PREFIX} Registrar manifest fetch/parse failed`, { url, e });
+                }
+                // A network failure is not an answer; let the next refresh try again.
+                registrarManifestCache.delete(url);
+                return null;
+            }
+        })());
     }
+    return registrarManifestCache.get(url);
+}
+
+async function fetchRegistrarManifestWithFallback(name, outfit) {
+    let list = await fetchRegistrarManifest(name, outfit);
+    if ((!list || list.length === 0) && outfit !== 'clothed') {
+        list = await fetchRegistrarManifest(name, 'clothed');
+    }
+    return list;
 }
 
 async function resolveRegistrarExpressionPath(name, outfit, emotion) {
     // Try to get a manifest from the Registrar
-    let list = await fetchRegistrarManifest(name, outfit);
-    if ((!list || list.length === 0) && outfit !== 'clothed') {
-        list = await fetchRegistrarManifest(name, 'clothed');
+    let list = await fetchRegistrarManifestWithFallback(name, outfit);
+    // The Registrar serves expressions by FIRST name ("Tuesday" works, "Tuesday McMahon" is a 404),
+    // but the lore gives the model the full name and it often labels speakers with it. So when a
+    // multi-word label misses, retry with its first word. Only runs after the full name failed.
+    const firstName = String(name || '').trim().split(/\s+/)[0];
+    if ((!list || list.length === 0) && firstName && firstName !== String(name || '').trim()) {
+        list = await fetchRegistrarManifestWithFallback(firstName, outfit);
     }
     if (!list || list.length === 0) return '';
 

@@ -312,6 +312,7 @@ export function renderUnderstudySettingsScreen(container, { settings, currentLiv
                 </select>
             </label>
             ${cadenceField}
+            ${toggleRowMarkup({ id: 'wp-understudy-autotoasts', label: 'Pop-up notifications', sub: 'Show when an automatic rewrite starts (with Cancel), lands or gets dropped. Errors always show.', checked: settings.autoToasts !== false })}
             <div class="wp-settings-hint">Each automatic rewrite uses one generation${autoTrigger === 'always' ? ', so Always roughly doubles your generation use' : ''}. Copycat never rewrites one of its own rewrites.</div>`}
         </section>
 

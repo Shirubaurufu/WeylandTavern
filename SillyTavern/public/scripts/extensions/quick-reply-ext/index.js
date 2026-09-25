@@ -23,6 +23,7 @@ import { ravs } from "./src/rav.js";
 import { detector } from "./src/similarity.js";
 import { applyGeminiBypass } from "./src/promptModifiers.js";
 import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
+import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
 
 const debug = true;
 
@@ -2682,6 +2683,7 @@ function registerSlashCommands() {
 }
 
 (async function () {
+    installGroupAddMenuItem();
     eventSource.on(event_types.APP_READY, OnStartup);
     eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, OnBeforeGeneration);
     eventSource.on(event_types.MESSAGE_SENT, OnUser);
