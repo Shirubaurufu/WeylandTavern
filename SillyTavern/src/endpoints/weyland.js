@@ -1,5 +1,5 @@
 import express from 'express';
-import { readdir, stat, writeFile, readFile, mkdir } from 'fs/promises';
+import { readdir, stat, writeFile, readFile, mkdir, chmod } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
@@ -179,6 +179,178 @@ function validateDownloadedAsset(buffer, expectedVersion, assetName) {
 }
 
 /**
+ * Turns a download failure into a reason a user can act on. The terminal used to say only
+ * "N file(s) failed to download", which hides four very different problems: the server,
+ * the connection, a truncated file, or Windows refusing to save it.
+ * @param {any} error
+ * @returns {string}
+ */
+function describeDownloadFailure(error) {
+    const code = error?.code || error?.cause?.code;
+    if (code === 'EPERM' || code === 'EACCES') {
+        return 'Windows blocked saving the file (check your antivirus, a Read-only file, or whether Weyland Tavern was ever started as administrator)';
+    }
+    if (code === 'EBUSY') return 'the file is open in another program';
+    if (code === 'ENOSPC') return 'the disk is full';
+    if (/size mismatch/i.test(String(error?.message))) return 'the file arrived incomplete';
+    if (error?.name === 'TypeError' || code === 'ECONNRESET' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') {
+        return 'could not reach the download server (check your internet connection)';
+    }
+    return String(error?.message || 'unknown error');
+}
+
+/**
+ * writeFile that recovers from a Read-only file. Windows reports writing to a Read-only file
+ * as EPERM; clearing the flag is harmless (we are about to replace the file anyway) and fixes
+ * that case. If something else is blocking (antivirus, a file owned by an administrator run),
+ * the retry throws again and the caller reports it.
+ * @param {string} path
+ * @param {string | Buffer} data
+ */
+async function writeFileClearingReadOnly(path, data) {
+    try {
+        await writeFile(path, data);
+    } catch (error) {
+        if (error?.code !== 'EPERM' && error?.code !== 'EACCES') throw error;
+        try {
+            await chmod(path, 0o666);
+        } catch {
+            throw error;
+        }
+        await writeFile(path, data);
+    }
+}
+
+/**
+ * Saves the local manifest (the record of what is installed). Returns null on success, or a
+ * plain reason on failure. Callers treat failure as non-fatal: the downloaded files are already
+ * on disk, and healLocalManifestFromDisk() recognises them on the next check even if this
+ * record could not be written.
+ * @param {Manifest} manifest
+ * @returns {Promise<string | null>}
+ */
+async function saveLocalManifest(manifest) {
+    try {
+        await mkdir(EXTENSION_PATH, { recursive: true });
+        await writeFileClearingReadOnly(LOCAL_MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+        return null;
+    } catch (error) {
+        console.warn('[Weyland] Could not save the download record:', LOCAL_MANIFEST_PATH, error?.message);
+        return describeDownloadFailure(error);
+    }
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<number | null>}
+ */
+async function sizeOnDisk(path) {
+    try {
+        return (await stat(path)).size;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Before listing updates, double-check each file the record says is outdated against the file
+ * actually on disk. If the disk copy is already exactly the server's size (manifest versions
+ * are byte sizes), it is up to date and the record is corrected.
+ *
+ * Why: the record can fall behind the disk, e.g. when Windows refused to save it after a
+ * successful download. Before this, those characters showed "Update" forever, however many
+ * times they were downloaded.
+ *
+ * Why not simply rebuild the whole record from disk every time: SillyTavern rewrites a card PNG
+ * when a character is favourited or edited, so its size stops matching the server. A disk-only
+ * check would flag those as updates forever and overwrite the user's edits. Only accepting an
+ * EXACT size match keeps that protection, and only checking already-flagged files keeps this to
+ * a handful of file lookups on a normal check.
+ * @param {string} userPath
+ * @param {Manifest} remoteManifest
+ * @param {Manifest} localManifest
+ * @returns {Promise<number>} how many entries were corrected
+ */
+async function healLocalManifestFromDisk(userPath, remoteManifest, localManifest) {
+    const charactersPath = join(userPath, 'characters');
+    const worldsPath = join(userPath, 'worlds');
+    const localCharMap = new Map(localManifest.characters.map(c => [manifestNameKey(c.name), c]));
+    const checks = [];
+
+    for (const remoteChar of remoteManifest.characters) {
+        const key = manifestNameKey(remoteChar.name);
+        const pngPath = join(charactersPath, `${remoteChar.name}.png`);
+        const ensureLocalChar = () => {
+            let localChar = localCharMap.get(key);
+            if (!localChar) {
+                localChar = { name: remoteChar.name, version: null, subcharacters: [] };
+                localManifest.characters.push(localChar);
+                localCharMap.set(key, localChar);
+            }
+            return localChar;
+        };
+
+        checks.push(async () => {
+            let localChar = localCharMap.get(key);
+            let healed = 0;
+            // A character not in the record is only worth checking if its card is on disk;
+            // otherwise it is simply not installed and every file lookup would miss.
+            if (!localChar && await sizeOnDisk(pngPath) === null) return 0;
+
+            if (localChar?.version !== remoteChar.version && await sizeOnDisk(pngPath) === Number(remoteChar.version)) {
+                ensureLocalChar().version = remoteChar.version;
+                healed++;
+            }
+
+            for (const remoteSub of remoteChar.subcharacters) {
+                if (!remoteSub.name) continue;
+                for (const remoteCostume of remoteSub.costumes) {
+                    for (const remoteExpr of remoteCostume.expressions) {
+                        localChar = localCharMap.get(key);
+                        const localSub = localChar?.subcharacters.find(s => manifestNamesEqual(s.name, remoteSub.name));
+                        const localCostume = localSub?.costumes.find(c => manifestNamesEqual(c.name, remoteCostume.name));
+                        const localExpr = localCostume?.expressions.find(e => manifestNamesEqual(e.filename, remoteExpr.filename));
+                        if (localExpr?.version === remoteExpr.version) continue;
+                        const diskSize = await sizeOnDisk(join(charactersPath, remoteSub.name, remoteCostume.name, remoteExpr.filename));
+                        if (diskSize !== Number(remoteExpr.version)) continue;
+
+                        const char = ensureLocalChar();
+                        let sub = char.subcharacters.find(s => manifestNamesEqual(s.name, remoteSub.name));
+                        if (!sub) { sub = { name: remoteSub.name, costumes: [] }; char.subcharacters.push(sub); }
+                        let costume = sub.costumes.find(c => manifestNamesEqual(c.name, remoteCostume.name));
+                        if (!costume) { costume = { name: remoteCostume.name, expressions: [] }; sub.costumes.push(costume); }
+                        const expr = costume.expressions.find(e => manifestNamesEqual(e.filename, remoteExpr.filename));
+                        if (expr) expr.version = remoteExpr.version;
+                        else costume.expressions.push({ filename: remoteExpr.filename, version: remoteExpr.version });
+                        healed++;
+                    }
+                }
+            }
+
+            for (const remoteLore of remoteChar.lorebooks ?? []) {
+                if (!remoteLore.filename) continue;
+                localChar = localCharMap.get(key);
+                const localLore = localChar?.lorebooks?.find(l => manifestNamesEqual(l.filename, remoteLore.filename));
+                if (localLore?.version === remoteLore.version) continue;
+                if (await sizeOnDisk(join(worldsPath, remoteLore.filename)) !== Number(remoteLore.version)) continue;
+                const char = ensureLocalChar();
+                if (!char.lorebooks) char.lorebooks = [];
+                const lore = char.lorebooks.find(l => manifestNamesEqual(l.filename, remoteLore.filename));
+                if (lore) lore.version = remoteLore.version;
+                else char.lorebooks.push({ filename: remoteLore.filename, version: remoteLore.version });
+                healed++;
+            }
+            return healed;
+        });
+    }
+
+    // One task per character, so characters never race on the same record entries.
+    const limit = pLimit(8);
+    const counts = await Promise.all(checks.map(check => limit(check)));
+    return counts.reduce((sum, n) => sum + n, 0);
+}
+
+/**
  * @param {string | URL | Request} url
  * @param {AbortSignal | null} signal
  * @returns {Promise<Response | null>}
@@ -198,18 +370,22 @@ async function fetchFromBunny(url, signal = null) {
  * @returns {Promise<Response | null>}
  */
 async function downloadWithRetry(url, signal, retryDelayMiliseconds = 1500) {
+  let lastError = null;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const response = await fetchFromBunny(url, signal);
       return response;
     } catch (error) {
       if (error.name === 'AbortError') throw error;
+      lastError = error;
       if (attempt === 0) {
         await new Promise(r => setTimeout(r, retryDelayMiliseconds));
       }
     }
   }
-  return null; // Both attempts failed
+  // Both attempts failed. Throw the real error (not null) so the terminal can say WHY.
+  // null stays reserved for a 404 from fetchFromBunny.
+  throw lastError;
 }
 
 /**
@@ -466,8 +642,9 @@ async function getLocalManifest(userHandle, remoteManifest, rebuildManifest) {
     }
     try {
         const localManifest = await buildLocalManifest(userPath, remoteManifest);
-        await mkdir(EXTENSION_PATH, { recursive: true });
-        await writeFile(LOCAL_MANIFEST_PATH, JSON.stringify(localManifest, null, 2));
+        // Best effort: a record Windows won't let us save must not break the whole update check.
+        // The freshly built manifest is correct either way; it just gets rebuilt next time.
+        await saveLocalManifest(localManifest);
         return localManifest;
     } catch (error) {
         return `getLocalManifest(): ${error.message} / Dirname: ${__dirname}, userHandle: ${userHandle}`;
@@ -666,6 +843,14 @@ router.get('/fetch-manifests', async (request, response) => {
         localManifest = await getLocalManifest(userHandle, remoteManifest, rebuildManifest);
         if (typeof localManifest === 'string') throw new Error(localManifest);
 
+        // Correct any "outdated" entries whose file on disk already matches the server
+        // (see healLocalManifestFromDisk), then keep the corrected record if Windows lets us.
+        const healed = await healLocalManifestFromDisk(join(__dirname, '..', '..', 'data', userHandle), remoteManifest, localManifest);
+        if (healed > 0) {
+            console.log(`[Weyland] Download record: ${healed} file(s) already up to date on disk were missing from it; corrected.`);
+            await saveLocalManifest(localManifest);
+        }
+
         // Compute and store diff
         pendingDiff = computeDiff(remoteManifest, localManifest);
         
@@ -720,8 +905,51 @@ router.post('/download', async (request, response) => {
         const downloadTasks = [];
         const failed = [];
         let consecutiveFailures = 0;
+        const consecutiveFailedCharacters = new Set();
         let aborted = false;
         const abortController = new AbortController();
+
+        /** A file landed: reset both the batch-wide and this character's failure streaks. */
+        const recordSuccess = (characterName) => {
+            consecutiveFailures = 0;
+            consecutiveFailedCharacters.clear();
+            charTotals.get(characterName).consecutiveFailures = 0;
+        };
+
+        /** True when this character's remaining files should not be attempted. */
+        const isSkipped = (characterName) => aborted || Boolean(charTotals.get(characterName).skipped);
+
+        /**
+         * One place for every failure: says WHY in the terminal and the server console, and
+         * isolates a broken character. It used to take 10 failures in a row from ANY character to
+         * abort the whole batch, so one bad character (Nefara, 2026-09-24) stopped six healthy
+         * ones. Now a character is skipped after 5 straight failures, and the batch only stops
+         * when failures span 2+ characters with nothing succeeding in between (a real outage,
+         * or the whole characters folder being blocked).
+         */
+        const recordFailure = (characterName, filePath, error) => {
+            const reason = describeDownloadFailure(error);
+            console.warn(`[Weyland] Download failed: ${characterName} / ${filePath}: ${error?.message}`);
+            failed.push({ character: characterName, filePath, reason });
+
+            const charProgress = charTotals.get(characterName);
+            charProgress.failed++;
+            charProgress.consecutiveFailures = (charProgress.consecutiveFailures || 0) + 1;
+            emitEvent('error', { character: characterName, message: `${charProgress.failed} file(s) failed to download: ${reason}` });
+
+            if (charProgress.consecutiveFailures >= 5 && !charProgress.skipped) {
+                charProgress.skipped = true;
+                emitEvent('error', { character: characterName, message: 'Skipping the rest of this character so the others can finish. Try it again on its own afterward.' });
+            }
+
+            consecutiveFailures++;
+            consecutiveFailedCharacters.add(characterName);
+            if (!aborted && consecutiveFailures >= 10 && consecutiveFailedCharacters.size >= 2) {
+                aborted = true;
+                abortController.abort();
+                emitEvent('error', { character: 'All characters', message: `Stopped: every download is failing (${reason}).` });
+            }
+        };
 
         for (const diffChar of diffChars) {
             const zoneFolder = diffChar.zoneHash;
@@ -745,35 +973,25 @@ router.post('/download', async (request, response) => {
                 const characterName = diffChar.name;
 
                 downloadTasks.push(async () => {
-                    if (aborted) return;
+                    if (isSkipped(characterName)) return;
                     try {
                         const response = await downloadWithRetry(url, abortController.signal);
-                        if (!response) throw new Error('Failed after retry');
+                        if (!response) throw new Error('Not found on the download server');
 
                         const buffer = Buffer.from(await response.arrayBuffer());
                         const downloadedSize = validateDownloadedAsset(buffer, diffChar.version, `${diffChar.name}.png`);
                         await mkdir(dirname(destPath), { recursive: true });
-                        await writeFile(destPath, buffer);
+                        await writeFileClearingReadOnly(destPath, buffer);
 
                         localChar.version = downloadedSize;
-                        consecutiveFailures = 0;
+                        recordSuccess(characterName);
 
                         const charProgress = charTotals.get(characterName);
                         charProgress.completed++;
                         emitEvent('progress', { character: characterName, completed: charProgress.completed, total: charProgress.total });
                     } catch (error) {
-                        failed.push({ character: characterName, file: `.png` });
                         if (error.name === 'AbortError') return;
-                        consecutiveFailures++;
-
-                        const charProgress = charTotals.get(characterName);
-                        charProgress.failed++;
-                        emitEvent('error', { character: characterName, message: `${charProgress.failed} file(s) failed to download` });
-
-                        if (consecutiveFailures >= 10) {
-                            aborted = true;
-                            abortController.abort();
-                        }
+                        recordFailure(characterName, `${characterName}.png`, error);
                     }
                 });
             }
@@ -803,15 +1021,15 @@ router.post('/download', async (request, response) => {
                         const version = diffExpr.version;
 
                         downloadTasks.push(async () => {
-                            if (aborted) return;
+                            if (isSkipped(characterName)) return;
                             try {
                                 const response = await downloadWithRetry(url, abortController.signal);
-                                if (!response) throw new Error('Failed after retry');
+                                if (!response) throw new Error('Not found on the download server');
 
                                 const buffer = Buffer.from(await response.arrayBuffer());
                                 const downloadedSize = validateDownloadedAsset(buffer, version, `${characterName}/${costumeName}/${filename}`);
                                 await mkdir(costumePath, { recursive: true });
-                                await writeFile(destPath, buffer);
+                                await writeFileClearingReadOnly(destPath, buffer);
 
                                 const localExpr = localCostume.expressions.find(e => manifestNamesEqual(e.filename, filename));
                                 if (localExpr) {
@@ -820,24 +1038,14 @@ router.post('/download', async (request, response) => {
                                     localCostume.expressions.push({ filename, version: downloadedSize });
                                 }
 
-                                consecutiveFailures = 0;
+                                recordSuccess(characterName);
 
                                 const charProgress = charTotals.get(characterName);
                                 charProgress.completed++;
                                 emitEvent('progress', { character: characterName, completed: charProgress.completed, total: charProgress.total });
                             } catch (error) {
-                                failed.push({ character: characterName, file: `/${costumeName}/${filename}` });
                                 if (error.name === 'AbortError') return;
-                                consecutiveFailures++;
-
-                                const charProgress = charTotals.get(characterName);
-                                charProgress.failed++;
-                                emitEvent('error', { character: characterName, message: `${charProgress.failed} file(s) failed to download` });
-
-                                if (consecutiveFailures >= 10) {
-                                    aborted = true;
-                                    abortController.abort();
-                                }
+                                recordFailure(characterName, `${diffSub.name}/${costumeName}/${filename}`, error);
                             }
                         });
                     }
@@ -858,15 +1066,15 @@ router.post('/download', async (request, response) => {
                     const loreVersion = diffLore.version;
 
                     downloadTasks.push(async () => {
-                        if (aborted) return;
+                        if (isSkipped(characterName)) return;
                         try {
                             const response = await downloadWithRetry(url, abortController.signal);
-                            if (!response) throw new Error('Failed after retry');
+                            if (!response) throw new Error('Not found on the download server');
 
                             const buffer = Buffer.from(await response.arrayBuffer());
                             const downloadedSize = validateDownloadedAsset(buffer, loreVersion, loreName);
                             await mkdir(dirname(destPath), { recursive: true });
-                            await writeFile(destPath, buffer);
+                            await writeFileClearingReadOnly(destPath, buffer);
 
                             if (localChar.lorebooks !== undefined) {
                                 const localLore = localChar.lorebooks.find(l => manifestNamesEqual(l.filename, loreName));
@@ -877,24 +1085,14 @@ router.post('/download', async (request, response) => {
                                 }
                             }
 
-                            consecutiveFailures = 0;
+                            recordSuccess(characterName);
 
                             const progress = charTotals.get(characterName);
                             progress.completed++;
                             emitEvent('progress', { character: characterName, completed: progress.completed, total: progress.total });
                         } catch (error) {
                             if (error.name === 'AbortError') return;
-                            failed.push({ character: characterName, lorebook: loreName });
-                            consecutiveFailures++;
-
-                            const progress = charTotals.get(characterName);
-                            progress.failed++;
-                            emitEvent('error', { character: characterName, message: `${progress.failed} file(s) failed to download` });
-
-                            if (consecutiveFailures >= 10) {
-                                aborted = true;
-                                abortController.abort();
-                            }
+                            recordFailure(characterName, loreName, error);
                         }
                     });
                 }
@@ -905,10 +1103,19 @@ router.post('/download', async (request, response) => {
         const limit = pLimit(10);
         await Promise.all(downloadTasks.map(task => limit(task)));
 
-        // Save updated local manifest regardless of failures
-        await writeFile(LOCAL_MANIFEST_PATH, JSON.stringify(localManifest, null, 2));
+        // Save updated local manifest regardless of failures. A failed save is NOT a failed
+        // download: the files are on disk and the next update check recognises them
+        // (healLocalManifestFromDisk). It used to throw here, so a download that fully worked
+        // reported "API TRANSFER FAILED" and the characters kept showing "Update".
+        const saveProblem = await saveLocalManifest(localManifest);
+        if (saveProblem) {
+            emitEvent('error', { character: 'Download record', message: `Your files were saved, but the record of them could not be: ${saveProblem}. They will be recognised on the next update check.` });
+        }
 
-        emitEvent('complete', { aborted, failed: failed.length > 0 ? failed : undefined });
+        // `aborted` in this event reads as "cancelled by user" in the terminal, and the server
+        // never cancels on a user's behalf, so an outage stop is reported through its error line
+        // and the failed list instead.
+        emitEvent('complete', { aborted: false, failed: failed.length > 0 ? failed : undefined });
         activeStream?.end();
         activeStream = null;
 
