@@ -42,14 +42,20 @@
 .rg-app h1, .rg-app h2, .rg-app h3 { font-family: 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; font-weight: 600; text-shadow: none; border: 0; }
 .rg-masthead { position: relative; padding: 10px 52px 10px 14px; color: #f4e8d0; background: var(--rg-wine); border-bottom: 3px double #ba955c; }
 .rg-wordmark { display: flex; align-items: center; gap: 14px; }
-/* Seal and wordmark were bumped ~20% (100px -> 120px seal, type scaled to match) so the lockup
-   fills the masthead instead of floating in it. */
-.rg-seal { width: 120px; height: 120px; flex: 0 0 120px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+/* Seal: bumped ~20% (100 -> 120px) so the lockup filled the masthead, then trimmed ~10% (-> 108px)
+   because at the default 360px phone the title no longer fit beside it. */
+.rg-seal { width: 108px; height: 108px; flex: 0 0 108px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .rg-seal img { width: 100%; height: 100%; object-fit: cover; }
-.rg-wordmark-text { min-width: 0; }
+/* The title column is the size container for the h1 below. Without one, its cqi unit silently
+   fell back to the whole browser window, so on a desktop the title sized itself to the window
+   (up to 58px) and ran off the edge of the 360px phone. flex: 1 1 0 gives the column a real width,
+   which inline-size containment needs because it ignores the content's own width. */
+.rg-wordmark-text { min-width: 0; flex: 1 1 0; container-type: inline-size; }
 .rg-app .rg-eyebrow { font: 700 9px/1.5 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; letter-spacing: .16em; text-transform: uppercase; display: block; }
 .rg-masthead .rg-eyebrow { color: #dbc195; font-size: 11px; }
-.rg-app .rg-masthead h1 { font-size: clamp(41px, 12cqi, 58px); line-height: 1; white-space: nowrap; margin-top: 2px; }
+/* "Registrar" in Rajdhani 600 is ~3.75x its font size wide, so 25cqi fills ~94% of the column at
+   any phone size (about 43px at the default phone), still capped at 58px on a big one. */
+.rg-app .rg-masthead h1 { font-size: clamp(24px, 25cqi, 58px); line-height: 1; white-space: nowrap; margin-top: 2px; }
 .rg-masthead h1 > span { color: #d4aa6b; }
 .rg-edition { display: block; margin-top: 5px; letter-spacing: .2em; font-size: 11px; text-align: right; color: #d3b993; }
 .rg-masthead-actions { position: absolute; top: 6px; right: 6px; display: flex; flex-direction: column; gap: 0; }

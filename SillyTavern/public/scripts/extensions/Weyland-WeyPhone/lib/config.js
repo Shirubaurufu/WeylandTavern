@@ -81,6 +81,10 @@ export const defaultSettings = Object.freeze({
         autoTrigger: 'every',   // 'always' every reply, 'every' N replies, or 'chance' per reply
         autoEvery: 5,
         autoChance: 25,
+        // Pop-ups for AUTOMATIC rewrites: "rewriting…" (with Cancel), "added", "ready", "dropped".
+        // An automatic rewrite can take minutes with the phone closed, and without these nothing
+        // on screen says one is running. Errors show regardless, like Do Not Disturb.
+        autoToasts: true,
     },
     pawxai: {
         promptCount: 5,
