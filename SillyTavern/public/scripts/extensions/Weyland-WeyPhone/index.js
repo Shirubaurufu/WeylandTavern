@@ -773,8 +773,16 @@ async function buildTetheredContext(context, conversation, { kressaObserver = fa
         chatId: context.chatId,
     });
 
+    // Weyland-LTM mirrors its coverage cursor into the chat's metadata (weyland_ltm_coverage), because
+    // the settings copy can be wiped by another open tab saving an older settings.json. Use whichever
+    // copy is newer: a wiped cursor reads as -1, which made this send the WHOLE chat as history.
     const ltmSettings = context.extensionSettings['Weyland-LTM'];
-    const lastLtmMessageId = ltmSettings?.__chatState?.[context.chatId]?.lastLtmMessageId ?? -1;
+    const ltmFromSettings = ltmSettings?.__chatState?.[context.chatId];
+    const ltmFromChat = context.chatMetadata?.weyland_ltm_coverage;
+    const ltmCoverage = ltmFromChat && (Number(ltmFromChat.updatedAt) || 0) > (Number(ltmFromSettings?.coverageAt) || 0)
+        ? ltmFromChat
+        : (ltmFromSettings ?? ltmFromChat);
+    const lastLtmMessageId = Number.isInteger(ltmCoverage?.lastLtmMessageId) ? ltmCoverage.lastLtmMessageId : -1;
 
     const historySlice = resolveMainHistorySlice({
         chat: context.chat,
@@ -3241,7 +3249,9 @@ function showCopycatWorkingToast(characterName) {
 
 function clearCopycatWorkingToast() {
     if (!copycatWorkingToast) return;
-    toastr.clear(copycatWorkingToast);
+    // force: toastr.clear() skips any toast that has focus inside it, and clicking the toast's own
+    // Cancel link leaves that link focused, so after a cancel the "rewriting…" pop-up never went away.
+    toastr.clear(copycatWorkingToast, { force: true });
     copycatWorkingToast = null;
 }
 
@@ -7618,8 +7628,10 @@ function initPanel() {
     // The working pop-up's Cancel link. Toasts live outside the phone panel, so this listens on
     // the document; the link only exists while an automatic rewrite is running.
     document.addEventListener('click', (event) => {
-        if (!event.target?.closest?.('.wp-copycat-toast-cancel')) return;
+        const cancelLink = event.target?.closest?.('.wp-copycat-toast-cancel');
+        if (!cancelLink) return;
         event.preventDefault();
+        cancelLink.blur?.(); // belt and braces with the forced clear: don't leave focus in the toast
         understudyAbort?.abort();
     });
     // Copycat's screen is static markup: without these it keeps showing whichever message was

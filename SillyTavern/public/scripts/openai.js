@@ -367,7 +367,7 @@ const default_settings = {
     scenario_format: default_scenario_format,
     personality_format: default_personality_format,
     openai_model: 'gpt-4-turbo',
-    claude_model: 'claude-3-5-sonnet-20240620',
+    claude_model: 'claude-sonnet-5',
     google_model: 'gemini-1.5-pro',
     vertexai_model: 'gemini-2.0-flash-001',
     ai21_model: 'jamba-large',
@@ -456,7 +456,7 @@ const oai_settings = {
     scenario_format: default_scenario_format,
     personality_format: default_personality_format,
     openai_model: 'gpt-4-turbo',
-    claude_model: 'claude-3-5-sonnet-20240620',
+    claude_model: 'claude-sonnet-5',
     google_model: 'gemini-1.5-pro',
     vertexai_model: 'gemini-2.0-flash-001',
     ai21_model: 'jamba-large',
@@ -4810,7 +4810,8 @@ async function onModelChange() {
         if (oai_settings.max_context_unlocked) {
             $('#openai_max_context').attr('max', max_200k);
         }
-        else if (value == 'claude-2.1' || value.startsWith('claude-3') || value.startsWith('claude-opus') || value.startsWith('claude-sonnet')) {
+        // WEYLAND: haiku-4-5 and fable are 200k models too; they used to fall through to the old 100k cap.
+        else if (value == 'claude-2.1' || value.startsWith('claude-3') || value.startsWith('claude-opus') || value.startsWith('claude-sonnet') || value.startsWith('claude-haiku') || value.startsWith('claude-fable')) {
             $('#openai_max_context').attr('max', max_200k);
         }
         else if (value.endsWith('100k') || value.startsWith('claude-2') || value === 'claude-instant-1.2') {
@@ -5476,6 +5477,10 @@ export function isImageInliningSupported() {
         'claude-3',
         'claude-opus-4',
         'claude-sonnet-4',
+        'claude-haiku-4',
+        'claude-opus-5',
+        'claude-sonnet-5',
+        'claude-fable',
         // Cohere
         'c4ai-aya-vision',
         'command-a-vision',

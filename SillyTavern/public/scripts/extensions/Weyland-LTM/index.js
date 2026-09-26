@@ -612,7 +612,7 @@ function computeRangeFromCurrentChat() {
     // from the old STscript system (which never wrote __chatState) — where an
     // uncapped range would ship the ENTIRE chat history to the model.
     const cap = getSpanCap();
-    let first = (state?.lastLtmMessageId ?? -1) + 1;
+    let first = (getCoverage(chatId).lastLtmMessageId ?? -1) + 1;
     if (last - first + 1 > cap) first = last - cap + 1;
     if (first > last) first = Math.max(0, last - Math.min(cap, resolveSummarizeSpan()) + 1);
     return { firstMessageId: Math.max(0, first), lastMessageId: Math.max(0, last) };
@@ -633,7 +633,7 @@ function rangeSize(range) {
 function getEffectiveGoal(chatId = getCurrentChatId()) {
     const state = settings.__chatState[chatId];
     if (Number.isInteger(state?.goalOverride)) return state.goalOverride;
-    return (state?.lastLtmMessageId ?? -1) + Number(settings.messagesBetweenLTMs || 50);
+    return (getCoverage(chatId).lastLtmMessageId ?? -1) + Number(settings.messagesBetweenLTMs || 50);
 }
 
 function setGoalOverride(chatId, absoluteMessageId) {
@@ -660,12 +660,15 @@ function recordLTMCoverage(chatId, lastMessageId) {
     // must survive saving an out-of-order draft, otherwise a later auto-
     // drafted-but-still-unsaved segment could get re-summarized from
     // scratch by the next auto-trigger.
-    const prevAutoDraft = settings.__chatState[chatId]?.lastAutoDraftMessageId;
+    const prevAutoDraft = getCoverage(chatId).lastAutoDraftMessageId;
+    const coverageAt = Date.now();
     settings.__chatState[chatId] = {
         lastLtmMessageId: lastMessageId,
         ...(prevAutoDraft !== undefined ? { lastAutoDraftMessageId: prevAutoDraft } : {}),
+        coverageAt,
     };
     persistSettings();
+    writeCoverageMetadata(chatId, settings.__chatState[chatId], coverageAt);
 }
 
 // Auto-LTM (semi/full) tracks its OWN cursor, separate from lastLtmMessageId
@@ -677,14 +680,104 @@ function recordLTMCoverage(chatId, lastMessageId) {
 // auto-trigger recompute the same starting point and re-summarize ground
 // an earlier (still-pending) draft already claimed.
 function getAutoTriggerCursor(chatId) {
-    const state = settings.__chatState[chatId];
+    const state = getCoverage(chatId);
     return Math.max(state?.lastLtmMessageId ?? -1, state?.lastAutoDraftMessageId ?? -1);
 }
 
 function recordAutoDraftCoverage(chatId, lastMessageId) {
+    // Carry the current lastLtmMessageId along (from whichever copy is newer): this entry becomes
+    // the newest record, so if it lacked the save cursor it would win and drop it.
+    const { lastLtmMessageId } = getCoverage(chatId);
+    const coverageAt = Date.now();
     settings.__chatState[chatId] ??= {};
     settings.__chatState[chatId].lastAutoDraftMessageId = lastMessageId;
+    if (lastLtmMessageId !== undefined) settings.__chatState[chatId].lastLtmMessageId = lastLtmMessageId;
+    settings.__chatState[chatId].coverageAt = coverageAt;
     persistSettings();
+    writeCoverageMetadata(chatId, settings.__chatState[chatId], coverageAt);
+}
+
+// ---------------------------------------------------------------------
+// Coverage mirror in the chat's own metadata
+// ---------------------------------------------------------------------
+// The two coverage cursors (lastLtmMessageId, lastAutoDraftMessageId) used to live ONLY in
+// settings.__chatState. settings.json is one file shared by every open tab, and each tab saves its
+// whole in-memory copy with no merge, so a tab opened BEFORE an LTM save writes the older copy back
+// later and the record silently vanishes. (2026-09-25: a phone tab erased a desktop save. The panel
+// went back to "none yet", the next LTM would have re-covered message 0 onward, and WeyPhone's
+// tethered texting started sending the whole chat as history, since it starts after the cursor.)
+//
+// So the cursors are ALSO written into the chat's metadata, next to the chat-book name this
+// extension already keeps there (METADATA_KEY). The chat file is per chat, travels with renames,
+// exports and branches, and SillyTavern's integrity check refuses a stale-tab overwrite of it.
+// Each copy carries a timestamp and the NEWER one wins, which keeps the existing overwrite
+// semantics exactly (a fresh save still resets the baseline), rather than "highest wins".
+// goalOverride / spanOverride stay settings-only: they are optional user tweaks, not coverage.
+const COVERAGE_META_KEY = 'weyland_ltm_coverage';
+
+/** The chat-metadata copy, readable only for the chat that is open right now. */
+function coverageFromMetadata(chatId) {
+    if (chatId !== getCurrentChatId()) return null;
+    const value = SillyTavern.getContext().chatMetadata?.[COVERAGE_META_KEY];
+    return value && typeof value === 'object' ? value : null;
+}
+
+/**
+ * The effective coverage cursors for a chat: the newer of the settings copy and the chat-metadata
+ * copy. Records written before this mirror existed have no timestamp and count as oldest, so a
+ * legacy settings record keeps working until the first new save stamps both.
+ * @returns {{ lastLtmMessageId?: number, lastAutoDraftMessageId?: number }}
+ */
+function getCoverage(chatId) {
+    const fromSettings = settings.__chatState[chatId];
+    const fromMeta = coverageFromMetadata(chatId);
+    const winner = fromMeta && (Number(fromMeta.updatedAt) || 0) > (Number(fromSettings?.coverageAt) || 0)
+        ? fromMeta
+        : (fromSettings ?? fromMeta ?? {});
+    const out = {};
+    if (Number.isInteger(winner.lastLtmMessageId)) out.lastLtmMessageId = winner.lastLtmMessageId;
+    if (Number.isInteger(winner.lastAutoDraftMessageId)) out.lastAutoDraftMessageId = winner.lastAutoDraftMessageId;
+    return out;
+}
+
+/** Mirrors the cursors into the open chat's metadata. A job for another chat syncs on next open. */
+function writeCoverageMetadata(chatId, state, updatedAt) {
+    if (chatId !== getCurrentChatId()) return;
+    const c = SillyTavern.getContext();
+    if (!c.chatMetadata) return;
+    const record = { updatedAt };
+    if (Number.isInteger(state?.lastLtmMessageId)) record.lastLtmMessageId = state.lastLtmMessageId;
+    if (Number.isInteger(state?.lastAutoDraftMessageId)) record.lastAutoDraftMessageId = state.lastAutoDraftMessageId;
+    c.chatMetadata[COVERAGE_META_KEY] = record;
+    c.saveMetadataDebounced?.();
+}
+
+/**
+ * On chat open, bring the two copies back in step: a newer chat copy repairs a settings record a
+ * stale tab wiped (so WeyPhone, which reads settings, sees it too), and a newer settings copy
+ * (a draft saved while this chat was closed, or a chat LTM covered before this mirror existed)
+ * is written into the chat. Writes only when they actually differ.
+ */
+function syncCoverageOnOpen(chatId) {
+    const fromSettings = settings.__chatState[chatId];
+    const fromMeta = coverageFromMetadata(chatId);
+    const settingsAt = Number(fromSettings?.coverageAt) || 0;
+    const metaAt = Number(fromMeta?.updatedAt) || 0;
+    const hasSettingsCursor = Number.isInteger(fromSettings?.lastLtmMessageId) || Number.isInteger(fromSettings?.lastAutoDraftMessageId);
+    if (fromMeta && metaAt > settingsAt) {
+        settings.__chatState[chatId] = { ...(fromSettings ?? {}) };
+        for (const key of ['lastLtmMessageId', 'lastAutoDraftMessageId']) {
+            if (Number.isInteger(fromMeta[key])) settings.__chatState[chatId][key] = fromMeta[key];
+            else delete settings.__chatState[chatId][key];
+        }
+        settings.__chatState[chatId].coverageAt = metaAt;
+        persistSettings();
+    } else if (hasSettingsCursor && (!fromMeta || settingsAt > metaAt)) {
+        // Legacy records get stamped now so both copies agree from here on.
+        const at = settingsAt || Date.now();
+        if (!settingsAt) { fromSettings.coverageAt = at; persistSettings(); }
+        writeCoverageMetadata(chatId, fromSettings, at);
+    }
 }
 
 // Each auto segment is capped to exactly one span, even if far more than a
@@ -1936,11 +2029,16 @@ function injectModal() {
 
     setupDragging();
 
-    // Escape closes
+    // Escape closes — but not while typing in the chat beside it. Now that the chat stays usable
+    // with the panel open, Escape in SillyTavern's own fields (cancel an edit, etc.) must not also
+    // close LTM.
     document.addEventListener('keydown', (ev) => {
         if (ev.key !== 'Escape') return;
         const overlay = document.getElementById(MODAL_ID);
-        if (overlay && overlay.style.display !== 'none') closePanel();
+        if (!overlay || overlay.style.display === 'none') return;
+        const active = document.activeElement;
+        if (active && !overlay.contains(active) && active.matches?.('input, textarea, select, [contenteditable="true"]')) return;
+        closePanel();
     });
 }
 
@@ -2015,7 +2113,7 @@ function renderProgress() {
     const chat = SillyTavern.getContext().chat || [];
     const current = Math.max(0, chat.length - 1);
     const goal = getEffectiveGoal(chatId);
-    const lastLtm = settings.__chatState[chatId]?.lastLtmMessageId;
+    const lastLtm = getCoverage(chatId).lastLtmMessageId;
 
     // Line 1 — where the last memory ended, and where the next one is due.
     const lastEl = document.getElementById('wlm-last-ltm-text');
@@ -2246,7 +2344,12 @@ async function openPanel() {
     injectModal();
     const overlay = document.getElementById(MODAL_ID);
     overlay.style.display = 'block';
-    overlay.style.pointerEvents = 'auto';
+    // The overlay stays pointer-events:none (as built in buildModalHtml); only #wlm-modal takes
+    // clicks (style.css). Setting the full-screen overlay to 'auto' here turned it into an
+    // invisible wall, so on desktop the chat beside the panel could not be clicked or typed in
+    // until LTM was closed. Nothing relies on clicks landing on the overlay (no click-outside
+    // close), and on phones the panel covers the screen anyway.
+    overlay.style.pointerEvents = 'none';
     toggleSettingsView(false);
     syncModelPickers();
     await refreshSidebar();
@@ -2838,6 +2941,8 @@ function addWandMenuItem() {
         addWandMenuItem();
 
         eventSource?.on?.(event_types?.CHAT_CHANGED, () => {
+            // Before anything reads coverage: repair/mirror between settings and the chat file.
+            try { syncCoverageOnOpen(getCurrentChatId()); } catch (err) { console.warn(`[${WLM_MODULE_NAME}] coverage sync failed`, err); }
             resetEditorSelection();
             // trigger:false — opening/switching chats must only ever REFLECT
             // existing state, never kick off a new auto-draft. Otherwise a

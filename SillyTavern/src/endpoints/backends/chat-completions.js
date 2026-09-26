@@ -181,6 +181,42 @@ function setJsonObjectFormat(bodyParams, messages, jsonSchema) {
 }
 
 /**
+ * WEYLAND: turns an Anthropic error response into one line a user can act on. The raw reason is
+ * kept (Anthropic's own message), with a plain hint for the causes users actually hit.
+ * @param {number} status HTTP status from Anthropic
+ * @param {string} bodyText raw response body
+ * @param {string} model the model id that was requested
+ * @returns {string}
+ */
+function describeClaudeError(status, bodyText, model) {
+    let type = '';
+    let detail = '';
+    try {
+        const parsed = JSON.parse(bodyText);
+        type = String(parsed?.error?.type ?? '');
+        detail = String(parsed?.error?.message ?? '');
+    } catch {
+        detail = String(bodyText ?? '').slice(0, 300);
+    }
+    let hint = '';
+    if (status === 401 || type === 'authentication_error') {
+        hint = 'Anthropic rejected the API key. Check it was copied in full and is still active.';
+    } else if (status === 403 || type === 'permission_error') {
+        hint = 'This key is not allowed to use that model or feature.';
+    } else if (status === 404 || type === 'not_found_error') {
+        hint = `The model "${model}" was not found. It may be retired: pick a current model such as claude-sonnet-5.`;
+    } else if (status === 429 || type === 'rate_limit_error') {
+        hint = 'Rate limited by Anthropic. Wait a moment and try again.';
+    } else if (status === 529 || type === 'overloaded_error') {
+        hint = 'Anthropic is overloaded right now. Try again shortly.';
+    } else if (/credit balance/i.test(detail)) {
+        hint = 'The Anthropic account is out of credits.';
+    }
+    const reason = detail ? `${detail}` : `HTTP ${status}`;
+    return hint ? `Claude: ${hint} (${reason})` : `Claude: ${reason}`;
+}
+
+/**
  * Sends a request to Claude API.
  * @param {express.Request} request Express request
  * @param {express.Response} response Express response
@@ -212,9 +248,27 @@ async function sendClaudeRequest(request, response) {
         const useTools = Array.isArray(request.body.tools) && request.body.tools.length > 0;
         const useSystemPrompt = Boolean(request.body.claude_use_sysprompt);
         const convertedPrompt = convertClaudeMessages(request.body.messages, request.body.assistant_prefill, useSystemPrompt, useTools, getPromptNames(request));
-        const useThinking = /^claude-(3-7|opus-4|sonnet-4)/.test(request.body.model);
-        const useWebSearch = /^claude-(3-5|3-7|opus-4|sonnet-4)/.test(request.body.model) && Boolean(request.body.enable_web_search);
-        const isOpus41 = /^claude-opus-4-1/.test(request.body.model);
+        // WEYLAND: model rules ported from upstream SillyTavern (1.18 + its Claude 5 / Fable
+        // additions, Sept 2026). This fork stopped at Opus 4.1, so every newer model was sent
+        // parameters Anthropic rejects (temperature + top_p together, sampling at all on Claude 5,
+        // a prefill, a fixed thinking budget), which surfaced only as "Internal Server Error".
+        // Unanchored to also match prefixed ids passed through proxies, e.g. 'anthropic/claude-fable-5'.
+        const isFableModel = /claude-fable/.test(request.body.model);
+        // Anthropic docs (Sept 2026): Opus 5.5, Fable 5.1 and Mythos 5.1 reject forced tool use on
+        // every request (400). Upstream only covered Fable 5.1.
+        const noForcedToolModel = /claude-(opus-5-5|fable-5-1|mythos-5-1)/.test(request.body.model);
+        const isClaude5Model = /claude-(opus-5|sonnet-5)/.test(request.body.model);
+        const enableAdaptiveThinking = getConfigValue('claude.enableAdaptiveThinking', true, 'boolean');
+        const useThinking = /^claude-(3-7|opus-4|sonnet-4|haiku-4-5|opus-4-5|opus-4-6|sonnet-4-6|opus-4-7)/.test(request.body.model) || isFableModel || isClaude5Model;
+        const useWebSearch = (/^claude-(3-5|3-7|opus-4|sonnet-4|haiku-4-5|opus-4-5|opus-4-6|sonnet-4-6|opus-4-7)/.test(request.body.model) || isFableModel || isClaude5Model) && Boolean(request.body.enable_web_search);
+        // These accept temperature OR top_p, never both.
+        const isLimitedSampling = /^claude-(opus-4-1|sonnet-4-5|haiku-4-5|opus-4-5|opus-4-6|sonnet-4-6)/.test(request.body.model);
+        // These reject an assistant prefill as the last message.
+        const noPrefillModel = /^claude-(opus-4-6|sonnet-4-6|opus-4-7|opus-4-8)/.test(request.body.model) || isFableModel || isClaude5Model;
+        // These use adaptive thinking (an effort level) instead of a token budget.
+        const isAdaptiveModel = /^claude-(opus-4-7|opus-4-8)/.test(request.body.model) || isFableModel || isClaude5Model || (enableAdaptiveThinking && /^claude-(opus-4-6|sonnet-4-6)/.test(request.body.model));
+        // These accept no temperature / top_p / top_k at all.
+        const noSamplingModel = /^claude-(opus-4-7|opus-4-8)/.test(request.body.model) || isFableModel || isClaude5Model;
         const cacheTTL = getConfigValue('claude.extendedTTL', false, 'boolean') ? '1h' : '5m';
         let fixThinkingPrefill = false;
         // Add custom stop sequences
@@ -256,15 +310,30 @@ async function sendClaudeRequest(request, response) {
             }
         }
 
-        // Structured output is a forced tool
+        // A forced tool_choice ('any' / a named tool) is rejected by these models; fall back to 'auto'.
+        if (noForcedToolModel && requestBody.tool_choice && !['auto', 'none'].includes(requestBody.tool_choice.type)) {
+            requestBody.tool_choice = { type: 'auto' };
+        }
+
+        // Structured output is a forced tool, except on models that reject forced tools: those use
+        // native JSON outputs (output_config.format, GA, no beta header).
         if (request.body.json_schema) {
-            const jsonTool = {
-                name: request.body.json_schema.name,
-                description: request.body.json_schema.description || 'Well-formed JSON object',
-                input_schema: request.body.json_schema.value,
-            };
-            requestBody.tools = [...(requestBody.tools || []), jsonTool];
-            requestBody.tool_choice = { type: 'tool', name: request.body.json_schema.name };
+            if (noForcedToolModel) {
+                requestBody.output_config = {
+                    format: {
+                        type: 'json_schema',
+                        schema: request.body.json_schema.value,
+                    },
+                };
+            } else {
+                const jsonTool = {
+                    name: request.body.json_schema.name,
+                    description: request.body.json_schema.description || 'Well-formed JSON object',
+                    input_schema: request.body.json_schema.value,
+                };
+                requestBody.tools = [...(requestBody.tools || []), jsonTool];
+                requestBody.tool_choice = { type: 'tool', name: request.body.json_schema.name };
+            }
         }
 
         if (useWebSearch) {
@@ -284,18 +353,44 @@ async function sendClaudeRequest(request, response) {
             betaHeaders.push('extended-cache-ttl-2025-04-11');
         }
 
-        if (isOpus41){
-            if (requestBody.top_p < 1) {
-                delete requestBody.temperature;
-            } else {
+        if (isLimitedSampling) {
+            // WEYLAND: keep temperature, drop top_p. Upstream keeps top_p whenever it is below 1,
+            // but Weyland ships top_p 0.95, so that silently threw away the tuned temperature 0.9
+            // (the setting that actually shapes the writing) on every 4.5/4.6-family model.
+            if (typeof requestBody.temperature === 'number') {
                 delete requestBody.top_p;
+            } else {
+                delete requestBody.temperature;
             }
         }
 
-        const reasoningEffort = request.body.reasoning_effort;
-        const budgetTokens = calculateClaudeBudgetTokens(requestBody.max_tokens, reasoningEffort, requestBody.stream);
+        if (noSamplingModel) {
+            delete requestBody.temperature;
+            delete requestBody.top_p;
+            delete requestBody.top_k;
+        }
 
-        if (useThinking && Number.isInteger(budgetTokens)) {
+        const reasoningEffort = request.body.reasoning_effort;
+        const includeReasoning = Boolean(request.body.include_reasoning);
+        const budgetTokens = calculateClaudeBudgetTokens(requestBody.max_tokens, reasoningEffort, requestBody.stream, isAdaptiveModel);
+
+        // Adaptive thinking: returns a string effort level (like Gemini 3)
+        if (useThinking && typeof budgetTokens === 'string') {
+            fixThinkingPrefill = true;
+            requestBody.thinking = { type: 'adaptive' };
+            if (noSamplingModel && includeReasoning) {
+                requestBody.thinking.display = 'summarized';
+            }
+            requestBody.output_config ??= {};
+            requestBody.output_config.effort = budgetTokens;
+            // top_k is not allowed in adaptive mode
+            delete requestBody.top_k;
+        } else if (useThinking && (isFableModel || isClaude5Model) && reasoningEffort === 'auto' && includeReasoning) {
+            // Fable/Claude 5 auto thinking is already enabled, but readable summaries require an explicit display request.
+            fixThinkingPrefill = true;
+            requestBody.thinking = { type: 'adaptive', display: 'summarized' };
+        } else if (useThinking && Number.isInteger(budgetTokens)) {
+            // Traditional thinking: returns a numeric budget
             // No prefill when thinking
             fixThinkingPrefill = true;
             const minThinkTokens = 1024;
@@ -316,7 +411,19 @@ async function sendClaudeRequest(request, response) {
             delete requestBody.top_k;
         }
 
-        if (fixThinkingPrefill && convertedPrompt.messages.length && convertedPrompt.messages[convertedPrompt.messages.length - 1].role === 'assistant') {
+        // WEYLAND: Anthropic docs (Sept 2026): on older models, while thinking is on, "temperature and
+        // top_k are incompatible with thinking, and top_p is allowed at values between 0.95 and 1".
+        // The adaptive branch above only removed top_k, so Sonnet/Opus 4.6 with thinking on would
+        // still send temperature (kept by Weyland's limited-sampling rule) and get a 400.
+        if (requestBody.thinking) {
+            delete requestBody.temperature;
+            delete requestBody.top_k;
+            if (!(requestBody.top_p >= 0.95 && requestBody.top_p <= 1)) {
+                delete requestBody.top_p;
+            }
+        }
+
+        if ((fixThinkingPrefill || noPrefillModel) && convertedPrompt.messages.length && convertedPrompt.messages[convertedPrompt.messages.length - 1].role === 'assistant') {
             convertedPrompt.messages[convertedPrompt.messages.length - 1].role = 'user';
         }
 
@@ -343,14 +450,23 @@ async function sendClaudeRequest(request, response) {
             forwardFetchResponse(generateResponse, response);
         } else {
             if (!generateResponse.ok) {
+                // WEYLAND: pass Anthropic's own reason through. This used to be a bare 500 with
+                // `{ error: true }`, so a retired model, a bad key and a rejected parameter all
+                // showed as "Internal Server Error" and nobody could tell them apart. The client
+                // toast shows `error.message`. Only Anthropic's error text is logged, never the prompt.
                 const generateResponseText = await generateResponse.text();
-                
-                return response.status(500).send({ error: true });
+                const message = describeClaudeError(generateResponse.status, generateResponseText, request.body.model);
+                console.warn(`Claude API returned error: ${generateResponse.status} ${generateResponse.statusText}: ${message}`);
+                return response.status(generateResponse.status >= 400 ? generateResponse.status : 500).send({ error: { message } });
             }
 
             /** @type {any} */
             const generateResponseJson = await generateResponse.json();
-            const responseText = generateResponseJson?.content?.[0]?.text || '';
+            // WEYLAND: join the text blocks rather than taking content[0]. Thinking models put a
+            // thinking block first, so content[0].text was empty and the reply came back blank.
+            const responseText = Array.isArray(generateResponseJson?.content)
+                ? generateResponseJson.content.filter(part => part?.type === 'text').map(part => part.text).join('')
+                : '';
             
 
             // Wrap it back to OAI format + save the original content
@@ -358,9 +474,10 @@ async function sendClaudeRequest(request, response) {
             return response.send(reply);
         }
     } catch (error) {
-        
+        // WEYLAND: say what failed (network, DNS, aborted) instead of a bare 500.
+        console.warn(`Error communicating with Claude: ${error?.message ?? error}`);
         if (!response.headersSent) {
-            return response.status(500).send({ error: true });
+            return response.status(500).send({ error: { message: `Could not reach Claude: ${error?.message ?? error}` } });
         }
     }
 }
