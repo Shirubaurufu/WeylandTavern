@@ -1019,7 +1019,27 @@ export function cachingAtDepthForOpenRouterClaude(messages, cachingAtDepth, ttl)
  * @param {boolean} stream If streaming is enabled
  * @returns {number?} Budget tokens
  */
-export function calculateClaudeBudgetTokens(maxTokens, reasoningEffort, stream) {
+export function calculateClaudeBudgetTokens(maxTokens, reasoningEffort, stream, isAdaptiveModel = false) {
+    // WEYLAND (ported from upstream): adaptive-thinking models (Opus 4.6+, Claude 5, Fable) take
+    // an effort level instead of a token budget; returning a string selects that path.
+    if (isAdaptiveModel) {
+        switch (reasoningEffort) {
+            case REASONING_EFFORT.auto:
+                return null;
+            case REASONING_EFFORT.min:
+                return 'low';
+            case REASONING_EFFORT.low:
+                return 'low';
+            case REASONING_EFFORT.medium:
+                return 'medium';
+            case REASONING_EFFORT.high:
+                return 'high';
+            case REASONING_EFFORT.max:
+                return 'max';
+        }
+        return null;
+    }
+
     let budgetTokens = 0;
 
     switch (reasoningEffort) {
