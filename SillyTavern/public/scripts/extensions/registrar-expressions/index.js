@@ -420,6 +420,63 @@ async function fetchRegistrarManifestWithFallback(name, outfit) {
     return list;
 }
 
+// Variant picked per sprite folder + expression for the current message, so repeated
+// updates for the same message don't reshuffle between variants.
+let variantMessageKey = null;
+const variantChoices = new Map();
+const previousVariantChoices = new Map();
+
+function getLatestMessageKey() {
+    const chat = SillyTavern.getContext()?.chat;
+    if (!Array.isArray(chat)) return '';
+    for (let i = chat.length - 1; i >= 0; i--) {
+        const m = chat[i];
+        if (m && !m.is_user && !m.is_system) return `${i}:${m.swipe_id ?? 0}`;
+    }
+    return '';
+}
+
+/**
+ * Normalizes a sprite label the same way ST's server does: "anger-2" and "anger.alt" become "anger".
+ * @param {string} label
+ * @returns {string}
+ */
+function normalizeSpriteLabel(label) {
+    const lower = String(label || '').toLowerCase();
+    return lower.match(/^(.+?)(?:[-\\.].*?)?$/)?.[1] ?? lower;
+}
+
+/**
+ * Picks one variant of an expression (anger, anger-2, anger-3) like ST's expressions extension,
+ * honoring its "allow multiple" and "reroll if same" settings.
+ * @param {string} key Sprite folder + expression
+ * @param {string[]} paths Paths of every variant
+ * @returns {string}
+ */
+function chooseVariant(key, paths) {
+    if (!paths.length) return '';
+    const settings = SillyTavern.getContext()?.extensionSettings?.expressions ?? {};
+    if (settings.allowMultiple === false || paths.length === 1) return paths[0];
+
+    const messageKey = getLatestMessageKey();
+    if (messageKey !== variantMessageKey) {
+        for (const [k, path] of variantChoices) previousVariantChoices.set(k, path);
+        variantChoices.clear();
+        variantMessageKey = messageKey;
+    }
+    const current = variantChoices.get(key);
+    if (current && paths.includes(current)) return current;
+
+    let pool = paths;
+    if (settings.rerollIfSame) {
+        const others = paths.filter((path) => path !== previousVariantChoices.get(key));
+        if (others.length) pool = others;
+    }
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    variantChoices.set(key, pick);
+    return pick;
+}
+
 async function resolveRegistrarExpressionPath(name, outfit, emotion) {
     // Try to get a manifest from the Registrar
     let list = await fetchRegistrarManifestWithFallback(name, outfit);
@@ -433,12 +490,11 @@ async function resolveRegistrarExpressionPath(name, outfit, emotion) {
     if (!list || list.length === 0) return '';
 
     // Try to get the expression from the manifest
-    const getExpression = (lab) => list.find((e) => e.label === lab);
-    const direct = getExpression(emotion);
-    if (direct?.path) return direct.path;
-    const neutral = getExpression('neutral');
-    if (neutral?.path) return neutral.path;
-    return '';
+    const getExpression = (lab) => chooseVariant(
+        `registrar:${name}/${outfit}|${lab}`,
+        list.filter((e) => e?.path && normalizeSpriteLabel(e.label) === lab).map((e) => e.path)
+    );
+    return getExpression(emotion) || getExpression('neutral');
 }
 
 /** @type {Map<string, Promise<{label: string, path: string}[]>>} */
@@ -484,9 +540,12 @@ async function resolveExpression(name){
         for (const fit of outfits) {
             const sprites = await getSpriteList(`${canonicalName}/${fit}`);
             for (const lab of emotions) {
-                const sprite = sprites.find((s) => s.label === lab);
-                if (sprite?.path) {
-                    return { path: sprite.path, name: name, isOfficial: true, outfit: fit, emotion: lab };
+                const path = chooseVariant(
+                    `${canonicalName}/${fit}|${lab}`,
+                    sprites.filter((sp) => sp?.path && sp.label === lab).map((sp) => sp.path)
+                );
+                if (path) {
+                    return { path: path, name: name, isOfficial: true, outfit: fit, emotion: lab };
                 }
             }
         }
