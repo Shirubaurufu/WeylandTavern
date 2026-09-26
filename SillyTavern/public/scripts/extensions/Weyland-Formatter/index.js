@@ -518,7 +518,10 @@ async function formatNewMessage(messageId) {
 async function formatMessage(messageId, mes = undefined) {
     if (settings === undefined) getSettings();
     const characterName = chat[messageId]?.name;
-    if (messageId === 0 && characterName !== "Weybot") return;
+    // Greetings are hand-written and already formatted, so message 0 is skipped. Exception: WeyPhone's
+    // Copycat sets weyland_force_format for the moment it applies a model-written rewrite of a
+    // greeting (and removes it right after), because that text does need formatting.
+    if (messageId === 0 && characterName !== "Weybot" && !chat[0]?.extra?.weyland_force_format) return;
 
     let originalMessage = mes ? mes : chat[messageId].mes;
 

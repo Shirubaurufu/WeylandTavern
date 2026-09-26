@@ -5663,6 +5663,12 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 #wp-panel[data-app="understudy"] .wp-understudy-empty strong { color: var(--en-text); font-family: inherit; font-size: 13px; font-weight: 800; }
 
 #wp-panel[data-app="understudy"] .wp-understudy-settings { display: flex; flex-direction: column; gap: 10px; padding: 11px 10px 2px; color: var(--en-text); }
+/* Copycat's settings sit below its masthead and tabs, so #wp-screen-body is the real scroller here.
+   The shared .wp-settings rule makes the list its own scroll box (overflow auto, height 100%,
+   overscroll contain); inside Copycat that box grows to its full content and never scrolls, but a
+   thumb swipe still latches onto it and "contain" stops the swipe reaching the screen, so touch
+   scrolling froze under the Models section (mouse wheels were unaffected). Hand scrolling back. */
+#wp-panel[data-app="understudy"] .wp-settings.wp-understudy-settings { height: auto; overflow: visible; overscroll-behavior: auto; }
 #wp-panel[data-app="understudy"] .wp-understudy-settings .wp-settings-section { overflow: hidden; margin: 0; border: 1px solid var(--en-line); border-radius: 12px; background: var(--en-surface); }
 #wp-panel[data-app="understudy"] .wp-understudy-settings .wp-settings-section-title { margin: 0; padding: 9px 10px; border-bottom: 1px solid var(--en-line); background: color-mix(in srgb, var(--en-surface-2) 62%, transparent); color: var(--en-accent); font-family: inherit; font-size: 8.5px; font-weight: 850; letter-spacing: .075em; }
 #wp-panel[data-app="understudy"] .wp-understudy-settings .wp-settings-field, #wp-panel[data-app="understudy"] .wp-understudy-settings .wp-settings-toggle-row { margin: 8px; border-color: var(--en-line); background: var(--en-bg); color: var(--en-text); }
