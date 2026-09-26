@@ -2951,6 +2951,20 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
 }
 
 /**
+ * A message's extra with Copycat's own bookkeeping removed: what a swipe Copycat did NOT write
+ * should carry. Used to give swipes without an extra of their own a clean one.
+ * @param {object} [extra]
+ * @returns {object}
+ */
+function copycatNeutralExtra(extra) {
+    const neutral = structuredClone(extra ?? {});
+    delete neutral.weyland_understudy;
+    delete neutral.weyland_understudy_model;
+    delete neutral.weyland_force_format;
+    return neutral;
+}
+
+/**
  * Commits a take by appending it as a NEW SWIPE rather than overwriting the message.
  *
  * This is deliberately additive: the first model's reading stays at its original swipe and
@@ -2994,6 +3008,17 @@ async function appendUnderstudyTakeAsSwipe(body, index, expectedKey = '') {
     if (!Array.isArray(message.swipe_info)) message.swipe_info = [];
     // swipe_info must stay parallel to swipes or SillyTavern's swipe handling breaks.
     while (message.swipe_info.length < message.swipes.length) message.swipe_info.push({});
+    // Every existing swipe needs its OWN extra. On a swipe, SillyTavern loads
+    // swipe_info[id].extra and, when a swipe has none, keeps the extra already on the message
+    // (script.js: `swipe_info[id]?.extra || ...extra`), then saves it into that swipe. So swiping
+    // from this take onto a greeting alternate with no extra copied the Copycat marking onto it:
+    // one Yue-Lin greeting ended up with all 5 swipes, hand-written ones included, labelled as
+    // Gemini rewrites. A neutral copy (Copycat keys removed) leaves nothing to inherit.
+    const neutralExtra = copycatNeutralExtra(message.extra);
+    message.swipe_info.forEach((info, k) => {
+        if (!info || typeof info !== 'object') message.swipe_info[k] = info = {};
+        if (!info.extra || typeof info.extra !== 'object') info.extra = structuredClone(neutralExtra);
+    });
 
     const settings = getSettings(context.extensionSettings);
     const extra = structuredClone(message.extra ?? {});
@@ -3026,6 +3051,12 @@ async function appendUnderstudyTakeAsSwipe(body, index, expectedKey = '') {
     // the bug is here or in Weyland-Formatter. Recording whether mes actually changed makes the
     // activity log answer that without a repro session.
     const beforeFormat = message.mes;
+    // Weyland-Formatter skips a chat's first message (greetings are hand-written and already
+    // formatted), so a manual rewrite of a greeting came back as raw text. This flag, honoured by
+    // formatMessage(), asks for this one pass anyway. It lives only for the duration of these
+    // formatter passes and is removed before the chat is saved, so it never reaches disk or a
+    // later edit of the original greeting.
+    message.extra.weyland_force_format = true;
     try {
         await context.eventSource.emit(context.eventTypes.MESSAGE_EDITED, index);
     } catch (error) {
@@ -3056,6 +3087,9 @@ async function appendUnderstudyTakeAsSwipe(body, index, expectedKey = '') {
             : 'Copycat: formatter needed a second pass (first one did not run)'}`
             + ` [message ${index} of ${context.chat?.length ?? '?'}, MESSAGE_EDITED listeners: ${listeners}]`);
     }
+    // The formatter may have replaced chat[index].extra; clear the flag wherever it now lives.
+    delete message.extra?.weyland_force_format;
+    if (context.chat?.[index]?.extra) delete context.chat[index].extra.weyland_force_format;
     if (understudyLastRun) {
         understudyLastRun.applied = {
             index,
@@ -3124,6 +3158,10 @@ async function maybeAutoUnderstudy() {
 
     const index = findUnderstudyTargetIndex(context);
     if (index === -1 || index === understudyAutoLastIndex) return;
+    // Never the chat's first message. That is the character's greeting (hand-written, already
+    // formatted, and sometimes a [CS] instruction rather than a scene), and automatic mode used to
+    // rewrite it every time a chat opened. A greeting can still be rewritten manually.
+    if (index === 0) return;
     // A take the understudy itself produced must never be re-performed.
     if (context.chat[index]?.extra?.weyland_understudy) return;
     understudyAutoLastIndex = index;
