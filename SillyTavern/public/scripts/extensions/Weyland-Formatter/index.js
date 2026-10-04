@@ -853,15 +853,18 @@ function headerV2MarkdownExt(){
                     p1 = p1.replace(/<\/?em>/g, ``);
                     p1 = p1.replace(/<\/?strong>/g, ``);
                     const split = p1.split(`~`);
-                    const dateIndex = split.findIndex(x => /mon|tue|thu|wed|fri|sat|sun|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i.test(x));
-                    const timeIndex = split.findIndex(x => /(?: |\d)[ap]m/i.test(x));
                     const modeIndex = split.findIndex(x => /saph|onyx|ruby/i.test(x));
-                    const locationIndex = split.findIndex((x, index) => {
-                        if (dateIndex > -1 && dateIndex === index) return false;
-                        if (timeIndex > -1 && timeIndex === index) return false;
-                        if (modeIndex > -1 && modeIndex === index) return false;
-                        return true;
-                    });
+                    // Time must contain a digit: 12h (9:28 AM) or 24h (15:09, 3h09, 15h, 15 Uhr, 15時)
+                    const timeIndex = split.findIndex((x, index) => index !== modeIndex
+                        && /\d\s?[ap]\.?m\b|\d{1,2}\s?[:h]\s?\d{2}|\d\s?(?:h|uhr)\b|\d\s?[時点]/i.test(x));
+                    // Whole-word English day/month names, so locations like "Sunset Pier" or "Marketplace" don't match
+                    let dateIndex = split.findIndex((x, index) => index !== modeIndex && index !== timeIndex
+                        && /\b(?:mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/i.test(x));
+                    if (dateIndex < 0) {
+                        // Non-English date: fall back to the canonical order (date ~ time ~ location ~ mode)
+                        dateIndex = split.findIndex((x, index) => index !== modeIndex && index !== timeIndex && x.trim());
+                    }
+                    const locationIndex = split.findIndex((x, index) => index !== dateIndex && index !== timeIndex && index !== modeIndex && x.trim());
                     if (dateIndex < 0 || timeIndex < 0 || locationIndex < 0) {
                         return `<strong style="color: darkred;">${p1}</strong>`
                     }
