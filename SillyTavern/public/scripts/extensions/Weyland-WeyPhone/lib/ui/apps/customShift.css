@@ -1,0 +1,31 @@
+/* PromptOS -> Roleplay Shift -> Custom Preset (lib/ui/apps/customShift.js loads this itself).
+   Its own file rather than style.css so the preset screen can change without touching the main
+   PromptOS styles. Colors come from the PromptOS tokens (--wn-*) set on #wp-panel[data-app="narrative"], and tints are
+   mixed from --wn-ink so they read on the light paper theme and the dark one alike. */
+.wp-custom-shift .wp-custom-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; padding: 6px 10px; border: 1px solid var(--wn-line); border-radius: 8px; background: color-mix(in srgb, var(--wn-ink) 6%, transparent); color: var(--wn-ember); font-size: 11px; font-weight: 700; cursor: pointer; }
+.wp-custom-list { display: grid; gap: 8px; margin: 10px 0 12px; }
+.wp-custom-preset { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--wn-line); border-radius: 10px; background: color-mix(in srgb, var(--wn-ink) 5%, transparent); }
+.wp-custom-preset.is-active { border-color: var(--wn-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--wn-accent) 35%, transparent); }
+.wp-custom-preset-text strong { display: block; color: var(--wn-ink); font-size: 12px; }
+.wp-custom-preset-text strong em { margin-left: 6px; color: var(--wn-accent); font-size: 9px; font-style: normal; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.wp-custom-preset-text small { display: block; margin-top: 3px; color: var(--wn-ink-muted); font-size: 10px; line-height: 1.35; }
+.wp-custom-preset-actions { display: flex; gap: 6px; }
+.wp-custom-preset-actions button, .wp-custom-editor-actions button:not(.wp-narrative-primary) { padding: 5px 10px; border: 1px solid var(--wn-line); border-radius: 8px; background: transparent; color: var(--wn-ink); font-size: 10px; font-weight: 700; cursor: pointer; }
+.wp-custom-preset-actions .wp-custom-use:not(:disabled) { border-color: var(--wn-ember); color: var(--wn-ember); }
+.wp-custom-preset-actions button:disabled { opacity: .55; cursor: default; }
+.wp-custom-preset-actions .wp-custom-delete.is-confirming { border-color: var(--wn-accent); background: var(--wn-accent); color: #fff; }
+.wp-custom-empty { color: var(--wn-ink-muted); font-size: 11px; }
+/* The editor's "?": the button sits where a card's heading icon goes; its explanation opens in
+   the normal flow right under the heading. */
+.wp-custom-editor { position: relative; }
+.wp-custom-help summary { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: var(--wn-ember); font-size: 17px; list-style: none; cursor: pointer; }
+.wp-custom-help summary::-webkit-details-marker { display: none; }
+.wp-custom-help summary:hover, .wp-custom-help[open] summary { background: color-mix(in srgb, var(--wn-ink) 10%, transparent); }
+.wp-custom-help p { margin: 0 0 10px; padding: 9px 10px; border-radius: 9px; background: color-mix(in srgb, var(--wn-ink) 7%, transparent); color: var(--wn-ink-muted); font-size: 10.5px; line-height: 1.5; }
+.wp-custom-label { display: block; margin: 12px 0 5px; color: var(--wn-ember); font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.wp-custom-name, .wp-custom-text { box-sizing: border-box; width: 100%; padding: 9px 10px; border: 1px solid var(--wn-line); border-radius: 9px; background: color-mix(in srgb, var(--wn-ink) 7%, transparent); color: var(--wn-ink); font-family: inherit; font-size: 12px; line-height: 1.45; }
+.wp-custom-text { min-height: 220px; resize: vertical; }
+.wp-custom-name::placeholder, .wp-custom-text::placeholder { color: var(--wn-ink-muted); opacity: .7; }
+.wp-custom-name:focus, .wp-custom-text:focus { outline: none; border-color: var(--wn-ember); }
+.wp-custom-count { margin-top: 4px; color: var(--wn-ink-muted); font: 10px 'JetBrains Mono', monospace; text-align: right; }
+.wp-custom-editor-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }

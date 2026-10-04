@@ -28,7 +28,7 @@ export function getHelixKey(context) {
 /**
  * @param {string} apiKey
  * @param {typeof fetch} [fetchFn] injectable for tests
- * @returns {Promise<number|null>} remaining daily messages, or null when unknowable
+ * @returns {Promise<{remaining: number, limit: number}|null>} quota, or null when unknowable
  *   (request failed, or the account has no finite limit)
  */
 export async function fetchMessageQuota(apiKey, fetchFn = fetch, { timeoutMs = QUOTA_FETCH_TIMEOUT_MS, now = Date.now } = {}) {
@@ -45,10 +45,12 @@ export async function fetchMessageQuota(apiKey, fetchFn = fetch, { timeoutMs = Q
         // server-side; either is null when the provider can't supply it, which we treat as
         // "unknowable" so the battery falls back to its theatrical mode.
         const payload = await response.json();
-        const limit = Number(payload?.limit);
-        const remaining = Number(payload?.remaining);
+        // The local proxy returns numbers or null. Coercing null/blank/false to zero
+        // would turn unknown usage into an apparently exhausted message budget.
+        const limit = payload?.limit;
+        const remaining = payload?.remaining;
         if (!Number.isFinite(limit) || limit <= 0 || !Number.isFinite(remaining)) return null;
-        return { remaining, limit };
+        return { remaining: Math.max(0, remaining), limit };
     } catch {
         return null;
     } finally {
@@ -82,7 +84,7 @@ export function getQuotaSnapshot(context) {
 /**
  * Throttled background refresh. Safe to call from every status-bar render: within the cache
  * window (or with a fetch already in flight, or no key set) it's a no-op. `onUpdate` fires
- * only when a fetch actually completes with a changed value — the caller re-renders then.
+ * only when the current fetch completes (including unavailable) — the caller re-renders then.
  * @param {object} context SillyTavern context (for the HMKey global)
  * @param {() => void} [onUpdate]
  */
@@ -93,6 +95,7 @@ export function refreshRemainingMessages(context, onUpdate, { fetchFn = fetch, n
         cachedRemaining = null;
         cachedLimit = null;
         cachedAt = 0;
+        inFlight = null; // Re-adding this key must not reuse a lookup started before removal.
         return;
     }
     if (apiKey !== cachedKey) {
@@ -104,11 +107,14 @@ export function refreshRemainingMessages(context, onUpdate, { fetchFn = fetch, n
     if (inFlight?.key === apiKey || (cachedAt > 0 && (now() - cachedAt) < QUOTA_CACHE_MS)) return;
 
     const promise = fetchMessageQuota(apiKey, fetchFn, { now }).then(quota => {
-        // Ignore a response for a key that was removed/replaced while this request was running.
-        if (cachedKey !== apiKey) return;
+        // Key identity alone is insufficient for A -> B -> A: the first A request
+        // may finish after the new A lookup. Only the current request can update state.
+        if (cachedKey !== apiKey || inFlight?.promise !== promise) return;
         cachedAt = now();
         cachedRemaining = quota?.remaining ?? null;
         cachedLimit = quota?.limit ?? null;
+        // Clear loading before repainting, so Settings sees ready/unavailable immediately.
+        inFlight = null;
         // A completed null result is still a meaningful state transition (loading -> unavailable),
         // so Settings must repaint even when the numeric value did not change.
         onUpdate?.();

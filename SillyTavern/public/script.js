@@ -242,6 +242,7 @@ import { getPresetManager, initPresetManager } from './scripts/preset-manager.js
 import { evaluateMacros, getLastMessageId, initMacros } from './scripts/macros.js';
 import { currentUser, setUserControls } from './scripts/user.js';
 import { POPUP_RESULT, POPUP_TYPE, Popup, callGenericPopup, fixToastrForDialogs } from './scripts/popup.js';
+import { ensureAgeConfirmation } from './scripts/weyland-age-notice.js';
 import { renderTemplate, renderTemplateAsync } from './scripts/templates.js';
 import { initScrapers } from './scripts/scrapers.js';
 import { initCustomSelectedSamplers, validateDisabledSamplers } from './scripts/samplerSelect.js';
@@ -688,6 +689,10 @@ async function firstLoadInit() {
     doDailyExtensionUpdatesCheck();
     await hideLoader();
     await fixViewport();
+    // All profiles confirm once, before startup Quick Replies launch first-open onboarding.
+    await ensureAgeConfirmation(extension_settings, saveSettings, {
+        preview: new URLSearchParams(window.location.search).get('age-notice-preview') === '1',
+    });
     await eventSource.emit(event_types.APP_READY);
 }
 
@@ -7023,9 +7028,11 @@ export async function saveSettings(loopCounter = 0) {
 
         settings = payload;
         await eventSource.emit(event_types.SETTINGS_UPDATED);
+        return true;
     } catch (error) {
         console.error('Error saving settings:', error);
         toastr.error(t`Check the server connection and reload the page to prevent data loss.`, t`Settings could not be saved`);
+        return false;
     }
 }
 

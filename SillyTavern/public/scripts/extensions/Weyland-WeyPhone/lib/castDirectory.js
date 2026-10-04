@@ -83,6 +83,8 @@ export function parseCastData(json) {
 
 /** @param {CastEntry} entry @returns {string|null} */
 export function castPortraitUrl(entry) {
+    // Cast entries carry a weybooru filename stem; Registrar contacts carry a full portrait URL.
+    if (/^https?:\/\//i.test(String(entry.image ?? ''))) return entry.image;
     return entry.image ? `${CAST_PORTRAIT_BASE}/${entry.image}.jpg` : null;
 }
 

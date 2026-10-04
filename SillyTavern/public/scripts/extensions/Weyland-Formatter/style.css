@@ -109,6 +109,86 @@
   width:0.8em;
 }
 
+/* Muse's display-only telemetry strip. Message sanitization prefixes every class with
+   custom-, just as it does for the standard header above. Keep these names in sync. */
+.custom-muse-strip {
+  container-type: inline-size;
+  padding: 8px 12px 9px;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+  font-family: -apple-system, sans-serif;
+  color: rgba(255, 255, 255, .55);
+  font-size: 11px;
+  line-height: 14px;
+}
+.custom-muse-row { display: flex; align-items: baseline; gap: 10px; }
+.custom-muse-day { flex: 0 0 auto; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.custom-muse-day b { color: #fff; font-weight: 600; }
+.custom-muse-short { display: none; }
+.custom-muse-code { flex: 0 0 auto; margin-left: auto; font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; color: rgba(255, 255, 255, .7); }
+.custom-muse-collapsed .custom-muse-code { color: rgba(255, 255, 255, .38); }
+.custom-muse-collar {
+  --muse-state: #d84343;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px 6px;
+  text-align: center;
+}
+.custom-muse-collapsed .custom-muse-collar { justify-content: flex-start; }
+.custom-muse-collar[data-c="Monitoring Only"] { --muse-state: #6b8eac; }
+.custom-muse-collar[data-c="Malfunctioning"] { --muse-state: #e0a040; }
+.custom-muse-collar[data-c="Inactive"] { --muse-state: rgba(255, 255, 255, .4); }
+.custom-muse-collar[data-c="Evening"] { --muse-state: rgba(255, 255, 255, .82); }
+.custom-muse-collar[data-c="Evening"] .custom-muse-st { font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+.custom-muse-lbl { letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.custom-muse-st { color: var(--muse-state); font-weight: 600; white-space: nowrap; }
+.custom-muse-tm { color: rgba(255, 255, 255, .75); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Reserve the crescent's height even in the morning so switching sessions never
+   jumps the layout. Two ticks per day: completed evening ticks are the darker red. */
+.custom-muse-lane { height: 13px; }
+.custom-muse-rail { display: grid; grid-template-columns: repeat(var(--muse-days, 14), minmax(0, 1fr)); gap: 5px; margin-bottom: 1px; }
+.custom-muse-cell { position: relative; display: flex; gap: 2px; }
+.custom-muse-cell > i { flex: 1; min-width: 0; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .1); }
+.custom-muse-cell > .custom-muse-done { background: rgba(216, 67, 67, .5); }
+.custom-muse-cell > .custom-muse-done-eve { background: rgba(180, 48, 48, .5); }
+.custom-muse-cell > .custom-muse-now { background: #d84343; box-shadow: 0 0 6px rgba(216, 67, 67, .7); }
+.custom-muse-cell > .custom-muse-pin {
+  position: absolute;
+  left: 75%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  display: block;
+  width: 9px;
+  height: 9px;
+  color: rgba(255, 255, 255, .85);
+  background: none;
+  box-shadow: none;
+}
+/* A CSS crescent survives message sanitization without depending on SVG or a font glyph. */
+.custom-muse-pin::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  mask-image: radial-gradient(circle at 72% 30%, transparent 0 52%, #000 56%);
+}
+
+@keyframes muse-collar-flicker { 0%, 46%, 50%, 72%, 100% { opacity: 1; } 48% { opacity: .35; } 71% { opacity: .55; } }
+.mes.last_mes .custom-muse-collar[data-c="Malfunctioning"] .custom-muse-st { animation: muse-collar-flicker 3.2s infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .mes.last_mes .custom-muse-collar[data-c="Malfunctioning"] .custom-muse-st { animation: none; }
+}
+/* Container width matters here: a narrow chat panel can live inside a desktop window. */
+@container (max-width: 400px) {
+  .custom-muse-long, .custom-muse-lbl { display: none; }
+  .custom-muse-short { display: inline; }
+}
+
 /* --- ONYX --- */
 .custom-message-mode[data-mode*="ONYX" i] { color: #e99bff; }
 .custom-message-mode[data-mode*="ONYX" i]::before {

@@ -11,7 +11,7 @@ import { SlashCommandParser } from "../../slash-commands/SlashCommandParser.js";
 import { SlashCommand } from "../../slash-commands/SlashCommand.js";
 import { ARGUMENT_TYPE, SlashCommandArgument } from "../../slash-commands/SlashCommandArgument.js";
 
-import { getRandomInt, getCurrentCharacterName, getCurrentUserName, setLLModel, setBackground, tagExists, tagAdd, tagRemove, getPersonaBook, getCurrentCharacterWorldbook, setCostume, setExpression, setCostumeAndExpression, getCharacterCostumeFromText, getCurrentCharacterVersion, getCurrentCharacterPersonality, getCurrentCharacterDescription, getCurrentCharacterFirstMes } from "./src/general.js";
+import { getRandomInt, getCurrentCharacterName, getCurrentUserName, setLLModel, setBackground, tagExists, tagAdd, tagRemove, getPersonaBook, getCurrentCharacterWorldbook, setCostume, setExpression, setCostumeAndExpression, isOpenWorldCard, getCurrentCardSpriteOverride, getCharacterCostumeFromText, getCurrentCharacterVersion, getCurrentCharacterPersonality, getCurrentCharacterDescription, getCurrentCharacterFirstMes } from "./src/general.js";
 import { deleteGlobalVariable, deleteLocalVariable, deleteLocalVariables, flushInject, inject, setGlobalVariable, setLocalVariable } from "./src/variables.js"
 import { findLoreBookEntry, getEntryField, setEntryField } from "./src/lorebook.js";
 import { doButtons, doPopup } from "./src/popups.js";
@@ -19,9 +19,16 @@ import { closeChat, editSwipe, getFirstMessage, getLastMessage, unhideMessages }
 import strings from "./src/strings.js";
 import { scenarios, tails } from "./src/scenarios.js";
 import { charPer, specialChar } from "./src/charper.js";
-import { ravs } from "./src/rav.js";
+import { ravs } from "./src/promptRegistry.js";
+import { SHIFT_BODIES, SHIFT_FRAME, SHIFT_SCOPES } from "./src/roleplayShifts.js";
+import { describeIntroContext, INTRO_CONTEXT_STATE_VARS, introHadScenario, setIntroContextMode, setIntroVariant } from "./src/introContext.js";
+import { activeDoseShift, applyDoseForGeneration, describeDose, endDose, startDose } from "./src/dose.js";
 import { detector } from "./src/similarity.js";
-import { applyGeminiBypass } from "./src/promptModifiers.js";
+import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
+import { buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName } from "./src/oocMode.js";
+import { NARRATOR_SUBBOTS, NARRATOR_SUBBOT_NAMES } from "./src/narratorSubbots.js";
+import { applyGeminiBypassForModel } from "./src/promptModifiers.js";
+import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.js";
 import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
 import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
 
@@ -70,6 +77,24 @@ async function OnBeforeGeneration(args) {
         // DebugLog(`chat:`, args.chat);
     } catch (error) {
         console.error(`[WQR] OnBeforeGeneration Error:`, error);
+    }
+}
+
+/**
+ * Last stop before a chat-completion request is sent: `data` is the exact payload, with the model
+ * Weyland-Router rolled for THIS attempt already in data.model. With Gemini Bypass on, Claude models
+ * get the bypass text cut out and keep box 6 whole; every other model keeps the text and loses box
+ * 6's explicit warm-up (see applyGeminiBypassForModel in src/promptModifiers.js). With the toggle
+ * off nothing changes. Cheap: a substring check per message.
+ */
+function OnRequestReady(data) {
+    try {
+        if (!data) return;
+        const { bypassRemoved, box6Cut } = applyGeminiBypassForModel(data.messages, data.model);
+        if (bypassRemoved) DebugLog(`Gemini Bypass left out for ${data.model}`);
+        if (box6Cut) DebugLog(`Gemini Bypass: box 6 warm-up cut for ${data.model}`);
+    } catch (error) {
+        console.error(`[WQR] OnRequestReady Error:`, error);
     }
 }
 
@@ -225,8 +250,14 @@ async function OnAi(messageID) {
             // AutoBG Script
             AutoBG(chatMessage);
 
-            // Cleanup ContextTimer
-            if (getLocalVariable("ConstantContext") !== "" && messageID >= getLocalVariable("ContextTimer")) {
+            // Cleanup ContextTimer: once the chat passes the greeting's ContextTimer, drop its
+            // ConstantContext (Belle's party intro keeps Emily, Remy and Kiera around until then).
+            // The original QR flushed ConstantContext here; the 07-01 JS port deleted ContextTimer
+            // instead, so the context never left. Fixed 2026-10-01. A missing ContextTimer (e.g. the
+            // user pinned the intro "On" in PromptOS) means no expiry.
+            const contextTimer = getLocalVariable("ContextTimer");
+            if (getLocalVariable("ConstantContext") !== "" && contextTimer !== "" && messageID >= Number(contextTimer)) {
+                deleteLocalVariable("ConstantContext");
                 deleteLocalVariable("ContextTimer");
             }
 
@@ -528,7 +559,8 @@ async function TitleBarColors() {
         }
         const costumeSave = getLocalVariable("CostmSave").split("/");
         if (costumeSave?.length > 1) {
-            await setCostumeAndExpression(costumeSave[0], costumeSave[1]);
+            // Open-world cards re-show their saved character through their own slot (see OpenWorldCostumes)
+            await setCostumeAndExpression(costumeSave[0], costumeSave[1], undefined, { onCurrentCard: isOpenWorldCard(getCurrentCharacterName()) });
             const costumeSaveSide = getLocalVariable("CostmSaveSide");
             if (costumeSaveSide) {
                 const expSave = getLocalVariable("ExpSave");
@@ -816,6 +848,8 @@ async function Scenarios(userMessage) {
         }
 
         const charName = getCurrentCharacterName();
+        // A fresh greeting setup starts PromptOS's "Roleplay intro context" back on Auto.
+        deleteLocalVariables(INTRO_CONTEXT_STATE_VARS);
 
         // Tails
         if (greetingText.includes("Tavern Tails")) {
@@ -2167,9 +2201,14 @@ async function OpenWorldCostumes(charName, charMessage) {
 
         if (pickedCharMain) {
             const mainCostume = getCostume(pickedCharMain);
-            if (getLocalVariable("CostmSave") !== `${pickedCharMain}/${mainCostume}`) {
-                setLocalVariable("CostmSave", `${pickedCharMain}/${mainCostume}`);
-                await setCostumeAndExpression(pickedCharMain, mainCostume, expression);
+            const mainFolder = `${pickedCharMain}/${mainCostume}`;
+            // Also re-apply when the OPEN card's override disagrees with what we recorded: chats saved before the fix wrote
+            // the override to the character's own card, so CostmSave says Jenn while Weybot still shows its silhouette.
+            if (getLocalVariable("CostmSave") !== mainFolder || getCurrentCardSpriteOverride() !== mainFolder) {
+                setLocalVariable("CostmSave", mainFolder);
+                // onCurrentCard: this slot is the open card's, so the override goes on the open card (Weybot, Mirror, Kinsbane).
+                // registrar-expressions reads that slot as the LEFT base; if it is not updated, the character lands on the right.
+                await setCostumeAndExpression(pickedCharMain, mainCostume, expression, { onCurrentCard: true });
                 DebugLog(`OpenWorldCostumes: Set left-side to "${pickedCharMain}/${mainCostume}"`);
             }
         } else if (charName === "Weybot") {
@@ -2177,9 +2216,9 @@ async function OpenWorldCostumes(charName, charMessage) {
             // Silhouette folders are lowercase; folder names are case-sensitive on Linux
             const choice = getGlobalVariable("WeybotCostume") || "Other";
             const silhouette = (await spriteFolderExists(`Weybot/${choice}`)) ? choice : choice.toLowerCase();
-            if (getLocalVariable("CostmSave") !== `Weybot/${silhouette}`) {
+            if (getLocalVariable("CostmSave") !== `Weybot/${silhouette}` || getCurrentCardSpriteOverride() !== `Weybot/${silhouette}`) {
                 setLocalVariable("CostmSave", `Weybot/${silhouette}`);
-                await setCostumeAndExpression("Weybot", silhouette, expression);
+                await setCostumeAndExpression("Weybot", silhouette, expression, { onCurrentCard: true });
                 DebugLog(`OpenWorldCostumes: Set left-side to silhouette "Weybot/${silhouette}"`);
             }
         } else {
@@ -2519,8 +2558,84 @@ async function SpecialChar(charName) {
 }
 
 /**
+ * PromptOS "Roleplay Shift": builds the one optional feedback item Beta injects after frameTop's
+ * item 1. Returns "" for None or anything unrecognized, so the caller can simply filter it out.
+ * The new shift texts live encoded in src/roleplayShifts.js (generated from the plaintext master
+ * in "Prompt Review/"); Hard Mode and General-Use still come from rav.js, untouched.
+ * @param {string} shift RoleplayShift value, or "Hard Mode" when HardToggle is On
+ * @param {import("./src/rav.js").Rav} rav
+ * @param {boolean} analysisOn
+ */
+function buildRoleplayShiftItem(shift, rav, analysisOn, scope = SHIFT_SCOPES[shift]) {
+    if (shift === "Hard Mode") {
+        return analysisOn ? `2. FEEDBACK: User feedback may appear below:\n\n${rav.directive}` : rav.directive;
+    }
+    // General-Use (called "Temporary" while it was only kept for testing) is the pre-split
+    // reason2Empirical, the original built-in Beta feedback. It's written around the scene sheet
+    // ("do box 6, every message"), so it only means anything with Analysis on.
+    if (shift === "General-Use" || shift === "Temporary") return analysisOn ? rav.reason2Empirical : "";
+    // Custom Preset: the player's own text (WeyPhone -> PromptOS -> Custom Preset), cleaned and capped
+    // at 4,000 characters there, goes in exactly where a built-in shift's player quote goes.
+    const custom = shift === "Custom Preset" ? customShiftPreset() : null;
+    if (shift === "Custom Preset" && !custom) return "";
+    const body = custom ? `> "${custom.text}"` : SHIFT_BODIES[shift];
+    if (!body) return "";
+    // "Branched" shifts are framed as "I just branched back, fix this stretch" instead of "my last
+    // roleplay", so the wrapper around them says the same (see SHIFT_SCOPES in roleplayShifts.js).
+    const branched = scope === "branched";
+    let head = (branched ? SHIFT_FRAME.headBranched : SHIFT_FRAME.head).replace("{{MODIFIER_NAME}}", custom ? custom.name : shift);
+    let tail = branched ? SHIFT_FRAME.tailBranched : SHIFT_FRAME.tail;
+    // A preset is just the player's words, with no calibration examples for this line to refer to.
+    if (custom) tail = tail.replace(/\n*The examples above[^\n]*/, "").trim();
+    if (!analysisOn) {
+        // No scene sheet: drop the list number and the pointer to the RECOGNITION box.
+        head = head.replace(/^2\. /, "");
+        tail = tail.replace(" Talk it through in your RECOGNITION box instead.", "");
+    }
+    return `${head}\n\n${body}\n\n${tail}`;
+}
+
+/** GENERATION_AFTER_COMMANDS: count a dose reply and rebuild the prompt if the dose turned on/off. */
+async function OnDoseCheck(type, _options, dryRun) {
+    try {
+        // OOC chatter isn't roleplay, so it shouldn't eat a dose's secret 2-10 replies (the dose
+        // isn't even in the prompt while OOC Mode is on).
+        if (isOocModeEnabled(getGlobalVariable("OOCMode"))) return;
+        if (applyDoseForGeneration(type, dryRun)) await XXX();
+    } catch (error) {
+        console.error(`[WQR] Dose check error:`, error);
+    }
+}
+
+/** The Custom Preset in use ({ id, name, text } in the RoleplayShiftCustom global), or null. */
+function customShiftPreset() {
+    try {
+        const preset = JSON.parse(String(getGlobalVariable("RoleplayShiftCustom") || ""));
+        return preset && typeof preset.text === "string" && preset.text.trim()
+            ? { name: String(preset.name || "Custom Preset"), text: preset.text.trim() }
+            : null;
+    } catch {
+        return null;
+    }
+}
+
+// Every shift can be dosed: Hard Mode, General-Use and the Custom Preset in use included (None has
+// nothing to dose).
+async function startDoseAndRebuild(shift) {
+    const known = ["Hard Mode", "General-Use"].includes(shift) || SHIFT_BODIES[shift] || (shift === "Custom Preset" && customShiftPreset());
+    if (!known) throw new Error(`Unknown shift for a dose: ${shift}`);
+    startDose(shift);
+    await XXX();
+}
+
+async function endDoseAndRebuild() {
+    endDose();
+    await XXX();
+}
+
+/**
  * @param {string} [charName]
- * @returns 
+ * @returns
  */
 async function XXX(charName) {
     const PerformanceStart = performance.now();
@@ -2530,17 +2645,17 @@ async function XXX(charName) {
         if (getLocalVariable("RPPOVLocalSet") === "") setLocalVariable("RPPOVLocal", getGlobalVariable("RPPOV"));
         if (/Kinsbane Manor|Aethel|Muse|Kressa/.test(charName)) await SpecialChar();
         if (getLocalVariable("LocalN") === "") setLocalVariable("LocalNarrator", getGlobalVariable("Narrator"));
-        // Default is Beta since 2026-09-28: Anthropic's anti-distillation check refuses Current
-        // Prompt's written-out analysis procedure, while Beta's "scene sheet" version goes through.
-        // Only applies when no valid choice is saved; a user who picked Current keeps it.
-        if (ravs.get(getGlobalVariable("PromptChoice")) === undefined) setGlobalVariable("PromptChoice", "Beta Prompt");
-        const pc = getGlobalVariable("PromptChoice");
-        const rav = ravs.get(pc) || ravs.get("Current Prompt");
+        // "Current" IS the Beta prompt since 2026-10-03 (the old normal Current is retired and the Beta slot is held for the next
+        // beta). A saved "Beta Prompt" (the default since 2026-09-28), a missing choice or an unknown one lands on Current, and the
+        // saved value is corrected so PromptOS shows the right cartridge. `pc` is the rav.js entry to build from.
+        const { saved: savedChoice, key: pc } = resolvePromptChoice(ravs, getGlobalVariable("PromptChoice"));
+        if (getGlobalVariable("PromptChoice") !== savedChoice) setGlobalVariable("PromptChoice", savedChoice);
+        const rav = ravs.get(pc);
         if (!rav) throw new Error("No rav found");
         const geminiBypassEnabled = String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled';
         if (["Summer","Loona","Belle","Hannah","Seth","Lentyl","Briar","Willow","Bap","Dash"].includes(charName) && rav.thinkYes) {
             setLocalVariable("ThoughtSet", rav.thinkYes);
-        } else if (charName === "Vera" && getLocalVariable("Scenario") && rav.thinkYes) {
+        } else if (charName === "Vera" && (getLocalVariable("Scenario") || introHadScenario()) && rav.thinkYes) {
             setLocalVariable("ThoughtSet", rav.thinkYes);
         } else if (charName === "Cerberus Sisters" && getLocalVariable("CerberusSister") === "Fawne" && rav.thinkYes) {
             setLocalVariable("ThoughtSet", rav.thinkYes);
@@ -2552,53 +2667,70 @@ async function XXX(charName) {
         if (/Weybot|Mirror Weyland|Kinsbane Manor/.test(charName)) {
             setLocalVariable("ExpAltShow", "true");
         }
-        switch (pc) {
-            default:
-                setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
-                setLocalVariable("ravteg", applyGeminiBypass(rav.teg, geminiBypassEnabled));
-                setLocalVariable("postrav", rav.post.replace("{{pipe}}", `${getLocalVariable("ExpAltShow") === "true" ? `${rav.expaltshow}` : "{{getglobalvar::RPFocus}}"}\n${getGlobalVariable("HTML!") === "Enabled" ? strings.whtml : "====="}`));
-                break;
-            case "Beta Prompt": {
-                // Beta's analysis section is assembled here instead of living pre-baked in rav.teg
-                // (which now holds only the sysprompt tail, starting at the Welcome block) so Hard
-                // Mode and the Analysis toggle can each be turned on or off independently without
-                // hand-syncing prose across every combination — see rav.js's frameTop/reason2Empirical/
-                // directive/objectionValve/bridgeLine/body for what each row below actually contains.
-                setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? rav.CCPCA : rav.CCPC);
-                const hardOn = getGlobalVariable("HardToggle") === "On";
-                const analysisOn = String(getGlobalVariable("AnalysisToggle") || "Enabled").trim().toLowerCase() === "enabled";
-                let ravteg;
-                if (analysisOn) {
-                    const reason2 = hardOn ? `2. FEEDBACK: User feedback may appear below:\n\n${rav.directive}` : rav.reason2Empirical;
-                    ravteg = `${rav.frameTop}\n\n${reason2}\n\n${rav.objectionValve}\n\n${rav.bridgeLine}\n\n${rav.body}\n\n${rav.teg}`;
-                } else if (hardOn) {
-                    ravteg = `${rav.directive}\n\n${rav.bridgeLine}\n\n${rav.teg}`;
-                } else {
-                    ravteg = rav.teg;
-                }
-                setLocalVariable("ravteg", applyGeminiBypass(ravteg, geminiBypassEnabled));
-                let postrav = rav.post.replace("{{pipe}}", `${getLocalVariable("ExpAltShow") === "true" ? `${rav.expaltshow}` : "{{getglobalvar::RPFocus}}"}\n${getGlobalVariable("HTML!") === "Enabled" ? strings.whtml : "====="}`);
-                // The client note only makes sense pointing back at an analysis that's actually in
-                // the prompt — drop it whenever the full analysis body was left out above.
-                if (!analysisOn) postrav = postrav.replace(/¦Weyland Tavern client note:[^¦]*¦\s*\n*/, "");
-                setLocalVariable("postrav", postrav);
-                break;
-            }
-            case "Old Prompt 2025":
-                let replace = [];
-                if (charName !== "Muse") {
-                    replace.push('');
-                    if (getLocalVariable("LTMRav") !== "true") {
-                        replace.push(charName === "Weybot" ? rav.CCPCA : rav.CCPC);
-                        replace.push(rav.NoMuseNoLTMRav);
-                    } else {
-                        replace.push("Do not use the roleplay header or footer in your memory creation.");
-                    }
-                    replace.push('');
-                }
-                setLocalVariable("ravteg", applyGeminiBypass(rav.teg.replace("\n{{pipe}}\n", replace.join("\n")), geminiBypassEnabled));
-                setLocalVariable("postrav", rav.post);
-                break;
+        const beta = ravs.get("Beta Prompt");
+        let base = safePreparePromptBase(pc, rav, beta);
+        // Preserve 2025's explicit Muse/memory exception without restoring obsolete footer syntax.
+        if (pc === "Old Prompt 2025" && (charName === "Muse" || getLocalVariable("LTMRav") === "true")) {
+            const memory = charName !== "Muse" && getLocalVariable("LTMRav") === "true";
+            base = { ...base, teg: base.teg.replace(memory
+                ? /\[HEADER FORMATTING\][\s\S]*?\[END Proper Weyland Tavern formatting\]/
+                : /\[FOOTER FORMATTING\][\s\S]*?\[END Proper Weyland Tavern formatting\]/,
+            memory ? "Do not use the roleplay header or footer in your memory creation." : "") };
+        }
+        const analysisOn = String(getGlobalVariable("AnalysisToggle") || "Enabled").trim().toLowerCase() === "enabled";
+        const hardOn = getGlobalVariable("HardToggle") === "On";
+        const savedShift = String(getGlobalVariable("RoleplayShift") || "None");
+        const regularShift = hardOn ? "Hard Mode" : (savedShift === "Hard Mode" ? "None" : savedShift);
+        // A chat's live dose replaces the regular feedback on every prompt, with its own framing.
+        const shift = activeDoseShift() || regularShift;
+        const shiftScope = shift === "Hard Mode" ? "reroll" : (SHIFT_SCOPES[shift] || "restarted");
+        // Shifts are written around Beta's scene sheet; a prompt with its own reasoning (2026) gets their no-scene-sheet form.
+        const shiftItem = buildRoleplayShiftItem(shift, beta, usesSceneSheet(base, analysisOn), shiftScope);
+        // The chat's narrator by name ('' for Default); Beta's box 1 becomes their green room (promptModifiers.js).
+        const activeNarrator = narratorName(getLocalVariable("LocalNarrator"));
+        const assembled = assemblePromptLayers(base, beta, { analysisOn, shift, shiftItem, shiftScope, geminiBypassEnabled, narrator: activeNarrator });
+        // Kinsbane Manor, Mirror Weyland and Muse don't read ravteg; they open their own system prompt with
+        // their own scene sheet, which always runs. A shift reaches them through two chat vars those sheets
+        // carry (src/specialSheets.js), always in its scene-sheet form, whatever the Analysis toggle says.
+        const specialBoxes = specialSheetBoxes(charName);
+        if (specialBoxes) {
+            const special = buildSpecialSheetShift({
+                shift, scope: shiftScope, boxes: specialBoxes, betaBody: beta.body,
+                sheetItem: buildRoleplayShiftItem(shift, beta, true, shiftScope),
+            });
+            setLocalVariable("SpecialShift", special.item);
+            setLocalVariable("SpecialRecognition", special.recognition);
+        }
+        setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? base.CCPCA : base.CCPC);
+        setLocalVariable("ravteg", assembled.teg);
+        setLocalVariable("postrav", resolvePromptPost({ ...base, post: assembled.post }, {
+            focus: getLocalVariable("ExpAltShow") === "true" ? base.expaltshow : "{{getglobalvar::RPFocus}}",
+            htmlEnabled: getGlobalVariable("HTML!") === "Enabled",
+            htmlInstructions: strings.whtml,
+        }));
+        // OOC Mode (PromptOS -> Modes -> Experimental) replaces the whole Weyland base prompt for
+        // every prompt choice, so it runs after shared assembly: the card, lorebooks and chat stay, the
+        // narrator comes along inside the OOC prompt (src/oocMode.js explains the wording). No
+        // Gemini Bypass here: its only job is cutting Beta's analysis, and there's none to cut.
+        if (isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const narrator = getLocalVariable("LocalNarrator");
+            setLocalVariable("ravteg", buildOocSystemPrompt(narrator));
+            setLocalVariable("postrav", buildOocPostHistory(narrator));
+        }
+        // Narrator subbots (src/narratorSubbots.js, generated from "Prompt Review/Narrator Subbots -
+        // MASTER.txt"): only the narrator selected for THIS chat gets their in-world sheet; the
+        // other two NSB_ vars are emptied. Their Weyland lorebook entries ({{getvar::NSB_<Name>}},
+        // keyed on the name and !command) fire normally but inject nothing unless that narrator is
+        // active, so Lauren can step into a scene only while Lauren is the one narrating.
+        for (const name of NARRATOR_SUBBOT_NAMES) {
+            setLocalVariable(`NSB_${name}`, name === activeNarrator ? NARRATOR_SUBBOTS[name] : "");
+        }
+        // Kris's card post-history is {{getvar::Krisrav}}. Hard Mode sets it to strings.krirav;
+        // Standard used to be a one-time copy of postrav taken by his greeting popup, so it went
+        // stale after a prompt switch, and came out empty (no post-history at all) if postrav
+        // wasn't built yet. Keep Standard pointed at the current postrav on every rebuild.
+        if (charName === "Kris" && getLocalVariable("Krisrav") !== strings.krirav) {
+            setLocalVariable("Krisrav", getLocalVariable("postrav"));
         }
         await Clear();
         DebugLog(`[P] XXX: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
@@ -2701,11 +2833,21 @@ function registerSlashCommands() {
     installGroupAddMenuItem();
     eventSource.on(event_types.APP_READY, OnStartup);
     eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, OnBeforeGeneration);
+    eventSource.on(event_types.CHAT_COMPLETION_SETTINGS_READY, OnRequestReady);
     eventSource.on(event_types.MESSAGE_SENT, OnUser);
     eventSource.on(event_types.MESSAGE_RECEIVED, OnAi);
     eventSource.on(event_types.CHAT_CHANGED, OnChatChanged);
     eventSource.on(event_types.CHAT_CREATED, OnNewChat);
     eventSource.on(event_types.MESSAGE_SWIPED, OnSwipe);
+    // Doses count replies, so this has to run before EVERY generation's prompt is built (XXX
+    // otherwise only runs on setup and settings changes). AFTER_COMMANDS rather than STARTED so a
+    // slash-command-only send doesn't use up a dose. Only rebuilds when the dose turns on or off.
+    eventSource.on(event_types.GENERATION_AFTER_COMMANDS, OnDoseCheck);
     DebugLog("Setup");
     registerSlashCommands();
+    // PromptOS (WeyPhone) reads and drives "Roleplay intro context" through this, the same way it
+    // reaches Weyland's Quick Replies through globalThis.quickReplyApi. describe() is synchronous.
+    globalThis.WeylandIntroContext = { describe: describeIntroContext, setMode: setIntroContextMode, setVariant: setIntroVariant };
+    // PromptOS's "A dose of..." button. describe() never reveals how long a dose lasts.
+    globalThis.WeylandDose = { describe: describeDose, start: startDoseAndRebuild, end: endDoseAndRebuild };
 })();

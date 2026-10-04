@@ -13,7 +13,7 @@
 //              dropdowns and each one explains itself once selected.
 //   Settings: "how does the app run": models, theme, automation. Set rarely, then left alone.
 
-import { UNDERSTUDY_SCOPES, UNDERSTUDY_NARRATORS } from '../../understudy.js';
+import { UNDERSTUDY_SCOPES, UNDERSTUDY_NARRATORS, availableUnderstudyScopes, effectiveUnderstudyScope, understudyScopeHint } from '../../understudy.js';
 import { modelSelect, fallbackModelSelect, modelQuickfills, toggleRowMarkup } from './settings.js';
 
 export const UNDERSTUDY_CAST_MODELS = ['gemini-3.8-flash', 'deepseek-v4-pro-thinking', 'gemini-3.1-pro-preview', 'gemma-4-31b-it', 'minimax-m3'];
@@ -181,7 +181,7 @@ function stageView({ target, draft, generating, error, settings, applied, take, 
  * Narrator leads because it is the widest-reaching choice: it changes what kind of scene comes
  * back, not just its wording.
  */
-function editsView({ settings }) {
+function editsView({ settings, thoughtsMode = 'unknown' }) {
     const narrator = String(settings.narrator ?? 'off');
     const narratorOptions = [
         { key: 'off', label: 'Off', blurb: 'No narrator modifier. Copycat follows the character and the scene only.' },
@@ -195,10 +195,13 @@ function editsView({ settings }) {
     // Explicit short labels rather than trimming the long ones: deriving them by string surgery
     // produced "unflinching" as a standalone button, which reads as a fragment.
     const SCOPE_BUTTON_LABELS = { full: 'Everything', uncomfortable: 'Unflinching', dialogue: 'Dialogue', dialogueThoughts: 'Dialogue + thoughts', thoughts: 'Thoughts', actions: 'Narration' };
-    const scopeOptions = Object.entries(UNDERSTUDY_SCOPES).map(([key, value]) => ({
+    // Thoughts-off characters (see thoughtsModeOf) don't get the two thought scopes, and the
+    // selected button is the scope that will really run, so a saved thought scope never shows as
+    // picked when it isn't.
+    const scopeOptions = availableUnderstudyScopes(thoughtsMode).map(key => ({
         key,
-        label: SCOPE_BUTTON_LABELS[key] ?? value.label,
-        blurb: value.hint,
+        label: SCOPE_BUTTON_LABELS[key] ?? UNDERSTUDY_SCOPES[key].label,
+        blurb: understudyScopeHint(key, thoughtsMode),
     }));
     const context = Math.min(UNDERSTUDY_MAX_CONTEXT, Math.max(0, Number(settings.contextMessages ?? UNDERSTUDY_RECOMMENDED_CONTEXT)));
 
@@ -214,7 +217,7 @@ function editsView({ settings }) {
     <section class="wp-copycat-edit-block">
         <h4>Scope</h4>
         <p class="wp-copycat-edit-note">Scope is how much of the reply Copycat is allowed to touch. A narrow scope extracts only those fragments and splices the results back, so nothing outside them can change.</p>
-        ${choiceRow({ group: 'scope', options: scopeOptions, value: String(settings.scope ?? 'full') })}
+        ${choiceRow({ group: 'scope', options: scopeOptions, value: effectiveUnderstudyScope(settings.scope, thoughtsMode) })}
     </section>
 
     <section class="wp-copycat-edit-block">
@@ -239,17 +242,17 @@ function editsView({ settings }) {
  * @param {HTMLElement} container #wp-screen-body
  * @param {object} state
  */
-export function renderUnderstudyScreen(container, { target, draft, generating, error, settings, applied, take = 0, showOriginal = false, statusIndex = 0, feedback = '', section = 'stage' }) {
+export function renderUnderstudyScreen(container, { target, draft, generating, error, settings, applied, take = 0, showOriginal = false, statusIndex = 0, feedback = '', section = 'stage', thoughtsMode = 'unknown' }) {
     const activeSection = section === 'edits' ? 'edits' : 'stage';
     if (activeSection === 'edits') {
-        container.innerHTML = `<div class="wp-understudy">${copycatMasthead()}${copycatNavigation('edits')}<main class="wp-copycat-content">${editsView({ settings })}</main></div>`;
+        container.innerHTML = `<div class="wp-understudy">${copycatMasthead()}${copycatNavigation('edits')}<main class="wp-copycat-content">${editsView({ settings, thoughtsMode })}</main></div>`;
         return;
     }
     if (!target) {
         container.innerHTML = `<div class="wp-understudy">${copycatMasthead()}${copycatNavigation('stage')}<div class="wp-understudy-empty"><div class="wp-understudy-empty-mark"><i class="fa-solid fa-cat"></i></div><strong>Nothing to copy yet</strong><span>Open a roleplay chat with a character reply, then come back to give it another life.</span></div></div>`;
         return;
     }
-    const scope = UNDERSTUDY_SCOPES[settings.scope] ?? UNDERSTUDY_SCOPES.full;
+    const scope = UNDERSTUDY_SCOPES[effectiveUnderstudyScope(settings.scope, thoughtsMode)];
     const isSpanScoped = Boolean(scope.spanKind);
     const noSpans = isSpanScoped && target.spanCount === 0;
     const state = { target, draft, generating, error, settings, applied, take, showOriginal, statusIndex, feedback, scope, isSpanScoped, noSpans };

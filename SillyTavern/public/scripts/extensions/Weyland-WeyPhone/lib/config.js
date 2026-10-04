@@ -125,6 +125,14 @@ export const defaultSettings = Object.freeze({
     // live against lorebookName every time, the same as a Registrar contact — no separate
     // "is this still valid" bookkeeping needed here.
     communityContacts: [],
+    // Which communityContacts were added automatically from the in-app Registrar import, as
+    // "name|lorebook" keys (lib/registrarLorebook.js syncRegistrarAutoContacts). Remembering
+    // them is what keeps a contact the user deleted from coming back on the next sync.
+    registrarAutoContacts: [],
+    // PromptOS Roleplay Shift -> Custom Preset: the player's saved feedback presets,
+    // { id, name, text, updatedAt }[]. The one in use is copied into the RoleplayShiftCustom
+    // global (that is what quick-reply-ext reads), so it survives even if this list is reset.
+    customShiftPresets: [],
     // onboarded flips to true when the first-open intro cards are completed ("Let's go").
     // batteryTracker maps the battery icon to remaining HelixMind daily messages. Defaults on —
     // the real percentage is the expected out-of-the-box behavior; the toggle exists for anyone

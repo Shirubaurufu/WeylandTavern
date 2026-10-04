@@ -5,9 +5,9 @@ import { APP_REGISTRY } from '../lib/appRegistry.js';
 import { getAppHelp, renderAppHelpDialog } from '../lib/ui/appHelp.js';
 import { createPanelMarkup } from '../lib/panel.js';
 
-// Apps that cannot spend a message on their own — the budget rule is deliberately omitted from
-// their help (see NO_BUDGET_RULE_APPS in lib/ui/appHelp.js).
-const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien']);
+// Non-generating apps omit the generic rule. Copycat instead explains its cost in its own
+// rewrite-specific bullet; keeping that exception explicit still checks every other app.
+const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien', 'registrar', 'understudy', 'narrative']);
 
 test('every WeyPhone app has contextual help with concise structured copy', () => {
     for (const app of APP_REGISTRY) {
@@ -22,12 +22,13 @@ test('every WeyPhone app has contextual help with concise structured copy', () =
     }
 });
 
-test('the budget rule is omitted for apps that never call a model, and getAppHelp stays pure', () => {
+test('non-generating apps and Copycat omit the generic budget rule, and getAppHelp stays pure', () => {
     for (const key of NO_BUDGET_RULE_APPS) {
         const help = getAppHelp(key);
         assert.ok(help, `${key} should have help`);
         assert.ok(!help.bullets.some(item => /Budget rule/i.test(item)), `${key} should not carry the budget rule`);
     }
+    assert.ok(getAppHelp('understudy').bullets.includes('Each rewrite consumes one message request.'));
     // Repeated calls must not accumulate duplicates — getAppHelp copies before pushing.
     assert.deepEqual(getAppHelp('chronicle').bullets, getAppHelp('chronicle').bullets);
     assert.deepEqual(

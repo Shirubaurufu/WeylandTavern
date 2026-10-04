@@ -73,7 +73,9 @@ test('appearance resolver injects only characters matched in the current scene',
 test('weighted difficult traits survive while the retired age tag does not', () => {
     const vera = formatPawXaiAppearanceReferences({ characterName: 'Vera', message: 'Vera smiles.' });
     assert.match(vera, /\(red inner hair:1\.5\)/);
-    assert.match(vera, /\(red curled horns:1\.5\)/);
+    // The released appearance correction lowers curl weight and emphasizes backswept horns.
+    assert.match(vera, /\(red curled horns:1\.2\)/);
+    assert.match(vera, /\(backswept horns:1\.3\)/);
     assert.match(vera, /\(messy hair:1\.5\)/);
     assert.doesNotMatch(vera, /aged up/i);
 });

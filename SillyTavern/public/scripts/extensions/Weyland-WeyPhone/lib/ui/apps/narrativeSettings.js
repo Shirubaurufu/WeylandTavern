@@ -1,13 +1,14 @@
 // lib/ui/apps/narrativeSettings.js
 //
 // PromptOS's product shell — a control-deck read on Storytelling Settings: a masthead, an icon
-// tab bar, and a few bespoke controls (the Hard Mode guard switch, the message mode strip) sitting
+// tab bar, and a few bespoke controls (the Roleplay Shift picker, the message mode strip) sitting
 // on top of plain-language cards, each carrying enough explanation that a user who has never opened
-// Storytelling Settings before can still make an informed choice. Every data-narrative-* hook below
-// is unchanged from the previous render, so index.js's click handling needs no edits — this file
-// only owns presentation, exactly like lib/narrativeSettings.js only owns data shape.
-import { EXPERIMENTAL_MODE_VARIABLES, FOCUS_OPTIONS, MENTAL_TOGGLES, MODE_TOGGLES, NARRATIVE_TABS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS } from '../../narrativeSettings.js';
+// Storytelling Settings before can still make an informed choice. Each data-narrative-* hook below
+// maps to a branch of handleNarrativeAction in index.js (Roleplay Shift added "set-shift") — this
+// file only owns presentation, exactly like lib/narrativeSettings.js only owns data shape.
+import { DOSE_OPTIONS, EXPERIMENTAL_MODE_VARIABLES, FOCUS_OPTIONS, INTRO_CONSTANT_MODE_OPTIONS, INTRO_MODE_OPTIONS, MENTAL_TOGGLES, MODE_TOGGLES, NARRATIVE_TABS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, SHIFT_OPTIONS } from '../../narrativeSettings.js';
 import { ASSET_BASE_URL } from '../../assetPaths.js';
+import { narratorPickerHtml, playNarratorMotion } from './narratorPicker.js';
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -30,8 +31,8 @@ function infoDisclosure(text, label) {
     return `<details class="wp-narrative-info"><summary aria-label="More about ${escapeHtml(label)}"><i class="fa-solid fa-circle-info"></i></summary><p>${escapeHtml(text)}</p></details>`;
 }
 
-function choiceButtons(items, active, action, valueKey = 'id', disabled = false) {
-    return `<div class="wp-narrative-choice-grid">${items.map(item => `
+function choiceButtons(items, active, action, valueKey = 'id', disabled = false, rowClass = '') {
+    return `<div class="wp-narrative-choice-grid${rowClass ? ` ${rowClass}` : ''}">${items.map(item => `
         <button type="button" class="wp-narrative-choice${selectedClass(active === item[valueKey])}" data-narrative-action="${escapeHtml(action)}" data-value="${escapeHtml(item[valueKey])}" ${disabled ? 'disabled' : ''}>
             <span class="wp-narrative-choice-dot" aria-hidden="true"></span>
             <strong>${escapeHtml(item.label ?? item.short)}</strong>
@@ -55,15 +56,11 @@ function toggleRows(items, values, scope) {
     }).join('')}</div>`;
 }
 
-function statusPill(label, value, kind = '') {
-    return `<span class="wp-narrative-status ${kind}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></span>`;
-}
-
 // Section metadata for the tab bar lives here, not in lib/narrativeSettings.js — it's
 // presentation, not the underlying variable/Quick Reply contract that file exists to protect.
 const TAB_META = {
     essentials: { label: 'Home', icon: 'fa-gauge-high' },
-    style: { label: 'Style', icon: 'fa-feather-pointed' },
+    style: { label: 'Narrator', icon: 'fa-feather-pointed' },
     modes: { label: 'Modes', icon: 'fa-sliders' },
     perspective: { label: 'POV', icon: 'fa-eye' },
 };
@@ -95,34 +92,131 @@ function narrativeNav(active) {
     </nav>`;
 }
 
-/** Hard Mode gets its own guarded-switch treatment rather than the generic pill — it's the one
- * setting on this screen that changes what the model is willing to write, so it should not read
- * as just another row in a list. The description is deliberately closer to Lucky's own original
- * Storytelling Settings wording than a trimmed-down summary — this is the one setting where a
- * user genuinely needs to understand the tradeoff, not just the gist. */
-function hardModeCard(snapshot) {
-    const on = snapshot.hardMode;
-    const promptSupportsIt = ['Current Prompt', 'Beta Prompt'].includes(snapshot.prompt);
+/** Course correction (Roleplay Shift). Layout from the PromptOS UI lab ("08"): "A dose of..." top
+ * right, a dot-matrix readout that names and explains whatever is in effect, then None/Custom above
+ * the rest of the shifts. The keys reuse the original choice-button look (name only, the readout
+ * does the explaining). Hard Mode still keeps its own caution note, since it's the one choice meant
+ * for 1-2 messages only.
+ *
+ * Doses (quick-reply-ext/src/dose.js): the syringe arms the grid so the next shift tapped is dosed
+ * into this chat for a secret 2-10 replies instead of being set. A live dose takes over the readout
+ * with an early way out, and deliberately never says how long it has left: the player not being in
+ * control of when it ends is the whole feature. */
+function roleplayShiftCard(snapshot) {
+    const active = snapshot.shift && snapshot.shift !== 'None';
+    const isHard = snapshot.shift === 'Hard Mode';
+    const dose = snapshot.dose;
+    const armed = Boolean(snapshot.doseArmed && snapshot.hasChat && !dose);
+    const selected = SHIFT_OPTIONS.find(option => option.id === (snapshot.shift || 'None')) || SHIFT_OPTIONS[0];
+    const regularName = selected.id === 'Custom Preset' && snapshot.customPreset ? `Custom: ${snapshot.customPreset.name}` : selected.label;
+    // `whisper` is the small centred line under a dose's description (Lucky's ask: say the range,
+    // never the actual count).
+    const readout = dose
+        ? { label: 'Dose · this chat', status: 'In your system', value: dose.shift === 'Custom Preset' && snapshot.customPreset ? `Custom: ${snapshot.customPreset.name}` : dose.shift, color: SHIFT_COLORS[dose.shift], say: 'Wears off on its own. You won’t know when.', whisper: '(in 2-10 responses)' }
+        : armed
+            ? { label: 'Pick your dose', status: 'Armed', value: 'A dose of...', say: 'Your next pick takes over for a little while, then wears off. You won’t know when.', whisper: '(in 2-10 responses)' }
+            : { label: 'Regular shift', status: 'Until changed', value: regularName, color: SHIFT_COLORS[selected.id], say: selected.description };
     return `
-    <section class="wp-narrative-card wp-narrative-hard-card${on ? ' is-on' : ''}">
-        <div class="wp-narrative-card-heading"><div><span>Short-term intensity</span><h3>Hard Mode</h3></div></div>
-        <ul class="wp-narrative-bullets">
-            <li>Adds Lucky's Hard Mode modifier.</li>
-            <li>Pushes models to embrace negativity and mental illness, hard. Can make normally soft characters cold/detached and hard characters rough - caution advised.</li>
-            <li>Meant for short stretches only.</li>
-            <li>Leaving it on for a long time can push characters into being unrealistically and permanently negative, past what's actually true to who they are.</li>
-        </ul>
-        <button type="button" class="wp-narrative-guard" data-narrative-action="toggle-hard" aria-pressed="${on}">
-            <span class="wp-narrative-guard-track"><span class="wp-narrative-guard-thumb"></span></span>
-            <span class="wp-narrative-guard-label">${on ? 'On' : 'Off'}</span>
-        </button>
-        ${!promptSupportsIt ? '<div class="wp-narrative-warning"><i class="fa-solid fa-triangle-exclamation"></i> This prompt does not inject Hard Mode. Enabling it switches to Current, matching the classic menu.</div>' : ''}
+    <section class="wp-narrative-card wp-narrative-hard-card wp-narrative-shift-card${active || dose ? ' is-on' : ''}${armed ? ' is-armed' : ''}">
+        <div class="wp-narrative-cc-head">
+            <div class="wp-narrative-cc-titles">
+                <h3><span class="wp-narrative-led${active || dose ? '' : ' is-off'}" aria-hidden="true"></span>Course correction<span class="wp-narrative-slash">/</span><button type="button" class="wp-narrative-cc-help" data-narrative-help="course-correction" title="What is Course Correction?" aria-label="What is Course Correction?"><i class="fa-solid fa-circle-question"></i></button></h3>
+                <p>A nudge in the direction your story needs.</p>
+            </div>
+            ${doseControl(snapshot, dose, armed, regularName)}
+        </div>
+        <div class="wp-narrative-matrix wp-narrative-shift-readout" aria-live="polite">
+            <div class="wp-narrative-lcd">
+                <div class="wp-narrative-lcd-meta"><span>${escapeHtml(readout.label)}</span><b>&#9679; ${escapeHtml(readout.status)}</b></div>
+                <div class="wp-narrative-readout-val"${readout.color ? ` style="--wn-shift-color: ${readout.color}"` : ''}>${escapeHtml(readout.value)}</div>
+                <div class="wp-narrative-readout-say">${escapeHtml(readout.say)}</div>
+                ${readout.whisper ? `<div class="wp-narrative-readout-whisper">${escapeHtml(readout.whisper)}</div>` : ''}
+            </div>
+        </div>
+        <div class="wp-narrative-shift-keys">
+            <div class="wp-narrative-shift-row wp-narrative-shift-topbar">${SHIFT_OPTIONS.filter(option => ['None', 'Custom Preset'].includes(option.id)).map(option => shiftKey(option, snapshot, armed)).join('')}</div>
+            <div class="wp-narrative-shift-row">${SHIFT_OPTIONS.filter(option => !['None', 'Custom Preset'].includes(option.id)).map(option => shiftKey(option, snapshot, armed)).join('')}</div>
+        </div>
+        ${!armed && !dose && isHard ? '<div class="wp-narrative-warning"><i class="fa-solid fa-triangle-exclamation"></i> Hard Mode is meant for 1-2 messages. Left on, it pushes every scene harsher and can make characters unrealistically and permanently negative.</div>' : ''}
+        ${snapshot.shift === 'General-Use' && !snapshot.analysisEnabled ? '<div class="wp-narrative-warning"><i class="fa-solid fa-triangle-exclamation"></i> General-Use only works with Analysis on. Right now nothing is being sent.</div>' : ''}
     </section>`;
 }
 
+/** Behind Course correction's "?" (opened in the phone's notice dialog by index.js, keyed by
+ * data-narrative-help). Lucky's explanation, lightly cleaned up; ***x*** renders bold italic. */
+export const NARRATIVE_HELP = {
+    'course-correction': {
+        kicker: 'PromptOS',
+        title: 'Course Correction',
+        paragraphs: [
+            'Course Correction allows you to add modifiers to your response that strongly encourage specific behaviors.',
+            'Promptside, when you select one of these options, the bot is handed a fake "feedback" section from you.',
+            'This feedback section tells the bot that it hasn\'t been following directions and that you need it to behave in a very specific way.',
+            'Each modifier has a casual-speech feedback section, an outlined section with specific ways to change its behavior, and a handful of example outputs, all of which were carefully handwritten by Lucky.',
+            'Be aware that some modifiers may have unexpected or poor results with some characters. Adding a Horror modifier to a warm scene of you cuddling Ava could do nothing, could make the story suddenly take a drastic turn, or could degrade output by confusing the bot.',
+            'You may also select "A dose of..." a modifier. If you do so, the bot will receive the modifier for 2-10 messages (***not counting rerolls***). This can make scenes more organic, as you aren\'t able to choose when to calm things down.',
+        ],
+    },
+};
+
+// Each shift's own colour on the Course correction screen (presentation only; the ids are the
+// RoleplayShift values). Picked to read clearly on the dark dot-matrix screen and to stay apart from
+// each other: Toxicity purple, Intimacy pink, Initiative green, and so on.
+const SHIFT_COLORS = {
+    None: '#bba79c',
+    'General-Use': '#f3dfc6',
+    'Hard Mode': '#ff4d4d',
+    'Self-Destruction': '#ff8040',
+    'Slow Burn': '#ffb45c',
+    Initiative: '#6fe08a',
+    Horror: '#a9c8ff',
+    Toxicity: '#c27dff',
+    Intimacy: '#ff7ac6',
+    'Flawed Communication': '#ffe066',
+    Intoxication: '#5fd6e8',
+    'Custom Preset': '#e3b3ff',
+};
+
+/** One shift key: the original choice button, compact. Armed, it doses instead of setting, and the
+ * choices that can't be dosed (None) are disabled. The full description is the button's tooltip. */
+function shiftKey(option, snapshot, armed) {
+    const selected = !armed && (snapshot.shift || 'None') === option.id;
+    const canDose = DOSE_OPTIONS.some(item => item.id === option.id);
+    return `
+                <button type="button" class="wp-narrative-choice wp-narrative-shift-key${selectedClass(selected)}" data-narrative-action="${armed ? 'start-dose' : 'set-shift'}" data-value="${escapeHtml(option.id)}" aria-pressed="${selected}" title="${escapeHtml(option.description)}" ${armed && !canDose ? 'disabled' : ''}>
+                    <span class="wp-narrative-choice-dot" aria-hidden="true"></span><strong>${escapeHtml(option.id === 'Custom Preset' ? 'Custom' : option.label)}</strong>
+                </button>`;
+}
+
+/** Top-right of Course correction: "A dose of..." (arms the grid), or "End it now" while a dose is in. */
+function doseControl(snapshot, dose, armed, regularName) {
+    if (dose) {
+        return `
+            <div class="wp-narrative-dose">
+                <button type="button" class="wp-narrative-dose-btn is-live" data-narrative-action="end-dose"><i class="fa-solid fa-syringe" aria-hidden="true"></i> End it now</button>
+                <small>Then back to ${escapeHtml(regularName)}</small>
+            </div>`;
+    }
+    const hint = !snapshot.hasChat ? 'Open a roleplay first' : armed ? 'Tap again to cancel' : 'Wears off on its own';
+    return `
+            <div class="wp-narrative-dose">
+                <button type="button" class="wp-narrative-dose-btn${armed ? ' is-armed' : ''}" data-narrative-action="arm-dose" aria-pressed="${armed}" ${snapshot.hasChat ? '' : 'disabled'}><i class="fa-solid fa-syringe" aria-hidden="true"></i> A dose of...</button>
+                <small>${hint}</small>
+            </div>`;
+}
+
+/** The line under a locked control while a built-in-prompt card's chat is open (see builtInPrompt
+ * in lib/narrativeSettings.js). Empty otherwise. */
+function builtInPromptNote(snapshot, text) {
+    if (!snapshot.builtInPrompt) return '';
+    return `<div class="wp-narrative-note wp-narrative-builtin-note"><i class="fa-solid fa-lock"></i><span>${escapeHtml(snapshot.builtInPrompt)} ${escapeHtml(text)}</span></div>`;
+}
+
 /** Analysis keeps the model-specific tradeoff visible while clearly identifying the enabled state
- * as the recommended default for most models. */
+ * as the recommended default for most models. While a built-in-prompt card is open the switch is
+ * locked: those cards always fill out their own scene sheet. */
 function analysisCard(snapshot) {
+    if (snapshot.builtInPrompt) return analysisCardLocked(snapshot);
     const on = snapshot.analysisEnabled;
     return `
     <section class="wp-narrative-card wp-narrative-analysis-card${on ? ' is-on' : ''}">
@@ -152,64 +246,166 @@ function analysisCard(snapshot) {
             <span><strong>${on ? 'Enabled' : 'Disabled'}</strong><small>Recommended for most models</small></span>
             <span class="wp-narrative-switch${on ? ' is-on' : ''}" aria-hidden="true"><i></i></span>
         </button>
-        ${snapshot.hardMode ? '<div class="wp-narrative-note"><i class="fa-solid fa-circle-info"></i> Hard Mode stays fully in effect either way — with the analysis off, it runs as a short standalone pre-analysis instead of a full section.</div>' : ''}
+        ${snapshot.shift && !['None', 'General-Use'].includes(snapshot.shift) ? '<div class="wp-narrative-note"><i class="fa-solid fa-circle-info"></i> Your Roleplay Shift stays in effect either way. With the analysis off, it is sent on its own ahead of the system prompt.</div>' : ''}
     </section>`;
 }
 
+/** The Analysis card in a Kinsbane / Mirror / Muse chat: no comparison table (it doesn't apply),
+ * the switch drawn always-on and disabled, and the reason underneath. */
+function analysisCardLocked(snapshot) {
+    return `
+    <section class="wp-narrative-card wp-narrative-analysis-card is-on is-locked">
+        <div class="wp-narrative-card-heading"><div><span>Pre-response reasoning</span><h3>Analysis</h3></div><i class="fa-solid fa-magnifying-glass"></i></div>
+        <button type="button" class="wp-narrative-gemini-toggle" disabled aria-disabled="true" aria-pressed="true">
+            <span><strong>Always on</strong><small>Built into this character</small></span>
+            <span class="wp-narrative-switch is-on" aria-hidden="true"><i></i></span>
+        </button>
+        ${builtInPromptNote(snapshot, 'always fills out its own scene sheet before writing. This setting applies to your other chats.')}
+    </section>`;
+}
+
+/** The READ ME button at the bottom opens lib/ui/apps/geminiFilterGuide.js, the explainer for
+ * Google's word filter (it's also where the chat's Gemini-block note sends players, so keep its
+ * label in sync with lib/ui/geminiBlockNotice.js). It uses data-narrative-guide rather than
+ * data-narrative-action because opening a static page doesn't need handleNarrativeAction's busy
+ * spinner or "settings updated" toast. */
 function geminiBypassCard(snapshot) {
     const on = snapshot.geminiBypass;
     return `
     <section class="wp-narrative-card wp-narrative-gemini-card${on ? ' is-on' : ''}">
-        <div class="wp-narrative-card-heading"><div><span>Optional model compatibility</span><h3>Gemini Bypass (Beta)</h3></div><i class="fa-solid fa-bolt"></i></div>
-        <p>Adds an experimental layer that may improve the reliability of Gemini-based models including Gemini 3.1 Pro, 3.8 Flash and Gemma.</p>
+        <div class="wp-narrative-card-heading"><div><h3>Gemini Bypass (Beta)</h3></div><i class="fa-solid fa-bolt"></i></div>
+        <p>Adds an experimental layer that may improve the reliability of Gemini-based models including Gemini 3.1 Pro, 3.8 Flash and Gemma. On the Beta prompt it also removes the explicit warm-up section that Gemini refuses to work with.</p>
         <button type="button" class="wp-narrative-gemini-toggle" data-narrative-action="toggle-gemini-bypass" aria-pressed="${on}">
             <span><strong>${on ? 'Enabled' : 'Disabled'}</strong><small>Gemini reasoning-loop safeguard</small></span>
             <span class="wp-narrative-switch${on ? ' is-on' : ''}" aria-hidden="true"><i></i></span>
         </button>
+        <div class="wp-narrative-note wp-narrative-gemini-note"><i class="fa-solid fa-circle-info"></i><span>Getting "The prompt could not be submitted"? This toggle can't fix that one. The guide below explains what can.</span></div>
+        <button type="button" class="wp-narrative-readme" data-narrative-guide="open"><i class="fa-solid fa-book-open" aria-hidden="true"></i> READ ME - Gemini Filter Guide</button>
+    </section>`;
+}
+
+// Cartridge labels for the System Prompt Selection bay (8-bit font, so short).
+const PROMPT_CART_LABELS = { 'Current Prompt': 'CURRENT', 'Beta Prompt': 'BETA', 'Old Prompt 2026': '2026', 'Old Prompt 2025': '2025', 'Mini Prompt': 'MINI' };
+
+/** "Current Setup:" on a dot-matrix screen (it replaced the "Current roleplay recipe" box). Same
+ * readings as before; chat-only overrides and an active shift light up. */
+function currentSetupScreen(snapshot) {
+    const promptLabel = PROMPT_OPTIONS.find(option => option.id === snapshot.prompt)?.label ?? snapshot.prompt;
+    // While a dose is in, the row itself reads "Dose" (the cell is too narrow for "Dose: Toxicity").
+    const shiftRow = snapshot.dose ? ['Dose', snapshot.dose.shift, true] : ['Shift', snapshot.shift || 'None', Boolean(snapshot.shift && snapshot.shift !== 'None')];
+    // A built-in-prompt card ignores the prompt choice, the narrator and the Analysis toggle, so the
+    // screen says so instead of listing settings that aren't in this chat's prompt.
+    const builtIn = Boolean(snapshot.builtInPrompt);
+    const rows = [
+        ['Prompt', builtIn ? 'Built-in' : promptLabel, builtIn],
+        ['Narrator', builtIn ? 'Built-in' : snapshot.localNarrator, !builtIn && snapshot.localNarratorOverride],
+        ['Analysis', builtIn ? 'Built-in' : (snapshot.analysisEnabled ? 'On' : 'Off'), false],
+        shiftRow,
+        ['POV', snapshot.localPovOverride ? 'Chat override' : snapshot.povType, snapshot.localPovOverride],
+        ['Language', snapshot.language, false],
+    ];
+    return `
+    <section class="wp-narrative-matrix wp-narrative-setup">
+        <div class="wp-narrative-lcd">
+            <div class="wp-narrative-lcd-meta"><span>Current Setup:</span><b>&#9679; Live</b></div>
+            <dl class="wp-narrative-setup-grid">${rows.map(([label, value, hot]) => `<div><dt>${label}</dt><dd${hot ? ' class="is-hot"' : ''}>${escapeHtml(value)}</dd></div>`).join('')}</dl>
+        </div>
+        <div class="wp-narrative-matrix-caption"><span class="wp-narrative-led" aria-hidden="true"></span>Dot matrix · storytelling system</div>
+    </section>`;
+}
+
+/** "System Prompt Selection:" as one cartridge bay. The old explanation of what a system prompt is
+ * sits behind the ? (top right); each cart's own description is its tooltip. */
+function systemPromptBay(snapshot) {
+    return `
+    <section class="wp-narrative-prompt-bay">
+        <div class="wp-narrative-bay-head">
+            <h3>System Prompt Selection:</h3>
+            <details class="wp-narrative-bay-help"><summary title="What is a system prompt?" aria-label="What is a system prompt?"><i class="fa-solid fa-circle-question"></i></summary>
+                <p>A system prompt is the foundational instruction set the model reads before anything else in a roleplay. It's what defines how characters think, speak, and behave underneath whatever scene you're actually in.</p></details>
+        </div>
+        <div class="wp-narrative-carts" role="group" aria-label="System prompt">${PROMPT_OPTIONS.map(option => {
+            const inserted = option.id === snapshot.prompt;
+            // Kinsbane Manor / Mirror Weyland / Muse run their own built-in prompt: every cart is drawn
+            // greyed out with no action, like a held slot, so nothing here looks like it changes this chat.
+            if (snapshot.builtInPrompt && !option.disabled) return `
+            <button type="button" class="wp-narrative-cart is-held is-locked" disabled aria-disabled="true" title="${escapeHtml(option.description)}">
+                <span class="wp-narrative-cart-body"><span class="wp-narrative-cart-label">${escapeHtml(PROMPT_CART_LABELS[option.id] ?? option.label)}</span><span class="wp-narrative-cart-grip" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="wp-narrative-cart-pins" aria-hidden="true"></span></span>
+                <small>&#9679; LOCKED</small>
+            </button>`;
+            // A held slot (no beta right now) is drawn but greyed out and carries no action, so it cannot be inserted.
+            if (option.disabled) return `
+            <button type="button" class="wp-narrative-cart is-held" disabled aria-disabled="true" title="${escapeHtml(option.description)}">
+                <span class="wp-narrative-cart-body"><span class="wp-narrative-cart-label">${escapeHtml(PROMPT_CART_LABELS[option.id] ?? option.label)}</span><span class="wp-narrative-cart-grip" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="wp-narrative-cart-pins" aria-hidden="true"></span></span>
+                <small>&#9679; EMPTY SLOT</small>
+            </button>`;
+            return `
+            <button type="button" class="wp-narrative-cart${inserted ? ' is-in' : ''}" data-narrative-action="set-prompt" data-value="${escapeHtml(option.id)}" aria-pressed="${inserted}" title="${escapeHtml(option.description)}">
+                <span class="wp-narrative-cart-body"><span class="wp-narrative-cart-label">${escapeHtml(PROMPT_CART_LABELS[option.id] ?? option.label)}</span><span class="wp-narrative-cart-grip" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="wp-narrative-cart-pins" aria-hidden="true"></span></span>
+                <small>&#9650; INSERTED</small>
+            </button>`;
+        }).join('')}
+        </div>
+        <div class="wp-narrative-bay-foot"><span>${PROMPT_OPTIONS.filter(option => !option.disabled).length} Promptcarts&trade; detected</span></div>
+        ${builtInPromptNote(snapshot, 'runs its own built-in system prompt. Prompt choice applies to your other chats.')}
     </section>`;
 }
 
 function essentials(snapshot) {
     return `
-    <section class="wp-narrative-hero">
-        <span class="wp-narrative-eyebrow">Current roleplay recipe</span>
-        <h2>${escapeHtml(snapshot.prompt)}</h2>
-        <p>${snapshot.hasChat ? 'Changes apply to the open roleplay. Global choices remain your defaults unless marked “this chat”.' : 'Open a roleplay to use chat-only overrides and character-specific scenarios.'}</p>
-        <div class="wp-narrative-status-row">
-            ${statusPill('Narrator', snapshot.localNarrator, snapshot.localNarratorOverride ? 'is-local' : '')}
-            ${statusPill('Analysis', snapshot.analysisEnabled ? 'On' : 'Off')}
-            ${statusPill('POV', snapshot.localPovOverride ? 'Chat override' : snapshot.povType, snapshot.localPovOverride ? 'is-local' : '')}
-            ${statusPill('Language', snapshot.language)}
-        </div>
-    </section>
-    <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>Foundation</span><h3>System prompt</h3></div><i class="fa-solid fa-layer-group"></i></div>
-        <p>A system prompt is the foundational instruction set the model reads before anything else in a roleplay. It's what defines how characters think, speak, and behave underneath whatever scene you're actually in.</p>
-        ${choiceButtons(PROMPT_OPTIONS, snapshot.prompt, 'set-prompt')}
-    </section>
-    ${hardModeCard(snapshot)}
+    ${currentSetupScreen(snapshot)}
+    ${systemPromptBay(snapshot)}
     ${analysisCard(snapshot)}
     ${geminiBypassCard(snapshot)}
+    ${roleplayShiftCard(snapshot)}
     <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>Character setup</span><h3>School year & scenario</h3></div><i class="fa-solid fa-graduation-cap"></i></div>
-        <p>Uses the existing character-specific scenario picker, including every backend-maintained option.</p>
+        <div class="wp-narrative-card-heading"><div><span>Character setup</span><h3>Change School Year or Scenario</h3></div><i class="fa-solid fa-graduation-cap"></i></div>
+        <p>Allows you to set the internal year forward and jump to other roleplay greetings, along with their embedded context entries.</p>
         <button type="button" class="wp-narrative-primary" data-narrative-action="school-year" ${snapshot.hasChat ? '' : 'disabled'}>Choose year or scenario <i class="fa-solid fa-chevron-right"></i></button>
+    </section>
+    ${introContextCard(snapshot)}`;
+}
+
+/** Sits under "Change School Year or Scenario": that card picks which intro you start with, this one
+ * decides whether that intro's starting situation stays in context. Variant groups (Loona's drunk
+ * start, Willow's eyes) carry their value as "group|option" since choiceButtons has one data-value. */
+function introContextCard(snapshot) {
+    const intro = snapshot.intro;
+    const heading = '<div class="wp-narrative-card-heading"><div><h3>Roleplay Intro Context</h3><span class="wp-narrative-intro-scope">This chat only</span></div><i class="fa-solid fa-clapperboard"></i></div>';
+    if (!snapshot.hasChat || !intro?.available) {
+        return `
+    <section class="wp-narrative-card wp-narrative-intro-card">
+        ${heading}
+        <p>${escapeHtml(intro?.reason || 'Open a roleplay to change its intro context.')}</p>
+    </section>`;
+    }
+    const context = intro.context;
+    const contextOptions = context?.fades ? INTRO_MODE_OPTIONS : INTRO_CONSTANT_MODE_OPTIONS;
+    const contextActive = context && !context.fades && context.mode === 'on' ? 'auto' : context?.mode;
+    return `
+    <section class="wp-narrative-card wp-narrative-intro-card">
+        ${heading}
+        <p>Roleplay greetings usually carry a context entry that explains to the character what’s going on and how to proceed in its new situation.</p>
+        <p>By default, these usually fall off after a number of messages, but you can manually enable or disable them here if your roleplay takes a different direction.</p>
+        ${context ? choiceButtons(contextOptions, contextActive, 'set-intro-context', 'id', false, 'wp-narrative-choice-row') : ''}
+        ${(intro.variants ?? []).map(group => `
+        <div class="wp-narrative-intro-group">
+            <strong class="wp-narrative-intro-group-label">${escapeHtml(group.label)}</strong>
+            ${choiceButtons(group.options.map(option => ({ ...option, id: `${group.id}|${option.id}`, description: option.description ?? '' })), `${group.id}|${group.current}`, 'set-intro-variant')}
+        </div>`).join('')}
     </section>`;
 }
 
+// Shown behind the picker's ? chip, one paragraph per entry (a \n is a line break; the last entry is the punchline).
+const NARRATOR_BLURB = [
+    'Narrators give the bot a specific voice and artistic belief to reach for throughout your roleplay. They influence how scenes are described as well as what directions they go in.',
+    'Choosing a warm narrator doesn’t prevent you from experiencing rough emotional scenes…\n…nor does a harsh narrator prevent you from experiencing soft, tender moments.',
+    'They are all balanced, so try each out.',
+];
+
 function style(snapshot) {
     return `
-    <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>Global default</span><h3>Narrator</h3></div><i class="fa-solid fa-feather-pointed"></i></div>
-        <p>A narrator sets the voice describing your scenes — how much detail lingers, how warm or how brutal the framing gets, and what kind of story the world leans toward. It changes how things are told, not who your characters are.</p>
-        ${choiceButtons(NARRATOR_OPTIONS, snapshot.globalNarrator, 'set-global-narrator')}
-    </section>
-    <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>Translation</span><h3>Roleplay language</h3></div><i class="fa-solid fa-language"></i></div>
-        <p>Characters remain unaware of the translation. English clears the extra language modifier.</p>
-        <div class="wp-narrative-language-row"><input id="wp-narrative-language" type="text" value="${escapeHtml(snapshot.language)}" placeholder="English" /><button type="button" data-narrative-action="save-language">Apply</button></div>
-        ${snapshot.language && snapshot.language.trim().toLowerCase() !== 'english' ? '<button type="button" class="wp-narrative-secondary" data-narrative-action="reset-language">Reset to English</button>' : ''}
-    </section>`;
+    ${narratorPickerHtml({ options: NARRATOR_OPTIONS, selected: snapshot.globalNarrator, from: snapshot.narratorFrom, busy: snapshot.narratorBusy, blurb: NARRATOR_BLURB })}`;
 }
 
 /** Onyx/Ruby/Opal/HTML/Clothing each get a colored channel tab so the row reads as a distinct
@@ -269,6 +465,12 @@ function modes(snapshot) {
     <section class="wp-narrative-card">
         <div class="wp-narrative-card-heading"><div><span>Chat display</span><h3>Commands & OOC prompts</h3></div><button type="button" class="wp-narrative-switch${snapshot.commandsHidden ? ' is-on' : ''}" data-narrative-action="toggle-command-visibility" aria-pressed="${snapshot.commandsHidden}"><i></i></button></div>
         <p>${snapshot.commandsHidden ? 'Hidden: technical command and OOC messages stay out of sight.' : 'Visible: command and OOC messages appear in the chat.'}</p>
+    </section>
+    <section class="wp-narrative-card">
+        <div class="wp-narrative-card-heading"><div><span>Translation</span><h3>Roleplay language</h3></div><i class="fa-solid fa-language"></i></div>
+        <p>Characters remain unaware of the translation. English clears the extra language modifier.</p>
+        <div class="wp-narrative-language-row"><input id="wp-narrative-language" type="text" value="${escapeHtml(snapshot.language)}" placeholder="English" /><button type="button" data-narrative-action="save-language">Apply</button></div>
+        ${snapshot.language && snapshot.language.trim().toLowerCase() !== 'english' ? '<button type="button" class="wp-narrative-secondary" data-narrative-action="reset-language">Reset to English</button>' : ''}
     </section>`;
 }
 
@@ -290,21 +492,69 @@ function perspective(snapshot) {
     </section>`;
 }
 
-export function renderNarrativeSettingsScreen(container, { snapshot, tab = 'essentials' }) {
+// ---- In-place redraw helpers -----------------------------------------------------------------------
+// Every action redraws this whole screen with innerHTML (index.js), and two things about that were felt:
+//  1. The app's screen entrance (style.css: #wp-screen-body > * { animation: wp-screen-in }) replays on every
+//     redraw, so each tap dipped the screen to 40% opacity and slid it in from the right. That is a
+//     navigation effect. A redraw over a PromptOS screen that is already showing is marked
+//     wp-narrative-still to skip it; arriving from another screen still gets the entrance.
+//  2. Cards change height (the Course Correction readout grows with a longer description). The redraw
+//     destroys the browser's own scroll anchor, so everything below jumped, including the control just
+//     tapped. Re-anchor by hand: remember where the tapped control's CONTAINER (or, failing that, the topmost
+//     visible control's) sat on screen, and scroll by however far it moved. The container, never the control
+//     itself: a control can move itself when its state changes (a seated System Prompt cartridge sits 6px
+//     lower than an unseated one), and compensating for that crept the page down 6px on every tap.
+const hasNarrativeScreen = container => typeof container?.querySelector === 'function' && Boolean(container.querySelector('.wp-narrative'));
+
+const controlKey = el => [el.dataset?.narrativeAction ?? '', el.dataset?.value ?? '', el.dataset?.variable ?? ''].join('|');
+
+// The control's wrapper (grid, row or strip). Its top follows layout shifts above it but not the control's own state.
+const anchorTop = el => (el.parentElement ?? el).getBoundingClientRect().top;
+
+function findControl(container, key) {
+    return [...container.querySelectorAll('[data-narrative-action]')].find(el => controlKey(el) === key) ?? null;
+}
+
+function captureScrollAnchor(container, preferredKey) {
+    // Tests render into a bare { innerHTML } object with no layout to anchor to.
+    if (typeof container?.querySelectorAll !== 'function') return null;
+    const box = container.getBoundingClientRect();
+    let el = preferredKey ? findControl(container, preferredKey) : null;
+    if (!el) el = [...container.querySelectorAll('[data-narrative-action]')].find(c => { const top = c.getBoundingClientRect().top; return top >= box.top && top < box.bottom; });
+    if (!el) return null;
+    return { key: controlKey(el), offset: anchorTop(el) - box.top, hadFocus: globalThis.document?.activeElement === el };
+}
+
+function restoreScrollAnchor(container, anchor) {
+    if (!anchor) return;
+    const el = findControl(container, anchor.key);
+    if (!el) return;
+    const delta = (anchorTop(el) - container.getBoundingClientRect().top) - anchor.offset;
+    if (Math.abs(delta) >= 1) container.scrollTop += delta;
+    // The old button had focus; its replacement should, so keyboard users are not dropped at the top of the page.
+    if (anchor.hadFocus) el.focus({ preventScroll: true });
+}
+
+export function renderNarrativeSettingsScreen(container, { snapshot: data, tab = 'essentials', doseArmed = false, narratorFrom = null, narratorBusy = false, anchorKey = '' }) {
+    // doseArmed is screen state (index.js), not a setting, so it rides along on the snapshot here.
+    // narratorFrom/narratorBusy are the same kind of thing for the narrator picker: only set for the one
+    // optimistic draw right after a tap (see 'set-global-narrator' in index.js and narratorPicker.js).
+    const snapshot = { ...data, doseArmed, narratorFrom, narratorBusy };
     const activeTab = NARRATIVE_TABS.includes(tab) ? tab : 'essentials';
     const body = activeTab === 'style' ? style(snapshot)
         : activeTab === 'modes' ? modes(snapshot)
         : activeTab === 'perspective' ? perspective(snapshot)
         : essentials(snapshot);
+    const inPlace = hasNarrativeScreen(container);
+    const anchor = captureScrollAnchor(container, anchorKey);
     container.innerHTML = `
-<div class="wp-narrative">
+<div class="wp-narrative${inPlace ? ' wp-narrative-still' : ''}">
     ${narrativeMasthead(snapshot)}
     ${narrativeNav(activeTab)}
     <div class="wp-narrative-content">${body}
-        <section class="wp-narrative-legacy">
-            <button type="button" data-narrative-action="legacy-menu"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open classic Storytelling Settings</button>
-            <small>The classic menu remains available as a compatibility fallback.</small>
-        </section>
     </div>
 </div>`;
+    restoreScrollAnchor(container, anchor);
+    // The picker was painted in its previous state; flip it to the new one so the swing-open transitions.
+    if (activeTab === 'style' && narratorFrom) playNarratorMotion(container, snapshot.globalNarrator);
 }
