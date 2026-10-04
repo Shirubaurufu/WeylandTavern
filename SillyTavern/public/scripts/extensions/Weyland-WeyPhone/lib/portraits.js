@@ -26,9 +26,13 @@ const WEYBOORU_PORTRAIT_BASE_URL = 'https://cast.weybooru.com/images/portraits';
  * @param {Array<{name: string, avatar: string}>} characters SillyTavern's context.characters
  * @param {string[]} charNames
  * @param {(type: string, file: string) => string} getThumbnailUrl SillyTavern's context.getThumbnailUrl
+ * @param {Record<string, string>} [primaryOverrides] name -> portrait URL that replaces the weybooru
+ *   guess. Used for Registrar community characters, whose real portrait comes from their Registrar
+ *   record: the first-name weybooru lookup would miss them, or show an official character's face
+ *   when the names collide. The rest of the fallback chain is unchanged.
  * @returns {Record<string, {primaryUrl: string|null, fallbackUrl: string|null, placeholderUrl: string|null, initial: string|null}>}
  */
-export function buildPortraitMap(characters, charNames, getThumbnailUrl) {
+export function buildPortraitMap(characters, charNames, getThumbnailUrl, primaryOverrides = {}) {
     const map = {};
     for (const charName of new Set(charNames)) {
         if (!charName) {
@@ -38,7 +42,7 @@ export function buildPortraitMap(characters, charNames, getThumbnailUrl) {
         const character = characters.find(c => c.name === charName);
         const firstName = charName.trim().split(/\s+/)[0].toLowerCase();
         map[charName] = {
-            primaryUrl: `${WEYBOORU_PORTRAIT_BASE_URL}/${firstName}.jpg`,
+            primaryUrl: primaryOverrides[charName] || `${WEYBOORU_PORTRAIT_BASE_URL}/${firstName}.jpg`,
             fallbackUrl: character ? getThumbnailUrl('avatar', character.avatar) : null,
             placeholderUrl: placeholderPortraitUrl(charName),
             initial: null,

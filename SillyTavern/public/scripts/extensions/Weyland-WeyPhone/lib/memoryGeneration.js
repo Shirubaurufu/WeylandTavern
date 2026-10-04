@@ -74,11 +74,13 @@ export async function sendMemoryRequest({ sendRequest, profileId, messages, prim
     if (!primaryModel) {
         throw new Error('No primary model configured for memory generation.');
     }
-    const boundedMessages = limitPhoneRequestMessages(withGeminiBypass(messages));
+    // Built per model: the primary and backup can be different families, and a Claude model must
+    // not get the Gemini Bypass text (see withGeminiBypass).
+    const forModel = model => limitPhoneRequestMessages(withGeminiBypass(messages, model));
     try {
-        return await sendRequest(profileId, boundedMessages, primaryModel);
+        return await sendRequest(profileId, forModel(primaryModel), primaryModel);
     } catch (primaryError) {
         if (!backupModel) throw primaryError;
-        return await sendRequest(profileId, boundedMessages, backupModel);
+        return await sendRequest(profileId, forModel(backupModel), backupModel);
     }
 }

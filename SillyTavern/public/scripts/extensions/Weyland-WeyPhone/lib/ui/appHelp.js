@@ -153,7 +153,13 @@ export function getAppHelp(appKey) {
     return { ...help, bullets: [...(help.bullets ?? []), ...(addBudgetRule ? [MESSAGE_BUDGET_BULLET] : [])] };
 }
 
-export function renderNoticeDialog(container, { kicker = 'WeyPhone', title, body, bullets = [] }) {
+/** `paragraphs` is optional, for notices longer than one `body` paragraph (PromptOS's Course
+ * Correction "?"). Text is escaped; the one markup allowed is ***word*** for bold italic emphasis. */
+function noticeParagraph(text) {
+    return `<p>${escapeHtml(text).replace(/\*\*\*(.+?)\*\*\*/g, '<b><i>$1</i></b>')}</p>`;
+}
+
+export function renderNoticeDialog(container, { kicker = 'WeyPhone', title, body, paragraphs = [], bullets = [] }) {
     container.innerHTML = `
 <div class="wp-app-help-backdrop" data-help-close></div>
 <section class="wp-app-help-card" role="dialog" aria-modal="true" aria-labelledby="wp-app-help-title">
@@ -164,7 +170,7 @@ export function renderNoticeDialog(container, { kicker = 'WeyPhone', title, body
         </div>
         <button type="button" class="wp-app-help-close" data-help-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <p>${escapeHtml(body)}</p>
+    ${[body, ...paragraphs].filter(Boolean).map(noticeParagraph).join('')}
     ${bullets.length ? `<ul>${bullets.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
 </section>`;
     container.hidden = false;

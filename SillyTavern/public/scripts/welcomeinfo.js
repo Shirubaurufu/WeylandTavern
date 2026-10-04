@@ -771,50 +771,123 @@ function sortCharacterCardsByName() {
  * Fetches markdown content from GitHub and renders it to HTML
  * @param {string} type The type of content to fetch (character, dorm, world)
  */
-async function fetchAndRenderMarkdown(type) {
+function fetchAndRenderMarkdown(type) {
+    // One click can reach this twice (the info panel attaches its click handlers every time it is
+    // set up), and each run used to convert the whole page again. A second call for a page that is
+    // already loading now shares the first one's work.
+    if (!markdownLoads.has(type)) {
+        markdownLoads.set(type, loadAndRenderMarkdown(type).finally(() => markdownLoads.delete(type)));
+    }
+    return markdownLoads.get(type);
+}
+
+/** @type {Map<string, Promise<void>>} */
+const markdownLoads = new Map();
+
+const MARKDOWN_FETCH_TIMEOUT_MS = 15000;
+// Last good copy of each page, so the lore still opens when GitHub can't be reached.
+const markdownCacheKey = (type) => `weyland-wiki-${type}`;
+
+function readCachedMarkdown(type) {
+    try {
+        return localStorage.getItem(markdownCacheKey(type)) || '';
+    } catch {
+        return '';
+    }
+}
+
+function cacheMarkdown(type, markdown) {
+    try {
+        localStorage.setItem(markdownCacheKey(type), markdown);
+    } catch {
+        // Private mode or a full quota: the cache is only a convenience.
+    }
+}
+
+/**
+ * Fetches the page, retrying once. Without a timeout, a connection that never answers made the
+ * page hang until the browser gave up (20-30 seconds), then show the generic failure.
+ * @param {string} url
+ */
+async function fetchMarkdownText(url) {
+    let lastError;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+            const response = await fetch(url, { signal: AbortSignal.timeout(MARKDOWN_FETCH_TIMEOUT_MS) });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.text();
+        } catch (error) {
+            lastError = error;
+            console.warn(`Attempt ${attempt} to fetch ${url} failed:`, error);
+            if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    throw lastError;
+}
+
+function renderMarkdownInto(type, markdownContent, note = '') {
+    // Convert markdown to HTML using SillyTavern's converter
+    const htmlContent = converter.makeHtml(markdownContent);
+    console.log(`Converted ${type} markdown to HTML`);
+
+    // Insert the HTML into the appropriate section
+    const container = document.getElementById(`${type}Info`);
+    if (container) {
+        container.innerHTML = htmlContent;
+        if (note) {
+            const noteElement = document.createElement('p');
+            noteElement.style.opacity = '0.7';
+            noteElement.textContent = note;
+            container.prepend(noteElement);
+        }
+        console.log(`Inserted ${type} HTML content into page`);
+        if (type === 'character') {
+            setupCharacterFilter();
+            sortCharacterCardsByName();
+        }
+        else if (type === 'world') {
+            setupWorldLoreFilter();
+        }
+    } else {
+        console.error(`Could not find container for ${type}Info`);
+    }
+}
+
+async function loadAndRenderMarkdown(type) {
     // The base URL to your GitHub repository's raw content
     const baseUrl = 'https://raw.githubusercontent.com/FFFox-ST-Manager/Weylandpedia/main/';
     const url = `${baseUrl}${type}.md`;
 
     try {
         console.log(`Fetching ${type} content from: ${url}`);
-
-        // Fetch the markdown content
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch ${type} content: ${response.status}`);
-        }
-
-        // Get the markdown text
-        const markdownContent = await response.text();
+        const markdownContent = await fetchMarkdownText(url);
         console.log(`Received markdown content for ${type}`);
-
-        // Convert markdown to HTML using SillyTavern's converter
-        const htmlContent = converter.makeHtml(markdownContent);
-        console.log(`Converted ${type} markdown to HTML`);
-
-        // Insert the HTML into the appropriate section
-        const container = document.getElementById(`${type}Info`);
-        if (container) {
-            container.innerHTML = htmlContent;
-            console.log(`Inserted ${type} HTML content into page`);
-            if (type === 'character') {
-                setupCharacterFilter();
-                sortCharacterCardsByName();
-            }
-            else if (type === 'world') {
-                setupWorldLoreFilter();
-            }
-        } else {
-            console.error(`Could not find container for ${type}Info`);
-        }
+        cacheMarkdown(type, markdownContent);
+        renderMarkdownInto(type, markdownContent);
     } catch (error) {
         console.error(`Error fetching ${type} content:`, error);
         const container = document.getElementById(`${type}Info`);
-        if (container) {
-            container.innerHTML = `<p>Failed to load ${type} information. Please try again later.</p>`;
+        if (!container) return;
+
+        const saved = readCachedMarkdown(type);
+        if (saved) {
+            try {
+                renderMarkdownInto(type, saved, 'Could not reach the latest version, so this is your last saved copy.');
+                return;
+            } catch (renderError) {
+                console.error(`Error rendering saved ${type} content:`, renderError);
+            }
         }
+        container.innerHTML = `<p>Failed to load ${type} information. Please try again later.</p>`;
+        const retry = document.createElement('button');
+        retry.className = 'menu_button';
+        retry.type = 'button';
+        retry.textContent = 'Try again';
+        retry.addEventListener('click', () => {
+            container.innerHTML = `<div class="loading">Loading ${type} information...</div>`;
+            fetchAndRenderMarkdown(type);
+        });
+        container.appendChild(retry);
     }
 }
 

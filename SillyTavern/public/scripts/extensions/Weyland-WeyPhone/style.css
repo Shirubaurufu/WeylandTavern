@@ -5337,6 +5337,13 @@ html body .st-modal-overlay#wbv-modal-overlay {
 .wp-narrative-gemini-toggle strong { font-size: 12px; }
 .wp-narrative-gemini-toggle small { color: var(--wn-ink-muted); font-size: 9px; }
 .wp-narrative-gemini-card.is-on .wp-narrative-switch { background: #4f7fc4; }
+/* READ ME button at the bottom of the card: opens the Gemini word-filter guide
+   (lib/ui/apps/geminiFilterGuide.js). A full-width labeled button rather than an icon because
+   players who just got blocked need to see that there's something to read, and the chat's
+   block note tells them to tap it by name. */
+.wp-narrative-readme { display: flex; width: 100%; align-items: center; justify-content: center; gap: 7px; margin-top: 10px; padding: 9px 12px; border: 1px solid #4f7fc4; border-radius: 10px; background: #4f7fc4; color: #fff; font: 400 12.5px 'WP Share Tech Mono', 'JetBrains Mono', monospace; letter-spacing: .06em; box-shadow: 0 2px 6px rgba(22, 49, 87, .25); transition: filter .15s, transform .15s; }
+.wp-narrative-readme:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.wp-narrative-gemini-note i { color: #4f7fc4; }
 
 .wp-narrative-switch {
     position: relative;
@@ -5382,6 +5389,132 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 @keyframes wp-narrative-spin { to { transform: rotate(360deg); } }
 
 .wp-narrative-warning { display: flex; gap: 7px; margin-top: 10px; padding: 9px; border-radius: 9px; background: rgba(58, 18, 6, .08); color: var(--wn-ember); font-size: 10px; line-height: 1.35; }
+/* Roleplay intro context: variant pickers (Loona's drunk start, Willow's eyes) get a small label
+   so they read as a separate choice from the Auto/On/Off row above them. */
+.wp-narrative-intro-group { margin-top: 12px; }
+.wp-narrative-intro-group-label { display: block; margin-bottom: 6px; color: var(--wn-ember); font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+/* ---------------------------------------------------------------------------
+   PromptOS upgrades from the UI lab ("PromptOS-UI-Lab/08", 2026-10-02): the Home screen keeps the
+   original theme, plus three pieces:
+   1. "Current Setup:" on a dot-matrix screen (.wp-narrative-setup, replaced the recipe box),
+   2. "System Prompt Selection:" as a cartridge bay (.wp-narrative-prompt-bay),
+   3. Course correction's dot-matrix readout, compact shift keys and dose button.
+   Only PromptOS tokens (--wn-*) are used, so it all sits in the original palette. The two fonts are
+   bundled in assets/fonts (SIL OFL): Share Tech Mono on the screens, Press Start 2P on cart labels.
+   --------------------------------------------------------------------------- */
+@font-face { font-family: 'WP Share Tech Mono'; src: url('assets/fonts/ShareTechMono-latin.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'WP Press Start 2P'; src: url('assets/fonts/PressStart2P-latin.woff2') format('woff2'); font-display: swap; }
+
+/* shared: the dot-matrix screen */
+#wp-panel[data-app="narrative"] .wp-narrative-matrix {
+    padding: 8px 8px 7px;
+    border: 1px solid color-mix(in srgb, var(--wn-ember) 40%, transparent);
+    border-radius: 14px;
+    background: linear-gradient(180deg, var(--wn-frame-2), var(--wn-frame));
+    box-shadow: inset 0 1px 0 rgba(255, 217, 204, .08), inset 0 -2px 4px rgba(0, 0, 0, .5), 0 10px 22px rgba(0, 0, 0, .35);
+}
+#wp-panel[data-app="narrative"] .wp-narrative-lcd {
+    position: relative;
+    overflow: hidden;
+    padding: 11px 12px;
+    border-radius: 8px;
+    color: var(--wn-accent-soft);
+    font-family: 'WP Share Tech Mono', 'JetBrains Mono', ui-monospace, monospace;
+    background:
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, .32) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(90deg, rgba(255, 217, 204, .03) 0 1px, transparent 1px 3px),
+        radial-gradient(130% 100% at 50% 0%, #22110e, #0d0605 75%);
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, .75), inset 0 0 0 1px rgba(0, 0, 0, .6), inset 0 0 26px rgba(255, 77, 77, .05);
+}
+#wp-panel[data-app="narrative"] .wp-narrative-lcd::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, rgba(255, 217, 204, .05), transparent 32%); }
+#wp-panel[data-app="narrative"] .wp-narrative-lcd-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255, 217, 204, .55); }
+#wp-panel[data-app="narrative"] .wp-narrative-lcd-meta b { font-weight: 400; color: var(--wn-accent); white-space: nowrap; }
+#wp-panel[data-app="narrative"] .wp-narrative-led { display: inline-block; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--wn-accent); box-shadow: 0 0 6px rgba(255, 77, 77, .8); }
+#wp-panel[data-app="narrative"] .wp-narrative-led.is-off { background: rgba(58, 18, 6, .22); box-shadow: none; }
+
+/* 1. Current Setup */
+#wp-panel[data-app="narrative"] .wp-narrative-setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 16px; margin: 10px 0 0; }
+#wp-panel[data-app="narrative"] .wp-narrative-setup-grid div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+#wp-panel[data-app="narrative"] .wp-narrative-setup-grid dt { flex: 0 0 auto; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 217, 204, .5); }
+#wp-panel[data-app="narrative"] .wp-narrative-setup-grid dd { min-width: 0; margin: 0; font-size: 13px; color: var(--wn-accent-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#wp-panel[data-app="narrative"] .wp-narrative-setup-grid dd.is-hot { color: var(--wn-accent); text-shadow: 0 0 8px rgba(255, 77, 77, .4); }
+#wp-panel[data-app="narrative"] .wp-narrative-matrix-caption { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 6px 0 0; font: italic 700 8px Inter, Arial, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: rgba(255, 217, 204, .4); }
+#wp-panel[data-app="narrative"] .wp-narrative-matrix-caption .wp-narrative-led { width: 6px; height: 6px; }
+
+/* 2. System Prompt Selection: the whole card is the cartridge bay */
+#wp-panel[data-app="narrative"] .wp-narrative-prompt-bay {
+    position: relative;
+    padding: 14px 13px 12px;
+    border: 1px solid color-mix(in srgb, var(--wn-ember) 40%, transparent);
+    border-radius: 14px;
+    background: linear-gradient(180deg, var(--wn-frame-2), #0e0706);
+    box-shadow: inset 0 3px 9px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(0, 0, 0, .4), 0 10px 22px rgba(0, 0, 0, .35);
+}
+#wp-panel[data-app="narrative"] .wp-narrative-bay-head { margin-bottom: 18px; padding-right: 30px; }
+#wp-panel[data-app="narrative"] .wp-narrative-bay-head h3 { margin: 0; color: var(--wn-accent-soft); font-size: 15px; }
+/* the ? sits top-right like a card's heading icon; its text opens in the flow under the title */
+#wp-panel[data-app="narrative"] .wp-narrative-bay-help summary { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: var(--wn-accent); font-size: 17px; list-style: none; cursor: pointer; }
+#wp-panel[data-app="narrative"] .wp-narrative-bay-help summary::-webkit-details-marker { display: none; }
+#wp-panel[data-app="narrative"] .wp-narrative-bay-help summary:hover, #wp-panel[data-app="narrative"] .wp-narrative-bay-help[open] summary { background: rgba(255, 217, 204, .1); }
+#wp-panel[data-app="narrative"] .wp-narrative-bay-help p { margin: 8px -30px 0 0; padding: 9px 10px; border-radius: 9px; background: rgba(255, 217, 204, .07); color: rgba(255, 217, 204, .7); font-size: 10.5px; line-height: 1.5; }
+#wp-panel[data-app="narrative"] .wp-narrative-carts { display: grid; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); gap: 28px 7px; align-items: end; }
+/* The button wraps the cart body AND its gold contacts (padding-bottom), so the inserted ring goes
+   around the whole cartridge instead of cutting across the contacts. */
+#wp-panel[data-app="narrative"] .wp-narrative-cart { position: relative; display: block; margin-bottom: 6px; padding: 3px 3px 9px; border: 0; border-radius: 6px; background: transparent; cursor: pointer; transition: margin .15s, box-shadow .15s; }
+#wp-panel[data-app="narrative"] .wp-narrative-cart.is-in { box-shadow: 0 0 0 2px rgba(255, 77, 77, .85), 0 0 14px rgba(255, 77, 77, .35); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart.is-in { margin-bottom: 0; }
+#wp-panel[data-app="narrative"] .wp-narrative-cart-body { position: relative; display: block; padding: 5px 4px 6px; border-radius: 4px 4px 2px 2px; background: linear-gradient(180deg, #4b2a2c, #34201f 70%, #2a1817); box-shadow: inset 0 2px 0 rgba(255, 217, 204, .14), inset 0 -3px 5px rgba(0, 0, 0, .4), 0 3px 4px rgba(0, 0, 0, .45); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart:nth-child(1) .wp-narrative-cart-body { background: linear-gradient(180deg, #55383a, #3c2727 70%, #2f1f1f); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart:nth-child(3) .wp-narrative-cart-body { background: linear-gradient(180deg, #5c3233, #432425 70%, #361d1e); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart:nth-child(4) .wp-narrative-cart-body { background: linear-gradient(180deg, #443031, #302222 70%, #261b1b); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart-body::before { content: ''; position: absolute; top: -4px; left: 6px; right: 6px; height: 5px; border-radius: 3px 3px 0 0; background: inherit; filter: brightness(.8); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart-label { display: block; padding: 6px 1px 5px; border-radius: 2px; background: linear-gradient(180deg, var(--wn-paper), var(--wn-paper-2)); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); font: 400 7px 'WP Press Start 2P', monospace; color: var(--wn-ink); text-align: center; }
+#wp-panel[data-app="narrative"] .wp-narrative-cart-grip { display: flex; justify-content: center; gap: 2px; margin-top: 5px; }
+#wp-panel[data-app="narrative"] .wp-narrative-cart-grip i { width: 4px; height: 7px; border-radius: 1px; background: rgba(255, 217, 204, .13); box-shadow: inset 0 1px 1px rgba(0, 0, 0, .35); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart-pins { position: absolute; bottom: -5px; left: 8px; right: 8px; height: 5px; opacity: .8; background: repeating-linear-gradient(90deg, #c9a86a 0 4px, transparent 4px 8px); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart.is-in .wp-narrative-cart-body { box-shadow: inset 0 2px 0 rgba(255, 217, 204, .16), inset 0 -3px 5px rgba(0, 0, 0, .4), 0 3px 4px rgba(0, 0, 0, .45); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart small { position: absolute; left: 50%; bottom: -21px; transform: translateX(-50%); opacity: 0; white-space: nowrap; font: 700 9px Inter, Arial, sans-serif; letter-spacing: .08em; color: var(--wn-accent); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart.is-in small { opacity: 1; }
+#wp-panel[data-app="narrative"] .wp-narrative-cart.wp-narrative-busy { opacity: .6; }
+/* Held slot (no beta right now): same cartridge, drained of color, not clickable. */
+#wp-panel[data-app="narrative"] .wp-narrative-cart.is-held { cursor: not-allowed; filter: grayscale(1) brightness(.6); opacity: .55; }
+#wp-panel[data-app="narrative"] .wp-narrative-cart.is-held small { opacity: .8; color: var(--wn-ink-soft, #9a8f8f); }
+/* Kinsbane Manor / Mirror Weyland / Muse chats: their built-in prompt ignores the carts and the Analysis
+   toggle, so both are drawn locked (lib/ui/apps/narrativeSettings.js, builtInPrompt). */
+#wp-panel[data-app="narrative"] .wp-narrative-analysis-card.is-locked .wp-narrative-gemini-toggle { cursor: not-allowed; opacity: .6; }
+#wp-panel[data-app="narrative"] .wp-narrative-builtin-note { margin-top: 10px; }
+#wp-panel[data-app="narrative"] .wp-narrative-bay-foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 26px; padding-top: 9px; border-top: 1px solid rgba(255, 217, 204, .08); font: 400 9.5px 'WP Share Tech Mono', ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: rgba(255, 217, 204, .5); }
+#wp-panel[data-app="narrative"] .wp-narrative-bay-foot b { font-weight: 400; color: var(--wn-accent); }
+
+/* 3. Course correction */
+#wp-panel[data-app="narrative"] .wp-narrative-cc-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 11px; }
+#wp-panel[data-app="narrative"] .wp-narrative-cc-titles { flex: 1; min-width: 0; }
+#wp-panel[data-app="narrative"] .wp-narrative-cc-titles h3 { display: flex; align-items: center; gap: 7px; margin: 2px 0 0; color: var(--wn-ink); font-size: 15px; }
+#wp-panel[data-app="narrative"] .wp-narrative-slash { margin-left: -4px; color: var(--wn-accent); font-weight: 900; }
+/* Course correction's "?" (opens NARRATIVE_HELP['course-correction'] in the notice dialog). Same
+   ember "?" look as the System Prompt Selection bay's help. */
+#wp-panel[data-app="narrative"] .wp-narrative-cc-help { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--wn-ember); font-size: 16px; }
+#wp-panel[data-app="narrative"] .wp-narrative-cc-help:hover { background: color-mix(in srgb, var(--wn-ink) 10%, transparent); }
+#wp-panel[data-app="narrative"] .wp-narrative-cc-titles p { margin: 4px 0 0; color: var(--wn-ink-muted); font-size: 11px; line-height: 1.45; }
+#wp-panel[data-app="narrative"] .wp-narrative-dose { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+#wp-panel[data-app="narrative"] .wp-narrative-dose small { color: var(--wn-ink-muted); font-size: 9px; }
+#wp-panel[data-app="narrative"] .wp-narrative-dose-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid color-mix(in srgb, var(--wn-ember) 45%, var(--wn-line)); border-radius: 10px; background: rgba(255, 255, 255, .22); color: var(--wn-ember); font-size: 11px; font-weight: 700; cursor: pointer; transition: background .12s; }
+#wp-panel[data-app="narrative"] .wp-narrative-dose-btn:not(:disabled):hover { background: rgba(255, 255, 255, .4); }
+#wp-panel[data-app="narrative"] .wp-narrative-dose-btn:disabled { opacity: .5; cursor: not-allowed; }
+#wp-panel[data-app="narrative"] .wp-narrative-dose-btn.is-armed, #wp-panel[data-app="narrative"] .wp-narrative-dose-btn.is-live { border-color: var(--wn-accent); background: var(--wn-accent); color: #fff; }
+#wp-panel[data-app="narrative"] .wp-narrative-shift-card.is-armed .wp-narrative-shift-key:not(:disabled) { border-style: dashed; border-color: color-mix(in srgb, var(--wn-accent) 55%, var(--wn-line)); }
+#wp-panel[data-app="narrative"] .wp-narrative-shift-readout { padding: 6px; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255, 217, 204, .08), 0 2px 5px rgba(58, 18, 6, .25); }
+#wp-panel[data-app="narrative"] .wp-narrative-readout-val { margin: 6px 0 4px; font-size: 20px; line-height: 1.1; color: var(--wn-shift-color, var(--wn-accent)); text-shadow: 0 0 8px color-mix(in srgb, var(--wn-shift-color, var(--wn-accent)) 40%, transparent); text-transform: uppercase; overflow-wrap: anywhere; }
+#wp-panel[data-app="narrative"] .wp-narrative-readout-say { font-size: 10.5px; line-height: 1.5; color: rgba(255, 217, 204, .7); }
+#wp-panel[data-app="narrative"] .wp-narrative-readout-say::before { content: '> '; color: var(--wn-accent); }
+#wp-panel[data-app="narrative"] .wp-narrative-readout-whisper { margin-top: 5px; font-size: 9px; letter-spacing: .08em; text-align: center; color: rgba(255, 217, 204, .38); }
+#wp-panel[data-app="narrative"] .wp-narrative-shift-keys { margin-top: 11px; }
+#wp-panel[data-app="narrative"] .wp-narrative-shift-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+#wp-panel[data-app="narrative"] .wp-narrative-shift-topbar { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed color-mix(in srgb, var(--wn-ember) 30%, var(--wn-line)); }
+/* the original choice button, compact: name only, since the readout above explains the pick */
+#wp-panel[data-app="narrative"] .wp-narrative-shift-key { min-height: 40px; justify-content: center; padding: 8px 10px 8px 24px; cursor: pointer; }
+#wp-panel[data-app="narrative"] .wp-narrative-shift-key strong { font-size: 11.5px; line-height: 1.25; overflow-wrap: anywhere; }
+#wp-panel[data-app="narrative"] .wp-narrative-shift-key .wp-narrative-choice-dot { top: 50%; transform: translateY(-50%); }
 
 /* Flat ember-on-parchment buttons for every in-card action. Sampled from the same palette as the
    classic popup's own buttons (see the block comment above) without reusing its texture — a plain
@@ -5896,3 +6029,247 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 .wp-discorgi-settings-actions button:disabled { opacity: .45; cursor: default; }
 /* Channels switched off in settings still show in the header strip, muted. */
 .wp-discorgi-channel-option.wp-off { opacity: .4; text-decoration: line-through; }
+
+/* --------------------------------------------------------------------------
+   PROMPTOS NARRATOR PICKER ("Slats"), Style tab. Markup + the previous-state motion hook live in
+   lib/ui/apps/narratorPicker.js. The prototype and design notes are in PromptOS-Narrator-Select-Claude/.
+   Everything is namespaced wp-np-* and sized in cqw against .wp-np's own width, so it scales with the
+   resizable phone (360px default, 280px minimum) instead of assuming a viewport.
+   -------------------------------------------------------------------------- */
+@font-face { font-family: 'WP Anton'; src: url('assets/fonts/Anton-latin.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'WP Archivo Black'; src: url('assets/fonts/ArchivoBlack-latin.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'WP Special Elite'; src: url('assets/fonts/SpecialElite-latin.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+.wp-np {
+    --np-S: 4.5cqw;                       /* how far the slats lean */
+    --np-disp: 'WP Anton', 'Anton', Impact, 'Haettenschweiler', 'Arial Narrow', sans-serif;
+    --np-title: 'WP Archivo Black', 'Archivo Black', 'Arial Black', 'Arial Bold', sans-serif;
+    --np-type: 'WP Special Elite', 'Special Elite', 'Courier New', Courier, monospace;
+    --np-mono: 'WP Share Tech Mono', 'JetBrains Mono', ui-monospace, monospace;
+    position: relative;
+    background: var(--wn-bg);
+}
+
+/* ---- header ---- */
+.wp-np-head { display: flex; align-items: flex-end; justify-content: space-between; padding: 14px 14px 10px; }
+.wp-np-k { display: block; color: var(--wn-accent-2); font: 400 10px/1 var(--np-mono); letter-spacing: .18em; text-transform: uppercase; }
+.wp-np-title { margin: 6px 0 0; color: #fff1e6; font: 400 30px/.9 var(--np-title); text-transform: uppercase; transform: skewX(-7deg); transform-origin: left bottom; }
+/* A slash in the title's wake. Pure decoration, but it ties the header to the slats' lean. */
+.wp-np-title::after { content: ''; display: inline-block; width: 34px; height: 7px; margin-left: 10px; background: var(--wn-accent); transform: translateY(-4px) skewX(-30deg); }
+.wp-np-help { width: 30px; height: 30px; border: 2px solid #ffd9cc66; background: transparent; color: #ffd9cc; font: 400 15px/1 var(--np-mono); transform: skewX(-10deg); }
+.wp-np-top[open] .wp-np-help { background: #ffd9cc; color: var(--wn-bg); }
+.wp-np-blurb { margin: 0; padding: 0 14px 12px; color: #d9b9a8; font: 400 12px/1.5 var(--np-type); }
+
+/* ---- stage ---- */
+/* 100cqw, not taller: the real panel is only ~450px of usable height under the tab bar, and the name plate
+   (name, description, tags) must start inside it so a tap visibly lands somewhere. */
+.wp-np-stage { display: flex; height: 100cqw; }
+.wp-np-slat {
+    --np-focus: 50% 20%;
+    position: relative; flex: 1 1 0; min-width: 0; padding: 0; border: 0; overflow: hidden;
+    background: transparent; color: var(--np-cream);
+    margin-left: calc(var(--np-S) * -1 + 3px);
+    clip-path: polygon(var(--np-S) 0, 100% 0, calc(100% - var(--np-S)) 100%, 0 100%);
+    transition: flex-grow .6s cubic-bezier(.75, 0, .15, 1);
+}
+.wp-np-slat:first-child { margin-left: 0; clip-path: polygon(0 0, 100% 0, calc(100% - var(--np-S)) 100%, 0 100%); }
+.wp-np-slat:last-child  { clip-path: polygon(var(--np-S) 0, 100% 0, 100% 100%, 0 100%); }
+.wp-np-slat[aria-pressed="true"] { flex-grow: 4; }
+.wp-np-slat:focus-visible { outline: none; }
+.wp-np-slat:focus-visible .wp-np-slat-bg { box-shadow: inset 0 0 0 3px var(--np-cream); }
+
+.wp-np-slat-bg { position: absolute; inset: 0; background: color-mix(in srgb, var(--np-main) 72%, #000); transition: background .4s; }
+/* Halftone dots: the one texture the whole picker leans on. Cheap, and it kills the flat-UI look. */
+.wp-np-slat-bg::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 2px 2px, rgb(255 255 255 / .16) 1.2px, transparent 1.7px) 0 0 / 7px 7px; mix-blend-mode: soft-light; }
+.wp-np-slat[data-value="Default"] .wp-np-slat-bg { background: var(--np-paper); }
+.wp-np-slat[data-value="Default"] .wp-np-slat-bg::after { background: radial-gradient(circle at 2px 2px, rgb(58 18 6 / .22) 1.2px, transparent 1.7px) 0 0 / 7px 7px; mix-blend-mode: normal; }
+
+/* the portrait is a fixed-size window opened inside the slat, so the art never rescales mid-swing */
+.wp-np-slat-art {
+    position: absolute; top: 0; bottom: 0; left: 50%; width: 66cqw; margin-left: -33cqw;
+    height: 100%; object-fit: cover; object-position: var(--np-focus);
+    clip-path: inset(0 0 100% 0); transform: scale(1.22) translateY(-3%); transform-origin: 50% 20%;
+    transition: clip-path .5s cubic-bezier(.7, 0, .2, 1), transform .9s cubic-bezier(.2, .8, .2, 1);
+    pointer-events: none;
+}
+.wp-np-slat[aria-pressed="true"] .wp-np-slat-art { clip-path: inset(0); transform: none; transition-delay: .14s, .1s; }
+
+/* Default's "empty chair": hatching and a dashed frame, instead of art */
+.wp-np-slat-void { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transition: opacity .15s;
+    background: repeating-linear-gradient(135deg, rgb(58 18 6 / .1) 0 2px, transparent 2px 11px); }
+.wp-np-slat-void i { display: grid; gap: 6px; padding: 14px 12px; border: 2px dashed rgb(58 18 6 / .55); text-align: center; font-style: normal; transform: rotate(-6deg); background: var(--np-paper); }
+.wp-np-slat-void b { font: 400 12cqw/.9 var(--np-disp); text-transform: uppercase; color: var(--np-ink); }
+.wp-np-slat-void small { font: 400 10px/1.2 var(--np-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--wn-ember); }
+.wp-np-slat[data-value="Default"][aria-pressed="true"] .wp-np-slat-void { opacity: 1; transition: opacity .35s .1s; }
+
+.wp-np-slat-idx { position: absolute; top: 9px; left: 0; right: 0; text-align: center; font: 400 10px/1 var(--np-mono); letter-spacing: .08em; color: var(--np-cream); opacity: .7; }
+.wp-np-slat[data-value="Default"] .wp-np-slat-idx { color: var(--np-ink); }
+
+/* The name runs up the spine. When its slat opens it flips to a big outlined shout over the art. */
+.wp-np-slat-name {
+    position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font: 400 9.6cqw/1 var(--np-disp); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+    color: var(--np-cream);
+    transition: color .3s, opacity .3s .22s;
+}
+.wp-np-slat[data-value="Default"] .wp-np-slat-name { color: var(--np-ink); }
+/* The open slat drops its spine label: the portrait gets the whole window and the plate below
+   carries the name. (A giant outlined name over the art was tried and just buried the character.) */
+.wp-np-slat[aria-pressed="true"] .wp-np-slat-name { opacity: 0; transition: opacity .12s; }
+
+/* a color bar sweeps across a slat the instant it's picked */
+.wp-np-slat-wipe { position: absolute; top: -10%; bottom: -10%; left: 0; width: 38%; background: var(--np-accent); transform: translateX(-130%) skewX(-18deg); opacity: 0; pointer-events: none; }
+.wp-np-slat.just .wp-np-slat-wipe { animation: wp-np-sweep .6s cubic-bezier(.6, 0, .3, 1); }
+@keyframes wp-np-sweep { 0% { opacity: 1; transform: translateX(-130%) skewX(-18deg); } 99% { opacity: 1; } 100% { opacity: 0; transform: translateX(520%) skewX(-18deg); } }
+
+/* ---- plate ---- */
+.wp-np-plate {
+    --np-main: #983132; --np-accent: #ff8c66; --np-ink: #2a0f0c; --np-cream: #f4e6d8; --np-paper: #e2c9b8;
+    position: relative; z-index: 2; margin-top: -5.2cqw; padding: 10cqw 5cqw 5.5cqw; min-height: 58cqw;
+    background: var(--np-ink); color: var(--np-cream);
+    clip-path: polygon(0 5.2cqw, 100% 0, 100% 100%, 0 100%);
+    transition: background .4s;
+}
+.wp-np-plate[data-id="Default"] { background: var(--np-paper); color: var(--np-ink); }
+.wp-np-plate-art { position: absolute; top: 0; right: 0; bottom: 0; width: 60%; overflow: hidden; clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%); }
+.wp-np-plate-art img { width: 100%; height: 100%; object-fit: cover; opacity: .95; transition: opacity .3s; }
+.wp-np-plate[data-id="Default"] .wp-np-plate-art { background: repeating-linear-gradient(135deg, rgb(58 18 6 / .12) 0 2px, transparent 2px 10px); }
+.wp-np-plate[data-id="Default"] .wp-np-plate-art img { opacity: 0; }
+/* a hard accent stripe riding the slash edge of the art panel */
+.wp-np-plate-stripe { position: absolute; top: 0; right: 0; bottom: 0; width: 60%; background: var(--np-accent); clip-path: polygon(30% 0, calc(30% + 7px) 0, 7px 100%, 0 100%); }
+.wp-np-plate[data-id="Default"] .wp-np-plate-stripe { background: var(--wn-ember); }
+
+.wp-np-plate-body { position: relative; max-width: 74%; }
+.wp-np-sub { display: block; font: 400 10px/1 var(--np-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--np-accent); }
+.wp-np-plate[data-id="Default"] .wp-np-sub { color: var(--wn-ember); }
+.wp-np-name { margin: 6px 0 0; font: 400 21cqw/.9 var(--np-disp); text-transform: uppercase; letter-spacing: .01em; transform: skewX(-7deg); transform-origin: left bottom; text-shadow: 3px 3px 0 var(--np-main); }
+.wp-np-plate[data-id="Default"] .wp-np-name { text-shadow: 3px 3px 0 var(--np-accent); }
+/* The description is a typed slip: narrators are writers, and a slip of paper reads clearly over any art. */
+.wp-np-desc { position: relative; margin: 13px 0 0; padding: 9px 11px 10px; background: var(--np-paper); color: var(--np-ink); font: 400 3.9cqw/1.35 var(--np-type); transform: rotate(-1.3deg); box-shadow: 4px 4px 0 rgb(0 0 0 / .5); }
+.wp-np-desc::before { content: ''; position: absolute; top: -7px; left: 14px; width: 34px; height: 13px; background: rgb(255 255 255 / .5); transform: rotate(-4deg); box-shadow: 0 0 0 1px rgb(0 0 0 / .08); }
+.wp-np-plate[data-id="Default"] .wp-np-desc { background: #fff6ea; }
+.wp-np-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 15px 0 0; padding: 0; list-style: none; }
+/* Solid chips, not outlines: the tags and status sit over the landscape panel and must stay readable on any art. */
+.wp-np-tags li { padding: 4px 7px; border: 1px solid var(--np-accent); background: var(--np-ink); color: var(--np-cream); font: 400 10px/1 var(--np-mono); letter-spacing: .1em; text-transform: uppercase; transform: skewX(-12deg); }
+.wp-np-plate[data-id="Default"] .wp-np-tags li { border-color: var(--wn-ember); background: var(--np-paper); color: var(--np-ink); }
+.wp-np-status { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 6px 9px; background: var(--np-ink); color: var(--np-cream); font: 400 11px/1 var(--np-mono); letter-spacing: .1em; text-transform: uppercase; }
+.wp-np-plate[data-id="Default"] .wp-np-status { background: var(--np-ink); color: var(--np-cream); }
+.wp-np-status i { width: 8px; height: 8px; background: var(--np-accent); transform: rotate(45deg); }
+.wp-np-plate[data-id="Default"] .wp-np-status i { background: var(--wn-ember); }
+.wp-np-plate[data-state="busy"] .wp-np-status i { animation: wp-np-pulse .55s steps(2) infinite; }
+@keyframes wp-np-pulse { 50% { opacity: .15; } }
+
+.wp-np-plate.swap .wp-np-plate-body > * { animation: wp-np-in .45s cubic-bezier(.2, .9, .25, 1) both; }
+.wp-np-plate.swap .wp-np-plate-body > *:nth-child(2) { animation-delay: .04s; }
+.wp-np-plate.swap .wp-np-plate-body > *:nth-child(3) { animation-delay: .09s; }
+.wp-np-plate.swap .wp-np-plate-body > *:nth-child(4) { animation-delay: .13s; }
+.wp-np-plate.swap .wp-np-plate-body > *:nth-child(5) { animation-delay: .17s; }
+@keyframes wp-np-in { from { opacity: 0; translate: -16px 0; } to { opacity: 1; translate: 0 0; } }
+
+/* PromptOS can be resized down to 280px: drop the title slash so it can't collide with the help button */
+@container (max-width: 330px) { .wp-np-title::after { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .wp-np-slat, .wp-np-slat-art, .wp-np-slat-name, .wp-np-slat-void { transition-duration: 0s !important; transition-delay: 0s !important; }
+    .wp-np-slat.just .wp-np-slat-wipe, .wp-np-plate.swap .wp-np-plate-body > * { animation: none !important; }
+}
+
+/* ---- production-only hardening (the prototype ran in a clean page; this runs inside SillyTavern) ---- */
+/* Full-bleed: the Style tab's content has 13px/12px padding and the picker is meant to touch the edges,
+   flush under the sticky tab bar. */
+.wp-np { container-type: inline-size; isolation: isolate; margin: -13px -12px 0; }
+.wp-np button { font: inherit; letter-spacing: normal; text-transform: none; box-shadow: none; }
+/* The narrative app strips every text-shadow with an !important wildcard (see the note above
+   [data-app="narrative"] * { text-shadow: none }). The big names rely on hard offset shadows, so
+   they have to win that fight explicitly. */
+#wp-panel[data-app="narrative"] .wp-np-name { text-shadow: 3px 3px 0 var(--np-main) !important; }
+#wp-panel[data-app="narrative"] .wp-np-plate[data-id="Default"] .wp-np-name { text-shadow: 3px 3px 0 var(--np-accent) !important; }
+/* The head is a <summary>: a plain row, no disclosure triangle, whole row toggles the explainer. */
+.wp-np-top { display: block; }
+.wp-np-top > summary { list-style: none; cursor: pointer; }
+.wp-np-top > summary::-webkit-details-marker { display: none; }
+.wp-np-head > span:first-child { display: block; }
+.wp-np-k, .wp-np-title { display: block; }
+.wp-np-help { display: grid; place-items: center; }
+.wp-np-blurb { margin: 0; }
+/* While a rebuild runs the tap is ignored by handleNarrativeAction, so make the stage look that way too. */
+.wp-np[data-busy="true"] .wp-np-stage { pointer-events: none; }
+/* The shared busy spinner is for flat controls; a slat shows its own "Applying..." status instead. */
+.wp-np-slat.wp-narrative-busy { opacity: 1; }
+.wp-np-slat.wp-narrative-busy::after { display: none; }
+/* The app slides every redraw of #wp-screen-body's content in from 6% right at 40% opacity (wp-screen-in, a
+   page-navigation effect). Picking a narrator redraws the same screen twice (the optimistic draw, then the
+   settled one when the rebuild finishes), so each pick visibly slid, faded and "blipped" twice on top of the
+   swing-open. In-place redraws are marked still; real navigation keeps its entrance. The id keeps this
+   ahead of the #wp-screen-body > * rule. */
+#wp-screen-body > .wp-narrative-still { animation: none; }
+
+/* ---- Narrator tab, round 2: the divider, the subtitle, the typed explainer, and clearer art ---- */
+/* A rule where the dotted stage meets the flat name plate, so the two do not butt together with no transition:
+   an accent band riding the plate's slanted top edge with a hairline under it, then a strip of halftone dots
+   that thins out into the flat plate. Both are pseudo-elements of the plate, rotated by the same angle as the
+   clip-path edge (atan(5.2/100) = 2.98deg), so they follow the slash exactly. */
+.wp-np-plate::before {
+    content: ''; position: absolute; z-index: 3; left: -3%; width: 106%; top: 2.6cqw; height: 1.7cqw;
+    background: var(--np-accent); transform-origin: 50% 0; transform: rotate(-2.98deg); pointer-events: none;
+    box-shadow: 0 2.6cqw 0 -.6cqw color-mix(in srgb, var(--np-cream) 60%, transparent);
+}
+.wp-np-plate[data-id="Default"]::before { background: var(--wn-ember); box-shadow: 0 2.6cqw 0 -.6cqw rgb(58 18 6 / .45); }
+.wp-np-plate::after {
+    content: ''; position: absolute; z-index: -1; left: -3%; width: 106%; top: 6.4cqw; height: 20cqw; pointer-events: none;
+    background: radial-gradient(circle at 2px 2px, rgb(255 255 255 / .18) 1.2px, transparent 1.7px) 0 0 / 7px 7px;
+    -webkit-mask-image: linear-gradient(to bottom, #000, transparent); mask-image: linear-gradient(to bottom, #000, transparent);
+    transform-origin: 50% 0; transform: rotate(-2.98deg);
+}
+.wp-np-plate[data-id="Default"]::after { background: radial-gradient(circle at 2px 2px, rgb(58 18 6 / .26) 1.2px, transparent 1.7px) 0 0 / 7px 7px; }
+
+/* Subtitle under the name, before the typed description. */
+.wp-np-subtitle { margin: 8px 0 0; font: 400 4.2cqw/1 var(--np-title); letter-spacing: .04em; text-transform: uppercase; color: var(--np-accent); }
+.wp-np-subtitle + .wp-np-desc { margin-top: 12px; }
+
+/* Text stays in the left two thirds so the landscape's character, framed to the right, is not buried. */
+.wp-np-plate-body { max-width: 66%; }
+.wp-np-name { font-size: 19cqw; }
+
+/* The ? explainer: a typed note taped over the stage, ending in a punchline. */
+.wp-np-blurb {
+    position: relative; margin: 1cqw 5cqw 6cqw; padding: 6cqw 5.5cqw 5.5cqw; background: var(--wn-paper); color: #2a0f0c;
+    font: 400 3.7cqw/1.5 var(--np-type); transform: rotate(-.7deg); box-shadow: 4px 4px 0 #000;
+}
+.wp-np-blurb::before { content: ''; position: absolute; top: -3.2cqw; left: 12cqw; width: 22cqw; height: 6cqw; background: color-mix(in srgb, var(--wn-accent-2) 55%, transparent); transform: rotate(-3deg); box-shadow: 0 0 0 1px rgb(0 0 0 / .08); }
+.wp-np-blurb p { margin: 0 0 3.4cqw; }
+.wp-np-blurb p:last-child { margin: 4.6cqw 0 0; font: 400 7.4cqw/1 var(--np-disp); letter-spacing: .02em; text-transform: uppercase; color: var(--wn-ember); transform: skewX(-7deg); transform-origin: left; }
+
+/* ---- PromptOS Home tidy-ups ---- */
+/* Course Correction's tagline: a hair smaller so it stays on one line beside the dose button. */
+#wp-panel[data-app="narrative"] .wp-narrative-cc-titles p { font-size: 10px; }
+/* The dose button's hint ("Wears off on its own") sat flush right, which read as hanging off to the side of the
+   button. Centre the pair so the hint sits directly under the button. */
+#wp-panel[data-app="narrative"] .wp-narrative-dose { align-items: center; }
+#wp-panel[data-app="narrative"] .wp-narrative-dose small { text-align: center; }
+/* "This chat only" used to be the eyebrow above the Roleplay Intro Context title; it now sits under it, quieter. */
+.wp-narrative-card-heading .wp-narrative-intro-scope { display: block; margin-top: 3px; opacity: .5; }
+/* Auto / On / Off in a single row (the base grid is two columns, one at narrow widths). Equal columns for however many
+   options there are, so the two-option "always on" variant still fills the row. */
+.wp-narrative-choice-grid.wp-narrative-choice-row { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+
+/* ---- Prompt cartridges: two over three ---- */
+/* Five cartridges in two rows: Current and Beta on top, 2026 / 2025 / Mini below. A six-column grid where every
+   cartridge spans two columns keeps all five the same size, and starting the top pair one column in centres it over
+   the row beneath. Order comes from PROMPT_OPTIONS (Current, Beta, 2026, 2025, Mini); if that list's length ever
+   changes, revisit the two nth-child rules. */
+#wp-panel[data-app="narrative"] .wp-narrative-carts { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+#wp-panel[data-app="narrative"] .wp-narrative-cart { grid-column: span 2; }
+#wp-panel[data-app="narrative"] .wp-narrative-cart:nth-child(1) { grid-column: 2 / span 2; }
+#wp-panel[data-app="narrative"] .wp-narrative-cart:nth-child(2) { grid-column: 4 / span 2; }
+
+/* ---- Plate text fits: nothing may cross the slanted stripe ---- */
+/* The subtitle shares the plate with the art panel's slanted edge stripe, which cuts back toward the left as it goes
+   down. Measured at 360px, about 152px is free left of the stripe at the subtitle's height, and "The Sunset Romantic"
+   (the longest) needs 209px at the old 4.2cqw. 2.95cqw makes it ~147px, so all three epithets sit on one line with a few
+   pixels to spare, and cqw keeps that ratio as the phone is resized. */
+.wp-np-subtitle { font-size: 2.95cqw; letter-spacing: .03em; white-space: nowrap; }
+/* The tag chips never wrap onto a second row (Lauren's "Unapologetic" and Salem's "Horror & angst" were dropping down). They
+   are smaller, and the row may run a little past the text column: the chips are solid, so that is harmless over the art. */
+.wp-np-tags { flex-wrap: nowrap; gap: 4px; }
+.wp-np-tags li { padding: 3px 5px; font-size: 2.6cqw; letter-spacing: .05em; white-space: nowrap; }

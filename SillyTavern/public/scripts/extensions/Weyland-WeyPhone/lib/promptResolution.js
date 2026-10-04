@@ -1,15 +1,19 @@
+import { resolvePromptChoice, resolvePromptPost, safePreparePromptBase } from '../../quick-reply-ext/src/promptAssembly.js';
+
 /**
  * Looks up the resolved master-prompt entry (system prompt + post-history template)
- * for the given prompt choice, falling back to "Current Prompt" if the choice is unknown.
+ * for the given prompt choice. "Current Prompt" is built from the Beta entry (see resolvePromptChoice), and an
+ * unknown or retired choice falls back to it.
  * @param {Map<string, {teg: string, post: string, whtml?: string}>} ravs quick-reply-ext's exported ravs Map
  * @param {string} promptChoice The value of the "PromptChoice" global variable
  */
 export function resolveMasterPrompt(ravs, promptChoice) {
-    const entry = ravs.get(promptChoice) ?? ravs.get('Current Prompt');
+    const { key } = resolvePromptChoice(ravs, promptChoice);
+    const entry = ravs.get(key);
     if (!entry) {
-        throw new Error(`No rav.js entry found for prompt choice "${promptChoice}" or fallback "Current Prompt"`);
+        throw new Error(`No rav.js entry found for prompt choice "${promptChoice}" (resolved to "${key}")`);
     }
-    return entry;
+    return safePreparePromptBase(key, entry, ravs.get('Beta Prompt'));
 }
 
 /**
@@ -23,9 +27,7 @@ export function resolveMasterPrompt(ravs, promptChoice) {
  * @param {{htmlEnabled: boolean, rpFocus?: string}} options
  */
 export function resolvePostHistoryInstructions(ravEntry, { htmlEnabled, rpFocus }) {
-    const focusText = rpFocus ?? '';
-    const htmlPart = htmlEnabled ? (ravEntry.whtml ?? '') : '=====';
-    return ravEntry.post.replaceAll('{{pipe}}', `${focusText}\n${htmlPart}`);
+    return resolvePromptPost(ravEntry, { focus: rpFocus ?? '', htmlEnabled });
 }
 
 /**

@@ -1,0 +1,33 @@
+#weyland-age-notice {
+    box-sizing: border-box;
+    width: min(510px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    overflow-y: auto;
+    background: #1d1b1c;
+    color: #eee7e9;
+    border: 1px solid #65444b;
+    border-radius: 12px;
+    box-shadow: 0 14px 36px #0008;
+    font: 15px/1.55 Arial, sans-serif;
+    text-align: left;
+}
+#weyland-age-notice::backdrop { background: #090708ed; backdrop-filter: blur(12px); }
+#weyland-age-notice header { padding: 15px 24px; border-bottom: 1px solid #3e3035; color: #ec8a9b; font-size: 11px; letter-spacing: .12em; font-weight: 700; }
+#weyland-age-notice .weyland-age-content { padding: 25px 28px 20px; }
+#weyland-age-notice .weyland-age-badge { display: inline-block; padding: 7px 13px; background: #38252d; color: #f19bae; border-radius: 9px; font-size: 24px; font-weight: 700; }
+#weyland-age-notice h2 { margin: 17px 0 16px; font: 700 25px/1.2 Arial, sans-serif; }
+#weyland-age-notice p { margin: 0 0 14px; }
+#weyland-age-notice .weyland-age-check { display: flex; align-items: flex-start; gap: 9px; padding-top: 12px; cursor: pointer; }
+#weyland-age-notice input { accent-color: #a3293b; width: 18px; height: 18px; flex: none; margin: 3px 0 0; }
+#weyland-age-notice .weyland-age-actions { display: flex; gap: 10px; margin-top: 25px; }
+#weyland-age-notice button { min-height: 44px; padding: 12px 15px; border: 1px solid #685158; border-radius: 7px; background: #30272b; color: inherit; font: 600 14px/1.4 Arial, sans-serif; cursor: pointer; }
+#weyland-age-notice #weyland-age-continue { flex: 1; background: #b63149; border-color: #b63149; }
+#weyland-age-notice button:disabled { opacity: .45; cursor: not-allowed; }
+#weyland-age-notice button:focus-visible, #weyland-age-notice input:focus-visible { outline: 2px solid #f19bae; outline-offset: 3px; }
+#weyland-age-notice .weyland-age-footnote { margin: 15px 0 0; color: #b8a7ae; font-size: 12px; }
+@media (max-width: 420px) {
+    #weyland-age-notice .weyland-age-content { padding: 22px 18px; }
+    #weyland-age-notice header { padding: 14px 18px; }
+    #weyland-age-notice .weyland-age-actions { flex-direction: column; }
+}

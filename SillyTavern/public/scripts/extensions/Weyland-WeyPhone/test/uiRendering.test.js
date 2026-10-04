@@ -84,16 +84,18 @@ test('ordinary character conversation keeps the Prior History control', () => {
     assert.match(target.innerHTML, /data-action="prior-history"/);
 });
 
-test('Kressa settings offers ten unique palettes including two dark modes and marks the saved palette selected', () => {
-    assert.equal(KRESSA_PALETTES.length, 10);
+test('Kressa settings offers twelve unique palettes and marks the saved palette selected', () => {
+    assert.equal(KRESSA_PALETTES.length, 12);
     assert.equal(new Set(KRESSA_PALETTES.map(palette => palette.id)).size, KRESSA_PALETTES.length);
-    assert.deepEqual(KRESSA_PALETTES.slice(-2).map(palette => palette.id), ['night-owl', 'terminal-bloom']);
+    for (const id of ['night-owl', 'terminal-bloom', 'warm-clay', 'graphite-code']) {
+        assert.ok(KRESSA_PALETTES.some(palette => palette.id === id), id);
+    }
     const target = container();
     renderKressaSettingsScreen(target, {
         settings: { kressaModel: '', kressaPalette: 'forest-sprite', kressaHardModeEnabled: false },
         currentLiveModel: 'live-model',
     });
-    assert.equal((target.innerHTML.match(/class="wp-kressa-palette-button/g) ?? []).length, 10);
+    assert.equal((target.innerHTML.match(/class="wp-kressa-palette-button/g) ?? []).length, 12);
     assert.match(target.innerHTML, /wp-kressa-palette-button wp-selected" data-palette="forest-sprite" aria-pressed="true"/);
     assert.match(target.innerHTML, /id="wp-kressa-hard-mode"/);
     assert.doesNotMatch(target.innerHTML, /id="wp-kressa-hard-mode"[^>]*checked/);

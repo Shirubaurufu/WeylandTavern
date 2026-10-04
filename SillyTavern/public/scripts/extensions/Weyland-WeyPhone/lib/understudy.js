@@ -61,6 +61,48 @@ export const UNDERSTUDY_SCOPES = Object.freeze({
 });
 
 export const DEFAULT_UNDERSTUDY_SCOPE = 'full';
+
+/**
+ * Thoughts are a per-character setting (quick-reply-ext's XXX() writes it to the ThoughtSet chat
+ * var), and Copycat follows it three ways (Lucky, 2026-10-02):
+ * - 'on': the character has thoughts. Everything includes them, and the two thought scopes exist.
+ * - 'off': the character has them disabled. The prompt passes the disabled message along and
+ *   otherwise never mentions thoughts (no "don't write thoughts", which still names the thing),
+ *   and the thought scopes are hidden. Players switching thoughts on by request is deliberately
+ *   not supported, so there's no "rewrite thoughts anyway" path for these characters.
+ * - 'unknown': no setting could be read (not a Weyland chat, or the var isn't set yet). The
+ *   generic, hardened "check if enabled" rule applies and nothing is hidden.
+ * The disabled text is XXX()'s fixed "[CHARACTER THOUGHTS: DISABLED BY DEFAULT ...]" line; any
+ * other non-empty setting is one of the enabled ones (rav.thinkYes / thinkSpec / a scenario's).
+ * @param {string} [setting] resolved {{getvar::ThoughtSet}}
+ * @returns {'on'|'off'|'unknown'}
+ */
+export function thoughtsModeOf(setting) {
+    const text = String(setting ?? '').trim();
+    if (!text) return 'unknown';
+    return /CHARACTER THOUGHTS:\s*DISABLED/i.test(text) ? 'off' : 'on';
+}
+
+// Where a saved thought scope lands on a thoughts-off character: the nearest scope that still
+// exists, so a player who picked "Dialogue + thoughts" still gets a dialogue-only pass.
+const THOUGHTS_OFF_SCOPE_FALLBACK = Object.freeze({ dialogueThoughts: 'dialogue', thoughts: 'full' });
+
+/** The scope that actually runs: the saved one, unless it's a thought scope on a thoughts-off character. */
+export function effectiveUnderstudyScope(scopeKey, thoughtsMode) {
+    const key = UNDERSTUDY_SCOPES[scopeKey] ? scopeKey : DEFAULT_UNDERSTUDY_SCOPE;
+    return thoughtsMode === 'off' ? (THOUGHTS_OFF_SCOPE_FALLBACK[key] ?? key) : key;
+}
+
+/** Scope keys to offer in the UI for this character. */
+export function availableUnderstudyScopes(thoughtsMode) {
+    return Object.keys(UNDERSTUDY_SCOPES).filter(key => thoughtsMode !== 'off' || !THOUGHTS_OFF_SCOPE_FALLBACK[key]);
+}
+
+/** The Everything button's description, which shouldn't promise thoughts the character doesn't have. */
+export function understudyScopeHint(scopeKey, thoughtsMode) {
+    if (scopeKey === 'full' && thoughtsMode === 'off') return 'Rewrite everything: dialogue and narration.';
+    return UNDERSTUDY_SCOPES[scopeKey]?.hint ?? '';
+}
 export const DEFAULT_UNDERSTUDY_CONTEXT_MESSAGES = 5;
 
 // A footer is a line made up entirely of short bracketed CODES like "[Amusement] [RC]",
@@ -555,10 +597,8 @@ Models have habits. These make characters feel like chatbots instead of people, 
 // unsafe')"); this is that rule carried into the rewrite pass. The third-person test is stated
 // carefully: a thought may well be ABOUT someone else in third person ("[she's going to kill
 // me]"), so what is banned is third person about the THINKER.
-const THOUGHTS_DIRECTIVE = `[THOUGHTS - CHECK IF ENABLED]
-Check whether thoughts are enabled for this character. If thoughts are DISABLED, output no bracketed thoughts at all.
-
-If thoughts are enabled - THE BRACKET CHANNEL BELONGS TO {{char}}, AND ONLY TO {{char}}:
+// The bracket-ownership rules, shared by the "on" and "unknown" versions below so the two can't drift.
+const THOUGHTS_OWNERSHIP_RULES = `THE BRACKET CHANNEL BELONGS TO {{char}}, AND ONLY TO {{char}}:
 - Text in [square brackets] is {{char}}'s own thought, in their own head, in FIRST PERSON, as it occurs to them. It is not a narration channel, not an aside to the reader, and not somewhere to comment on the scene. If you are writing a bracket, you are {{char}} thinking: "I", "me", "my".
 - The specific failure to avoid: a bracket that refers to {{char}} in the third person. "[she is blowing this SO HARD]" is the narrator talking about the character from outside, printed inside their skull. So is any bracket that addresses {{char}} by name, warns them, or judges their performance.
 - Thoughts about anyone ELSE in third person are fine: "[she's going to kill me]", "[why is he still standing there]". The thinker is still {{char}}.
@@ -566,6 +606,19 @@ If thoughts are enabled - THE BRACKET CHANNEL BELONGS TO {{char}}, AND ONLY TO {
 
 WRONG: [she is blowing this SO HARD. (thought continues)-]
 RIGHT: [Fucking hell, I am blowing this SO. HARD. (thought continues)]`;
+
+// Unknown setting: the model has to check for itself, so it gets the on/off test plus the rules.
+const THOUGHTS_DIRECTIVE = `[THOUGHTS - CHECK IF ENABLED]
+Check whether thoughts are enabled for this character. If thoughts are DISABLED, output no bracketed thoughts at all.
+A disabled setting may say thoughts can be turned on if {{user}} requests them. That means {{user}} explicitly asking for the character's thoughts. Requesting this rewrite, a note about what to change, or asking for other content (a text block, a different tone) is NOT that request: thoughts stay off.
+
+If thoughts are enabled - ${THOUGHTS_OWNERSHIP_RULES}`;
+
+// Known on: no on/off test to get wrong, just the rules for writing them well.
+const THOUGHTS_ON_DIRECTIVE = `[THOUGHTS - ENABLED FOR THIS CHARACTER]
+This character has thoughts. Write them the way the original reply does, in [square brackets].
+
+${THOUGHTS_OWNERSHIP_RULES}`;
 
 /**
  * THOUGHTS_DIRECTIVE tells the model to "check whether thoughts are enabled", but the only thing
@@ -579,8 +632,12 @@ RIGHT: [Fucking hell, I am blowing this SO. HARD. (thought continues)]`;
  */
 export function buildThoughtsDirective(thoughtsSetting = '') {
     const setting = String(thoughtsSetting ?? '').trim();
-    if (!setting) return THOUGHTS_DIRECTIVE;
-    return `[THOUGHTS SETTING FOR THIS CHAT - this is what the original reply was written under]\n${setting}\n\n${THOUGHTS_DIRECTIVE}`;
+    const mode = thoughtsModeOf(setting);
+    if (mode === 'unknown') return THOUGHTS_DIRECTIVE;
+    const settingBlock = `[THOUGHTS SETTING FOR THIS CHAT - this is what the original reply was written under]\n${setting}`;
+    // Off: the disabled message alone. Adding "so don't write any" would put thoughts back on the
+    // model's mind; the setting already says everything that needs saying.
+    return mode === 'off' ? settingBlock : `${settingBlock}\n\n${THOUGHTS_ON_DIRECTIVE}`;
 }
 
 const VOICE_DIRECTIVE = `[VOICE IS MORE IMPORTANT THAN GRAMMAR]
@@ -617,7 +674,11 @@ The BAD version tries somewhat, neatly, legibly, and stops - a sad clown perform
  * @param {string} feedback the director's note, may be empty
  * @returns {string}
  */
-function buildMission(feedback) {
+function buildMission(feedback, thoughtsMode = 'unknown') {
+    // The checklist names the thoughts section the prompt actually carries, and none at all for a
+    // thoughts-off character, whose prompt shouldn't mention thoughts beyond the disabled message.
+    const checkItem = '\n- [THOUGHTS - CHECK IF ENABLED]';
+    const thoughtsItem = { on: '\n- [THOUGHTS - ENABLED FOR THIS CHARACTER]', off: '', unknown: checkItem }[thoughtsMode] ?? checkItem;
     const note = String(feedback ?? '').trim();
     const guidance = note
         ? `The user provided the following guidance:\n${note}\n\n`
@@ -649,8 +710,7 @@ You must consider the following sections before your rewrite - ALL are critical.
 - [HOW TO USE THE PROFILE]
 - [NO ANALYSIS]
 - [KEEP SECRETS]
-- [VOICE IS MORE IMPORTANT THAN GRAMMAR]
-- [THOUGHTS - CHECK IF ENABLED]
+- [VOICE IS MORE IMPORTANT THAN GRAMMAR]${thoughtsItem}
 - [BANNED AI SLOP PATTERNS]
 - [USER AGENCY - DO NOT CONTROL {{user}}]
 - [NARRATOR MODIFIER]
@@ -680,8 +740,18 @@ const UNCOMFORTABLE_DIRECTIVE = `[DO THE UNCOMFORTABLE THING]
 - Where the scene is already dark or explicit, keep the flavour and go further than it strictly needs.
 - Where it is quiet, keep it quiet, and write the quiet from the same place: specific, unhedged, unsentimental.`;
 
+// The Everything scope, per thoughts mode. It sits after the THOUGHTS block, closest to the
+// output, so it outweighs it: listing thoughts flatly as part of the job read as "write thoughts"
+// on characters that have them disabled (Sayori, Copycat on Gemini 3.1 Pro, 2026-10-02). Off
+// never names thoughts at all; unknown keeps it conditional on the check above.
+const FULL_SCOPE_DIRECTIVES = Object.freeze({
+    on: '[SCOPE]\nThe whole passage: dialogue, narration, thoughts. All of it is yours to redo.',
+    off: '[SCOPE]\nThe whole passage: dialogue and narration. All of it is yours to redo.',
+    unknown: '[SCOPE]\nThe whole passage: dialogue, narration, and thoughts only if they are enabled (see THOUGHTS above). All of it is yours to redo.',
+});
+
 const SCOPE_DIRECTIVES = {
-    full: '[SCOPE]\nThe whole passage: dialogue, narration, thoughts. All of it is yours to redo.',
+    full: FULL_SCOPE_DIRECTIVES.unknown,
     uncomfortable: UNCOMFORTABLE_DIRECTIVE,
     dialogue: '[SCOPE]\nSPOKEN DIALOGUE only. Narration, actions and thoughts are kept exactly as written and will be put back around whatever you write.',
     thoughts: '[SCOPE]\nINTERNAL THOUGHTS only. Dialogue, narration and actions are kept exactly as written.',
@@ -920,11 +990,15 @@ export function buildUnderstudyMessages({
     allowDeviation = false,
     thoughtsSetting = '',
 }) {
-    const isSpanScoped = isSpanScopedKind(UNDERSTUDY_SCOPES[scope]?.spanKind);
-    const scopeDirective = SCOPE_DIRECTIVES[scope] ?? SCOPE_DIRECTIVES.full;
+    // The thoughts mode decides which scope can actually run and how Everything is worded, so a
+    // caller that passes a thought scope for a thoughts-off character still gets a safe prompt.
+    const thoughtsMode = thoughtsModeOf(thoughtsSetting);
+    const scopeKey = effectiveUnderstudyScope(scope, thoughtsMode);
+    const isSpanScoped = isSpanScopedKind(UNDERSTUDY_SCOPES[scopeKey]?.spanKind);
+    const scopeDirective = scopeKey === 'full' ? FULL_SCOPE_DIRECTIVES[thoughtsMode] : (SCOPE_DIRECTIVES[scopeKey] ?? SCOPE_DIRECTIVES.full);
 
     const systemParts = [
-        buildMission(feedback),
+        buildMission(feedback, thoughtsMode),
         characterProfile
             ? `[CHARACTER PROFILE - ${characterName}]\nThe same profile the first model had.\n\n${characterProfile}`
             : `[CHARACTER - ${characterName}]\nNo character profile was available. Work from the scene and the character's voice in the log below.`,

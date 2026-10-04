@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution } from '../lib/generation.js';
+import { WEYPHONE_GEMINI_BYPASS } from '../lib/phonePromptPolicy.js';
 
 test('buildSystemPrompt joins non-empty sections in main->WIbefore->description->personality->scenario->WIafter order', () => {
     const result = buildSystemPrompt({
@@ -172,15 +173,26 @@ test('sendMessage throws when no profileId is available', async () => {
     );
 });
 
-test('sendMessage calls sendRequest with the profileId and messages', async () => {
+test('sendMessage preserves profile and caller messages while adding the phone Gemini instructions', async () => {
     let capturedArgs = null;
     const fakeSendRequest = async (profileId, messages) => {
         capturedArgs = { profileId, messages };
         return 'the reply';
     };
-    const result = await sendMessage({ sendRequest: fakeSendRequest, profileId: 'p1', messages: [{ role: 'user', content: 'hi' }] });
+    const messages = [{ role: 'user', content: 'hi' }];
+    const result = await sendMessage({ sendRequest: fakeSendRequest, profileId: 'p1', messages });
     assert.equal(result, 'the reply');
-    assert.deepEqual(capturedArgs, { profileId: 'p1', messages: [{ role: 'user', content: 'hi' }] });
+    assert.deepEqual(capturedArgs, { profileId: 'p1', messages: [
+        { role: 'system', content: WEYPHONE_GEMINI_BYPASS }, { role: 'user', content: 'hi' },
+    ] });
+    assert.deepEqual(messages, [{ role: 'user', content: 'hi' }]);
+});
+
+test('sendMessage leaves Claude requests free of Gemini instructions', async () => {
+    const messages = [{ role: 'system', content: 'TEXTING RULES' }, { role: 'user', content: 'hi' }];
+    let sent;
+    await sendMessage({ profileId: 'p1', model: 'claude-sonnet', messages, sendRequest: async (profileId, payload) => { sent = { profileId, payload }; } });
+    assert.deepEqual(sent, { profileId: 'p1', payload: messages });
 });
 
 test('reconstructHistoryAsPhoneFormat wraps user turns as Outgoing lines and assistant turns as Incoming lines', () => {

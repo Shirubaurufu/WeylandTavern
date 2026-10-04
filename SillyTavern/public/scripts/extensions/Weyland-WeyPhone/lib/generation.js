@@ -183,11 +183,13 @@ export function resolveModelOverride({ settingsModel, liveModel } = {}) {
 }
 
 /**
- * @param {{sendRequest: (profileId: string, messages: any[]) => Promise<any>, profileId: string, messages: any[]}} options
+ * `model` is the model the request goes to (the same value the caller puts in its override
+ * payload). It only decides whether the Gemini Bypass text is left out for a Claude model.
+ * @param {{sendRequest: (profileId: string, messages: any[]) => Promise<any>, profileId: string, messages: any[], model?: string}} options
  */
-export async function sendMessage({ sendRequest, profileId, messages }) {
+export async function sendMessage({ sendRequest, profileId, messages, model = '' }) {
     if (!profileId) {
         throw new Error('No Connection Profile available (none selected in WeyPhone settings and none active in SillyTavern)');
     }
-    return sendRequest(profileId, limitPhoneRequestMessages(withGeminiBypass(messages)));
+    return sendRequest(profileId, limitPhoneRequestMessages(withGeminiBypass(messages, model)));
 }

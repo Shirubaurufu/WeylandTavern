@@ -1,4 +1,5 @@
 import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor, updateMessageBlock } from '../../../script.js';
+import { headerMuseStripExt } from './muse-header.js';
 import { power_user } from '../../power-user.js';
 import { getGlobalVariable } from '../../variables.js';
 import { substituteParams } from '../../../script.js';
@@ -7,7 +8,7 @@ import { oai_settings } from '../../openai.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
-const extensionVersion = "1.11.12";
+const extensionVersion = "1.11.13";
 let preFormatLastMessage = undefined;
 let postFormatLastMessage = undefined;
 
@@ -935,10 +936,17 @@ function weyBotRelationsExt(){
 /** @returns {showdown.ShowdownExtension[]} */
 function thinkMarkdownExt(){
     try {
+        // Hides the hidden long-term-memory prompt: a message containing the whole
+        // [MEMORY FORMATION SYSTEM] ... [END MEMORY FORMATION...] block renders as empty.
+        // This used to be one regex wrapped in leading and trailing [\s\S]* (replace: ''), which
+        // made the engine retry from every start position whenever the block was absent. That is
+        // quadratic: invisible on a chat message, but ~40 seconds on the 200 KB Weyland Lore page,
+        // which goes through this same converter. Testing for the block and blanking the whole
+        // text gives the identical result in linear time (the old match always spanned the text).
+        const memoryBlock = /\[MEMORY FORMATION SYSTEM\][\s\S]+\[END MEMORY FORMATION\. END MESSAGE HERE\. DO NOT RESUME ROLEPLAY\.\]/;
         return [{
             type: 'output',
-            regex: /[\s\S]*\[MEMORY FORMATION SYSTEM\][\s\S]+\[END MEMORY FORMATION\. END MESSAGE HERE\. DO NOT RESUME ROLEPLAY\.\][\s\S]*/,
-            replace: ``
+            filter: (text) => (memoryBlock.test(text) ? '' : text)
         }];
     } catch (e) {
         console.error(`[${MODULE_NAME}] Error in thinkMarkdownExt extension:`, e);
@@ -1141,6 +1149,8 @@ function updateReloadMarkdownProcessor(){
     reloadMarkdownProcessor();
     converter.addExtension(thinkMarkdownExt(), 'weylandThink');
     converter.addExtension(introImagesExt(), 'introImages');
+    // Parse Muse's plain header before Showdown wraps it in HTML; legacy headers keep their fallback.
+    converter.addExtension(headerMuseStripExt(), 'weylandMuseStrip');
     converter.addExtension(headerV2MarkdownExt(), 'weylandHeader');
     converter.addExtension(headerMarkdownMuseExt(), 'weylandHeaderMuse');
     converter.addExtension(expCloParCodeExt(), 'expCloparCodeExt');

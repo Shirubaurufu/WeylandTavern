@@ -558,18 +558,22 @@ export async function setExpression(expression, characterName) {
  * @param {string} [expression]
  * @returns 
  */
-export async function setCostumeAndExpression(characterName, costume, expression) {
+export async function setCostumeAndExpression(characterName, costume, expression, { onCurrentCard = false } = {}) {
     expression = expression || getLocalVariable("ExpSave") || "neutral";
     if (!expression) return;
-    await setCostume(`${characterName}/${costume}`);
+    await setCostume(`${characterName}/${costume}`, { onCurrentCard });
     // @ts-ignore
     await sendExpressionCall(`${characterName}/${costume}`, expression.toLowerCase());
 }
 
 /**
  * @param {string} folder
+ * @param {{onCurrentCard?: boolean}} [options] onCurrentCard: write the sprite override to the card that is OPEN, not to
+ *   the card named like the folder's character. "Open world" cards (Weybot, Mirror Weyland, Kinsbane Manor) show OTHER
+ *   characters' sprites through their own slot, so the override belongs to them. Without this, a character with her own
+ *   card installed (Jenn, Rivera...) got the override written to HER card and Weybot kept showing its placeholder.
  */
-export async function setCostume(folder) {
+export async function setCostume(folder, { onCurrentCard = false } = {}) {
     if (!folder) {
         console.log('Clearing sprite set');
         folder = '';
@@ -586,17 +590,20 @@ export async function setCostume(folder) {
 
     // @ts-ignore
     $('#expression_override').val(folder.trim());
-    await ExpressionOverride(charName);
+    await ExpressionOverride(charName, onCurrentCard);
 
     return;
 }
 
 /**
  * @param {string} [characterName]
+ * @param {boolean} [onCurrentCard] target the open card (by its chat id, so duplicate names cannot collide)
  */
-async function ExpressionOverride(characterName) {
+async function ExpressionOverride(characterName, onCurrentCard = false) {
     characterName = characterName ?? getCurrentCharacterName();
-    const avatarFileName = characterName?.length ? getCharaFilename(getCharacterID(characterName)) : getLocalVariable("CostmSave");
+    const avatarFileName = onCurrentCard
+        ? getCharaFilename(getCharacterID())
+        : (characterName?.length ? getCharaFilename(getCharacterID(characterName)) : getLocalVariable("CostmSave"));
     console.log(`[WQR] avatarFileName: ${avatarFileName}`);
 
     // If the avatar name couldn't be found, abort.
@@ -639,4 +646,23 @@ async function ExpressionOverride(characterName) {
     }
 
     await saveSettings();
+}
+
+/**
+ * Cards that show other characters through their own sprite slot instead of being one character themselves.
+ * @param {string} [cardName]
+ * @returns {boolean}
+ */
+export function isOpenWorldCard(cardName) {
+    return /Weybot|Mirror Weyland|Kinsbane Manor/.test(String(cardName ?? ''));
+}
+
+/**
+ * The sprite folder currently overriding the OPEN card's sprites ("" when none).
+ * @returns {string}
+ */
+export function getCurrentCardSpriteOverride() {
+    const avatarFileName = getCharaFilename(getCharacterID());
+    // @ts-ignore
+    return extension_settings.expressionOverrides?.find(e => e.name == avatarFileName)?.path ?? '';
 }

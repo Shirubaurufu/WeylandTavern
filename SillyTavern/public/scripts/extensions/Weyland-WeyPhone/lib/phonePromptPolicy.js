@@ -1,3 +1,5 @@
+import { isClaudeModel } from '../../quick-reply-ext/src/promptModifiers.js';
+
 // WeyPhone's own cut of PromptOS's Gemini Bypass (quick-reply-ext/src/promptModifiers.js). Same
 // wording where it still applies, but reframed for requests that have NO analysis step at all: the
 // roleplay version tells Gemini to skip "the Weyland Analysis" and end a "pre-analysis", which on
@@ -53,10 +55,24 @@ export function applyPhoneHardModePolicy(content, {
  * is no analysis step. It addresses Gemini/Google/MiMo by name, so other models can ignore it.
  * Applied at the shared send helpers (sendMessage / sendMemoryRequest) so no app can miss it.
  * Idempotent, and never mutates the caller's array.
+ *
+ * EXCEPT for Claude models (`model` passed and isClaudeModel): Claude's classifier rejects
+ * requests that tell the model how to handle its reasoning, which is exactly what this text does,
+ * so a phone app pointed at Sonnet would just get refused. Same rule the main roleplay applies at
+ * send time (quick-reply-ext OnRequestReady). A blank `model` means "the profile decides", which
+ * we can't see from here, so the text is kept (the safe default for the Gemini-first phone).
  * @param {Array<{role: string, content: string}>} messages
+ * @param {string} [model] the model this request is going to, when the caller knows it
  */
-export function withGeminiBypass(messages) {
+export function withGeminiBypass(messages, model = '') {
     const list = Array.isArray(messages) ? messages.map(message => ({ ...message })) : [];
+    if (isClaudeModel(model)) {
+        for (const message of list) {
+            if (typeof message.content !== 'string' || !message.content.includes(WEYPHONE_GEMINI_BYPASS)) continue;
+            message.content = message.content.replace(`${WEYPHONE_GEMINI_BYPASS}\n\n`, '').replace(WEYPHONE_GEMINI_BYPASS, '');
+        }
+        return list.filter(message => !(message.role === 'system' && message.content === ''));
+    }
     if (list.some(message => String(message.content ?? '').includes(WEYPHONE_GEMINI_BYPASS))) return list;
     const first = list[0];
     if (first?.role === 'system') {

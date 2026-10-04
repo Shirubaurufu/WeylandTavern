@@ -72,22 +72,29 @@ import {
     parseSpanReplacements as understudyParseSpans,
     cleanFullRewrite as understudyCleanFull,
     buildUnderstudyMessages,
+    effectiveUnderstudyScope,
+    thoughtsModeOf as understudyThoughtsModeOf,
 } from './lib/understudy.js';
 import { PAWXAI_PALETTES, buildPawXaiMessages, deletePawXaiPrompt, findPawXaiSceneContext, normalizePawXaiSettings, parsePawXaiResponse, pawXaiSuffixEnabled, savePawXaiPrompt, togglePawXaiSuffix } from './lib/pawxai.js';
 import { renderOnboarding, clampOnboardingPage, ONBOARDING_PAGES } from './lib/ui/onboarding.js';
 import { renderAppHelpDialog, renderNoticeDialog } from './lib/ui/appHelp.js';
 import { createAppTutorial, shouldShowAppTutorial } from './lib/ui/appTutorials.js';
-import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster } from './lib/registrarLorebook.js';
+import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster, syncRegistrarAutoContacts } from './lib/registrarLorebook.js';
 import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
 import { applyMienExpression, loadMienGallery, resolveMienCharacter, selectMienOutfit } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
-import { renderNarrativeSettingsScreen } from './lib/ui/apps/narrativeSettings.js';
-import { extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, mentalPresetValues, NARRATOR_OPTIONS, POV_OPTIONS, readNarrativeSnapshot } from './lib/narrativeSettings.js';
+import { NARRATIVE_HELP, renderNarrativeSettingsScreen } from './lib/ui/apps/narrativeSettings.js';
+import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, mentalPresetValues, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
+import { renderCustomShiftScreen } from './lib/ui/apps/customShift.js';
+import { renderGeminiFilterGuide } from './lib/ui/apps/geminiFilterGuide.js';
+import { installGeminiBlockNotice } from './lib/ui/geminiBlockNotice.js';
+// Only for Custom Preset's starting example (Slow Burn's player quote); quick-reply-ext owns the text.
+import { SHIFT_BODIES } from '../quick-reply-ext/src/roleplayShifts.js';
 import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, dedupeCapturedMessages, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './lib/roleplayMode.js';
 import { buildContactContextBlock, buildGroupContactContextBlock, buildPersonaContextBlock, resolveContactContext } from './lib/contactContext.js';
 import { applySettingsPatch, createSettingsPatch, mergeWeyPhoneSettings, replaceSettingsInPlace, settingsChangedDuringRefresh } from './lib/settingsSync.js';
-import { ravs } from '../quick-reply-ext/src/rav.js';
+import { ravs } from '../quick-reply-ext/src/promptRegistry.js';
 import { charPer } from '../quick-reply-ext/src/charper.js';
 import { world_names } from '../../world-info.js';
 import { applyPhoneHardModePolicy, stripAnalysisProcedure } from './lib/phonePromptPolicy.js';
@@ -116,6 +123,23 @@ let calcState = calcInitialState(); // session-only, like a real calculator
 let currentNoteId = null; // set when entering 'note-editor'
 let currentPawXaiTab = 'generate';
 let currentNarrativeTab = 'essentials';
+// "A dose of..." armed in the Roleplay Shift card: the next shift tapped is dosed instead of set.
+let narrativeDoseArmed = false;
+// While a narrator pick is rebuilding prompts (several seconds), the picker shows the NEW narrator at once
+// instead of sitting on the old one: { from, to, animated }. `animated` makes sure the entrance plays on the
+// first draw only, so an unrelated redraw mid-rebuild does not replay it. Cleared in the handler's finally.
+let narrativeNarratorPreview = null;
+// The control that was just tapped, as "action|value|variable". Every PromptOS action redraws the whole screen,
+// and cards change height, so the redraw re-anchors the scroll position on this control instead of letting
+// it jump (see captureScrollAnchor in lib/ui/apps/narrativeSettings.js). Cleared after the final redraw.
+let narrativeAnchorKey = '';
+// How long the swing-open needs to finish (the slowest piece, the portrait settling, is about 0.9s).
+const NARRATOR_MOTION_MS = 850;
+// Custom Preset screen (session-only): null = the main PromptOS screen, otherwise
+// { editing: null | { id?, name, text }, deletePendingId: null | id }.
+let narrativeCustom = null;
+// Gemini word-filter README (session-only): true while that page is open over PromptOS.
+let narrativeGuide = false;
 // Toggling a Storytelling Settings variable reruns a Quick Reply script, which can take several
 // seconds with nothing else on screen changing. This guards against a second click landing
 // mid-rebuild (which would read a stale "before" snapshot) while the busy spinner is showing.
@@ -541,6 +565,16 @@ const registrarApp = createHostedRegistrar(() => {
     contactLorebookState.ready = false;
 }, () => queueWeyPhoneSave());
 
+/** Registrar record portraits for Registrar community characters, fed to every buildPortraitMap
+ * call. Official roster names are never overridden, so a community character who shares a name
+ * with the official cast can't replace the official face. */
+function registrarPortraitOverrides() {
+    const official = new Set(WEYLAND_ROSTER.map(character => character.name.toLowerCase()));
+    return Object.fromEntries(contactLorebookState.registrarContacts
+        .filter(contact => contact.image && !official.has(contact.name.toLowerCase()))
+        .map(contact => [contact.name, contact.image]));
+}
+
 function contactLorebookSignature() {
     const settings = getSettings(SillyTavern.getContext().extensionSettings);
     return ['Weyland', ...findRegistrarBookNames(world_names), ...communityLorebookNames(settings)].join('|');
@@ -551,7 +585,7 @@ function contactLorebooksAreReady() {
 }
 
 async function ensureContactLorebooks(context) {
-    const signature = contactLorebookSignature();
+    let signature = contactLorebookSignature();
     if (contactLorebookState.ready && contactLorebookState.signature === signature) return contactLorebookState;
     if (contactLorebookState.loading && contactLorebookState.signature === signature) return contactLorebookState.loading;
 
@@ -567,6 +601,16 @@ async function ensureContactLorebooks(context) {
         const registrar = await loadRegistrarLorebooks({ worldNames: world_names, loadWorldInfo: context.loadWorldInfo });
         const communityBooks = new Map();
         const settingsForCommunity = getSettings(context.extensionSettings);
+        // In-app Registrar imports become Contacts automatically (and leave when removed or
+        // unloaded). Adding them changes which community books are referenced, so re-key this
+        // load to the new signature rather than letting the next caller trigger a second load.
+        if (syncRegistrarAutoContacts(settingsForCommunity, registrar.contacts)) {
+            queueWeyPhoneSave(context);
+            if (contactLorebookState.signature === signature) {
+                signature = contactLorebookSignature();
+                contactLorebookState.signature = signature;
+            }
+        }
         await Promise.all(communityLorebookNames(settingsForCommunity).map(async name => {
             try {
                 const book = await context.loadWorldInfo(name);
@@ -694,7 +738,7 @@ function applyPawXaiPalette(panel, settings) {
 }
 
 async function resolveCharacterPrompt(context, character, { lorebookContact = false, lorebookName = 'Weyland' } = {}) {
-    const promptChoice = context.variables.global.get('PromptChoice') || 'Beta Prompt';
+    const promptChoice = context.variables.global.get('PromptChoice') || 'Current Prompt';
     const ravEntry = resolveMasterPrompt(ravs, promptChoice);
     const htmlEnabled = context.variables.global.get('HTML!') === 'Enabled';
     const rpFocus = context.variables.global.get('RPFocus') || '';
@@ -720,14 +764,9 @@ async function resolveCharacterPrompt(context, character, { lorebookContact = fa
         personalityText = applySpecialCase(character.name, basePersonality, {});
     }
 
-    // Beta bakes Hard Mode into its prompt at quick-reply-ext XXX() time instead of reading
-    // the Coach macro, so its raw teg has no Coach slot and the phone Hard Mode opt-ins
-    // (applyPhoneHardModePolicy keeps or strips that macro) would silently do nothing.
-    // Restore the slot where Beta used to carry it: directly ahead of the Welcome block,
-    // which is where Beta's teg now begins.
-    const systemPrompt = ravEntry === ravs.get('Beta Prompt')
-        ? `{{getglobalvar::Coach}}\n\n${ravEntry.teg}`
-        : ravEntry.teg;
+    // Shared PromptOS assembly owns feedback for every prompt. Phone requests keep their
+    // separate opt-in policy: supply the Coach slot for any selected base prompt.
+    const systemPrompt = `{{getglobalvar::Coach}}\n\n${ravEntry.teg}`;
 
     // Phone requests never carry the analysis procedure (see stripAnalysisProcedure) - only the
     // Coach/Hard Mode slot survives, and applyPhoneHardModePolicy decides whether it stays.
@@ -965,7 +1004,7 @@ function renderMessagesScreenNow(context, settings) {
                 : resolveContactName(settings, summary.charName)),
         }));
     const charNames = summaries.map(summary => summary.charName);
-    const portraitMap = buildPortraitMap(context.characters, charNames, context.getThumbnailUrl);
+    const portraitMap = buildPortraitMap(context.characters, charNames, context.getThumbnailUrl, registrarPortraitOverrides());
     for (const summary of summaries) {
         if ((summary.participants?.length ?? 1) > 1) portraitMap[summary.charName] = { group: true };
     }
@@ -980,7 +1019,7 @@ function renderThreadsScreenNow(context, settings) {
     if (!screenBody) return null;
     const summaries = withTypingState(getThreadsFor(settings, currentThreadsFilter ?? ''), generatingConversationIds)
         .map(summary => ({ ...summary, displayName: resolveContactName(settings, summary.charName) }));
-    const portraitMap = buildPortraitMap(context.characters, [currentThreadsFilter ?? ''], context.getThumbnailUrl);
+    const portraitMap = buildPortraitMap(context.characters, [currentThreadsFilter ?? ''], context.getThumbnailUrl, registrarPortraitOverrides());
     renderMessagesScreen(screenBody, summaries, formatRelativeTime, portraitMap);
     return portraitMap;
 }
@@ -1106,6 +1145,7 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
             sendRequest: (id, msgs) => context.ConnectionManagerRequestService.sendRequest(id, msgs, maxTokens, undefined, flavorOverridePayload),
             profileId,
             messages,
+            model: flavorModel,
         });
 
         const rawText = extractResponseText(result);
@@ -1254,7 +1294,7 @@ function findTwitterProfileSubject(name) {
 // names actually in view, and this guarantees a PSA account's local asset always wins over any
 // (wrong) weybooru-CDN guess buildPortraitMap would otherwise attempt for that same name.
 function buildTwitterPortraitMap(context, charNames) {
-    return { ...buildPortraitMap(context.characters, charNames, context.getThumbnailUrl), ...buildPsaPortraitMap(PSA_ACCOUNTS) };
+    return { ...buildPortraitMap(context.characters, charNames, context.getThumbnailUrl, registrarPortraitOverrides()), ...buildPsaPortraitMap(PSA_ACCOUNTS) };
 }
 
 /**
@@ -1542,6 +1582,7 @@ async function generateGroupReply(conversationId, conversation, context, setting
             sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(id, requestMessages, DEFAULT_MAX_TOKENS, undefined, modelOverride ? { model: modelOverride } : undefined),
             profileId,
             messages,
+            model: modelOverride,
         });
         const parsed = parseGroupReply(extractResponseText(result));
         if (!parsed.messages.length) throw new Error('The group did not return any usable messages.');
@@ -1712,6 +1753,7 @@ async function generateReply(conversationId, conversation, context, settings) {
             sendRequest: (id, msgs) => context.ConnectionManagerRequestService.sendRequest(id, msgs, DEFAULT_MAX_TOKENS, undefined, overridePayload),
             profileId,
             messages,
+            model: modelOverride,
         });
 
         const replyText = extractResponseText(result);
@@ -1990,8 +2032,18 @@ function getCombinedContactEntries(settings, refreshOptions = {}) {
     // which never touched this always-on list) — the picker's whole point is that a Registrar
     // character becomes a contact only when the user explicitly adds them via
     // getCommunityContacts/addCommunityContacts below.
-    const communityEntries = getCommunityContacts(settings).map(communityContactDirectoryEntry)
-        .map(entry => ({ ...entry, name: preferredContactDisplayName(entry.name) }));
+    // A community contact that came from a Registrar book (the in-app import adds these
+    // automatically) shows its Registrar details (species, handle, summary, portrait) instead of
+    // a blank "Community" card. profileText stays out: it's the full subbot, resolved live on send.
+    const registrarByKey = new Map(contactLorebookState.registrarContacts.map(contact =>
+        [`${contact.name.toLowerCase()}|${String(contact.lorebookName).toLowerCase()}`, contact]));
+    const communityEntries = getCommunityContacts(settings).map(contact => {
+        const entry = communityContactDirectoryEntry(contact);
+        const registrar = registrarByKey.get(`${String(contact.name).toLowerCase()}|${String(contact.lorebookName).toLowerCase()}`);
+        if (!registrar) return entry;
+        const { profileText, ...details } = registrar;
+        return { ...entry, ...details, community: true };
+    }).map(entry => ({ ...entry, name: preferredContactDisplayName(entry.name) }));
     const directoryEntries = [...official, ...communityEntries.filter(entry => {
         const key = entry.name.toLowerCase();
         if (seen.has(key)) return false;
@@ -2290,6 +2342,7 @@ async function runPawXaiGeneration() {
                 ),
                 profileId,
                 messages,
+                model: requestModel,
             });
             const parsed = parsePawXaiResponse(extractResponseText(response), settings.pawxai.promptCount);
             if (!parsed.length) throw new Error('The model did not return any usable prompts.');
@@ -2659,7 +2712,9 @@ function currentUnderstudyTarget(context, settings) {
     const readings = understudyReadings(message);
     const pick = understudyPickedReading(message);
     const parts = understudySplitMessage(readings[pick] ?? message.mes);
-    const scope = UNDERSTUDY_SCOPES[settings.understudy?.scope] ?? UNDERSTUDY_SCOPES.full;
+    // The scope that will really run: a saved thought scope falls back on a thoughts-off character.
+    const thoughtsMode = understudyThoughtsModeOf(resolveUnderstudyThoughtsSetting(context));
+    const scope = UNDERSTUDY_SCOPES[effectiveUnderstudyScope(settings.understudy?.scope, thoughtsMode)];
     const spans = scope.spanKind ? understudyExtractSpans(parts.body, scope.spanKind) : [];
     return {
         index,
@@ -2668,6 +2723,7 @@ function currentUnderstudyTarget(context, settings) {
         body: parts.body.trim(),
         footer: parts.footer,
         spanCount: spans.length,
+        thoughtsMode,
         readingIndex: pick,
         readingCount: readings.length,
         // Labelled in the picker so a take is distinguishable from the model's own reading.
@@ -2767,6 +2823,9 @@ function renderUnderstudyScreenNow() {
         statusIndex: understudyStatusIndex,
         feedback: understudyFeedback,
         section: understudySection,
+        // The Instincts tab hides the thought scopes for thoughts-off characters, so it needs the
+        // mode even when there's no reply to rewrite yet.
+        thoughtsMode: target?.thoughtsMode ?? understudyThoughtsModeOf(resolveUnderstudyThoughtsSetting(context)),
     });
 }
 
@@ -2797,7 +2856,10 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
     const sourceBody = (targetKey === understudyTargetKey && understudySourceBody)
         ? understudySourceBody
         : target.body;
-    const scope = UNDERSTUDY_SCOPES[config.scope] ?? UNDERSTUDY_SCOPES.full;
+    // Same thoughts-mode fallback as the screen, so what runs is what the screen showed.
+    const thoughtsSetting = resolveUnderstudyThoughtsSetting(context);
+    const scopeKey = effectiveUnderstudyScope(config.scope, understudyThoughtsModeOf(thoughtsSetting));
+    const scope = UNDERSTUDY_SCOPES[scopeKey];
     const spans = scope.spanKind ? understudyExtractSpans(sourceBody, scope.spanKind) : [];
     if (scope.spanKind && !spans.length) {
         wpToast('info', 'Nothing matching that scope in this reply.', 'Copycat');
@@ -2805,7 +2867,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
     }
 
     const messages = buildUnderstudyMessages({
-        scope: config.scope,
+        scope: scopeKey,
         characterName: target.characterName,
         characterProfile: resolveUnderstudyProfile(context, target.characterName),
         recentMessages: collectUnderstudyContext(context, target.index, config.contextMessages),
@@ -2819,7 +2881,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         stageDirections: resolveUnderstudyStageDirections(context, config, target),
         feedback: understudySlotOf(understudyFeedbackKey) === understudySlotOf(targetKey) ? understudyFeedback : '',
         allowDeviation: Boolean(config.allowDeviation),
-        thoughtsSetting: resolveUnderstudyThoughtsSetting(context),
+        thoughtsSetting,
     });
 
     const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
@@ -2851,6 +2913,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         ),
         profileId,
         messages,
+        model,
     });
 
     try {
@@ -2891,7 +2954,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         understudyLastRun = {
             at: new Date().toISOString(),
             model: answeringModel,
-            scope: config.scope,
+            scope: scopeKey,
             system: messages[0].content,
             user: messages[1].content,
             raw: text,
@@ -3528,6 +3591,28 @@ function handleScreenBodyClick(event) {
     if (narrativeTab) {
         currentNarrativeTab = narrativeTab.dataset.narrativeTab;
         renderNarrativeScreenNow();
+        return;
+    }
+    // Gemini word-filter README: a static page, so it opens/closes here instead of going through
+    // handleNarrativeAction (no prompt rebuild, no spinner, no "settings updated" toast). Opening
+    // starts at the top; closing lands back on the Gemini card the player came from rather than
+    // dumping them at the top of Home.
+    const narrativeGuideToggle = event.target.closest('[data-narrative-guide]');
+    if (narrativeGuideToggle) {
+        const opening = narrativeGuideToggle.dataset.narrativeGuide === 'open';
+        narrativeGuide = opening;
+        if (opening) narrativeDoseArmed = false;
+        renderNarrativeScreenNow();
+        const body = document.getElementById('wp-screen-body');
+        if (opening) body?.scrollTo({ top: 0 });
+        else body?.querySelector('.wp-narrative-gemini-card')?.scrollIntoView({ block: 'center' });
+        return;
+    }
+    // PromptOS "?" explainers (Course correction), shown in the phone's shared notice dialog.
+    const narrativeHelp = event.target.closest('[data-narrative-help]');
+    if (narrativeHelp) {
+        const help = NARRATIVE_HELP[narrativeHelp.dataset.narrativeHelp];
+        if (help) renderNoticeDialog(document.getElementById('wp-app-help'), help);
         return;
     }
     const narrativeAction = event.target.closest('[data-narrative-action]');
@@ -4287,6 +4372,10 @@ function handleScreenBodyClick(event) {
         }
         const appKey = appTile.dataset.app;
         const app = getApp(appKey);
+        if (appKey === 'narrative') {
+            narrativeCustom = null;
+            narrativeGuide = false;
+        }
         // Mirrors openNotificationTarget's shade-entry behavior — any app tile opened directly
         // from the home screen should clear its own badge too, not just Messages. Guarded on a
         // truthy appKey because markAppNotificationsRead treats a missing key as "mark ALL apps
@@ -5808,20 +5897,161 @@ async function rebuildNarrativePrompts(...labels) {
     for (const label of labels) await runWeylandQuickReply(label);
 }
 
+function narrativeIntroContext(context) {
+    // quick-reply-ext publishes this; if it's missing or throws, the card just says it's unavailable.
+    if (!context.chatId) return null;
+    try {
+        return globalThis.WeylandIntroContext?.describe?.() ?? null;
+    } catch (error) {
+        console.warn('[WeyPhone] Could not read the roleplay intro context:', error);
+        return null;
+    }
+}
+
 function narrativeSnapshot(context = SillyTavern.getContext()) {
     return readNarrativeSnapshot({
         getGlobal: key => context.variables?.global?.get(key),
         getLocal: key => context.variables?.local?.get(key),
         hasChat: Boolean(context.chatId),
+        intro: narrativeIntroContext(context),
+        dose: narrativeDose(context),
+        // Solo chats only: a group has no characterId, and a group never runs a special card's own prompt.
+        characterName: context.characters?.[context.characterId]?.name ?? '',
     });
+}
+
+function narrativeDose(context) {
+    if (!context.chatId) return null;
+    try {
+        return globalThis.WeylandDose?.describe?.() ?? null;
+    } catch (error) {
+        console.warn('[WeyPhone] Could not read the dose state:', error);
+        return null;
+    }
 }
 
 function renderNarrativeScreenNow() {
     const context = SillyTavern.getContext();
+    if (narrativeGuide) {
+        renderGeminiFilterGuide(document.getElementById('wp-screen-body'));
+        return;
+    }
+    if (narrativeCustom) {
+        const snapshot = narrativeSnapshot(context);
+        renderCustomShiftScreen(document.getElementById('wp-screen-body'), {
+            presets: getSettings(context.extensionSettings).customShiftPresets,
+            activeId: snapshot.customPreset?.id ?? null,
+            shiftIsCustom: snapshot.shift === 'Custom Preset',
+            editing: narrativeCustom.editing,
+            deletePendingId: narrativeCustom.deletePendingId,
+            example: customShiftExample(SHIFT_BODIES),
+        });
+        return;
+    }
+    const preview = narrativeNarratorPreview;
+    const snapshot = narrativeSnapshot(context);
     renderNarrativeSettingsScreen(document.getElementById('wp-screen-body'), {
-        snapshot: narrativeSnapshot(context),
+        snapshot: preview ? { ...snapshot, globalNarrator: preview.to } : snapshot,
         tab: currentNarrativeTab,
+        doseArmed: narrativeDoseArmed,
+        narratorFrom: preview && !preview.animated ? preview.from : null,
+        narratorBusy: Boolean(preview),
+        anchorKey: narrativeAnchorKey,
     });
+    if (preview) preview.animated = true;
+}
+
+/** Sets the regular (global) Roleplay Shift. Hard Mode still lives in HardToggle + Coach (the
+ * shared assembler, phone opt-ins and classic menu read those), so moving into or out of it runs exactly the steps the
+ * old Hard Mode switch did. Callers rebuild XXX afterwards. */
+function applyRegularShift(global, before, script, id) {
+    const hard = id === 'Hard Mode';
+    if (hard !== before.hardMode) {
+        const coach = hard ? extractHardModeDirective(script) : extractHardModeOffDirective(script);
+        if (!coach) throw new Error('The canonical Hard Mode text could not be found in Storytelling Settings.');
+        global.set('HardToggle', hard ? 'On' : 'Off');
+        global.set('Coach', coach);
+    }
+    global.set('RoleplayShift', id);
+}
+
+/** Always opens on the saved-presets list; New preset and Edit open the editor from there. */
+function openCustomPresetScreen() {
+    narrativeDoseArmed = false;
+    narrativeCustom = { editing: null, deletePendingId: null };
+}
+
+/** Custom Preset screen actions (lib/ui/apps/customShift.js). The preset in use is copied into
+ * the RoleplayShiftCustom global, which is all quick-reply-ext reads, so saving an edit to that
+ * preset re-copies it and rebuilds the prompt. */
+async function handleCustomPresetAction(action, value, { context, global, before, script }) {
+    const settings = getSettings(context.extensionSettings);
+    const presets = settings.customShiftPresets;
+    const state = narrativeCustom ?? { editing: null, deletePendingId: null };
+    narrativeCustom = state;
+    if (action !== 'custom-delete') state.deletePendingId = null;
+    const usingCustom = before.shift === 'Custom Preset' || before.dose?.shift === 'Custom Preset';
+
+    if (action === 'custom-back') {
+        narrativeCustom = null;
+    } else if (action === 'custom-new') {
+        state.editing = { name: '', text: '' };
+    } else if (action === 'custom-edit') {
+        const preset = presets.find(item => item.id === value);
+        if (preset) state.editing = { id: preset.id, name: preset.name, text: preset.text };
+    } else if (action === 'custom-cancel') {
+        state.editing = null;
+    } else if (action === 'custom-save') {
+        // Keep what was typed even if the save is refused, since the screen re-renders either way.
+        state.editing = {
+            ...state.editing,
+            name: document.getElementById('wp-custom-name')?.value ?? state.editing?.name ?? '',
+            text: document.getElementById('wp-custom-text')?.value ?? state.editing?.text ?? '',
+        };
+        const text = cleanCustomFeedback(state.editing.text);
+        if (!text) throw new Error('Write some feedback first.');
+        const name = cleanCustomName(state.editing.name) || 'My preset';
+        let preset = presets.find(item => item.id === state.editing.id);
+        if (preset) {
+            Object.assign(preset, { name, text, updatedAt: Date.now() });
+        } else {
+            preset = { id: `cp-${Date.now().toString(36)}`, name, text, updatedAt: Date.now() };
+            presets.push(preset);
+        }
+        queueWeyPhoneSave(context);
+        if (before.customPreset?.id === preset.id) {
+            global.set('RoleplayShiftCustom', JSON.stringify({ id: preset.id, name, text }));
+            if (usingCustom) await rebuildNarrativePrompts('XXX');
+        }
+        state.editing = null;
+        wpToast('success', `Saved "${name}".`);
+    } else if (action === 'custom-use') {
+        const preset = presets.find(item => item.id === value);
+        if (!preset) return;
+        global.set('RoleplayShiftCustom', JSON.stringify({ id: preset.id, name: preset.name, text: preset.text }));
+        applyRegularShift(global, before, script, 'Custom Preset');
+        await rebuildNarrativePrompts('XXX');
+        narrativeCustom = null;
+        wpToast('success', `Using "${preset.name}".`);
+    } else if (action === 'custom-delete') {
+        // Two taps, no browser dialog: the first arms it ("Tap again"), the second deletes.
+        if (state.deletePendingId !== value) {
+            state.deletePendingId = value;
+            return;
+        }
+        state.deletePendingId = null;
+        const index = presets.findIndex(item => item.id === value);
+        if (index < 0) return;
+        const [removed] = presets.splice(index, 1);
+        queueWeyPhoneSave(context);
+        if (before.customPreset?.id === removed.id) {
+            // Don't leave a deleted preset quietly running (or waiting to be dosed).
+            global.set('RoleplayShiftCustom', '');
+            if (before.shift === 'Custom Preset') applyRegularShift(global, before, script, 'None');
+            if (usingCustom) await rebuildNarrativePrompts('XXX');
+        }
+        wpToast('success', `Deleted "${removed.name}".`);
+    }
 }
 
 async function handleNarrativeAction(button) {
@@ -5831,6 +6061,7 @@ async function handleNarrativeAction(button) {
     // read as having done nothing for that whole stretch.
     if (narrativeActionPending) return;
     narrativeActionPending = true;
+    narrativeAnchorKey = [button.dataset.narrativeAction ?? '', button.dataset.value ?? '', button.dataset.variable ?? ''].join('|');
     button.classList.add('wp-narrative-busy');
     button.disabled = true;
 
@@ -5849,17 +6080,59 @@ async function handleNarrativeAction(button) {
         } else if (action === 'legacy-menu') {
             await runWeylandQuickReply('NarrativeSettings');
         } else if (action === 'set-prompt') {
+            // A held slot (the greyed-out Beta cartridge) has no action in the UI; refuse a stale or hand-made one too.
+            const promptOption = PROMPT_OPTIONS.find(item => item.id === value);
+            // A built-in-prompt card's chat draws every cart locked; refuse a stale button from before the chat changed too.
+            if (!promptOption || promptOption.disabled || before.builtInPrompt) return;
             global.set('PromptChoice', value);
             await rebuildNarrativePrompts('XXX');
         } else if (action === 'toggle-hard') {
             const next = !before.hardMode;
             const coach = next ? extractHardModeDirective(script) : extractHardModeOffDirective(script);
             if (!coach) throw new Error('The canonical Hard Mode text could not be found in Storytelling Settings.');
-            if (next && !['Current Prompt', 'Beta Prompt'].includes(before.prompt)) global.set('PromptChoice', 'Beta Prompt');
             global.set('HardToggle', next ? 'On' : 'Off');
             global.set('Coach', coach);
             await rebuildNarrativePrompts('XXX');
+        } else if (action === 'set-shift') {
+            const option = SHIFT_OPTIONS.find(item => item.id === value);
+            if (!option) return;
+            if (option.id === 'Custom Preset') {
+                // Picking which preset happens on its own screen ("Use" applies it).
+                openCustomPresetScreen();
+                return;
+            }
+            applyRegularShift(global, before, script, option.id);
+            await rebuildNarrativePrompts('XXX');
+        } else if (action === 'arm-dose') {
+            narrativeDoseArmed = before.hasChat && !narrativeDoseArmed;
+        } else if (action === 'start-dose') {
+            narrativeDoseArmed = false;
+            if (!before.hasChat || !globalThis.WeylandDose) return;
+            if (!DOSE_OPTIONS.some(item => item.id === value)) return;
+            if (value === 'Custom Preset' && !before.customPreset) {
+                openCustomPresetScreen();
+                wpToast('info', 'Pick a Custom Preset with "Use" first, then dose it.');
+                return;
+            }
+            await globalThis.WeylandDose.start(value);
+            wpToast('success', `A dose of ${value} is in your system.`);
+        } else if (action === 'end-dose') {
+            if (!globalThis.WeylandDose) return;
+            await globalThis.WeylandDose.end();
+            wpToast('success', 'Dose ended. Back to your regular shift.');
+        } else if (action.startsWith('custom-')) {
+            await handleCustomPresetAction(action, value, { context, global, before, script });
+        } else if (action === 'set-intro-context') {
+            if (!before.hasChat || !globalThis.WeylandIntroContext) return;
+            await globalThis.WeylandIntroContext.setMode(value);
+        } else if (action === 'set-intro-variant') {
+            if (!before.hasChat || !globalThis.WeylandIntroContext) return;
+            const [group, option] = value.split('|');
+            await globalThis.WeylandIntroContext.setVariant(group, option);
+            // XXX re-syncs Standard Kris's post-history to the current prompt (see its Krisrav note).
+            await rebuildNarrativePrompts('XXX');
         } else if (action === 'toggle-analysis') {
+            if (before.builtInPrompt) return;   // locked in Kinsbane / Mirror / Muse chats (their sheet always runs)
             global.set('AnalysisToggle', before.analysisEnabled ? 'Disabled' : 'Enabled');
             await rebuildNarrativePrompts('XXX');
         } else if (action === 'toggle-gemini-bypass') {
@@ -5870,6 +6143,13 @@ async function handleNarrativeAction(button) {
             if (!option) return;
             const narratorPrompt = global.get(option.globalKey);
             if (!String(narratorPrompt ?? '').trim()) throw new Error(`The ${option.label} narrator prompt is not available.`);
+            // Draw the pick right now. The prompt rebuild below takes seconds, and the picker's whole job is the
+            // reveal, so waiting on it would make the art arrive long after the tap. If the rebuild fails, the
+            // finally block redraws from the real variables, which rolls the picker back.
+            if (option.id !== before.globalNarrator) {
+                narrativeNarratorPreview = { from: before.globalNarrator, to: option.id, animated: false, startedAt: Date.now() };
+                if (currentView === 'narrative') renderNarrativeScreenNow();
+            }
             global.set('Narrator', narratorPrompt);
             if (!before.localNarratorOverride && before.hasChat) local.set('LocalNarrator', narratorPrompt);
             await rebuildNarrativePrompts('XXX');
@@ -5910,7 +6190,11 @@ async function handleNarrativeAction(button) {
                 await rebuildNarrativePrompts('XXX');
             } else if (variable === 'HTML!') {
                 global.set(variable, next);
-                await rebuildNarrativePrompts('Framework');
+                await rebuildNarrativePrompts('Framework', 'XXX');
+            } else if (variable === OOC_MODE_VARIABLE) {
+                // OOC Mode swaps the whole base prompt inside XXX (quick-reply-ext/src/oocMode.js).
+                global.set(variable, next);
+                await rebuildNarrativePrompts('XXX');
             } else {
                 global.set(variable, next);
                 await rebuildNarrativePrompts('NewEntries');
@@ -5956,16 +6240,25 @@ async function handleNarrativeAction(button) {
         } else {
             return;
         }
-        if (!['school-year', 'legacy-menu'].includes(action)) wpToast('success', 'Storytelling settings updated.');
+        // No success toast: PromptOS applies a pick almost instantly, so a green "updated" on every tap was noise. A failure
+        // still announces itself in the catch below.
     } catch (error) {
         console.error('[WeyPhone] Narrative settings update failed:', error);
         wpToast('error', error?.message || 'Could not update Storytelling Settings.');
     } finally {
+        // A quick rebuild would redraw the settled picker a few ms after the optimistic one and cut the
+        // swing-open off mid-animation, so let the entrance finish first. Taps stay locked meanwhile.
+        if (narrativeNarratorPreview) {
+            const remaining = NARRATOR_MOTION_MS - (Date.now() - narrativeNarratorPreview.startedAt);
+            if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
+        }
         narrativeActionPending = false;
+        narrativeNarratorPreview = null;
         // A full re-render replaces this button's markup outright, so there's nothing to manually
         // un-busy on the success path — this only matters if the screen was navigated away from
         // mid-rebuild, in which case the stale button (now off-screen) is left alone.
         if (currentView === 'narrative') renderNarrativeScreenNow();
+        narrativeAnchorKey = '';
     }
 }
 
@@ -6475,7 +6768,7 @@ function showScreen(view) {
             .filter(isGeneralMessagingContact)
             .filter(entry => resolveContactCapability(context, entry).messageable)
             .map(entry => ({ name: entry.name }));
-        const portraitMap = buildPortraitMap(context.characters, characters.map(c => c.name), context.getThumbnailUrl);
+        const portraitMap = buildPortraitMap(context.characters, characters.map(c => c.name), context.getThumbnailUrl, registrarPortraitOverrides());
         renderContactsScreen(screenBody, characters, portraitMap);
         return;
     }
@@ -6505,7 +6798,7 @@ function showScreen(view) {
         }
         title.textContent = 'Memory';
         const isGroup = (conversation.participants?.length ?? 1) > 1;
-        const portraitMap = isGroup ? {} : buildPortraitMap(context.characters, [conversation.charName], context.getThumbnailUrl);
+        const portraitMap = isGroup ? {} : buildPortraitMap(context.characters, [conversation.charName], context.getThumbnailUrl, registrarPortraitOverrides());
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), isGroup ? { group: true } : portraitMap[conversation.charName]);
         rerenderMemoryScreen();
         return;
@@ -6543,7 +6836,7 @@ function showScreen(view) {
         title.textContent = '';
     }
     const isGroup = (conversation.participants?.length ?? 1) > 1;
-    const portraitMap = isGroup ? {} : buildPortraitMap(context.characters, [conversation.charName], context.getThumbnailUrl);
+    const portraitMap = isGroup ? {} : buildPortraitMap(context.characters, [conversation.charName], context.getThumbnailUrl, registrarPortraitOverrides());
     renderPanelAvatar(
         document.getElementById('wp-panel-avatar'),
         conversation.isDedicatedApp === 'kressa' ? null : (isGroup ? { group: true } : portraitMap[conversation.charName]),
@@ -7672,6 +7965,13 @@ function initPanel() {
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateRoleplayModeAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, refreshHomeScreenAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateLoreWarningAvailability);
+    // Gemini word-filter rejections arrive as chat messages; this tacks a "don't reroll, see the
+    // PromptOS guide" note onto them (display only, see lib/ui/geminiBlockNotice.js).
+    try {
+        installGeminiBlockNotice();
+    } catch (error) {
+        console.warn('[WeyPhone] Gemini block notice unavailable:', error);
+    }
     const refreshAfterResume = () => {
         if (document.visibilityState === 'hidden') return;
         void refreshWeyPhoneSettings(SillyTavern.getContext()).then(changed => {
@@ -7716,6 +8016,11 @@ function initPanel() {
         if (applyAlarmFieldFromEvent(event.target)) return;
         if (event.target.id === 'wp-group-title') {
             groupDraftTitle = event.target.value;
+            return;
+        }
+        if (event.target.id === 'wp-custom-text') {
+            const counter = document.getElementById('wp-custom-count');
+            if (counter) counter.textContent = String(event.target.value.length);
             return;
         }
         if (event.target.id === 'wp-contact-context') {
