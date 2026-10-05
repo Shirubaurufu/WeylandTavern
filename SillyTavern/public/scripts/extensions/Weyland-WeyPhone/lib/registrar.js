@@ -26,7 +26,11 @@ export function createHostedRegistrar(onChanged, saveWeyPhoneSettings = saveSett
             if (response.status === 404) throw new Error('Restart Weyland Tavern once to enable the new Registrar service, then reopen this app.');
             let data;
             try { data = await response.json(); } catch { throw new Error('The Registrar service returned an unreadable response. Please try again.'); }
-            if (!response.ok) throw new Error(data.error || 'The Registrar request failed.');
+            if (!response.ok) {
+                const error = new Error(data.error || 'The Registrar request failed.');
+                error.code = data.code;
+                throw error;
+            }
             return data;
         },
         isActive: name => selected_world_info.includes(name),

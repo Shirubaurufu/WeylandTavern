@@ -2,8 +2,9 @@
 // (inspected 2026-09-15). Keep prompt text, macros, selective keys and activation flags
 // aligned with the website. No browser code is executed or downloaded at runtime.
 
-/** Build subbots and location lore, never character cards or greetings. */
-export function buildRegistrarBook(items) {
+/** Build subbots and location lore. Optional entryKeys maps generated UIDs to stable owner/slot
+ * identities so managed-library updates can preserve unrelated edits when UID slots move. */
+export function buildRegistrarBook(items, entryKeys = {}) {
     const book = { entries: {} };
     const characters = items.filter(item => item.kind === 'character');
     const locations = items.filter(item => item.kind === 'location');
@@ -12,23 +13,33 @@ export function buildRegistrarBook(items) {
         // Allocate locally instead of characterId*5: upstream IDs can otherwise collide
         // with the website's fixed 8000 location namespace in mixed collections.
         addLoreEntries(book, index * 5, item);
+        for (let slot = 1; slot <= 5; slot++) {
+            const uid = 5000 + index * 5 + slot;
+            if (book.entries[uid]) entryKeys[uid] = `${item.kind}:${item.id}/${slot}`;
+        }
         const names = item.name.split(',').map(name => name.trim());
         const aliases = names.slice(1);
         roster += `${names[0]}: (${aliases.length ? `AKA: [${aliases.toString()}], ` : ''}${item.species}, ${item.roster ? `${item.roster}, ` : ''}${item.gender}, Username: ${item.onlineHandle}, {{getvar:${item.schoolYear}}},${item.major ? ` Major: ${item.major},` : ''} ${item.dwelling})\n`;
     });
     if (characters.length) book.entries[5000] = buildRosterEntry(5000, roster + '[END CHARACTER ROSTER]');
+    if (characters.length) entryKeys[5000] = 'shared/roster';
     let next = Math.max(8000, 5001 + characters.length * 5);
     const listId = next++;
     let list = '[LOCATIONS]\nThe following is a list of special named locations on and around the campus.\n';
     for (const item of locations) {
         const id = next++;
         addWorldEntries(book, id, item);
+        entryKeys[id] = `${item.kind}:${item.id}/main`;
         const subs = parseLocationSubLocations(item);
-        for (const sub of subs) addSubLocationEntry(book, next++, id, item.name, sub);
+        for (const [index, sub] of subs.entries()) {
+            entryKeys[next] = `${item.kind}:${item.id}/sub-${index}`;
+            addSubLocationEntry(book, next++, id, item.name, sub);
+        }
         book.entries[id].content = book.entries[id].content.replace('::SUBLOCS::', subs.length ? `\nSub-Locations:[\n${subs.map(sub => `- ${sub.name}\n`).join('')}]\n\n` : '');
         list += `${item.name}: (${item.summary})\n`;
     }
     if (locations.length) book.entries[listId] = buildLocationsEntry(listId, list + '[END LOCATIONS]');
+    if (locations.length) entryKeys[listId] = 'shared/locations';
     return book;
 }
 

@@ -172,10 +172,10 @@ export function normalizeRegistrarSprites(sprites, characterName, outfit) {
         }));
 }
 
-async function fetchJson(url, fetchImpl) {
+async function fetchJson(url, fetchImpl, credentials = 'omit') {
     let fallbackTimer = null;
     try {
-        const request = { method: 'GET', credentials: 'omit' };
+        const request = { method: 'GET', credentials };
         if (globalThis.AbortSignal?.timeout) {
             request.signal = globalThis.AbortSignal.timeout(5000);
         } else if (globalThis.AbortController) {
@@ -215,7 +215,9 @@ async function findLocalOutfits(context, character, fetchImpl, documentRef) {
     // Enumerates a character's REAL outfit subfolders. This is what surfaces non-conventional
     // outfits (Summer/Baker, Mika/Santa, Weybot/female, …) that no name-guess list can cover.
     // Requires GET /api/sprites/folders — see src/endpoints/sprites.js.
-    const folderData = await fetchJson(`/api/sprites/folders?name=${encodeURIComponent(character.name)}`, fetchImpl);
+    // Local sprite APIs share SillyTavern's session/HTTP authentication. External Registrar
+    // manifests keep fetchJson's credential-free default, including when following redirects.
+    const folderData = await fetchJson(`/api/sprites/folders?name=${encodeURIComponent(character.name)}`, fetchImpl, 'same-origin');
     const discoveredFolders = Array.isArray(folderData)
         ? folderData
             .filter(entry => entry && typeof entry.name === 'string' && !('path' in entry))
@@ -223,7 +225,7 @@ async function findLocalOutfits(context, character, fetchImpl, documentRef) {
         : [];
     const folderNames = [...new Set([...preferredFolders, ...discoveredFolders])];
     const outfits = await Promise.all(folderNames.map(async folderName => {
-        const data = await fetchJson(`/api/sprites/get?name=${encodeURIComponent(folderName)}`, fetchImpl);
+        const data = await fetchJson(`/api/sprites/get?name=${encodeURIComponent(folderName)}`, fetchImpl, 'same-origin');
         const expressions = normalizeLocalSprites(data, folderName);
         if (!expressions.length) return null;
         return outfitRecord({

@@ -7,6 +7,7 @@ import { createLockScreenMarkup } from './ui/lockScreen.js';
 import { createShadeMarkup } from './ui/shade.js';
 import { DISCORGI_CHANNELS } from './discorgiChannels.js';
 import { renderMessageImages } from './messageImages.js';
+import { canGroupMessageTimes, getMessageTime } from './messageTime.js';
 
 export function createPanelMarkup() {
     return `
@@ -864,16 +865,18 @@ export function populateConnectionProfileOptions(selectEl, profiles, selectedId)
  * @param {{active?: boolean, selectedIndices?: Set<number>}} [selectState] bulk-delete select mode — when active,
  *   every bubble (both roles) renders a checkbox instead of any edit control, and inline-edit mode is suppressed.
  */
-export function renderMessages(container, messages, editingIndex = -1, isTyping = false, selectState = {}, showSpeakers = false) {
+export function renderMessages(container, messages, editingIndex = -1, isTyping = false, selectState = {}, showSpeakers = false, timeOptions = {}) {
     const { active: selectActive = false, selectedIndices = new Set() } = selectState;
     container.innerHTML = '';
     messages.forEach((message, index) => {
         const bubble = document.createElement('div');
         bubble.className = `wp-message ${message.role === 'user' ? 'wp-user' : 'wp-char'}`;
         bubble.dataset.index = String(index);
+        const time = getMessageTime(message, timeOptions);
         let speakerLabel = null;
 
         if (selectActive) {
+            bubble.classList.add('wp-message-selectable');
             bubble.classList.toggle('wp-message-selected', selectedIndices.has(index));
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -907,26 +910,29 @@ export function renderMessages(container, messages, editingIndex = -1, isTyping 
             textSpan.className = 'wp-message-text';
             renderMessageImages(textSpan, message.content);
             bubble.appendChild(textSpan);
-            // Only the user's own messages are editable — a character's reply can only be
-            // changed by regenerating it (see the Regenerate control), not hand-edited in place,
-            // so no edit button is rendered for wp-char bubbles at all.
-            if (message.role === 'user') {
-                const editButton = document.createElement('button');
-                editButton.className = 'wp-message-edit-btn';
-                editButton.title = 'Edit';
-                editButton.innerHTML = '<i class="fa-solid fa-pencil"></i>';
-                bubble.appendChild(editButton);
-            }
+            bubble.tabIndex = 0;
+            bubble.setAttribute('aria-label', `${message.role === 'user' ? 'Your message' : (message.speaker || 'Character message')}${time.clock ? `, ${time.clock}` : ''}: ${message.content}. Right-click or hold to edit.`);
+            bubble.setAttribute('aria-haspopup', 'dialog');
         }
-        if (speakerLabel) {
-            const groupBlock = document.createElement('div');
-            groupBlock.className = 'wp-group-message-block';
-            groupBlock.appendChild(speakerLabel);
-            groupBlock.appendChild(bubble);
-            container.appendChild(groupBlock);
-            return;
+        const row = document.createElement('div');
+        row.className = `wp-message-row ${message.role === 'user' ? 'wp-user-row' : 'wp-char-row'}`;
+        row.classList.toggle('wp-message-continuation', canGroupMessageTimes(messages[index - 1], message, timeOptions));
+        if (speakerLabel) { row.classList.add('wp-group-message-block'); row.appendChild(speakerLabel); }
+        row.appendChild(bubble);
+        if (time.date && (index === 0 || getMessageTime(messages[index - 1], timeOptions).date !== time.date)) {
+            const day = document.createElement('div');
+            day.className = 'wp-message-date';
+            day.textContent = new Date(`${time.date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            container.appendChild(day);
         }
-        container.appendChild(bubble);
+        if (time.clock && !canGroupMessageTimes(message, messages[index + 1], timeOptions)) {
+            const stamp = document.createElement('span');
+            stamp.className = 'wp-message-timestamp';
+            stamp.dataset.index = String(index);
+            stamp.textContent = time.clock;
+            row.appendChild(stamp);
+        }
+        container.appendChild(row);
     });
     if (isTyping) {
         const typingBubble = document.createElement('div');

@@ -12,6 +12,10 @@
    instead of escaping to the real browser viewport through #wp-portal. */
 #wp-panel[data-view="registrar"] { --wp-app-accent: #b68a48; transform: translateZ(0); }
 #wp-panel[data-view="registrar"] #wp-screen-body { padding: 0; background: #ece5d7; color: #302b27; }
+/* Registrar redraws its root for progress and dialogs. The shared screen entrance animation
+   transforms that root, temporarily making it the fixed dialog's containing block. Focusing
+   Cancel then scrolls the book underneath it and can clip the popup above the phone screen. */
+#wp-panel[data-view="registrar"] #wp-screen-body > .rg-app { animation: none; }
 /* The `padding: 0` above wins over style.css's own #wp-screen-body rule (more specific selector)
    and, on narrow/short viewports, that rule is the ONLY thing reserving space for #wp-nav-bar -
    which goes position:absolute over the bottom of the screen there (see style.css's own comment
@@ -88,9 +92,14 @@
 .rg-art > span { font: 600 42px 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; color: #9b744d; }
 .rg-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
 .rg-card-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; padding-top: 1px; }
-.rg-card-copy > .rg-eyebrow { font-size: 8px; color: #976039; padding-right: 15px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 6px; }
-.rg-card-meta { color: #6b5a42; text-transform: none; letter-spacing: 0; font-weight: 700; }
-.rg-card-copy > strong { font: 600 22px/1.12 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; color: #4e2020; padding-right: 6px; }
+.rg-card-copy > .rg-eyebrow { font-size: 8px; color: #976039; padding-right: 15px; margin-bottom: 4px; letter-spacing: .08em; overflow-wrap: normal; }
+/* Give species the full copy width. Keep the facts together beside the name, then move
+   the whole facts block below it when the card is too narrow rather than splitting words. */
+.rg-card-heading { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 10px; }
+.rg-card-heading > strong { flex: 1 1 auto; min-width: 0; font: 600 22px/1.12 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; color: #4e2020; overflow-wrap: normal; }
+.rg-card-facts { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 100%; }
+.rg-card-meta { color: #6b5a42; font: 700 8px/1.5 'Rajdhani', 'Trebuchet MS', Arial, sans-serif; letter-spacing: 0; white-space: nowrap; }
+.rg-card-facts .rg-expr-badge { font-size: 7px; gap: 3.5px; padding: 2px 5.5px; margin: 0; border-radius: 3px; white-space: nowrap; }
 .rg-summary { font-size: 11px; line-height: 1.55; color: #6c6256; margin: 7px 0 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .rg-card-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: 9px; color: #7c6d5a; }
 .rg-card-foot > span:last-child { font-size: 17px; color: #77392e; }
@@ -101,7 +110,7 @@
 .rg-app .rg-card-collection { padding: 0; background: #432427; color: #f3e4cb; border-color: #5e3b31; min-height: 190px; box-shadow: 3px 4px 0 #b8a991; }
 .rg-card-collection .rg-art { width: 37%; flex-basis: 37%; min-height: 190px; border: 0; border-right: 4px double #bf9b60; background-color: #b79768; }
 .rg-card-collection .rg-card-copy { padding: 20px 12px 16px 0; }
-.rg-card-collection .rg-card-copy > strong { color: #f7e8cf; font-size: 25px; }
+.rg-card-collection .rg-card-heading > strong { color: #f7e8cf; font-size: 25px; }
 .rg-card-collection .rg-summary, .rg-card-collection .rg-card-foot { color: #d3c2aa; }
 .rg-card-collection .rg-eyebrow, .rg-card-collection .rg-card-foot > span:last-child { color: #dab477; }
 .rg-card-collection .rg-stamp { color: #e4c58f; border-color: #bd935d; }

@@ -1,5 +1,6 @@
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './roleplayMode.js';
 import { characterNamesEquivalent } from './characterIdentity.js';
+import { withMessageDate } from './messageTime.js';
 
 const DELIMITER = '[¦|│]';
 const PHONE_LINE_RE = new RegExp(`^(Incoming|Outgoing)${DELIMITER}([^¦|│]*)${DELIMITER}([^¦|│]*)${DELIMITER}(.*)$`);
@@ -399,8 +400,8 @@ export function buildTetherInjectionPlan({ conversations, chatId, chatLength, ch
             // wall clock. New messages authored inside WeyPhone also carry displayTime while the
             // RP clock is enabled. Legacy entries without it use the caller's clock policy, which
             // deliberately returns an empty time in RP mode instead of leaking browser wall time.
-            const time = String(message.displayTime ?? '').trim()
-                || (Number.isFinite(message.timestamp) ? formatClockTime(message.timestamp) : '');
+            const time = withMessageDate(message, String(message.displayTime ?? '').trim()
+                || (Number.isFinite(message.timestamp) ? formatClockTime(message.timestamp) : ''));
             if (message.role === 'user') lines.push(`Outgoing¦${time}¦${userName}¦${message.content}`);
             else lines.push(`Incoming¦${time}¦${message.speaker || label}¦${message.content}`);
         }

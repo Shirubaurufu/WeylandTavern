@@ -22,6 +22,8 @@ const APP_HELP = {
                 heading: 'General',
                 bullets: [
                     'The arrow adds your message to the thread without calling a model. Queue as many separate texts as you want.',
+                    'Consecutive texts from the same person share one timestamp when each gap is five minutes or less. The stamp belongs to the last message in the group.',
+                    'Right-click a message on desktop or press and hold on mobile to edit its text, change its scene time, or delete just that message. This works for your texts and character replies; each message keeps its own exact time.',
                     'In Unlinked and Observe, the refresh button sends the queued burst through WeyPhone’s texting model.',
                     'Downloaded characters use their full card in one-person chats. Otherwise WeyPhone uses an available lorebook subbot. Group chats always use subbots.',
                 ],
@@ -87,6 +89,8 @@ const APP_HELP = {
             'Pawpad holds the source reply, your Catnip note, and the rewrite once it arrives - compare it against the original, edit it, then use or discard it.',
             'Instincts is where you set narrator, scope, scene context and message modes. Scope decides what changes: everything, unflinching, dialogue, thoughts, narration, or dialogue and thoughts together - a narrow scope cannot alter anything outside those fragments.',
             'The Catnip note is the strongest instruction. It carries across rewrites of the same message.',
+            'The Catnip Jar saves your custom instructions. Use once queues a recipe for the next successful manual rewrite of this reply; Automatically apply includes it in every rewrite, including automatic rewrites.',
+            'Instincts can include your enabled Author’s notes and active Course Correction. Both are off by default.',
             'Let it wander allows Copycat to change what happens instead of only rewording it. It is off by default and applies only to whole-passage rewrites.',
             'The second model is told that anything it knows only from the character profile has not been revealed yet, so a rewrite should not spill backstory or secrets into the narration.',
 

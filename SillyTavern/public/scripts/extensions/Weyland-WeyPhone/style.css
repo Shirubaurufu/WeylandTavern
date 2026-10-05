@@ -957,6 +957,81 @@
     word-wrap: break-word;
 }
 
+/* One quiet timestamp below each run; every bubble retains its individual clock. */
+#wp-panel .wp-message-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-self: flex-start;
+    max-width: 78%;
+    gap: 3px;
+    margin-top: 8px;
+    min-width: 0;
+}
+#wp-panel .wp-message-row.wp-user-row { align-self: flex-end; align-items: flex-end; }
+#wp-panel .wp-message-row.wp-message-continuation { margin-top: 0; }
+#wp-panel .wp-message-row > .wp-message { max-width: 100% !important; box-sizing: border-box; }
+#wp-panel .wp-message-timestamp {
+    border: 0;
+    background: none;
+    color: var(--wp-text-dim, #aaa);
+    font: inherit;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 4px;
+    margin: 0;
+    cursor: default;
+    text-shadow: none;
+}
+#wp-panel .wp-message-date { text-align: center; color: var(--wp-text-dim, #aaa); font-size: 11px; padding: 8px 0 2px; }
+#wp-panel .wp-message-time-btn {
+    background: none;
+    border: 0;
+    color: inherit;
+    opacity: .65;
+    font-size: 11px;
+    padding: 2px;
+    flex: 0 0 auto;
+    cursor: pointer;
+}
+#wp-panel .wp-message-time-btn:hover { opacity: 1; }
+#wp-panel .wp-time-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, .55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+#wp-panel .wp-time-dialog {
+    background: var(--wp-surface, #202226);
+    color: var(--wp-text, #eee);
+    border: 1px solid var(--wp-border, #444);
+    border-radius: 16px;
+    padding: 18px;
+    width: 100%;
+    max-width: 330px;
+    max-height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+}
+#wp-panel .wp-time-dialog h3 { margin: 0 0 12px; font-size: 16px; }
+#wp-panel .wp-time-preview { color: var(--wp-text-dim, #aaa); font-size: 12px; margin-bottom: 14px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 80px; overflow-y: auto; }
+#wp-panel .wp-time-fields { display: flex; flex-direction: column; gap: 10px; }
+#wp-panel .wp-time-fields label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+#wp-panel .wp-time-fields input { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px; font: inherit; font-size: 16px; color: var(--wp-text, #eee); background: var(--wp-surface-2, #30333a); border: 1px solid var(--wp-border, #444); border-radius: 8px; color-scheme: dark; }
+#wp-panel .wp-time-dialog button { display: block; width: 100%; min-height: 42px; margin-top: 8px; padding: 10px; border: 0; border-radius: 9px; font: inherit; cursor: pointer; background: var(--wp-surface-2, #30333a); color: var(--wp-text, #eee); }
+#wp-panel .wp-time-dialog .wp-time-save { background: var(--wp-app-accent, var(--wp-accent, #963a3a)); color: #fff; }
+#wp-panel .wp-time-dialog .wp-message-delete { color: var(--wp-amber, #f0be75); }
+#wp-panel .wp-message-content-label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; margin-bottom: 12px; }
+#wp-panel .wp-message-content-input { width: 100%; box-sizing: border-box; resize: vertical; min-height: 90px; max-height: 180px; font: inherit; font-size: 16px; padding: 10px; border-radius: 8px; border: 1px solid var(--wp-border, #444); background: var(--wp-surface-2, #30333a); color: var(--wp-text, #eee); }
+#wp-panel .wp-message:not(.wp-message-editing) { -webkit-touch-callout: none; user-select: none; touch-action: pan-y; }
+#wp-panel .wp-time-error { color: var(--wp-amber, #f0be75); font-size: 12px; }
+
 /* Reserve a bounded preview so lazy image loads do not move the conversation around.
    The full image remains available through the link, including on narrow phones. */
 .wp-message-image-link {
@@ -6273,3 +6348,100 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
    are smaller, and the row may run a little past the text column: the chips are solid, so that is harmless over the art. */
 .wp-np-tags { flex-wrap: nowrap; gap: 4px; }
 .wp-np-tags li { padding: 3px 5px; font-size: 2.6cqw; letter-spacing: .05em; white-space: nowrap; }
+
+/* Narrator Strength: two illuminated Control deck keys, below the narrator picker. */
+.wp-narrative-strength { margin: 18px 0 0; padding: 21px 20px 17px; background: var(--wn-frame); border: 1px solid var(--wn-ember); border-radius: 6px; color: var(--wn-accent-soft); }
+.wp-narrative-strength h3 { margin: 0; text-align: center; color: var(--wn-accent-soft); font: 400 29px/1.2 'WP Anton', Impact, sans-serif; }
+.wp-narrative-strength-keys { display: flex; gap: 6px; margin-top: 20px; padding: 5px; border: 1px solid #67302a; border-radius: 5px; background: #100707; }
+.wp-narrative-strength-keys button { display: flex; align-items: center; justify-content: center; gap: 9px; flex: 1; min-width: 0; min-height: 46px; padding: 8px; border: 1px solid transparent; border-radius: 2px; background: #251311; color: #bd9786; font: 400 17px/1.2 'WP Share Tech Mono', ui-monospace, monospace; cursor: pointer; transition: background .15s, color .15s; }
+.wp-narrative-strength-keys button i { width: 6px; height: 6px; border-radius: 50%; background: #684238; }
+.wp-narrative-strength-keys button[aria-pressed="true"] { background: var(--wn-ember); border-color: var(--wn-accent-2); color: #fff0e5; box-shadow: inset 0 1px #ffb29650, 0 0 10px #ff4d4d25; }
+.wp-narrative-strength-keys button[aria-pressed="true"] i { background: #ffc9a8; box-shadow: 0 0 8px var(--wn-accent-2); }
+.wp-narrative-strength-keys button:hover:not(:disabled) { border-color: var(--wn-accent-2); }
+.wp-narrative-strength-keys button:focus-visible { outline: 2px solid #ffba91; outline-offset: 3px; }
+.wp-narrative-strength-keys button:disabled { opacity: .55; cursor: default; }
+.wp-narrative-strength-effects { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 16px; margin-top: 17px; padding-top: 12px; border-top: 1px solid #6b302a; text-align: center; font: 400 14px/1.5 'WP Share Tech Mono', ui-monospace, monospace; }
+.wp-narrative-strength-gain { color: var(--wn-accent-soft); }
+.wp-narrative-strength-cost { color: #c19b88; }
+@media (prefers-reduced-motion: reduce) { .wp-narrative-strength-keys button { transition: none; } }
+
+/* Copycat release polish — scoped to the existing app, retaining its header paw shader,
+   settings cards, reading picker, model controls and automatic rewrite options. */
+@font-face{font-family:'Copycat Bungee';src:url('assets/fonts/copycat/Bungee-Regular.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'Copycat Righteous';src:url('assets/fonts/copycat/Righteous-Regular.ttf') format('truetype');font-display:swap}
+#wp-panel[data-app="understudy"] .wp-copycat-brand strong{font-family:'Copycat Bungee',sans-serif;font-size:26px;font-weight:400;letter-spacing:-.035em}
+#wp-panel[data-app="understudy"] :is(.wp-copycat-nav-button,.wp-copycat-choice,.wp-copycat-refresh,.wp-understudy-run,.wp-understudy-apply,.wp-understudy-again,.wp-understudy-discard,.wp-understudy-tab,.wp-copycat-palette-button,.wp-settings-use-current-model,.wp-model-quickfill){font-family:'Copycat Righteous',sans-serif;font-weight:400}
+#wp-panel[data-app="understudy"] .wp-copycat-nav{margin:8px 10px 0;padding:5px;border:1px solid var(--en-line);border-radius:18px;background:var(--en-surface)}
+#wp-panel[data-app="understudy"] .wp-copycat-nav-button{font-size:14px;min-height:44px;border-radius:12px}
+#wp-panel[data-app="understudy"] .wp-copycat-nav-button.wp-active{background:linear-gradient(135deg,color-mix(in srgb,var(--en-accent) 80%,white),var(--en-accent));box-shadow:0 3px 10px color-mix(in srgb,var(--en-accent) 18%,transparent)}
+#wp-panel[data-app="understudy"] .wp-copycat-edit-block{border-radius:19px;padding:14px;background:linear-gradient(135deg,color-mix(in srgb,var(--en-surface) 94%,white),var(--en-surface));box-shadow:inset 0 1px #ffffff06}
+#wp-panel[data-app="understudy"] .wp-copycat-edit-block h4{font-family:'Copycat Righteous',sans-serif;font-size:16px;font-weight:400;text-transform:none;letter-spacing:.02em}
+#wp-panel[data-app="understudy"] .wp-copycat-edit-block h4 i{margin-right:5px}
+#wp-panel[data-app="understudy"] :is(.wp-copycat-edit-note,.wp-copycat-choice-blurb){font-size:13px}
+#wp-panel[data-app="understudy"] .wp-copycat-choice{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;font-size:13px;min-height:40px}
+#wp-panel[data-app="understudy"] :is(.wp-understudy-source,.wp-understudy-draft){font-size:14px;line-height:1.6}
+#wp-panel[data-app="understudy"] .wp-understudy-feedback{font-size:16px;line-height:1.5}
+#wp-panel[data-app="understudy"] .wp-understudy-note-box{border:1px dashed color-mix(in srgb,var(--en-accent) 48%,transparent);border-radius:19px;padding:13px;background:color-mix(in srgb,var(--en-accent-2) 10%,var(--en-surface))}
+#wp-panel[data-app="understudy"] .wp-understudy-note-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+#wp-panel[data-app="understudy"] .wp-understudy-note-head>label{color:var(--en-accent);font-family:'Copycat Righteous',sans-serif;font-size:16px;font-weight:400;text-transform:uppercase;letter-spacing:.025em}
+#wp-panel[data-app="understudy"] #wp-catnip-open{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:8px 10px;border:1px solid var(--en-accent);border-radius:14px 14px 14px 5px;background:linear-gradient(135deg,color-mix(in srgb,var(--en-accent) 65%,white),var(--en-accent));color:var(--en-bg);font:16px 'Copycat Righteous',sans-serif;box-shadow:0 3px 0 var(--en-accent-2);cursor:pointer}
+#wp-panel[data-app="understudy"] #wp-catnip-open small{color:inherit;font-size:11px;border-radius:99px;padding:2px 5px;background:#0002}
+#wp-panel[data-app="understudy"] :is(.wp-understudy-run,.wp-understudy-apply){font-size:15px;min-height:44px}
+#wp-panel[data-app="understudy"] :is(.wp-understudy-again,.wp-understudy-discard,.wp-understudy-tab){font-size:13px;min-height:38px}
+#wp-panel[data-app="understudy"] :is(.wp-understudy-deviate strong,.wp-settings-toggle-label){font-size:13px}
+#wp-panel[data-app="understudy"] .wp-understudy-settings .wp-settings-section{border-radius:19px}
+#wp-panel[data-app="understudy"] .wp-understudy-settings .wp-settings-section-title{font-family:'Copycat Righteous',sans-serif;font-size:16px;font-weight:400;text-transform:none;letter-spacing:.02em;padding:12px}
+#wp-panel[data-app="understudy"] .wp-understudy-settings :is(.wp-settings-field>span,.wp-settings-toggle-label){font-size:13px}
+#wp-panel[data-app="understudy"] .wp-understudy-settings :is(.wp-settings-sub,.wp-settings-hint,.wp-settings-recommend-disclaimer){font-size:12px;line-height:1.5}
+#wp-panel[data-app="understudy"] .wp-copycat-palette-button{font-size:12px;border-radius:13px}
+#wp-panel[data-app="understudy"] .wp-copycat-edit-block .wp-settings-toggle-row{background:var(--en-bg);border:1px solid var(--en-line);border-radius:13px;margin-top:9px;padding:10px}
+#wp-panel[data-app="understudy"] .wp-copycat-edit-block .wp-settings-sub{font-size:12px;line-height:1.4;color:var(--en-muted)}
+.wp-catnip-active{display:flex;flex-wrap:wrap;gap:5px}.wp-catnip-active:empty{display:none}.wp-catnip-active>span{font:11px 'Copycat Righteous',sans-serif;padding:5px 8px;border:1px solid var(--en-line);border-radius:999px;color:var(--en-accent);overflow-wrap:anywhere}
+#wp-panel .wp-catnip-overlay{position:absolute;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:12px;background:#0009;backdrop-filter:blur(3px);color:var(--en-text)}
+#wp-panel .wp-catnip-dialog{box-sizing:border-box;width:100%;max-height:100%;overflow-y:auto;overscroll-behavior:contain;padding:16px;border:1px solid var(--en-line);border-radius:23px;background:radial-gradient(ellipse at 0 0,color-mix(in srgb,var(--en-accent-2) 30%,transparent),transparent 65%),var(--en-bg);box-shadow:0 15px 50px #0007;scrollbar-width:thin}
+#wp-panel .wp-catnip-header{position:relative;display:flex;align-items:center;justify-content:center;min-height:44px;padding-inline:30px}
+#wp-panel .wp-catnip-header h2{margin:0;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--en-accent);font:21px 'Copycat Bungee',sans-serif;text-align:center}
+#wp-panel .wp-catnip-header .wp-catnip-close{position:absolute;right:0;width:30px;min-height:32px;padding:4px}
+#wp-panel .wp-catnip-description{font-size:13px;color:var(--en-muted);text-align:center;margin:10px 0 16px}
+#wp-panel .wp-catnip-dialog button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:8px 10px;border:1px solid var(--en-line);border-radius:999px;background:var(--en-surface-2);color:var(--en-text);font:13px 'Copycat Righteous',sans-serif;cursor:pointer}
+#wp-panel .wp-catnip-dialog button:hover:not(:disabled){border-color:var(--en-accent)}
+#wp-panel .wp-catnip-dialog button:disabled{opacity:.4;cursor:default}
+#wp-panel .wp-catnip-dialog button:focus-visible{outline:2px solid var(--en-accent);outline-offset:2px}
+#wp-panel .wp-catnip-dialog button[aria-pressed=true]{color:var(--en-accent);border-color:var(--en-accent)}
+#wp-panel .wp-catnip-recipe{padding:14px;border:1px solid var(--en-line);border-radius:18px;background:linear-gradient(135deg,var(--en-surface-2),var(--en-surface));margin-bottom:11px}
+#wp-panel .wp-catnip-dialog h3{margin:0 0 8px;font:17px 'Copycat Righteous',sans-serif;color:var(--en-text);overflow-wrap:anywhere}
+#wp-panel .wp-catnip-recipe>p{font-size:13px;line-height:1.5;color:var(--en-muted);white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+#wp-panel .wp-catnip-auto{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;padding-top:10px;border-top:1px solid var(--en-line);font-size:13px;cursor:pointer}
+#wp-panel .wp-catnip-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#wp-panel .wp-catnip-dialog .wp-catnip-new{width:100%;border:1px dashed var(--en-accent);color:var(--en-accent);background:transparent;border-radius:13px;font-size:15px}
+#wp-panel .wp-catnip-form{border-top:1px solid var(--en-line);padding-top:16px;margin-top:16px}
+#wp-panel .wp-catnip-form[hidden]{display:none}
+#wp-panel .wp-catnip-form>label:not(.wp-catnip-auto){display:flex;flex-direction:column;gap:5px;margin-top:10px;font-size:13px}
+#wp-panel .wp-catnip-form :is(input:not([type=checkbox]),textarea){box-sizing:border-box;width:100%;min-width:0;padding:10px;border:1px solid var(--en-line);border-radius:12px;background:var(--en-bg);color:var(--en-text);font-size:16px;line-height:1.5;font-family:inherit}
+#wp-panel .wp-catnip-form textarea{font-size:16px;resize:vertical}
+#wp-panel .wp-catnip-form .wp-catnip-actions>button{flex:1;border-radius:12px;white-space:nowrap}
+#wp-panel .wp-catnip-dialog .wp-catnip-save{color:var(--en-bg);background:var(--en-accent);border-color:var(--en-accent)}
+#wp-panel .wp-catnip-status{font-size:12px;color:var(--en-accent);margin:8px 0 0;overflow-wrap:anywhere}
+#wp-panel .wp-catnip-empty{font-size:13px;color:var(--en-muted);padding:10px 0}
+@media(max-width:420px){#wp-panel[data-app="understudy"] .wp-copycat-brand strong{font-size:23px}#wp-panel[data-app="understudy"] .wp-copycat-nav-button{font-size:13px;padding:5px 3px}#wp-panel .wp-catnip-dialog{padding:12px}#wp-panel .wp-catnip-header h2{font-size:18px}}
+
+#wp-panel[data-app="understudy"] .wp-copycat-edit-block .wp-toggle-input:checked + .wp-toggle-track{background:var(--en-accent)}
+#wp-panel[data-app="understudy"] .wp-copycat-switch input:focus-visible + i{outline:2px solid var(--en-accent);outline-offset:3px}
+
+/* Keep the compact Instincts choices easy to scan alongside the expressive headings. */
+#wp-panel[data-app="understudy"] .wp-copycat-choice{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:600;letter-spacing:0}
+
+/* Modes headings and the two-plus-one Narrative Focus layout. */
+.wp-narrative-language-heading .wp-narrative-language-caption {
+    display: block;
+    margin-top: 5px;
+    color: var(--wn-ember);
+    opacity: .55;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: none;
+}
+.wp-narrative-language-heading > i { font-size: 28px; }
+.wp-narrative-choice-grid.wp-narrative-focus-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wp-narrative-focus-grid [data-value="Split"] { grid-column: 1 / -1; }

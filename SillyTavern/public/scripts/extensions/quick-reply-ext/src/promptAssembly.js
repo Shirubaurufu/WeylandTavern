@@ -3,6 +3,7 @@
 // slots and competing preparation procedures here. Beta remains the shared layer source.
 import { addNarratorGreenRoom, addShiftRouteLine, applyGeminiBypass } from './promptModifiers.js';
 import { PREP_SHEET_2025 } from './prepSheet2025.js';
+import { resolveNarratorStrength } from './narratorStrength.js';
 
 const CLIENT_NOTE = /¦Weyland Tavern client note:[^¦]*¦\s*\n*/;
 const NARRATOR_SLOT = '{{getvar::LocalNarrator}}';
@@ -115,8 +116,9 @@ export function preparePromptBase(choice, entry, beta) {
 
 /** The former Beta branch, shared unchanged across all selectable prompts. */
 export function assemblePromptLayers(base, beta, {
-    analysisOn = true, shift = 'None', shiftItem = '', shiftScope = 'restarted', geminiBypassEnabled = false, narrator = '',
+    analysisOn = true, shift = 'None', shiftItem = '', shiftScope = 'restarted', geminiBypassEnabled = false, narrator = '', narratorStrength,
 } = {}) {
+    const early = resolveNarratorStrength(narratorStrength) === 'Low';
     const sceneSheet = usesSceneSheet(base, analysisOn);
     let teg;
     if (sceneSheet) {
@@ -129,7 +131,7 @@ export function assemblePromptLayers(base, beta, {
             .replace(' (Technically Seven)', '');
         if (shiftItem) body = addShiftRouteLine(body, shiftScope);
         // A selected narrator (Lauren/Salem/Lucky, by name) takes over box 1 as their green room.
-        body = addNarratorGreenRoom(body, narrator);
+        body = addNarratorGreenRoom(body, narrator, early);
         teg = [beta.frameTop, shiftItem, beta.objectionValve, beta.bridgeLine, body, base.teg].filter(Boolean).join('\n\n');
     } else if (shift === 'Hard Mode') {
         // Beta's bridge line says "fill out your modified scene sheet", so a prompt running its own reasoning (2026, Analysis on)
@@ -143,7 +145,7 @@ export function assemblePromptLayers(base, beta, {
     const note = beta.post.match(CLIENT_NOTE)?.[0] ?? '';
     // Analysis on + a prompt with its own reasoning: that prompt's original post-history, with no scene-sheet client note.
     const post = analysisOn && base.ownAnalysis ? base.ownAnalysis.post : base.post;
-    // Put the existing narrator after the client note, close to the reply. Do not add a
+    // High keeps the narrator after the client note; Low routes it after the card. Do not add a
     // narrator to prompts that never carried one (including the special cards' own prompts).
     const hasNarrator = teg.includes(NARRATOR_SLOT) || post.includes(NARRATOR_SLOT);
     const narratorLayer = hasNarrator ? `${NARRATOR_SLOT}\n${narrator
@@ -151,7 +153,8 @@ export function assemblePromptLayers(base, beta, {
         : ''}\n` : '';
     return {
         teg: applyGeminiBypass(teg.replaceAll(NARRATOR_SLOT, ''), geminiBypassEnabled),
-        post: (sceneSheet ? note : '') + narratorLayer + post.replace(CLIENT_NOTE, '').replaceAll(NARRATOR_SLOT, ''),
+        post: (sceneSheet ? note : '') + (early ? '' : narratorLayer) + post.replace(CLIENT_NOTE, '').replaceAll(NARRATOR_SLOT, ''),
+        narratorEarly: early ? narratorLayer : '',
     };
 }
 

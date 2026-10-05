@@ -38,14 +38,16 @@ export function librarySummary(book) {
 
 /**
  * Sources own references, not copies: importing overlapping collections never duplicates NPCs.
- * @param {{startPaused?: boolean}} [options] startPaused: install new members already deactivated
+ * @param {{startPaused?: boolean, overwriteEdits?: boolean}} [options] startPaused: install new members already deactivated
  * (used by the "load new imports automatically" off setting) - a big collection can be added
  * without touching the current token cost until the user chooses to load individual members.
+ * overwriteEdits is sent only after the user accepts the edits-detected popup for this operation.
  */
 export function changeLibrary(book, action, key, catalog, now = new Date().toISOString(), options = {}) {
-    if (book.registrar.entriesHash && digest(book.entries) !== book.registrar.entriesHash) {
-        throw new Error('This app’s lorebook has manual edits. Export a copy and rename it in World Info before rebuilding your Registrar library; your edits have been preserved.');
-    }
+    const oldKeys = {};
+    const oldInactive = new Set(book.registrar.inactive ?? []);
+    const baseline = buildRegistrarBook(book.registrar.records.filter(item => !oldInactive.has(itemKey(item))), oldKeys);
+    const affected = new Set();
     let sources = structuredClone(book.registrar.sources);
     const records = new Map(book.registrar.records.map(item => [itemKey(item), item]));
     const inactive = new Set(book.registrar.inactive ?? []);
@@ -58,6 +60,7 @@ export function changeLibrary(book, action, key, catalog, now = new Date().toISO
         if (!members.length) throw new Error('This collection has no publicly available characters or locations to import.');
         const wasKnown = new Set(records.keys());
         for (const member of members) {
+            affected.add(itemKey(member));
             records.set(itemKey(member), member);
             // Only apply startPaused to members genuinely new to this library - re-installing to
             // pick up an update must never silently pause something the user already had loaded.
@@ -70,14 +73,57 @@ export function changeLibrary(book, action, key, catalog, now = new Date().toISO
         sources = [...sources.filter(old => old.key !== key), source];
     } else if (action === 'activate' || action === 'deactivate') {
         if (!records.has(key)) throw new Error('This entry is not in your world.');
+        affected.add(key);
         if (action === 'deactivate') inactive.add(key); else inactive.delete(key);
     } else throw new Error('Unknown library action.');
     const needed = new Set(sources.flatMap(source => source.members));
     const kept = [...records.values()].filter(item => needed.has(itemKey(item)));
     for (const staleKey of inactive) if (!needed.has(staleKey)) inactive.delete(staleKey);
     const active = kept.filter(item => !inactive.has(itemKey(item)));
-    const result = buildRegistrarBook(active);
-    result.registrar = { format: MARKER, sources, records: kept, inactive: [...inactive], entriesHash: digest(result.entries) };
+    const newKeys = {};
+    const result = buildRegistrarBook(active, newKeys);
+    const entriesHash = digest(result.entries);
+    const newIds = new Map(Object.entries(newKeys).map(([uid, identity]) => [identity, uid]));
+    const conflicts = [];
+    for (const [uid, original] of Object.entries(baseline.entries)) {
+        const actual = book.entries[uid];
+        if (JSON.stringify(actual) === JSON.stringify(original)) continue;
+        const identity = oldKeys[uid];
+        const owner = identity.split('/')[0];
+        const nextId = newIds.get(identity);
+        // Removing a source may remove its entries; unrelated/shared imports keep their edits.
+        const replacing = affected.has(owner) || (owner === 'shared' && nextId !== undefined
+            && (JSON.stringify(original.content) !== JSON.stringify(result.entries[nextId].content)
+                || (action === 'install' && [...affected].some(item => item.startsWith(identity === 'shared/roster' ? 'character:' : 'location:')))));
+        if (replacing) {
+            conflicts.push(original.comment);
+            continue;
+        }
+        if (nextId === undefined) continue;
+        if (!actual) delete result.entries[nextId];
+        else {
+            const preserved = structuredClone(actual);
+            preserved.uid = Number(nextId);
+            for (const field of ['displayIndex', 'order']) {
+                if (preserved[field] === original[field]) preserved[field] = result.entries[nextId][field];
+            }
+            result.entries[nextId] = preserved;
+        }
+    }
+    // Keep user-added entries too, moving them only if a newly generated UID collides.
+    let nextUid = Math.max(0, ...Object.keys(result.entries).map(Number)) + 1;
+    for (const [uid, entry] of Object.entries(book.entries)) {
+        if (baseline.entries[uid]) continue;
+        while (result.entries[nextUid] || book.entries[nextUid]) nextUid++;
+        const target = result.entries[uid] ? String(nextUid++) : uid;
+        result.entries[target] = { ...structuredClone(entry), uid: Number(target) };
+    }
+    if (conflicts.length && options.overwriteEdits !== true) {
+        const error = new Error(`Manual edits were detected in: ${[...new Set(conflicts)].join(', ')}. Proceeding will overwrite these changes with downloaded lore. Cancel to keep your edits.`);
+        error.code = 'REGISTRAR_EDITS_DETECTED';
+        throw error;
+    }
+    result.registrar = { format: MARKER, sources, records: kept, inactive: [...inactive], entriesHash };
     return result;
 }
 

@@ -14,6 +14,10 @@ export function createRegistrarApp(host) {
     state.expressionStatus = null;
     let expressionTimer = null;
     const alive = () => container && root && container.contains(root);
+    function confirmEdits(error, action, key, options, bulk = false) {
+        state.settingsOpen = false;
+        state.confirm = { action, key, ...options, overwriteEdits: true, bulk, edits: true, message: error.message };
+    }
     // Imports return once the lore is saved; the server keeps downloading sprites in the background.
     // Poll only while a download runs and only while the app is on screen (mount() resumes it).
     async function pollExpressions(route = '/expressions/status', body = undefined) {
@@ -83,7 +87,10 @@ export function createRegistrarApp(host) {
                 activate: 'Loaded. This entry can appear in your roleplays again.',
                 deactivate: 'Unloaded. Kept in your world, but won’t appear or cost tokens until loaded again.',
             }[action];
-        } catch (error) { state.error = error.message; }
+        } catch (error) {
+            if (error.code === 'REGISTRAR_EDITS_DETECTED') confirmEdits(error, action, key, options);
+            else state.error = error.message;
+        }
         finally { state.busy = false; draw(); }
         if (!state.error) void pollExpressions();
     }
@@ -119,7 +126,7 @@ export function createRegistrarApp(host) {
         // sprites were downloaded, without touching any lore.
         void pollExpressions('/expressions/sync', {});
     }
-    async function updateAll() {
+    async function updateAll(confirmedKey = null) {
         if (state.busy || state.loading || !state.pendingUpdates.length) return;
         ++generation;
         state.busy = true; state.updatingAll = true; state.error = ''; state.notice = '';
@@ -131,19 +138,28 @@ export function createRegistrarApp(host) {
             for (const [index, update] of updates.entries()) {
                 state.scanResult = `Updating ${index + 1} of ${updates.length}: ${update.name}…`; draw();
                 try {
-                    const library = await host.request('/library', { action: 'install', key: update.key, startPaused });
+                    const library = await host.request('/library', { action: 'install', key: update.key, startPaused, ...(confirmedKey === update.key ? { overwriteEdits: true } : {}) });
                     state.library = library;
                     // Updating must not unpause the user's whole Registrar library.
                     await host.onLibraryChange(library, false);
                     state.active = host.isActive(library.bookName);
                     state.pendingUpdates = state.pendingUpdates.filter(row => row.key !== update.key);
                     completed++;
-                } catch (error) { failures.push(`${update.name}: ${error.message}`); }
+                } catch (error) {
+                    if (error.code === 'REGISTRAR_EDITS_DETECTED') {
+                        confirmEdits(error, 'install', update.key, { startPaused }, true);
+                        break;
+                    }
+                    failures.push(`${update.name}: ${error.message}`);
+                }
             }
-            state.scanResult = failures.length
+            state.scanResult = state.confirm?.edits
+                ? `${completed} updates applied. Update all paused because manual edits were detected. Remaining updates are still available.`
+                : failures.length
                 ? `${completed} of ${updates.length} updates applied. ${failures.length} failed. Choose Update all to retry the remaining updates.`
                 : `All ${completed} update${completed === 1 ? '' : 's'} downloaded and applied.`;
             state.error = failures.join(' ');
+            state.notice = state.scanResult;
         } finally { state.busy = false; state.updatingAll = false; draw(); }
         void pollExpressions();
     }
@@ -173,7 +189,13 @@ export function createRegistrarApp(host) {
                 case 'previous': state.page--; draw(true); break;
                 case 'next': state.page++; draw(true); break;
                 case 'cancel': state.confirm = null; draw(); break;
-                case 'confirm': { const choice = state.confirm; if (choice) await mutate(choice.action, choice.key, { startPaused: choice.startPaused }); break; }
+                case 'confirm': {
+                    const choice = state.confirm;
+                    state.confirm = null;
+                    if (choice?.bulk) await updateAll(choice.key);
+                    else if (choice) await mutate(choice.action, choice.key, { startPaused: choice.startPaused, ...(choice.overwriteEdits ? { overwriteEdits: true } : {}) });
+                    break;
+                }
                 case 'tokenCost': state.tokenCost = true; draw(); break;
                 case 'closeTokenCost': state.tokenCost = false; draw(); break;
                 case 'settings': state.settingsOpen = true; draw(); break;
