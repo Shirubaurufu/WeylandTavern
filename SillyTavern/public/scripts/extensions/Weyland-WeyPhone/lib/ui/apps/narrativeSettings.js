@@ -9,6 +9,7 @@
 import { DOSE_OPTIONS, EXPERIMENTAL_MODE_VARIABLES, FOCUS_OPTIONS, INTRO_CONSTANT_MODE_OPTIONS, INTRO_MODE_OPTIONS, MENTAL_TOGGLES, MODE_TOGGLES, NARRATIVE_TABS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, SHIFT_OPTIONS } from '../../narrativeSettings.js';
 import { ASSET_BASE_URL } from '../../assetPaths.js';
 import { narratorPickerHtml, playNarratorMotion } from './narratorPicker.js';
+import { narratorStrengthHtml } from './narratorStrength.js';
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -48,7 +49,7 @@ function toggleRows(items, values, scope) {
         return `
         <div class="wp-narrative-toggle-row">
             <button type="button" class="wp-narrative-toggle-main" data-narrative-action="toggle-${escapeHtml(scope)}" data-variable="${escapeHtml(item.variable)}" aria-pressed="${active}">
-                <span><strong>${escapeHtml(item.label)}</strong>${item.recommended ? '<em class="wp-narrative-recommended">Recommended</em>' : ''}</span>
+            <span><strong>${escapeHtml(item.label)}</strong></span>
                 <span class="wp-narrative-switch${active ? ' is-on' : ''}"><i></i></span>
             </button>
             ${infoDisclosure(item.tooltip, item.label)}
@@ -405,7 +406,8 @@ const NARRATOR_BLURB = [
 
 function style(snapshot) {
     return `
-    ${narratorPickerHtml({ options: NARRATOR_OPTIONS, selected: snapshot.globalNarrator, from: snapshot.narratorFrom, busy: snapshot.narratorBusy, blurb: NARRATOR_BLURB })}`;
+    ${narratorPickerHtml({ options: NARRATOR_OPTIONS, selected: snapshot.globalNarrator, from: snapshot.narratorFrom, busy: snapshot.narratorBusy, blurb: NARRATOR_BLURB })}
+    ${narratorStrengthHtml({ strength: snapshot.narratorStrength, disabled: Boolean(snapshot.builtInPrompt) })}`;
 }
 
 /** Onyx/Ruby/Opal/HTML/Clothing each get a colored channel tab so the row reads as a distinct
@@ -442,32 +444,29 @@ function modes(snapshot) {
     const experimentalModes = MODE_TOGGLES.filter(item => EXPERIMENTAL_MODE_VARIABLES.includes(item.variable));
     return `
     <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>Scene-aware instructions</span><h3>Message modes</h3></div><i class="fa-solid fa-sliders"></i></div>
+        <div class="wp-narrative-card-heading"><div><h3>Message Modes</h3></div><i class="fa-solid fa-sliders"></i></div>
         <p>These tell the model how to handle intimacy and trauma when a scene calls for it — tap <i class="fa-solid fa-circle-info"></i> on any of them for the full explanation. Sapphire remains automatic and has no instruction payload to disable.</p>
         ${modeStrip(mainModes, snapshot.modes)}
     </section>
     <section class="wp-narrative-card wp-narrative-experimental-card">
-        <div class="wp-narrative-card-heading"><div><span>Still in testing</span><h3>Experimental</h3></div><i class="fa-solid fa-flask"></i></div>
+        <div class="wp-narrative-card-heading"><div><h3>Experimental Settings</h3></div><i class="fa-solid fa-flask"></i></div>
         <p>Newer additions that haven't had as much time in the oven — expect rougher edges than the modes above.</p>
         ${modeStrip(experimentalModes, snapshot.modes)}
     </section>
     <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>Emotional range</span><h3>Mental health directives</h3></div><i class="fa-solid fa-heart-pulse"></i></div>
-        <p>Even with all of these off, characters stay written to feel authentic and human, these just encourage specific parts of the emotional spectrum.</p>
+        <div class="wp-narrative-card-heading"><div><h3>Mental Health Directives</h3></div><i class="fa-solid fa-heart-pulse"></i></div>
+        <p>Mental health directives are optional modifiers that give additional instructions to the AI on how to approach specific scenes and scenarios.</p>
+        <p>These modifiers may improve output, but may also degrade short term memory.</p>
+        <p>We are experimenting with moving on without them. If you notice genuine and observable changes from enabling them, please let us know in Discord feedback.</p>
         <p>Tap <i class="fa-solid fa-circle-info"></i> on any of them for a brief summary of what they do.</p>
-        <div class="wp-narrative-preset-row">
-            <button type="button" data-narrative-action="mental-preset" data-value="recommended">Recommended</button>
-            <button type="button" data-narrative-action="mental-preset" data-value="all">All on</button>
-            <button type="button" data-narrative-action="mental-preset" data-value="none">All off</button>
-        </div>
         ${toggleRows(MENTAL_TOGGLES, snapshot.mental, 'mental')}
     </section>
     <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>Chat display</span><h3>Commands & OOC prompts</h3></div><button type="button" class="wp-narrative-switch${snapshot.commandsHidden ? ' is-on' : ''}" data-narrative-action="toggle-command-visibility" aria-pressed="${snapshot.commandsHidden}"><i></i></button></div>
+        <div class="wp-narrative-card-heading"><div><h3>Command and OOC Visibility</h3></div><button type="button" class="wp-narrative-switch${snapshot.commandsHidden ? ' is-on' : ''}" data-narrative-action="toggle-command-visibility" aria-pressed="${snapshot.commandsHidden}"><i></i></button></div>
         <p>${snapshot.commandsHidden ? 'Hidden: technical command and OOC messages stay out of sight.' : 'Visible: command and OOC messages appear in the chat.'}</p>
     </section>
     <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>Translation</span><h3>Roleplay language</h3></div><i class="fa-solid fa-language"></i></div>
+        <div class="wp-narrative-card-heading wp-narrative-language-heading"><div><h3>Roleplay Language</h3><span class="wp-narrative-language-caption">Auto-Translation</span></div><i class="fa-solid fa-language"></i></div>
         <p>Characters remain unaware of the translation. English clears the extra language modifier.</p>
         <div class="wp-narrative-language-row"><input id="wp-narrative-language" type="text" value="${escapeHtml(snapshot.language)}" placeholder="English" /><button type="button" data-narrative-action="save-language">Apply</button></div>
         ${snapshot.language && snapshot.language.trim().toLowerCase() !== 'english' ? '<button type="button" class="wp-narrative-secondary" data-narrative-action="reset-language">Reset to English</button>' : ''}
@@ -487,8 +486,8 @@ function perspective(snapshot) {
         <button type="button" class="wp-narrative-secondary" data-narrative-action="reset-local-pov" ${snapshot.hasChat && snapshot.localPovOverride ? '' : 'disabled'}>Use global POV</button>
     </section>
     <section class="wp-narrative-card">
-        <div class="wp-narrative-card-heading"><div><span>When paths separate</span><h3>Narrative focus</h3></div><i class="fa-solid fa-arrows-split-up-and-left"></i></div>
-        ${choiceButtons(FOCUS_OPTIONS, snapshot.focus, 'set-focus')}
+        <div class="wp-narrative-card-heading"><div><span>When paths separate</span><h3>Narrative Focus</h3></div><i class="fa-solid fa-arrows-split-up-and-left"></i></div>
+        ${choiceButtons(FOCUS_OPTIONS, snapshot.focus, 'set-focus', 'id', false, 'wp-narrative-focus-grid')}
     </section>`;
 }
 

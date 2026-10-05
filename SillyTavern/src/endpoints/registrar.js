@@ -32,18 +32,18 @@ export function createRegistrarRouter(catalogProvider = getCatalog, syncExpressi
         response.json(expressionSyncStatus(request.user.directories));
     });
     router.post('/library', async (request, response) => {
-        const { action, key, startPaused } = request.body || {};
+        const { action, key, startPaused, overwriteEdits } = request.body || {};
         const keyPattern = ['activate', 'deactivate'].includes(action) ? /^(character|location):\d+$/ : /^(character|location|collection):\d+$/;
         if (!['install', 'remove', 'activate', 'deactivate'].includes(action) || typeof key !== 'string' || !keyPattern.test(key)) {
             return response.status(400).json({ error: 'Choose a valid Registrar entry.' });
         }
         try {
             const catalog = action === 'install' ? await catalogProvider() : [];
-            const book = await saveLibraryChange(request.user.directories, action, key, catalog, { startPaused: Boolean(startPaused) });
+            const book = await saveLibraryChange(request.user.directories, action, key, catalog, { startPaused: Boolean(startPaused), overwriteEdits: overwriteEdits === true });
             // Sprites download in the background (see registrar/expressions.js); the lore is usable now.
             syncExpressions(request.user.directories);
             response.json(librarySummary(book));
-        } catch (error) { response.status(409).json({ error: error.message }); }
+        } catch (error) { response.status(409).json({ error: error.message, code: error.code }); }
     });
     return router;
 }

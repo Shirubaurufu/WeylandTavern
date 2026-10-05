@@ -1,3 +1,4 @@
+import { catnipRecipes } from '../../copycatInstructions.js';
 // lib/ui/apps/understudy.js
 //
 // Copycat's product shell. The stable `understudy` storage and routing keys deliberately remain
@@ -98,7 +99,7 @@ function choiceRow({ group, options, value }) {
     const selected = options.find(option => option.key === value) ?? options[0];
     return `
         <div class="wp-copycat-choices" role="group">
-            ${options.map(option => `<button type="button" class="wp-copycat-choice${option.key === selected.key ? ' wp-selected' : ''}" data-copycat-choice="${group}" data-value="${escapeHtml(option.key)}" aria-pressed="${option.key === selected.key}">${escapeHtml(option.label)}</button>`).join('')}
+            ${options.map(option => `<button type="button" class="wp-copycat-choice${option.key === selected.key ? ' wp-selected' : ''}" data-copycat-choice="${group}" data-value="${escapeHtml(option.key)}" aria-pressed="${option.key === selected.key}"><i class="fa-solid ${group === 'narrator' ? (option.key === 'off' ? 'fa-ban' : 'fa-book-open') : (option.key === 'dialogue' ? 'fa-comment' : 'fa-pen-ruler')}" aria-hidden="true"></i> ${escapeHtml(option.label)}</button>`).join('')}
         </div>
         <p class="wp-copycat-choice-blurb">${escapeHtml(selected.blurb)}</p>`;
 }
@@ -134,7 +135,7 @@ function readingPicker(target) {
         </div>`;
 }
 
-function stageView({ target, draft, generating, error, settings, applied, take, statusIndex, feedback, scope, isSpanScoped, noSpans, showOriginal }) {
+function stageView({ target, draft, generating, error, settings, applied, take, statusIndex, feedback, scope, isSpanScoped, noSpans, showOriginal, catnipOnce = [] }) {
     const hasDraft = Boolean(draft.trim());
     return `
     <div class="wp-copycat-section-head">
@@ -160,8 +161,9 @@ function stageView({ target, draft, generating, error, settings, applied, take, 
     <div class="wp-understudy-stage" role="status" aria-live="polite"><span class="wp-understudy-stage-icon"><i class="fa-solid fa-rotate"></i></span><div><strong class="wp-understudy-stage-text">${escapeHtml(UNDERSTUDY_STATUS_LINES[statusIndex % UNDERSTUDY_STATUS_LINES.length])}</strong></div><div class="wp-understudy-stage-glow"></div></div>
     <button type="button" id="wp-understudy-cancel" class="wp-understudy-discard wp-understudy-cancel"><i class="fa-solid fa-xmark"></i> Cancel</button>` : `
     <section class="wp-understudy-note-box">
-        <label class="wp-understudy-note-head" for="wp-understudy-feedback"><span><i class="fa-solid fa-paw"></i> Catnip note</span><small>Optional · strongest instruction</small></label>
+        <div class="wp-understudy-note-head"><label for="wp-understudy-feedback"><i class="fa-solid fa-paw" aria-hidden="true"></i> Catnip note</label><button type="button" id="wp-catnip-open"><i class="fa-solid fa-jar" aria-hidden="true"></i> Catnip Jar <small>${catnipRecipes(settings).length}</small></button></div>
         <textarea id="wp-understudy-feedback" class="wp-understudy-feedback" rows="2" spellcheck="false" placeholder="Write custom instructions for your rewrite here.">${escapeHtml(feedback)}</textarea>
+        <div class="wp-catnip-active">${catnipRecipes(settings).filter(recipe => recipe.auto || catnipOnce.includes(recipe.id)).map(recipe => `<span>${escapeHtml(recipe.name)} · ${recipe.auto ? 'always' : 'once'}</span>`).join('')}</div>
         <label class="wp-understudy-deviate" title="Let Copycat choose a different direction instead of only rewording this one."><span><strong>Let it wander</strong><small>${isSpanScoped ? 'Whole-passage rewrites only' : 'Tell the AI it’s allowed to make major changes'}</small></span><span class="wp-copycat-switch"><input type="checkbox" id="wp-understudy-deviate"${settings.allowDeviation ? ' checked' : ''}${isSpanScoped ? ' disabled' : ''} /><i></i></span></label>
     </section>
     ${hasDraft ? `
@@ -209,19 +211,19 @@ function editsView({ settings, thoughtsMode = 'unknown' }) {
     <div class="wp-copycat-section-head"><div><span>Instincts</span><strong>How this reply gets changed</strong></div><small>Applies to Copycat only</small></div>
 
     <section class="wp-copycat-edit-block">
-        <h4>Narrator</h4>
+        <h4><i class="fa-solid fa-book-open" aria-hidden="true"></i> Narrator</h4>
         <p class="wp-copycat-edit-note">A narrator changes how scenes are described and which direction they tend to go: how much is lingered on, how warm or how brutal the framing is. This applies to Copycat's rewrites only and never touches your chat's own narrator.</p>
         ${choiceRow({ group: 'narrator', options: narratorOptions, value: narrator })}
     </section>
 
     <section class="wp-copycat-edit-block">
-        <h4>Scope</h4>
+        <h4><i class="fa-solid fa-pen-ruler" aria-hidden="true"></i> Scope</h4>
         <p class="wp-copycat-edit-note">Scope is how much of the reply Copycat is allowed to touch. A narrow scope extracts only those fragments and splices the results back, so nothing outside them can change.</p>
         ${choiceRow({ group: 'scope', options: scopeOptions, value: effectiveUnderstudyScope(settings.scope, thoughtsMode) })}
     </section>
 
     <section class="wp-copycat-edit-block">
-        <h4>Scene context</h4>
+        <h4><i class="fa-solid fa-clock" aria-hidden="true"></i> Scene context</h4>
         <p class="wp-copycat-edit-note">How many recent messages ride along with the rewrite. Copycat always gets the character's full profile; this is just how much of the conversation comes with it.</p>
         <label class="wp-copycat-stepper" for="wp-understudy-context">
             <input id="wp-understudy-context" type="number" min="0" max="${UNDERSTUDY_MAX_CONTEXT}" step="1" value="${context}" />
@@ -230,8 +232,10 @@ function editsView({ settings, thoughtsMode = 'unknown' }) {
     </section>
 
     <section class="wp-copycat-edit-block">
-        <h4>Message modes</h4>
-        <p class="wp-copycat-edit-note">Your language and POV settings always travel with a rewrite and are not listed here. This is the one standing instruction you choose.</p>
+        <h4><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Instructions from your chat</h4>
+        <p class="wp-copycat-edit-note">Your language and POV settings always travel with a rewrite. Choose which other instructions come along.</p>
+        ${toggleRowMarkup({ id: 'wp-understudy-authors-notes', label: 'Author’s notes', sub: 'Include enabled chat and character notes on every rewrite', checked: settings.sendAuthorsNotes === true })}
+        ${toggleRowMarkup({ id: 'wp-understudy-course-corrections', label: 'Course corrections', sub: 'Include the active Course Correction or dose', checked: settings.sendCourseCorrections === true })}
         ${toggleRowMarkup({ id: 'wp-understudy-modes', label: 'Message modes', sub: 'Tell Copycat the register when the reply is already tagged ONYX, RUBY or OPAL', checked: settings.sendModes !== false })}
     </section>`;
 }
@@ -242,7 +246,7 @@ function editsView({ settings, thoughtsMode = 'unknown' }) {
  * @param {HTMLElement} container #wp-screen-body
  * @param {object} state
  */
-export function renderUnderstudyScreen(container, { target, draft, generating, error, settings, applied, take = 0, showOriginal = false, statusIndex = 0, feedback = '', section = 'stage', thoughtsMode = 'unknown' }) {
+export function renderUnderstudyScreen(container, { target, draft, generating, error, settings, applied, take = 0, showOriginal = false, statusIndex = 0, feedback = '', section = 'stage', thoughtsMode = 'unknown', catnipOnce = [] }) {
     const activeSection = section === 'edits' ? 'edits' : 'stage';
     if (activeSection === 'edits') {
         container.innerHTML = `<div class="wp-understudy">${copycatMasthead()}${copycatNavigation('edits')}<main class="wp-copycat-content">${editsView({ settings, thoughtsMode })}</main></div>`;
@@ -255,7 +259,7 @@ export function renderUnderstudyScreen(container, { target, draft, generating, e
     const scope = UNDERSTUDY_SCOPES[effectiveUnderstudyScope(settings.scope, thoughtsMode)];
     const isSpanScoped = Boolean(scope.spanKind);
     const noSpans = isSpanScoped && target.spanCount === 0;
-    const state = { target, draft, generating, error, settings, applied, take, showOriginal, statusIndex, feedback, scope, isSpanScoped, noSpans };
+    const state = { target, draft, generating, error, settings, applied, take, showOriginal, statusIndex, feedback, scope, isSpanScoped, noSpans, catnipOnce };
     container.innerHTML = `<div class="wp-understudy">${copycatMasthead()}${copycatNavigation('stage')}<main class="wp-copycat-content">${stageView(state)}</main></div>`;
 }
 

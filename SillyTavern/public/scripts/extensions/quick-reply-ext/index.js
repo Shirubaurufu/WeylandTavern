@@ -1,3 +1,5 @@
+import { assembleRoleplayShiftItem } from './src/roleplayShiftItem.js';
+import { resetMentalDirectivesOnce } from './src/mentalDirectives.js';
 import { quickReplyApi } from "../quick-reply/index.js";
 import { executeSlashCommandsWithOptions } from "../../slash-commands.js";
 
@@ -59,6 +61,7 @@ const checks = {
 
 async function OnStartup() {
     try {
+        resetMentalDirectivesOnce(getGlobalVariable, setGlobalVariable);
         DebugLog(`OnStartup called.`);
     } catch (error) {
         console.error(`[WQR] OnStartup Error:`, error);
@@ -2567,32 +2570,7 @@ async function SpecialChar(charName) {
  * @param {boolean} analysisOn
  */
 function buildRoleplayShiftItem(shift, rav, analysisOn, scope = SHIFT_SCOPES[shift]) {
-    if (shift === "Hard Mode") {
-        return analysisOn ? `2. FEEDBACK: User feedback may appear below:\n\n${rav.directive}` : rav.directive;
-    }
-    // General-Use (called "Temporary" while it was only kept for testing) is the pre-split
-    // reason2Empirical, the original built-in Beta feedback. It's written around the scene sheet
-    // ("do box 6, every message"), so it only means anything with Analysis on.
-    if (shift === "General-Use" || shift === "Temporary") return analysisOn ? rav.reason2Empirical : "";
-    // Custom Preset: the player's own text (WeyPhone -> PromptOS -> Custom Preset), cleaned and capped
-    // at 4,000 characters there, goes in exactly where a built-in shift's player quote goes.
-    const custom = shift === "Custom Preset" ? customShiftPreset() : null;
-    if (shift === "Custom Preset" && !custom) return "";
-    const body = custom ? `> "${custom.text}"` : SHIFT_BODIES[shift];
-    if (!body) return "";
-    // "Branched" shifts are framed as "I just branched back, fix this stretch" instead of "my last
-    // roleplay", so the wrapper around them says the same (see SHIFT_SCOPES in roleplayShifts.js).
-    const branched = scope === "branched";
-    let head = (branched ? SHIFT_FRAME.headBranched : SHIFT_FRAME.head).replace("{{MODIFIER_NAME}}", custom ? custom.name : shift);
-    let tail = branched ? SHIFT_FRAME.tailBranched : SHIFT_FRAME.tail;
-    // A preset is just the player's words, with no calibration examples for this line to refer to.
-    if (custom) tail = tail.replace(/\n*The examples above[^\n]*/, "").trim();
-    if (!analysisOn) {
-        // No scene sheet: drop the list number and the pointer to the RECOGNITION box.
-        head = head.replace(/^2\. /, "");
-        tail = tail.replace(" Talk it through in your RECOGNITION box instead.", "");
-    }
-    return `${head}\n\n${body}\n\n${tail}`;
+    return assembleRoleplayShiftItem(shift, rav, analysisOn, scope, customShiftPreset());
 }
 
 /** GENERATION_AFTER_COMMANDS: count a dose reply and rebuild the prompt if the dose turned on/off. */
@@ -2640,6 +2618,7 @@ async function endDoseAndRebuild() {
 async function XXX(charName) {
     const PerformanceStart = performance.now();
     try {
+        resetMentalDirectivesOnce(getGlobalVariable, setGlobalVariable);
         charName = charName || getCurrentCharacterName();
         if (!charName) return;
         if (getLocalVariable("RPPOVLocalSet") === "") setLocalVariable("RPPOVLocal", getGlobalVariable("RPPOV"));
@@ -2688,7 +2667,7 @@ async function XXX(charName) {
         const shiftItem = buildRoleplayShiftItem(shift, beta, usesSceneSheet(base, analysisOn), shiftScope);
         // The chat's narrator by name ('' for Default); Beta's box 1 becomes their green room (promptModifiers.js).
         const activeNarrator = narratorName(getLocalVariable("LocalNarrator"));
-        const assembled = assemblePromptLayers(base, beta, { analysisOn, shift, shiftItem, shiftScope, geminiBypassEnabled, narrator: activeNarrator });
+        const assembled = assemblePromptLayers(base, beta, { analysisOn, shift, shiftItem, shiftScope, geminiBypassEnabled, narrator: activeNarrator, narratorStrength: getGlobalVariable("NarratorStrength") });
         // Kinsbane Manor, Mirror Weyland and Muse don't read ravteg; they open their own system prompt with
         // their own scene sheet, which always runs. A shift reaches them through two chat vars those sheets
         // carry (src/specialSheets.js), always in its scene-sheet form, whatever the Analysis toggle says.
@@ -2703,6 +2682,8 @@ async function XXX(charName) {
         }
         setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? base.CCPCA : base.CCPC);
         setLocalVariable("ravteg", assembled.teg);
+        // Built-in prompts and OOC bring their own voice; do not inject an extra roleplay narrator.
+        setLocalVariable("NarratorEarly", specialBoxes || isOocModeEnabled(getGlobalVariable("OOCMode")) ? "" : assembled.narratorEarly.replaceAll("{{getvar::LocalNarrator}}", getLocalVariable("LocalNarrator")));
         setLocalVariable("postrav", resolvePromptPost({ ...base, post: assembled.post }, {
             focus: getLocalVariable("ExpAltShow") === "true" ? base.expaltshow : "{{getglobalvar::RPFocus}}",
             htmlEnabled: getGlobalVariable("HTML!") === "Enabled",

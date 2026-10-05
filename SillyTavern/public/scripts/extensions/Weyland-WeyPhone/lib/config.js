@@ -72,6 +72,9 @@ export const defaultSettings = Object.freeze({
         // main model then follows it up into RUBY, so the scene escalates precisely BECAUSE the
         // framing was withheld. ONYX's own text says being in ONYX is not escalation to sex.
         sendModes: true,
+        sendAuthorsNotes: false,
+        sendCourseCorrections: false,
+        catnipRecipes: [],
         // License to discard the original's choice of beat entirely rather than reword it.
         // Off by default because it changes what happens in the scene, not just how it reads.
         allowDeviation: false,

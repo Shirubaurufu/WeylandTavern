@@ -11,6 +11,7 @@ import {
 } from './lib.js';
 
 import { humanizedDateTime, favsToHotswap, getMessageTimeStamp, dragElement, isMobile, initRossMods } from './scripts/RossAscends-mods.js';
+import { appendEarlyNarrator } from './scripts/extensions/quick-reply-ext/src/narratorStrength.js';
 import { userStatsHandler, statMesProcess, initStats } from './scripts/stats.js';
 import {
     generateKoboldWithStreaming,
@@ -3612,6 +3613,12 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
         charDepthPrompt,
         creatorNotes,
     } = getCharacterCardFields();
+
+    // Low Narrator Strength follows the last card field, ahead of after-card lorebooks.
+    // Chat completions append it after scenario formatting in openai.js instead.
+    if (main_api !== 'openai') {
+        scenario = appendEarlyNarrator(scenario, baseChatReplace('{{getvar::NarratorEarly}}', name1, name2));
+    }
 
     if (main_api !== 'openai') {
         if (power_user.sysprompt.enabled) {

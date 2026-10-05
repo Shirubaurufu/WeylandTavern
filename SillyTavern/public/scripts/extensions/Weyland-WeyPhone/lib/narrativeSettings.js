@@ -6,6 +6,7 @@
 // the existing rebuild Quick Reply is executed by index.js.
 
 import { specialSheetBoxes } from '../../quick-reply-ext/src/specialSheets.js';
+import { resolveNarratorStrength } from '../../quick-reply-ext/src/narratorStrength.js';
 
 export const NARRATIVE_TABS = Object.freeze(['essentials', 'style', 'modes', 'perspective']);
 
@@ -161,10 +162,10 @@ export const EXPERIMENTAL_MODE_VARIABLES = Object.freeze(['HTML!', 'ClothingTrac
 // menu, condensed only where the original repeated itself.
 export const MENTAL_TOGGLES = Object.freeze([
     { variable: 'MentalToggle', label: 'Mental health isn’t romantic', tooltip: 'Love is not the cure for mental illness, and mentally ill people may not respond to kindness in the "right" way. Characters may reflexively push away comfort, self-sabotage when things are going well, or react to affection with suspicion or anger. Progress is not linear — relapse is possible even after months of improvement.' },
-    { variable: 'SecretsToggle', label: 'Secrets, boundaries & conflict', recommended: true, tooltip: 'Characters have secrets about their past, trauma, and coping mechanisms that aren’t easily shared. They may deflect, lie, or shut down when pressed about painful topics. Trust must be earned through consistent action, not extracted through one heartfelt question. Crossing a boundary may cause explosive conflict, withdrawal, or relationship damage.' },
-    { variable: 'DialogueToggle', label: 'Dialogue that hurts', recommended: true, tooltip: 'When characters are hurting, angry, or spiraling, their dialogue reflects it authentically — they may say cruel things they don’t mean, target known insecurities, or become incoherent through sobs. Speech and thought get fragmented and raw instead of staying articulate and controlled.' },
+    { variable: 'SecretsToggle', label: 'Secrets, boundaries & conflict', tooltip: 'Characters have secrets about their past, trauma, and coping mechanisms that aren’t easily shared. They may deflect, lie, or shut down when pressed about painful topics. Trust must be earned through consistent action, not extracted through one heartfelt question. Crossing a boundary may cause explosive conflict, withdrawal, or relationship damage.' },
+    { variable: 'DialogueToggle', label: 'Dialogue that hurts', tooltip: 'When characters are hurting, angry, or spiraling, their dialogue reflects it authentically — they may say cruel things they don’t mean, target known insecurities, or become incoherent through sobs. Speech and thought get fragmented and raw instead of staying articulate and controlled.' },
     { variable: 'HappyToggle', label: 'Authenticity, not happiness', tooltip: 'The model’s job is to portray the character with unflinching honesty, not to make sure your character feels good or that relationships succeed. Characters may make bad choices, self-destruct, or become genuinely unlikable, and relationships may fall apart without reconciliation — that still counts as a success if it’s authentic to the character.' },
-    { variable: 'JoyToggle', label: 'Warmth, joy & safety', recommended: true, tooltip: 'Broken people still laugh, feel butterflies, and have moments of genuine happiness. Mental illness doesn’t erase someone’s capacity for joy, warmth, or safety — good moments don’t need to be tainted with hidden pain or foreshadowing, and characters can be goofy, playful, and genuinely content when circumstances allow.' },
+    { variable: 'JoyToggle', label: 'Warmth, joy & safety', tooltip: 'Broken people still laugh, feel butterflies, and have moments of genuine happiness. Mental illness doesn’t erase someone’s capacity for joy, warmth, or safety — good moments don’t need to be tainted with hidden pain or foreshadowing, and characters can be goofy, playful, and genuinely content when circumstances allow.' },
 ]);
 
 export const FOCUS_OPTIONS = Object.freeze([
@@ -290,6 +291,7 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
         analysisEnabled: enabled(getGlobal('AnalysisToggle') || 'Enabled'),
         thinking,
         globalNarrator,
+        narratorStrength: resolveNarratorStrength(getGlobal('NarratorStrength')),
         localNarrator,
         localNarratorOverride,
         language,
@@ -301,14 +303,4 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
         modes: Object.fromEntries(MODE_TOGGLES.map(item => [item.variable, enabled(getGlobal(item.variable))])),
         mental: Object.fromEntries(MENTAL_TOGGLES.map(item => [item.variable, enabled(getGlobal(item.variable))])),
     };
-}
-
-export function mentalPresetValues(preset) {
-    const all = Object.fromEntries(MENTAL_TOGGLES.map(item => [item.variable, 'Enabled']));
-    if (preset === 'all') return all;
-    if (preset === 'none') return Object.fromEntries(MENTAL_TOGGLES.map(item => [item.variable, 'Disabled']));
-    if (preset === 'recommended') {
-        return Object.fromEntries(MENTAL_TOGGLES.map(item => [item.variable, item.recommended ? 'Enabled' : 'Disabled']));
-    }
-    return {};
 }

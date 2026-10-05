@@ -103,7 +103,7 @@ export function addShiftRouteLine(body, scope = 'restarted') {
 const SPARK_BOX = /SPARK \[1\/6\][\s\S]*?(?=\n\s*BOARD \[2\/6\])/;
 const GHOST_NARRATOR_LINE = '- What narrator are you this message, and how does that shape the output?';
 
-export function addNarratorGreenRoom(body, narrator = '') {
+export function addNarratorGreenRoom(body, narrator = '', early = false) {
     const source = String(body ?? '');
     const name = String(narrator ?? '').trim();
     if (!name) return source;
@@ -111,8 +111,9 @@ export function addNarratorGreenRoom(body, narrator = '') {
         console.warn('[WQR] Narrator: box 1 markers not found in the Beta body, so the narrator green room was NOT added.');
         return source;
     }
+    const location = early ? 'after the character card, before the lorebooks' : 'in the post-history instructions (after the Weyland Tavern client note, when present)';
     const box = `NARRATOR GREEN ROOM [1/6] — Get into character. You're up first.
-The player picked ${name} to narrate, on purpose. Find [CRITICAL - NARRATOR - ${name.toUpperCase()}] in the post-history instructions (after the Weyland Tavern client note, when present) and reread it, especially ${name}'s writing style section. Then, AS ${name}, first person, in ${name}'s voice:
+The player picked ${name} to narrate, on purpose. Find [CRITICAL - NARRATOR - ${name.toUpperCase()}] ${location} and reread it, especially ${name}'s writing style section. Then, AS ${name}, first person, in ${name}'s voice:
 - What does ${name} think of what the user just did, and whose side is ${name} on? Those opinions come from ${name}'s block, not from your default warmth.
 - Quote two techniques from ${name}'s writing style and say exactly where each one lands in THIS message.
 - Write one sentence that only ${name} would write. It goes in the draft, word for word.

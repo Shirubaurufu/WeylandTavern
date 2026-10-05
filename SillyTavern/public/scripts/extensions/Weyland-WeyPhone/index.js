@@ -1,3 +1,5 @@
+import { buildCatnipFeedback, copycatOptionalDirections } from './lib/copycatInstructions.js';
+import { showCatnipJar, closeCatnipJar } from './lib/ui/catnipJar.js';
 import { MODULE_NAME, getSettings, resetSettings } from './lib/config.js';
 import { getRequestHeaders, showSwipeButtons } from '../../../script.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, applySpecialCase } from './lib/promptResolution.js';
@@ -6,6 +8,7 @@ import { createConversation, getConversation, appendMessage, editMessage, delete
 import { buildSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
 import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
+import { closeMessageTimeEditor, initMessageTimeGestures, showMessageTimeEditor } from './lib/ui/messageTimeEditor.js';
 import { withTypingState } from './lib/generationTracking.js';
 import { buildPortraitMap, buildPsaPortraitMap } from './lib/portraits.js';
 import { mergeInstalledContacts } from './lib/installedContacts.js';
@@ -84,7 +87,7 @@ import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
 import { applyMienExpression, loadMienGallery, resolveMienCharacter, selectMienOutfit } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
 import { NARRATIVE_HELP, renderNarrativeSettingsScreen } from './lib/ui/apps/narrativeSettings.js';
-import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, mentalPresetValues, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
+import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
 import { renderCustomShiftScreen } from './lib/ui/apps/customShift.js';
 import { renderGeminiFilterGuide } from './lib/ui/apps/geminiFilterGuide.js';
 import { installGeminiBlockNotice } from './lib/ui/geminiBlockNotice.js';
@@ -169,6 +172,8 @@ let understudySourceBody = '';
 // send time, because the textarea is unmounted while a take is generating and must come back
 // with the note intact — it deliberately survives across takes on the same message.
 let understudyFeedback = '';
+let understudyCatnipOnce = [];
+let understudyCatnipKey = '';
 // Immutable identity of the reading every piece of understudy state belongs to:
 // chat + message index + swipe. The index alone is not enough — swiping or regenerating the
 // last message leaves its index unchanged while replacing its content, so keying on the index
@@ -921,7 +926,7 @@ function rerenderConversationMessages() {
     const conversation = getConversation(settings, currentConversationId);
     if (!conversation) return;
     const isTyping = generatingConversationIds.has(currentConversationId);
-    renderMessages(document.getElementById('wp-messages'), conversation.messages, editingMessageIndex, isTyping, getSelectState(), (conversation.participants?.length ?? 1) > 1);
+    renderMessages(document.getElementById('wp-messages'), conversation.messages, editingMessageIndex, isTyping, getSelectState(), (conversation.participants?.length ?? 1) > 1, { suppressTimestampFallback: Boolean(settings.ui?.rpClockEnabled) });
     updateRegenerateEnabled(conversation);
 }
 
@@ -2246,6 +2251,34 @@ function handleConfirmEdit(bubbleEl) {
     rerenderConversationMessages();
 }
 
+function handleChangeMessageTime(index) {
+    if (currentView !== 'conversation' || selectMode || editingMessageIndex >= 0) return;
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const conversation = getConversation(settings, currentConversationId);
+    const message = conversation?.messages[index];
+    if (!message) return;
+    const saveAndRender = () => {
+        // Saving a date/time never changes lastActive or the original send timestamp.
+        queueWeyPhoneSave(context);
+        const messagesEl = document.getElementById('wp-messages');
+        const scrollTop = messagesEl?.scrollTop;
+        rerenderConversationMessages();
+        if (messagesEl) messagesEl.scrollTop = scrollTop;
+    };
+    showMessageTimeEditor(document.getElementById('wp-panel'), message, saveAndRender, {
+        suppressTimestampFallback: Boolean(settings.ui?.rpClockEnabled),
+        onDelete: () => {
+            // The conversation may receive new replies while the editor is open. Delete only
+            // the selected object, rather than a stale index or its surrounding timestamp group.
+            const currentIndex = conversation.messages.indexOf(message);
+            if (currentIndex < 0) return;
+            deleteMessage(settings, conversation.id, currentIndex);
+            saveAndRender();
+        },
+    });
+}
+
 function handleDeleteMessage(bubbleEl) {
     const index = Number(bubbleEl.dataset.index);
     const context = SillyTavern.getContext();
@@ -2569,7 +2602,7 @@ function resolveUnderstudyStageDirections(context, config, target) {
     const names = [...UNDERSTUDY_STRUCTURAL_VARS];
     if (config.sendModes) names.push(...understudyDetectModes(target?.header, target?.footer));
 
-    return understudyBuildStageDirections(names.map(read));
+    return [understudyBuildStageDirections(names.map(read)), copycatOptionalDirections(context, config, ravs.get('Beta Prompt'))].filter(Boolean).join('\n\n');
 }
 
 /**
@@ -2822,6 +2855,7 @@ function renderUnderstudyScreenNow() {
         showOriginal: understudyShowOriginal,
         statusIndex: understudyStatusIndex,
         feedback: understudyFeedback,
+        catnipOnce: understudyCatnipKey === shownKey ? understudyCatnipOnce : [],
         section: understudySection,
         // The Instincts tab hides the thought scopes for thoughts-off characters, so it needs the
         // mode even when there's no reply to rewrite yet.
@@ -2866,6 +2900,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         return;
     }
 
+    const catnipOnce = !auto && understudyCatnipKey === targetKey ? [...understudyCatnipOnce] : [];
     const messages = buildUnderstudyMessages({
         scope: scopeKey,
         characterName: target.characterName,
@@ -2879,7 +2914,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         header: target.header,
         narratorText: resolveUnderstudyNarrator(context, config.narrator),
         stageDirections: resolveUnderstudyStageDirections(context, config, target),
-        feedback: understudySlotOf(understudyFeedbackKey) === understudySlotOf(targetKey) ? understudyFeedback : '',
+        feedback: buildCatnipFeedback(config, understudySlotOf(understudyFeedbackKey) === understudySlotOf(targetKey) ? understudyFeedback : '', catnipOnce),
         allowDeviation: Boolean(config.allowDeviation),
         thoughtsSetting,
     });
@@ -2995,6 +3030,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         if (!scope.spanKind && understudyDraft.trim() === sourceBody.trim()) {
             pushLogLine('Copycat: the rewrite came back identical to the original');
         }
+        if (!auto && understudyCatnipKey === targetKey) understudyCatnipOnce = understudyCatnipOnce.filter(id => !catnipOnce.includes(id));
         understudyDraftModel = answeringModel;
         understudyTake++;
         understudySection = 'stage';
@@ -4173,6 +4209,20 @@ function handleScreenBodyClick(event) {
     }
     // Edits-panel choice buttons. They replace the old dropdowns, so they write the same
     // settings keys and redraw in place - the blurb under the row is derived from the value.
+    if (event.target.closest('#wp-catnip-open')) {
+        const context = SillyTavern.getContext();
+        const key = understudyIdentity(context, findUnderstudyTargetIndex(context));
+        if (understudyCatnipKey !== key) { understudyCatnipOnce = []; understudyCatnipKey = key; }
+        showCatnipJar(document.getElementById('wp-panel'), {
+            getConfig: () => getSettings(context.extensionSettings).understudy,
+            save: () => queueWeyPhoneSave(context),
+            getOnce: () => understudyCatnipOnce,
+            setOnce: ids => { understudyCatnipOnce = ids; },
+            note: understudyFeedback,
+            onClose: () => { if (currentView === 'understudy') renderUnderstudyScreenNow(); },
+        });
+        return;
+    }
     const copycatChoice = event.target.closest('[data-copycat-choice]');
     if (copycatChoice) {
         const context = SillyTavern.getContext();
@@ -5060,6 +5110,8 @@ function handleScreenBodyChange(event) {
         'wp-understudy-fallback': 'fallbackModel',
         'wp-understudy-narrator': 'narrator',
         'wp-understudy-modes': 'sendModes',
+        'wp-understudy-authors-notes': 'sendAuthorsNotes',
+        'wp-understudy-course-corrections': 'sendCourseCorrections',
         'wp-understudy-scope': 'scope',
         'wp-understudy-context': 'contextMessages',
         'wp-understudy-automode': 'autoMode',
@@ -6138,6 +6190,10 @@ async function handleNarrativeAction(button) {
         } else if (action === 'toggle-gemini-bypass') {
             global.set('GeminiBypassToggle', before.geminiBypass ? 'Disabled' : 'Enabled');
             await rebuildNarrativePrompts('XXX');
+        } else if (action === 'set-narrator-strength') {
+            if (!['Low', 'High'].includes(value) || before.builtInPrompt || value === before.narratorStrength) return;
+            global.set('NarratorStrength', value);
+            await rebuildNarrativePrompts('XXX');
         } else if (action === 'set-global-narrator') {
             const option = NARRATOR_OPTIONS.find(item => item.id === value);
             if (!option) return;
@@ -6202,9 +6258,6 @@ async function handleNarrativeAction(button) {
         } else if (action === 'toggle-mental') {
             global.set(variable, before.mental[variable] ? 'Disabled' : 'Enabled');
             await rebuildNarrativePrompts('Framework', 'XXX');
-        } else if (action === 'mental-preset') {
-            for (const [key, setting] of Object.entries(mentalPresetValues(value))) global.set(key, setting);
-            await rebuildNarrativePrompts('Framework', 'XXX');
         } else if (action === 'set-global-pov') {
             const option = POV_OPTIONS.find(item => item.type === value);
             if (!option) return;
@@ -6263,6 +6316,8 @@ async function handleNarrativeAction(button) {
 }
 
 function showScreen(view) {
+    closeCatnipJar(document.getElementById('wp-panel'));
+    closeMessageTimeEditor(document.getElementById('wp-panel'));
     appTutorial?.navigate(view);
     currentView = view;
     if (view !== 'mien') mienFullscreen = false;
@@ -6849,7 +6904,7 @@ function showScreen(view) {
     renderConversationScreen(screenBody, { appKey: conversation.isDedicatedApp ?? null });
     editingMessageIndex = -1;
     const isTyping = generatingConversationIds.has(currentConversationId);
-    renderMessages(document.getElementById('wp-messages'), conversation.messages, editingMessageIndex, isTyping, getSelectState(), (conversation.participants?.length ?? 1) > 1);
+    renderMessages(document.getElementById('wp-messages'), conversation.messages, editingMessageIndex, isTyping, getSelectState(), (conversation.participants?.length ?? 1) > 1, { suppressTimestampFallback: Boolean(settings.ui?.rpClockEnabled) });
     updateRegenerateEnabled(conversation);
     // Route the tethered checkbox's checked AND disabled state (plus the mode-toggle visibility)
     // through the shared helper, so entering the conversation view freshly re-verifies the disabled
@@ -7943,11 +7998,17 @@ function initPanel() {
                 || understudyDraft || understudyTargetKey || understudyFeedback || understudySourceSwipe !== null;
             if (!hasWorkToInvalidate) return;
             const moved = syncUnderstudyToLiveTarget(SillyTavern.getContext());
+            if (moved) {
+                closeCatnipJar(document.getElementById('wp-panel'));
+                understudyCatnipOnce = [];
+                understudyCatnipKey = '';
+            }
             if (currentView === 'understudy' && (moved || eventName === 'MESSAGE_SWIPED')) renderUnderstudyScreenNow();
         });
     }
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, () => {
         // A new chat is a new run: nothing carries over.
+        closeCatnipJar(document.getElementById('wp-panel'));
         understudyAutoLastIndex = -1;
         understudyAutoCounter = 0;
         understudyTargetIndex = -1;
@@ -7957,6 +8018,8 @@ function initPanel() {
         understudySourceSwipe = null;
         understudyFeedback = '';
         understudyFeedbackKey = '';
+        understudyCatnipOnce = [];
+        understudyCatnipKey = '';
         understudyDraft = '';
         understudyTake = 0;
         understudySection = 'stage';
@@ -8000,6 +8063,7 @@ function initPanel() {
     // delegated on the stable #wp-screen-body container rather than attached to elements that
     // get destroyed and recreated.
     const screenBody = document.getElementById('wp-screen-body');
+    initMessageTimeGestures(screenBody, handleChangeMessageTime);
     screenBody.addEventListener('click', handleScreenBodyClick);
     screenBody.addEventListener('change', handleScreenBodyChange);
     screenBody.addEventListener('keydown', (event) => {

@@ -1,5 +1,6 @@
 import { limitPhoneRequestMessages } from './requestBudget.js';
 import { withGeminiBypass } from './phonePromptPolicy.js';
+import { withMessageDate } from './messageTime.js';
 
 /**
  * Drops non-string / empty / whitespace-only sections and joins the rest with `sep`. The single
@@ -51,7 +52,7 @@ export function buildGroupSystemPrompt({ participants, worldInfo = '', textingIn
  */
 export function resolveStoredMessageTime(entry, formatClockTime, { suppressTimestampFallback = false } = {}) {
     const displayTime = String(entry?.displayTime ?? '').trim();
-    if (displayTime) return displayTime;
+    if (displayTime) return withMessageDate(entry, displayTime);
     if (suppressTimestampFallback) return '';
     return Number.isFinite(entry?.timestamp) ? formatClockTime(entry.timestamp) : '';
 }
