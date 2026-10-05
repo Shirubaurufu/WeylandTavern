@@ -129,6 +129,7 @@ let settings = undefined;
  * @property {RegExp} weybotRelationships
  * @property {RegExp} ltmFix
  * @property {RegExp} roughDraftRemove
+ * @property {RegExp} weygenImage
  */
 
 /** @type {WeylandFormatterRegex} */
@@ -234,6 +235,7 @@ const weylandRegex = {
     weybotRelationships: /^New (?:Aquaintance|Friend|Hostile|Lover): ?{?.+?}?$/im,
     ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im,
     roughDraftRemove: /((?<=\n)\n+)? *\[D\] *(\n+(?=\n))?/i,
+    weygenImage: /<img class="weygen-rp-image"[\s\S]*?\/>/g,
 };
 
 
@@ -564,6 +566,13 @@ async function formatMessage(messageId, mes = undefined) {
 
     if (isUser || isSystem) return;
 
+    // WeyGen RP images are appended after the footer, so the paragraph pass would strip them.
+    // Pull them out before formatting and re-append them unchanged afterwards.
+    const weygenImages = originalMessage.match(weylandRegex.weygenImage) ?? [];
+    if (weygenImages.length) {
+        originalMessage = originalMessage.replace(weylandRegex.weygenImage, "").trim();
+    }
+
     const ltmFix = originalMessage.match(weylandRegex.ltmFix);
     if (ltmFix) {
         originalMessage = ltmFix[1].trim();
@@ -635,6 +644,9 @@ async function formatMessage(messageId, mes = undefined) {
         originalMessage = paragraphs.join("\n\n");
     } else if (!settings?.experimental && !weylandRegex.thinkFull.test(originalMessage) && weylandRegex.thinkStart.test(originalMessage) && characterName !== "Kressa" && characterName !== "Kinsbane Manor") {
         originalMessage = "";
+    }
+    if (weygenImages.length) {
+        originalMessage = [originalMessage, ...weygenImages].filter(part => part.length !== 0).join("\n\n");
     }
     chat[messageId].mes = originalMessage;
 
