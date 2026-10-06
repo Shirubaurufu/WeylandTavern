@@ -568,6 +568,9 @@ const registrarApp = createHostedRegistrar(() => {
     // Invalidate even when the managed book name is unchanged after an update/removal.
     contactLorebookState.signature = '';
     contactLorebookState.ready = false;
+    // Imports/removals sync Contacts immediately, even while another phone app is open.
+    void ensureContactLorebooks(SillyTavern.getContext()).catch(error =>
+        console.error('[WeyPhone] Could not sync Registrar contacts:', error));
 }, () => queueWeyPhoneSave());
 
 /** Registrar record portraits for Registrar community characters, fed to every buildPortraitMap
@@ -8141,6 +8144,10 @@ jQuery(async () => {
         queueWeyPhoneSave(context);
     }
     initPanel();
+    // Eagerly reconcile imported contacts on every startup. This also removes locations
+    // auto-added by older builds without requiring Contacts to be opened or refreshed.
+    void ensureContactLorebooks(context).catch(error =>
+        console.error('[WeyPhone] Could not sync startup contacts:', error));
     syncAlarmTick(settings); // resume watching any enabled real alarms from a previous session
     log('WeyPhone initialized');
 });

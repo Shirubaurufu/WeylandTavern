@@ -51,12 +51,30 @@ function rosterEntry(book) {
         (/character roster/i.test(String(entry.comment ?? '')) || /\[CHARACTER ROSTER\b/i.test(String(entry.content ?? ''))));
 }
 
+function registrarRecordKind(book, name) {
+    const normalized = String(name).trim().toLowerCase();
+    const record = (Array.isArray(book?.registrar?.records) ? book.registrar.records : [])
+        .find(record => (record.kind === 'character' ? String(record.name ?? '').split(',') : [record.name])
+            .some(alias => String(alias ?? '').trim().toLowerCase() === normalized));
+    return record?.kind;
+}
+
+function isCharacterProfile(book, entry, name) {
+    const kind = registrarRecordKind(book, name);
+    if (kind) return kind === 'character';
+    // Both locations and subbots use [Name INFO]. Legacy exports without metadata
+    // need a character trigger or the subbot's explicit roleplay instruction instead.
+    return (Array.isArray(entry.key) ? entry.key : []).some(key =>
+        String(key).trim().toLowerCase() === `!${name.toLowerCase()}`)
+        || /^If user sends ![^\r\n]+, begin roleplay as both /im.test(String(entry.content));
+}
+
 function profileNames(book) {
     const names = [];
     for (const entry of Object.values(book?.entries ?? {})) {
         if (!entry || entry.disable || !entry.content) continue;
         const match = String(entry.content).match(/^\s*\[([^\]\r\n]+?)\s+INFO\]/i);
-        if (match && !/^END\s+/i.test(match[1])) names.push(match[1].trim());
+        if (match && !/^END\s+/i.test(match[1]) && isCharacterProfile(book, entry, match[1].trim())) names.push(match[1].trim());
     }
     return [...new Set(names)];
 }
@@ -79,6 +97,7 @@ export function parseRegistrarLorebook(book, bookName = 'Weyland Registrar') {
         const match = rawLine.trim().match(/^([^:\[\]]+):\s*\((.*)\)\s*$/);
         if (!match) continue;
         const name = match[1].trim();
+        if (registrarRecordKind(book, name) === 'location') continue;
         const fields = splitRosterFields(match[2]);
         const profile = findLorebookCharacterEntry(book, name);
         const gender = fields.find(field => /^(female|male|nonbinary|non-binary|genderfluid|gender-fluid)$/i.test(field)) ?? '';
@@ -110,8 +129,8 @@ export function parseRegistrarLorebook(book, bookName = 'Weyland Registrar') {
         });
     }
 
-    // Older/community-customized exports may omit the roster entry. The [Name INFO] marker still
-    // gives WeyPhone a safe minimal contact instead of making an otherwise valid subbot invisible.
+    // Older/community-customized exports may omit the roster. Only character profiles
+    // qualify: locations and sublocations also have [Name INFO] headings.
     for (const name of profileNames(book)) {
         if (parsed.some(entry => entry.name.toLowerCase() === name.toLowerCase())) continue;
         const profile = findLorebookCharacterEntry(book, name);
