@@ -126,6 +126,8 @@ let settings = undefined;
  * @property {RegExp} verticalBar
  * 
  * @property {RegExp} expressionClothingParagraph
+ * @property {RegExp} clothingAliasUnderwear
+ * @property {RegExp} clothingAliasNaked
  * @property {RegExp} weybotRelationships
  * @property {RegExp} ltmFix
  * @property {RegExp} roughDraftRemove
@@ -232,6 +234,10 @@ const weylandRegex = {
     verticalBar: /[\|│¦]/,
 
     expressionClothingParagraph: /^((?:\[[a-z]+?\]) ?(?:\[[a-z0-9]+?\])(?: ?\[[a-z]+?\])?)(?: +)?(\[\d+\])?.*$/i,
+    // Long-form clothing tags the model sometimes writes; normalized to the short codes that
+    // registrar-expressions and WeyPhone look for.
+    clothingAliasUnderwear: /\[underwear\]/gi,
+    clothingAliasNaked: /\[naked\]/gi,
     weybotRelationships: /^New (?:Aquaintance|Friend|Hostile|Lover): ?{?.+?}?$/im,
     ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im,
     roughDraftRemove: /((?<=\n)\n+)? *\[D\] *(\n+(?=\n))?/i,
@@ -369,6 +375,9 @@ async function formatParagraphs(message) {
                     const expCloPar = paragraph.match(weylandRegex.expressionClothingParagraph);
                     if (expCloPar) {
                         foundFooter = true;
+                        expCloPar[1] = expCloPar[1]
+                            .replace(weylandRegex.clothingAliasUnderwear, "[LG]")
+                            .replace(weylandRegex.clothingAliasNaked, "[NK]");
                         expCloPar[2] = `[${paragraphCount - (paragraphs.length-index)}]`;
                         paragraph = replaceText(paragraph, weylandRegex.expressionClothingParagraph, `${expCloPar[1]} ${expCloPar[2]}`);
                         paragraphs[index] = replaceText(paragraph, weylandRegex.asterisk, "");
