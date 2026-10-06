@@ -53,10 +53,11 @@ test('every choice receives byte-identical shared analysis / feedback / Gemini l
     }
 });
 
-test('Beta analysis without modifiers remains the exact existing scene sheet and client note', async () => {
+test('Beta analysis adds the POV/tense check and otherwise preserves the scene sheet and client note', async () => {
     const { locals } = await assemble('Rosa', { PromptChoice: 'Beta Prompt' });
     const body = beta.body.replace(/RECOGNITION \[0\/6\][\s\S]*?(?=SPARK \[1\/6\])/, '').replace(' (Technically Seven)', '');
-    assert.equal(locals.get('ravteg'), [beta.frameTop, beta.objectionValve, beta.bridgeLine, body, beta.teg.replaceAll('{{getvar::LocalNarrator}}', '')].filter(Boolean).join('\n\n'));
+    const checkedBody = body.replace('- Are character thoughts ENABLED or DISABLED?', line => `${line}\n${"- POV + TENSE CHECK: Confirm the active character/player POV (e.g. 3rd/2nd = she/you). Narrate in present tense unless explicitly overridden or describing a requested time skip; don’t inherit POV or tense errors from previous replies."}\n- Remember to respond to the latest user message in the chatlog.`);
+    assert.equal(locals.get('ravteg'), [beta.frameTop, beta.objectionValve, beta.bridgeLine, checkedBody, beta.teg.replaceAll('{{getvar::LocalNarrator}}', '')].filter(Boolean).join('\n\n'));
     const note = beta.post.match(/¦Weyland Tavern client note:[^¦]*¦\s*\n*/)[0];
     assert.equal(locals.get('postrav'), (note + '{{getvar::LocalNarrator}}\n\n' + beta.post.slice(note.length)).replace('{{pipe}}', '{{getglobalvar::RPFocus}}\n====='));
 });
