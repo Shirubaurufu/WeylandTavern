@@ -129,6 +129,15 @@ export function assemblePromptLayers(base, beta, {
         let body = shiftItem ? beta.body : beta.body
             .replace(/RECOGNITION \[0\/6\][\s\S]*?(?=SPARK \[1\/6\])/, '')
             .replace(' (Technically Seven)', '');
+        // Check output settings in BOARD; avoid duplication if Fox adds this to the upstream prompt master.
+        const povTenseCheck = "- POV + TENSE CHECK: Confirm the active character/player POV (e.g. 3rd/2nd = she/you). Narrate in present tense unless explicitly overridden or describing a requested time skip; don’t inherit POV or tense errors from previous replies.";
+        if (!body.includes('- POV + TENSE CHECK:')) {
+            body = body.replace('- Are character thoughts ENABLED or DISABLED?', line => `${line}\n${povTenseCheck}`);
+        }
+        const latestMessageReminder = '- Remember to respond to the latest user message in the chatlog.';
+        if (!body.includes(latestMessageReminder)) {
+            body = body.replace(/- POV \+ TENSE CHECK:[^\n]*/, line => `${line}\n${latestMessageReminder}`);
+        }
         if (shiftItem) body = addShiftRouteLine(body, shiftScope);
         // A selected narrator (Lauren/Salem/Lucky, by name) takes over box 1 as their green room.
         body = addNarratorGreenRoom(body, narrator, early);
