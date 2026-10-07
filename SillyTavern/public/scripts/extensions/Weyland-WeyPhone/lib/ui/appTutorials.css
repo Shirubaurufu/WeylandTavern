@@ -53,3 +53,7 @@
 #wp-panel.wp-tour-active #wp-nav-bar { position: relative; flex: 0 0 auto; }
 @keyframes wp-tour-point { from { outline-color: transparent; } to { outline-color: var(--wp-tour-focus); } }
 @media (prefers-reduced-motion: reduce) { #wp-panel .wp-tour *, #wp-panel .wp-tour-target { animation: none !important; transition: none !important; } }
+
+/* Keep long Registrar notes compact without forcing overflow on narrow phones. */
+#wp-panel .wp-tour-registrar .wp-tour-compact-line { font-size: 11px; }
+#wp-panel .rg-scan-updates.wp-tour-target { outline-offset: 3px; border-radius: 8px; }

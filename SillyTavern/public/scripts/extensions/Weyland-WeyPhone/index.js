@@ -5,7 +5,7 @@ import { getRequestHeaders, showSwipeButtons } from '../../../script.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, applySpecialCase } from './lib/promptResolution.js';
 import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLorebookContactProfile, resolveWorldInfoTethered, resolveWorldInfoUntethered } from './lib/worldInfo.js';
 import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
-import { buildSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
+import { buildSystemPrompt, buildTextingSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
 import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
 import { closeMessageTimeEditor, initMessageTimeGestures, showMessageTimeEditor } from './lib/ui/messageTimeEditor.js';
@@ -19,7 +19,7 @@ import { FIRST_CONTACT_BLOCK } from './lib/firstContact.js';
 import { isKnownByDefault } from './lib/knownContacts.js';
 import { buildMemoryGenerationMessages, joinMemoriesForInjection, sendMemoryRequest } from './lib/memoryGeneration.js';
 import { createSettledTrigger } from './lib/settledTrigger.js';
-import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText, KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS, KRESSA_POST_CHATLOG_ORIENTATION } from './lib/tetheredContext.js';
+import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText, KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS, KRESSA_POST_CHATLOG_ORIENTATION, KRESSA_PHONE_USER_INSTRUCTIONS } from './lib/tetheredContext.js';
 import { getPhoneAppContent, setPhoneAppContent } from './lib/phoneApps.js';
 import { toggleLike } from './lib/twitterLikes.js';
 import { parseTwitterPosts } from './lib/twitterParsing.js';
@@ -33,7 +33,7 @@ import { recordSyncNotifications, recordMessageNotification, getNotifications, g
 import { copyTextToClipboard } from './lib/clipboard.js';
 import { initialBatteryLevel, batteryLevel, trackerBatteryLevel, describeBatteryMode } from './lib/battery.js';
 import { refreshRemainingMessages, getQuotaSnapshot } from './lib/helixQuota.js';
-import { PHONE_REQUEST_MAX_INPUT_TOKENS, limitPhoneRequestMessages } from './lib/requestBudget.js';
+import { PHONE_REQUEST_MAX_INPUT_TOKENS, PHONE_THREAD_MAX_TOKENS, limitPhoneRequestMessages } from './lib/requestBudget.js';
 import { renderStatusBar } from './lib/ui/statusBar.js';
 import { renderLockScreen } from './lib/ui/lockScreen.js';
 import { renderShade } from './lib/ui/shade.js';
@@ -164,6 +164,8 @@ let understudyTargetIndex = -1;
 let understudyTake = 0;
 let understudyShowOriginal = false;
 let understudySection = 'stage';
+// The walkthrough shows controls beneath an existing draft without discarding that draft.
+let understudyTutorialStep = '';
 // The reading every take is derived from. Pinned when the target message changes, so
 // "Another take" always re-performs the ORIGINAL rather than rewriting the previous take
 // (which would drift further from the character with each pass).
@@ -171,9 +173,8 @@ let understudySourceBody = '';
 // The reader's note for THIS message. Held in module state rather than read off the DOM at
 // send time, because the textarea is unmounted while a take is generating and must come back
 // with the note intact — it deliberately survives across takes on the same message.
+// Reusable session-wide Catnip Note; target refreshes/chat switches reset drafts, not this input.
 let understudyFeedback = '';
-let understudyCatnipOnce = [];
-let understudyCatnipKey = '';
 // Immutable identity of the reading every piece of understudy state belongs to:
 // chat + message index + swipe. The index alone is not enough — swiping or regenerating the
 // last message leaves its index unchanged while replacing its content, so keying on the index
@@ -182,7 +183,6 @@ let understudyTargetKey = '';
 // Which reading the note in the box was typed against. The note has to outlive a generation
 // (it guides every take on the same message) but must not follow the user to the next one, and
 // generation-time state cannot express that: by then the note has already been sent.
-let understudyFeedbackKey = '';
 // Last run, for debugging. Also mirrored to window.copycatDebug so the whole exchange can be
 // read from the console without shipping a UI for it.
 let understudyLastRun = null;
@@ -745,12 +745,12 @@ function applyPawXaiPalette(panel, settings) {
     panel.dataset.pawxaiPalette = resolvePawXaiPaletteId(settings);
 }
 
-async function resolveCharacterPrompt(context, character, { lorebookContact = false, lorebookName = 'Weyland' } = {}) {
+async function resolveCharacterPrompt(context, character, { lorebookContact = false, lorebookName = 'Weyland', includeMasterPrompt = true } = {}) {
     const promptChoice = context.variables.global.get('PromptChoice') || 'Current Prompt';
-    const ravEntry = resolveMasterPrompt(ravs, promptChoice);
+    const ravEntry = includeMasterPrompt ? resolveMasterPrompt(ravs, promptChoice) : null;
     const htmlEnabled = context.variables.global.get('HTML!') === 'Enabled';
     const rpFocus = context.variables.global.get('RPFocus') || '';
-    const postHistory = resolvePostHistoryInstructions(ravEntry, { htmlEnabled, rpFocus });
+    const postHistory = includeMasterPrompt ? resolvePostHistoryInstructions(ravEntry, { htmlEnabled, rpFocus }) : '';
 
     let personalityText;
     if (lorebookContact) {
@@ -772,9 +772,9 @@ async function resolveCharacterPrompt(context, character, { lorebookContact = fa
         personalityText = applySpecialCase(character.name, basePersonality, {});
     }
 
-    // Shared PromptOS assembly owns feedback for every prompt. Phone requests keep their
-    // separate opt-in policy: supply the Coach slot for any selected base prompt.
-    const systemPrompt = `{{getglobalvar::Coach}}\n\n${ravEntry.teg}`;
+    // Social-app requests still use the selected master prompt. Texting resolves only the
+    // character profile and supplies its standalone phone framing in generateReply.
+    const systemPrompt = includeMasterPrompt ? `{{getglobalvar::Coach}}\n\n${ravEntry.teg}` : '';
 
     // Phone requests never carry the analysis procedure (see stripAnalysisProcedure) - only the
     // Coach/Hard Mode slot survives, and applyPhoneHardModePolicy decides whether it stays.
@@ -834,9 +834,7 @@ async function buildTetheredContext(context, conversation, { kressaObserver = fa
     const historySlice = resolveMainHistorySlice({
         chat: context.chat,
         lastLtmMessageId,
-        historyCap: kressaObserver
-            ? Math.min(15, Number.isFinite(conversation.tetheredHistoryCap) ? conversation.tetheredHistoryCap : 15)
-            : conversation.tetheredHistoryCap,
+        historyCap: conversation.tetheredHistoryCap,
     });
     const historyTranscript = formatMainHistoryTranscript(historySlice);
 
@@ -1564,12 +1562,10 @@ async function generateGroupReply(conversationId, conversation, context, setting
         const personaContext = buildPersonaContextBlock(userName, context.powerUserSettings?.persona_description);
         const systemPrompt = buildGroupSystemPrompt({
             participants: profiles,
-            worldInfo: joinNonEmptySections([
-                worldInfo.worldInfoBefore,
-                worldInfo.worldInfoAfter,
-                personaContext,
-                joinMemoriesForInjection(getPinnedMemories(settings, conversationId)),
-            ]),
+            worldInfoBefore: worldInfo.worldInfoBefore,
+            worldInfo: worldInfo.worldInfoAfter,
+            personaContext,
+            memoryBlock: joinMemoriesForInjection(getPinnedMemories(settings, conversationId)),
             textingInstructions: TEXTING_MODE_INSTRUCTIONS,
             relationshipContext: buildGroupContactContextBlock(participants, settings.contactContexts),
             finalInstructions: TEXTING_THOUGHTS_DISABLED,
@@ -1583,7 +1579,7 @@ async function generateGroupReply(conversationId, conversation, context, setting
                 : `Incoming¦${time}¦${message.speaker || participants[0]}¦${message.content}`;
         };
         const history = conversation.messages.slice(0, -1).map(message => ({ role: message.role, content: wire(message) }));
-        const messages = buildMessages({ systemPromptText: substituted, history, userMessage: wire(conversation.messages.at(-1)) });
+        const messages = buildMessages({ systemPromptText: substituted, history, userMessage: wire(conversation.messages.at(-1)), historyMaxTokens: PHONE_THREAD_MAX_TOKENS });
         const profileId = resolveProfileId(settings, context.extensionSettings.connectionManager?.selectedProfile ?? '', context.extensionSettings.connectionManager?.profiles);
         const modelOverride = resolveModelOverride({ settingsModel: settings.textingModelOverride, liveModel: context.getChatCompletionModel?.() });
         const result = await sendMessage({
@@ -1646,6 +1642,7 @@ async function generateReply(conversationId, conversation, context, settings) {
         const resolved = await resolveCharacterPrompt(context, character, {
             lorebookContact,
             lorebookName: conversation.lorebookName || 'Weyland',
+            includeMasterPrompt: false,
         });
         const isKressa = conversation.charName === 'Kressa' && conversation.isDedicatedApp === 'kressa';
         // Memories are purely additive, matching the real platform's own Weyland-LTM behavior
@@ -1690,22 +1687,7 @@ async function generateReply(conversationId, conversation, context, settings) {
         const kressaObserverInstructions = isKressa && tetheredBlock
             ? KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS
             : '';
-        const worldInfoAfterWithMemory = joinNonEmptySections([worldInfo.worldInfoAfter, memoryBlock, tetheredBlock]);
-        const systemPromptText = buildSystemPrompt({
-            systemPrompt: applyPhoneHardModePolicy(resolved.systemPrompt, {
-                allowHardMode: Boolean(isKressa ? settings.kressaHardModeEnabled : settings.phoneHardModeEnabled),
-                hardModeEnabled: isGlobalHardModeEnabled(context),
-            }),
-            worldInfoBefore: worldInfo.worldInfoBefore,
-            descriptionText: resolved.descriptionText,
-            personalityText: resolved.personalityText,
-            scenarioText: '',
-            worldInfoAfter: worldInfoAfterWithMemory,
-        });
-        // When this thread is marked "no prior history", the first-contact block sits with the
-        // texting framing (but TEXTING_MODE_INSTRUCTIONS stays last for positional weight).
-        // Kressa always knows the user. Old threads may still carry hasHistory:false from when she
-        // could be opened as a generic DM, but that stale flag must never inject stranger framing.
+        // First-contact framing is only for ordinary contacts; Kressa already knows the user.
         const firstContactBlock = !isKressa && conversation.hasHistory === false ? FIRST_CONTACT_BLOCK : '';
         const relationshipContext = buildContactContextBlock(
             character.name,
@@ -1713,20 +1695,32 @@ async function generateReply(conversationId, conversation, context, settings) {
         );
         const userName = context.name1 || 'User';
         const personaContext = buildPersonaContextBlock(userName, context.powerUserSettings?.persona_description);
-        const fullSystemPromptText = joinNonEmptySections([
-            systemPromptText,
-            resolved.postHistory,
+        const fullSystemPromptText = buildTextingSystemPrompt({
+            discussionInstructions: joinNonEmptySections([
+                isKressa ? KRESSA_PHONE_USER_INSTRUCTIONS : '',
+                kressaObserverInstructions,
+                // Preserve the separate, explicit Hard Mode opt-in without bringing back the RP prompt.
+                applyPhoneHardModePolicy('{{getglobalvar::Coach}}', {
+                    allowHardMode: Boolean(isKressa ? settings.kressaHardModeEnabled : settings.phoneHardModeEnabled),
+                    hardModeEnabled: isGlobalHardModeEnabled(context),
+                }),
+            ]),
+            relationshipContext,
+            textingInstructions: TEXTING_MODE_INSTRUCTIONS,
             personaContext,
             firstContactBlock,
-            TEXTING_MODE_INSTRUCTIONS,
-            relationshipContext,
-            kressaObserverInstructions,
-            TEXTING_THOUGHTS_DISABLED,
-        ]);
+            worldInfoBefore: worldInfo.worldInfoBefore,
+            descriptionText: resolved.descriptionText,
+            personalityText: resolved.personalityText,
+            worldInfoAfter: worldInfo.worldInfoAfter,
+            memoryBlock,
+            tetheredBlock,
+            finalInstructions: TEXTING_THOUGHTS_DISABLED,
+        });
 
         // Resolves every macro in the fully-assembled prompt — {{user}}, {{char}}, {{time}},
         // {{date}}, dice rolls, etc. — via SillyTavern's own real macro engine. This covers the
-        // character's base prompt, World Info, memories, and the [TETHERED VIEW] block all at
+        // character profile, World Info, memories, and the [TETHERED VIEW] block all at
         // once, since they're already joined into one string by this point.
         const substitutedSystemPromptText = applyMacroSubstitution({
             substituteParams: context.substituteParams,
@@ -1743,6 +1737,7 @@ async function generateReply(conversationId, conversation, context, settings) {
             systemPromptText: substitutedSystemPromptText,
             history: reconstructedHistory,
             userMessage: wrappedUserMessage,
+            historyMaxTokens: PHONE_THREAD_MAX_TOKENS,
         });
 
         const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
@@ -2636,12 +2631,6 @@ function understudySlot(context, index, swipeId) {
     return `${context.chatId ?? ''}|${index}|${swipeId}`;
 }
 
-/** Everything in an identity except the content fingerprint. */
-function understudySlotOf(key) {
-    const cut = String(key ?? '').lastIndexOf('#');
-    return cut === -1 ? String(key ?? '') : key.slice(0, cut);
-}
-
 /**
  * Cheap non-cryptographic fingerprint (FNV-1a). Only ever compared against another fingerprint
  * of the same kind, so collision resistance beyond "different text differs" is not needed, and
@@ -2685,9 +2674,9 @@ function syncUnderstudyToLiveTarget(context) {
 }
 
 /**
- * Drops everything tied to one message: the pinned source, the draft, the note, the reading
+ * Drops everything tied to one message: the pinned source, the draft, the reading
  * choice. Settings (scope, narrator, models, automation) are untouched, since those are the
- * user's standing preferences rather than work in progress.
+ * user's standing preferences rather than work in progress. The reusable Catnip Note also stays.
  */
 function clearUnderstudyWorkingState() {
     understudySourceSwipe = null;
@@ -2700,8 +2689,6 @@ function clearUnderstudyWorkingState() {
     understudyShowOriginal = false;
     understudyApplied = false;
     understudyError = '';
-    understudyFeedback = '';
-    understudyFeedbackKey = '';
 }
 
 /**
@@ -2836,17 +2823,6 @@ function renderUnderstudyScreenNow() {
     // Before anything is drawn: if the scene moved on, the old work goes with it.
     if (!understudyGenerating) syncUnderstudyToLiveTarget(context);
     const target = currentUnderstudyTarget(context, settings);
-    // Retire the note when the message under it changes, so the box the user is looking at
-    // always shows the note that will actually be sent. Doing this on render rather than on
-    // generation is what lets a note survive "Another take" on the same message.
-    const shownKey = target ? understudyIdentity(context, target.index) : '';
-    // Slot comparison, deliberately: the note belongs to the MESSAGE, and the message's text
-    // changes under it whenever the formatter re-runs. Keying the note on content would make it
-    // disappear mid-typing for reasons the user cannot see.
-    if (understudySlotOf(shownKey) !== understudySlotOf(understudyFeedbackKey)) {
-        understudyFeedback = '';
-        understudyFeedbackKey = shownKey;
-    }
     renderUnderstudyScreen(document.getElementById('wp-screen-body'), {
         target,
         draft: understudyDraft,
@@ -2858,8 +2834,8 @@ function renderUnderstudyScreenNow() {
         showOriginal: understudyShowOriginal,
         statusIndex: understudyStatusIndex,
         feedback: understudyFeedback,
-        catnipOnce: understudyCatnipKey === shownKey ? understudyCatnipOnce : [],
         section: understudySection,
+        tutorialStep: understudyTutorialStep,
         // The Instincts tab hides the thought scopes for thoughts-off characters, so it needs the
         // mode even when there's no reply to rewrite yet.
         thoughtsMode: target?.thoughtsMode ?? understudyThoughtsModeOf(resolveUnderstudyThoughtsSetting(context)),
@@ -2903,7 +2879,6 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         return;
     }
 
-    const catnipOnce = !auto && understudyCatnipKey === targetKey ? [...understudyCatnipOnce] : [];
     const messages = buildUnderstudyMessages({
         scope: scopeKey,
         characterName: target.characterName,
@@ -2917,7 +2892,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         header: target.header,
         narratorText: resolveUnderstudyNarrator(context, config.narrator),
         stageDirections: resolveUnderstudyStageDirections(context, config, target),
-        feedback: buildCatnipFeedback(config, understudySlotOf(understudyFeedbackKey) === understudySlotOf(targetKey) ? understudyFeedback : '', catnipOnce),
+        feedback: buildCatnipFeedback(config, understudyFeedback),
         allowDeviation: Boolean(config.allowDeviation),
         thoughtsSetting,
     });
@@ -3033,7 +3008,6 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         if (!scope.spanKind && understudyDraft.trim() === sourceBody.trim()) {
             pushLogLine('Copycat: the rewrite came back identical to the original');
         }
-        if (!auto && understudyCatnipKey === targetKey) understudyCatnipOnce = understudyCatnipOnce.filter(id => !catnipOnce.includes(id));
         understudyDraftModel = answeringModel;
         understudyTake++;
         understudySection = 'stage';
@@ -4214,14 +4188,11 @@ function handleScreenBodyClick(event) {
     // settings keys and redraw in place - the blurb under the row is derived from the value.
     if (event.target.closest('#wp-catnip-open')) {
         const context = SillyTavern.getContext();
-        const key = understudyIdentity(context, findUnderstudyTargetIndex(context));
-        if (understudyCatnipKey !== key) { understudyCatnipOnce = []; understudyCatnipKey = key; }
         showCatnipJar(document.getElementById('wp-panel'), {
             getConfig: () => getSettings(context.extensionSettings).understudy,
             save: () => queueWeyPhoneSave(context),
-            getOnce: () => understudyCatnipOnce,
-            setOnce: ids => { understudyCatnipOnce = ids; },
-            note: understudyFeedback,
+            getNote: () => understudyFeedback,
+            setNote: note => { understudyFeedback = note; },
             onClose: () => { if (currentView === 'understudy') renderUnderstudyScreenNow(); },
         });
         return;
@@ -4887,8 +4858,6 @@ function handleUnderstudyStageInput(event) {
     }
     if (event.target?.id === 'wp-understudy-feedback') {
         understudyFeedback = String(event.target.value ?? '');
-        const noteContext = SillyTavern.getContext();
-        understudyFeedbackKey = understudyIdentity(noteContext, findUnderstudyTargetIndex(noteContext));
         return true;
     }
     if (event.target?.id === 'wp-understudy-deviate') {
@@ -5921,12 +5890,16 @@ function openAppTutorial(appKey, replay = false) {
                 renderPawXaiScreenNow();
             }
             else {
+                understudyTutorialStep = step;
                 understudySection = step === 'instincts' ? 'edits' : 'stage';
                 if (currentView !== 'understudy') showScreen('understudy');
                 else renderUnderstudyScreenNow();
             }
         },
-        onClose(key) { if (key === 'registrar') registrarApp.closeTutorial(); },
+        onClose(key) {
+            if (key === 'registrar') registrarApp.closeTutorial();
+            if (key === 'understudy') { understudyTutorialStep = ''; if (currentView === 'understudy') renderUnderstudyScreenNow(); }
+        },
         onFinish(key) {
             const latestContext = SillyTavern.getContext();
             const latest = getSettings(latestContext.extensionSettings);
@@ -5972,6 +5945,7 @@ function narrativeSnapshot(context = SillyTavern.getContext()) {
         dose: narrativeDose(context),
         // Solo chats only: a group has no characterId, and a group never runs a special card's own prompt.
         characterName: context.characters?.[context.characterId]?.name ?? '',
+        schoolYearScript: String(globalThis.quickReplyApi?.getQrByLabel?.('Weyland', 'School Year')?.message ?? ''),
     });
 }
 
@@ -6150,7 +6124,7 @@ async function handleNarrativeAction(button) {
             await rebuildNarrativePrompts('XXX');
         } else if (action === 'set-shift') {
             const option = SHIFT_OPTIONS.find(item => item.id === value);
-            if (!option) return;
+            if (!option || option.disabled) return;
             if (option.id === 'Custom Preset') {
                 // Picking which preset happens on its own screen ("Use" applies it).
                 openCustomPresetScreen();
@@ -8003,14 +7977,12 @@ function initPanel() {
             const moved = syncUnderstudyToLiveTarget(SillyTavern.getContext());
             if (moved) {
                 closeCatnipJar(document.getElementById('wp-panel'));
-                understudyCatnipOnce = [];
-                understudyCatnipKey = '';
             }
             if (currentView === 'understudy' && (moved || eventName === 'MESSAGE_SWIPED')) renderUnderstudyScreenNow();
         });
     }
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, () => {
-        // A new chat is a new run: nothing carries over.
+        // A new chat resets message-specific work; the reusable Catnip Note stays.
         closeCatnipJar(document.getElementById('wp-panel'));
         understudyAutoLastIndex = -1;
         understudyAutoCounter = 0;
@@ -8019,10 +7991,6 @@ function initPanel() {
         understudyDraftModel = '';
         understudySourceBody = '';
         understudySourceSwipe = null;
-        understudyFeedback = '';
-        understudyFeedbackKey = '';
-        understudyCatnipOnce = [];
-        understudyCatnipKey = '';
         understudyDraft = '';
         understudyTake = 0;
         understudySection = 'stage';

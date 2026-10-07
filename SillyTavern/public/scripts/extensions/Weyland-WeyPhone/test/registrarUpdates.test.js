@@ -29,7 +29,7 @@ function fixture(t, failing = new Set()) {
     });
     app.mount(container);
     const click = action => handlers.click({ target: { closest: () => ({ dataset: typeof action === 'string' ? { rgAction: action } : action }) } });
-    return { container, click, requests, activations, failing, expressionRequests, library, items, edited };
+    return { app, container, click, requests, activations, failing, expressionRequests, library, items, edited };
 }
 
 test('scan only checks; Update all installs found updates and disappears after success', async t => {
@@ -105,4 +105,20 @@ test('Update all pauses for each edited import and cancellation leaves remaining
     assert.equal(f.requests.filter(row => row.key === 'character:2' && row.overwriteEdits).length, 1);
     assert.match(f.container.innerHTML, /All 1 update downloaded and applied/);
     assert.doesNotMatch(f.container.innerHTML, /rg-confirm-title/);
+});
+
+
+test('empty-library walkthrough uses a catalog character without saving an import', async t => {
+    const f = fixture(t);
+    await new Promise(resolve => setImmediate(resolve));
+    f.library.sources = [];
+    f.app.showTutorialStep('world-card');
+    assert.match(f.container.innerHTML, /rg-load-toggle/);
+    assert.match(f.container.innerHTML, /Character [12]/);
+    assert.equal(f.library.items.length, 0);
+    assert.equal(f.library.sources.length, 0);
+    assert.equal(f.requests.length, 0);
+    f.app.closeTutorial();
+    assert.doesNotMatch(f.container.innerHTML, /rg-load-toggle/);
+    assert.equal(f.requests.length, 0);
 });

@@ -1,4 +1,4 @@
-import { limitPhoneRequestMessages } from './requestBudget.js';
+import { limitPhoneRequestMessages, limitRecentHistory } from './requestBudget.js';
 import { withGeminiBypass } from './phonePromptPolicy.js';
 import { withMessageDate } from './messageTime.js';
 
@@ -26,20 +26,43 @@ export function buildSystemPrompt({ systemPrompt, worldInfoBefore, descriptionTe
     return joinNonEmptySections([systemPrompt, worldInfoBefore, descriptionText, personalityText, scenarioText, worldInfoAfter]);
 }
 
-export function buildGroupSystemPrompt({ participants, worldInfo = '', textingInstructions = '', relationshipContext = '', finalInstructions = '' }) {
+// Texting owns its framing; the main roleplay prompt and its closing directives do not belong here.
+export function buildTextingSystemPrompt({ discussionInstructions, relationshipContext, textingInstructions,
+    personaContext, firstContactBlock, worldInfoBefore, descriptionText, personalityText,
+    worldInfoAfter, memoryBlock, tetheredBlock, finalInstructions }) {
+    // Explicit boundaries separate operating instructions from profiles and reference material.
+    // Wrap the original strings verbatim; never rewrite character or lorebook wording here.
+    return [
+        ['DISCUSSION INSTRUCTIONS', discussionInstructions],
+        ['RELATIONSHIP CONTEXT', relationshipContext],
+        ['TEXTING RULES', textingInstructions],
+        ['USER PERSONA', personaContext],
+        ['FIRST CONTACT', firstContactBlock],
+        ['LORE BEFORE PROFILE', worldInfoBefore],
+        ['CHARACTER DESCRIPTION', descriptionText],
+        ['CHARACTER PERSONALITY', personalityText],
+        ['LORE AFTER PROFILE', worldInfoAfter],
+        ['PHONE MEMORIES', memoryBlock],
+        ['SHARED ROLEPLAY CONTEXT', tetheredBlock],
+        ['FINAL REPLY INSTRUCTIONS', finalInstructions],
+    ]
+        .filter(([, content]) => typeof content === 'string' && content.trim().length > 0)
+        .map(([name, content]) => `[WEYPHONE SECTION: ${name}]\n${content}\n[END WEYPHONE SECTION: ${name}]`)
+        .join('\n\n');
+}
+
+export function buildGroupSystemPrompt({ participants, worldInfo = '', worldInfoBefore = '',
+    personaContext = '', memoryBlock = '', textingInstructions = '', relationshipContext = '', finalInstructions = '' }) {
     const profiles = participants.map(participant => `## ${participant.name}\n${participant.personalityText}`).join('\n\n');
     const names = participants.map(participant => participant.name).join(', ');
-    return joinNonEmptySections([
-        `[GROUP TEXT THREAD]\nThis is a private group chat between {{user}} and ${names}.\n` +
-        'Write only messages from these named participants. Each may send zero or multiple short, natural texts.\n' +
-        'Every reply line must be exactly: Incoming¦time¦speaker name¦message\n' +
-        "Never write {{user}}'s messages and never merge speakers.",
-        profiles,
-        worldInfo,
-        textingInstructions,
-        relationshipContext,
-        finalInstructions,
-    ]);
+    return buildTextingSystemPrompt({
+        discussionInstructions: `[GROUP TEXT THREAD]\nThis is a private group chat between {{user}} and ${names}.\n` +
+            'Write only messages from these named participants. Each may send zero or multiple short, natural texts.\n' +
+            'Every reply line must be exactly: Incoming¦time¦speaker name¦message\n' +
+            "Never write {{user}}'s messages and never merge speakers.",
+        relationshipContext, textingInstructions, personaContext, worldInfoBefore,
+        personalityText: profiles, worldInfoAfter: worldInfo, memoryBlock, finalInstructions,
+    });
 }
 
 /**
@@ -78,32 +101,26 @@ export function reconstructHistoryAsPhoneFormat(history, { charName, userName },
 }
 
 /**
- * @param {{systemPromptText: string, history: Array<{role: string, content: string}>, userMessage: string}} options
+ * @param {{systemPromptText: string, history: Array<{role: string, content: string}>, userMessage: string, historyMaxTokens?: number|null}} options
  */
-export function buildMessages({ systemPromptText, history, userMessage }) {
+export function buildMessages({ systemPromptText, history, userMessage, historyMaxTokens = null }) {
+    // Texting opts into its own history allowance, including the latest queued text.
+    // Other phone apps retain their existing request assembly and overall budget.
+    const thread = [...history, { role: 'user', content: userMessage }];
+    const boundedThread = historyMaxTokens === null ? thread : limitRecentHistory(thread, historyMaxTokens);
     const messages = [{ role: 'system', content: systemPromptText }];
-    // Coalesce consecutive same-role entries in `history` into a single message each, so the
+    // Coalesce consecutive same-role entries, including the latest text, into a single message each, so the
     // final messages array always strictly alternates user/assistant. Multi-message bursts
     // (e.g. several "Incoming¦" lines parsed out of one reply) are stored as separate
     // same-role history entries upstream, which would otherwise produce non-alternating
     // sequences that some chat-completion backends reject or mishandle.
-    for (const entry of history) {
+    for (const entry of boundedThread) {
         const last = messages[messages.length - 1];
         if (last && last.role === entry.role) {
             last.content = `${last.content}\n${entry.content}`;
         } else {
             messages.push({ role: entry.role, content: entry.content });
         }
-    }
-    // Same coalescing applies at the history/userMessage boundary: if the last (coalesced)
-    // history entry is also role:'user' (e.g. a dangling user turn left over from a failed
-    // generation, or discardTrailingReply leaving the conversation ending on 'user'), merge
-    // the trailing userMessage into it instead of pushing a second adjacent user message.
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage && lastMessage.role === 'user') {
-        lastMessage.content = `${lastMessage.content}\n${userMessage}`;
-    } else {
-        messages.push({ role: 'user', content: userMessage });
     }
     return messages;
 }

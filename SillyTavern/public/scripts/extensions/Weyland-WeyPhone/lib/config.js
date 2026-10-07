@@ -50,15 +50,13 @@ export const defaultSettings = Object.freeze({
     calculatorPalette: 'graphite',
     // Understudy: second-model rewrite pass over the last reply. gemini-3.8-flash is the default
     // on measured results - it rewrites properly where others polish. deepseek-v4-pro-thinking is
-    // the backup; its NON-thinking sibling returned near-identical text and is not offered.
+    // the recommended optional backup; its NON-thinking sibling returned near-identical text and is not offered.
     understudy: {
         // Visible Copycat theme. The internal object name is retained for saved-setting compatibility.
         palette: 'opening-night',
         modelOverride: 'gemini-3.8-flash',
-        // Deliberately NOT the house minimax-m3 fallback: this app needs a strong rewriter, and a
-        // weak-prose backup defeats the point of the retry. The fallback stays inside the
-        // gemini-3.8-flash / deepseek-v4-pro-thinking pair.
-        fallbackModel: 'deepseek-v4-pro-thinking',
+        // Backup retries are opt-in; recommend DeepSeek V4 Pro Thinking in the picker.
+        fallbackModel: '',
         scope: 'full',
         contextMessages: 5,
         // Weyland narrator persona to write the rewrite in the style of. 'off' = no modifier,

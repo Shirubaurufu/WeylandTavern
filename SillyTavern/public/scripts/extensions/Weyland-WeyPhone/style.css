@@ -3497,8 +3497,9 @@
     letter-spacing: 0.02em;
 }
 #wp-panel[data-app="kressa"] .wp-message.wp-user::before { content: none; }
-#wp-panel[data-app="kressa"] .wp-message.wp-char + .wp-message.wp-char { margin-top: 0; }
-#wp-panel[data-app="kressa"] .wp-message.wp-char + .wp-message.wp-char::before { display: none; }
+/* Bubbles live inside rows; group consecutive reply rows rather than bubble siblings. */
+#wp-panel[data-app="kressa"] .wp-char-row + .wp-char-row .wp-message.wp-char { margin-top: 0; }
+#wp-panel[data-app="kressa"] .wp-char-row + .wp-char-row .wp-message.wp-char::before { display: none; }
 
 /* Rounded pill input: a cozy assistant composer with both queue and reply actions inside. */
 #wp-panel[data-app="kressa"] #wp-input-row {
@@ -4926,8 +4927,7 @@ html body .st-modal-overlay#wbv-modal-overlay {
     --en-good: #75d5a4;
     --wp-app-accent: var(--en-accent) !important;
 }
-/* Mossy Window: deep pine, warm sunlight, and a place to curl up. Deliberately outside
-   the plum family so the picker offers a real alternative rather than a shade. */
+/* Green Bean: deep pine, warm sunlight, and a place to curl up. */
 #wp-panel[data-app="understudy"][data-copycat-palette="green-room"] {
     --en-bg: #0d1512; --en-surface: #14201b; --en-surface-2: #1d3a30;
     --en-text: #f2f6ef; --en-muted: #9db3a5; --en-accent: #d8a657; --en-accent-2: #2f6b52;
@@ -5578,6 +5578,7 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 #wp-panel[data-app="narrative"] .wp-narrative-dose-btn:disabled { opacity: .5; cursor: not-allowed; }
 #wp-panel[data-app="narrative"] .wp-narrative-dose-btn.is-armed, #wp-panel[data-app="narrative"] .wp-narrative-dose-btn.is-live { border-color: var(--wn-accent); background: var(--wn-accent); color: #fff; }
 #wp-panel[data-app="narrative"] .wp-narrative-shift-card.is-armed .wp-narrative-shift-key:not(:disabled) { border-style: dashed; border-color: color-mix(in srgb, var(--wn-accent) 55%, var(--wn-line)); }
+#wp-panel[data-app="narrative"] .wp-narrative-shift-key:disabled { filter: grayscale(1); }
 #wp-panel[data-app="narrative"] .wp-narrative-shift-readout { padding: 6px; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255, 217, 204, .08), 0 2px 5px rgba(58, 18, 6, .25); }
 #wp-panel[data-app="narrative"] .wp-narrative-readout-val { margin: 6px 0 4px; font-size: 20px; line-height: 1.1; color: var(--wn-shift-color, var(--wn-accent)); text-shadow: 0 0 8px color-mix(in srgb, var(--wn-shift-color, var(--wn-accent)) 40%, transparent); text-transform: uppercase; overflow-wrap: anywhere; }
 #wp-panel[data-app="narrative"] .wp-narrative-readout-say { font-size: 10.5px; line-height: 1.5; color: rgba(255, 217, 204, .7); }
@@ -5782,8 +5783,8 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 .wp-copycat-nav-button.wp-active { color: var(--en-bg); background: var(--en-accent); }
 .wp-copycat-nav-button > span { min-width: 16px; padding: 1px 4px; border-radius: 9px; background: rgba(0,0,0,.2); font-size: 8px; }
 .wp-copycat-content { display: flex; flex-direction: column; gap: 10px; padding: 11px 10px 0; }
-.wp-copycat-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 1px 2px; }
-.wp-copycat-section-head > div { display: flex; flex-direction: column; gap: 2px; }
+.wp-copycat-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 1px 2px; }
+.wp-copycat-section-head > div { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 7px; }
 .wp-copycat-section-head span { color: var(--en-accent); font-size: 8.5px; font-weight: 850; text-transform: uppercase; letter-spacing: .08em; }
 .wp-copycat-section-head strong { font-size: 14px; line-height: 1.15; }
 .wp-copycat-section-head > small { color: var(--en-muted); font-size: 8.5px; text-align: right; }
@@ -5990,7 +5991,8 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 }
 .wp-copycat-refresh:hover { color: var(--en-text, #f3e7ea); border-color: var(--en-accent, #ff747c); }
 .wp-copycat-section-sub {
-    margin: -4px 2px 10px;
+    margin: 0;
+    line-height: 1.5;
     font-size: 11px;
     color: var(--en-muted, rgba(243, 231, 234, 0.55));
 }

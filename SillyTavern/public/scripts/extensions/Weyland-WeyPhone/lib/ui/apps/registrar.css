@@ -237,3 +237,12 @@
     text-transform: none; letter-spacing: 0; white-space: nowrap; width: auto;
 }
 .rg-app .rg-list-heading .rg-expr-toggle[aria-pressed="true"] { background: #e3eed9; border-color: #4f7a4a; color: #2f5129; }
+
+.rg-footer-credit { flex: 0 0 100%; text-align: center; }
+.rg-footer-credit span { display: block; }
+.rg-scan-note { display: block; padding-left: 8px; margin-top: 3px; }
+.rg-app .rg-settings-row.rg-scan-updates { flex-direction: row; align-items: center; }
+.rg-scan-updates > div { min-width: 0; flex: 1; }
+.rg-scan-updates > button { white-space: nowrap; }
+.rg-list-heading:has(.rg-library-kind) { flex-wrap: wrap; gap: 6px; }
+.rg-list-heading .rg-library-kind { margin-left: auto; }

@@ -108,7 +108,9 @@ function roleplayShiftCard(snapshot) {
     const isHard = snapshot.shift === 'Hard Mode';
     const dose = snapshot.dose;
     const armed = Boolean(snapshot.doseArmed && snapshot.hasChat && !dose);
-    const selected = SHIFT_OPTIONS.find(option => option.id === (snapshot.shift || 'None')) || SHIFT_OPTIONS[0];
+    const selected = snapshot.shift === 'General-Use'
+        ? { id: 'General-Use', label: 'General-Use', description: 'Previously saved course correction.' }
+        : SHIFT_OPTIONS.find(option => option.id === (snapshot.shift || 'None')) || SHIFT_OPTIONS[0];
     const regularName = selected.id === 'Custom Preset' && snapshot.customPreset ? `Custom: ${snapshot.customPreset.name}` : selected.label;
     // `whisper` is the small centred line under a dose's description (Lucky's ask: say the range,
     // never the actual count).
@@ -181,10 +183,10 @@ const SHIFT_COLORS = {
 /** One shift key: the original choice button, compact. Armed, it doses instead of setting, and the
  * choices that can't be dosed (None) are disabled. The full description is the button's tooltip. */
 function shiftKey(option, snapshot, armed) {
-    const selected = !armed && (snapshot.shift || 'None') === option.id;
+    const selected = !option.disabled && !armed && (snapshot.shift || 'None') === option.id;
     const canDose = DOSE_OPTIONS.some(item => item.id === option.id);
     return `
-                <button type="button" class="wp-narrative-choice wp-narrative-shift-key${selectedClass(selected)}" data-narrative-action="${armed ? 'start-dose' : 'set-shift'}" data-value="${escapeHtml(option.id)}" aria-pressed="${selected}" title="${escapeHtml(option.description)}" ${armed && !canDose ? 'disabled' : ''}>
+                <button type="button" class="wp-narrative-choice wp-narrative-shift-key${selectedClass(selected)}" ${option.disabled ? 'disabled aria-disabled="true"' : `data-narrative-action="${armed ? 'start-dose' : 'set-shift'}" data-value="${escapeHtml(option.id)}"`} aria-pressed="${selected}" title="${escapeHtml(option.description)}" ${armed && !canDose && !option.disabled ? 'disabled' : ''}>
                     <span class="wp-narrative-choice-dot" aria-hidden="true"></span><strong>${escapeHtml(option.id === 'Custom Preset' ? 'Custom' : option.label)}</strong>
                 </button>`;
 }
@@ -361,6 +363,7 @@ function essentials(snapshot) {
     ${roleplayShiftCard(snapshot)}
     <section class="wp-narrative-card">
         <div class="wp-narrative-card-heading"><div><span>Character setup</span><h3>Change School Year or Scenario</h3></div><i class="fa-solid fa-graduation-cap"></i></div>
+        ${snapshot.hasChat ? `<p class="wp-narrative-current-scenario"><strong>Current:</strong> ${escapeHtml([snapshot.startingYear, snapshot.schoolYear, snapshot.scenario].filter(Boolean).join(' · ') || 'Original greeting')}</p>` : ''}
         <p>Allows you to set the internal year forward and jump to other roleplay greetings, along with their embedded context entries.</p>
         <button type="button" class="wp-narrative-primary" data-narrative-action="school-year" ${snapshot.hasChat ? '' : 'disabled'}>Choose year or scenario <i class="fa-solid fa-chevron-right"></i></button>
     </section>

@@ -1,5 +1,7 @@
 import { characterNamesEquivalent } from './characterIdentity.js';
 
+export const PHONE_WORLD_INFO_SCAN_DEPTH = 15;
+
 function filteredTraitTerms(entry) {
     return String(entry?.comment ?? '')
         .replace(/\s+Trait(?:\s+-.*)?$/i, '')
@@ -36,12 +38,20 @@ function entryMatchesPhoneCharacters(entry, characterNames = [], characterContex
  * @param {{characterNames?: string[], characterContext?: string}} [options]
  */
 export function scanEntries(entries, history, { characterNames = [], characterContext = '' } = {}) {
-    const text = history.map(m => m.content ?? '').join('\n').toLowerCase();
+    const messages = history.map(m => m.content ?? '');
+    const text = messages.slice(-PHONE_WORLD_INFO_SCAN_DEPTH).join('\n').toLowerCase();
     const matched = entries.filter(entry => {
         if (entry.disable) return false;
         if (entry.constant) return entryMatchesPhoneCharacters(entry, characterNames, characterContext);
+        // A persisted phone thread can span many different roleplays. Honor the entry's
+        // explicit scan depth so an old mention does not keep a subbot active forever.
+        // Null/unset uses WeyPhone's 15-bubble default; explicit entry overrides still win.
+        const depth = entry.scanDepth;
+        const scanText = Number.isInteger(depth) && depth >= 0
+            ? (depth === 0 ? '' : messages.slice(-depth).join('\n').toLowerCase())
+            : text;
         const keys = entry.key ?? [];
-        return keys.some(key => typeof key === 'string' && key.length > 0 && text.includes(key.toLowerCase()));
+        return keys.some(key => typeof key === 'string' && key.length > 0 && scanText.includes(key.toLowerCase()));
     });
     return matched.map(entry => entry.content).filter(Boolean).join('\n');
 }

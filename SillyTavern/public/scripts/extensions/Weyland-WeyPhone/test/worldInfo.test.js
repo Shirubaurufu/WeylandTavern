@@ -118,6 +118,21 @@ test('scanEntries includes constant entries regardless of keyword match', () => 
     assert.equal(scanEntries(entries, history), 'Always included');
 });
 
+test('an old Kiera mention cannot outlive the subbot entry’s two-message scan depth', () => {
+    const entry = { key: ['Kiera', '!Kiera'], content: '[KIERA INFO] profile', scanDepth: 2, constant: false };
+    const history = [
+        { role: 'user', content: 'What do you know about Kiera?' },
+        ...Array.from({ length: 30 }, () => ({ role: 'user', content: 'Look at this Rivera scene.' })),
+    ];
+    const before = structuredClone(history);
+    assert.equal(scanEntries([entry], history), '');
+    assert.deepEqual(history, before);
+    history.push({ role: 'user', content: 'Now tell me about Kiera.' });
+    assert.equal(scanEntries([entry], history), entry.content);
+    assert.equal(scanEntries([{ ...entry, scanDepth: 0 }], history), '');
+    assert.equal(scanEntries([{ ...entry, constant: true, scanDepth: 0 }], history), entry.content);
+});
+
 test('scanEntries does not apply another character tag-filtered constant to phone requests', () => {
     const entries = [
         { content: 'Global campus lore', constant: true, characterFilter: { names: [], tags: [] } },
@@ -366,4 +381,17 @@ test('resolveWorldInfoUntethered scans a conversation-specific Registrar book wi
     });
     assert.deepEqual(calls, ['Weyland', 'Weyland Registrar']);
     assert.match(result.worldInfoBefore, /Weyland Registrar lore/);
+});
+
+test('phone default lore scan includes the fifteenth bubble and excludes the sixteenth', () => {
+    const entry = {key: ['Kiera'], content: 'Kiera lore'};
+    const history = [{role: 'user', content: 'Kiera'},
+        ...Array.from({length: 14}, () => ({role: 'assistant', content: 'Rivera scene'}))];
+    assert.equal(scanEntries([entry], history), entry.content);
+    history.push({role: 'user', content: 'Rivera'});
+    for (const scanDepth of [undefined, null, -1]) {
+        assert.equal(scanEntries([{...entry, scanDepth}], history), '');
+    }
+    assert.equal(scanEntries([{...entry, scanDepth: 16}], history), entry.content);
+    assert.equal(scanEntries([{...entry, constant: true}], history), entry.content);
 });

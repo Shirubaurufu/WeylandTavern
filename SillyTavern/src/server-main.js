@@ -18,6 +18,7 @@ import bodyParser from 'body-parser';
 // local library imports
 import './fetch-patch.js';
 import { serverDirectory } from './server-directory.js';
+import { removeDuplicateWeylandLtm } from './weyland-ltm-cleanup.js';
 
 import { serverEvents, EVENT_NAMES } from './server-events.js';
 import { loadPlugins } from './plugin-loader.js';
@@ -398,6 +399,9 @@ initUserStorage(globalThis.DATA_ROOT)
     .then(setDnsResolutionOrder)
     .then(ensurePublicDirectoriesExist)
     .then(migrateUserData)
+    // Run after legacy migration (which can copy old extensions into user data), but before
+    // listening, so Windows/Termux browsers cannot register the retired LTM copy.
+    .then(() => removeDuplicateWeylandLtm({ serverRoot: serverDirectory, dataRoot: globalThis.DATA_ROOT }))
     .then(migrateSystemPrompts)
     .then(verifySecuritySettings)
     .then(preSetupTasks)

@@ -3,12 +3,13 @@ import { normalizeRegistrarFilters } from './registrarFilters.js';
 
 /** A self-contained screen controller. Host functions keep tests and previews off real user data. */
 export function createRegistrarApp(host) {
-    const state = { tab: 'character', query: '', sort: 'updated', page: 0, detail: null, history: [], items: [], library: null, loading: false, busy: false, active: false, error: '', notice: '', confirm: null, tokenCost: false, settingsOpen: false, scanResult: '', autoActivateNewImports: true };
+    const state = { tab: 'character', libraryKind: 'character', tutorialStep: '', query: '', sort: 'updated', page: 0, detail: null, history: [], items: [], library: null, loading: false, busy: false, active: false, error: '', notice: '', confirm: null, tokenCost: false, settingsOpen: false, scanResult: '', autoActivateNewImports: true };
     let container;
     let root;
     let generation = 0;
     let lastLoad = 0;
     let searchTimer;
+    let tutorialCharacter;
     state.pendingUpdates = [];
     state.updatingAll = false;
     state.expressionStatus = null;
@@ -44,7 +45,15 @@ export function createRegistrarApp(host) {
         // typed (typing "tsun" produced "sunt"). Capture and restore the selection explicitly.
         const selectionStart = focused ? searchInput.selectionStart : null;
         const selectionEnd = focused ? searchInput.selectionEnd : null;
-        renderRegistrar(container, state);
+        // A tutorial-only catalog example never enters the saved library or enables lore.
+        let displayState = state;
+        if (state.tutorialStep && state.tab === 'library' && !state.library?.items.some(item => item.kind === 'character')) {
+            const characters = state.items.filter(item => item.kind === 'character');
+            tutorialCharacter ??= characters[Math.floor(Math.random() * characters.length)];
+            const example = { ...(tutorialCharacter || { key: 'character:example', kind: 'character', id: 'example', name: 'Example character', summary: 'A downloaded character appears here.' }), active: true, members: [] };
+            displayState = { ...state, libraryKind: 'character', library: { ...state.library, items: [...(state.library?.items ?? []), example], sources: [...(state.library?.sources ?? []), example], entryCount: state.library?.entryCount ?? 0 } };
+        }
+        renderRegistrar(container, displayState);
         root = container.firstElementChild;
         container.scrollTop = resetScroll ? 0 : top;
         bind();
@@ -171,6 +180,7 @@ export function createRegistrarApp(host) {
             const d = button.dataset;
             if (d.rgTab) { state.tab = d.rgTab; state.detail = null; state.history = []; state.page = 0; state.query = ''; state.notice = ''; draw(true); }
             if (d.rgOpen) { if (state.detail) state.history.push(state.detail); state.detail = d.rgOpen; state.notice = ''; draw(true); }
+            if (state.tutorialStep && [d.rgInstall, d.rgRemove, d.rgToggle].includes(tutorialCharacter?.key) && tutorialCharacter) return;
             if (d.rgInstall && !state.busy) {
                 const item = state.items.find(row => row.key === d.rgInstall);
                 const startPaused = !state.autoActivateNewImports;
@@ -225,7 +235,8 @@ export function createRegistrarApp(host) {
             state.query = event.target.value; clearTimeout(searchTimer);
             searchTimer = setTimeout(() => { state.page = 0; draw(); }, 250);
         });
-        root.querySelector('.rg-list-heading select')?.addEventListener('change', event => { state.sort = event.target.value; state.page = 0; draw(); });
+        root.querySelector('.rg-sort')?.addEventListener('change', event => { state.sort = event.target.value; state.page = 0; draw(); });
+        root.querySelector('.rg-library-kind')?.addEventListener('change', event => { state.libraryKind = event.target.value; state.page = 0; draw(true); });
         root.querySelector('#rg-autoload-toggle')?.addEventListener('change', event => {
             state.autoActivateNewImports = event.target.checked;
             host.setAutoActivateNewImports(state.autoActivateNewImports);
@@ -263,6 +274,8 @@ export function createRegistrarApp(host) {
     return {
         // Read-only navigation for the guide, using the actual catalog and library.
         showTutorialStep(step) {
+            state.tutorialStep = step;
+            state.libraryKind = 'character';
             state.confirm = null;
             state.tokenCost = false;
             state.settingsOpen = step === 'settings';
@@ -276,7 +289,7 @@ export function createRegistrarApp(host) {
             }
             draw(true);
         },
-        closeTutorial() { state.settingsOpen = false; state.tokenCost = false; draw(); },
+        closeTutorial() { state.tutorialStep = ''; tutorialCharacter = null; state.settingsOpen = false; state.tokenCost = false; draw(); },
         mount(target) {
             container = target;
             state.autoActivateNewImports = host.getAutoActivateNewImports();

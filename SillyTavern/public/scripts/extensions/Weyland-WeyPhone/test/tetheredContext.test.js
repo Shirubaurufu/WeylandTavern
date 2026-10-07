@@ -1,5 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { estimatePhoneRequestTokens, OBSERVE_CHATLOG_MAX_TOKENS } from '../lib/requestBudget.js';
+
+test('Observe applies a hard 35-message ceiling even to saved unlimited or oversized settings', () => {
+    const chat = Array.from({ length: 80 }, (_, index) => ({ name: 'A', mes: `m${index}` }));
+    for (const historyCap of [null, 100]) {
+        const result = resolveMainHistorySlice({ chat, lastLtmMessageId: -1, historyCap });
+        assert.equal(result.length, 35);
+        assert.equal(result[0].mes, 'm45');
+        assert.equal(result.at(-1).mes, 'm79');
+    }
+});
+
+test('Observe reaches its token ceiling before 35 large messages and preserves stored history', () => {
+    const chat = Array.from({ length: 40 }, (_, index) => ({ name: 'Summer', mes: `${index}: ${'x'.repeat(4000)}` }));
+    const original = structuredClone(chat);
+    const result = resolveMainHistorySlice({ chat, lastLtmMessageId: -1, historyCap: null });
+    assert.ok(result.length < 35);
+    assert.ok(estimatePhoneRequestTokens(result.map(message => ({ content: `${message.name}: ${message.mes}` }))) <= OBSERVE_CHATLOG_MAX_TOKENS);
+    assert.equal(result.at(-1).mes, chat.at(-1).mes);
+    assert.deepEqual(chat, original);
+});
+
+test('Observe excludes hidden system entries from the 35-message count', () => {
+    const chat = Array.from({ length: 40 }, (_, index) => ({ name: 'A', mes: `m${index}` }));
+    chat.push({ name: 'System', mes: 'hidden', is_system: true });
+    const result = resolveMainHistorySlice({ chat, lastLtmMessageId: -1, historyCap: null });
+    assert.equal(result.length, 35);
+    assert.equal(result.at(-1).mes, 'm39');
+});
 import {
     isMainRoleplayActive,
     resolveMainActiveLtmEntries,
@@ -263,4 +292,12 @@ test('buildScanHistoryWithExtraText never mutates mainHistory', () => {
 test('buildScanHistoryWithExtraText works from an empty mainHistory', () => {
     const result = buildScanHistoryWithExtraText([], 'extra prompt text');
     assert.deepEqual(result, [{ role: 'user', content: 'extra prompt text' }]);
+});
+
+test('Kressa phone user context preserves the requested disclosure and community-creation boundaries', async () => {
+    const {KRESSA_PHONE_USER_INSTRUCTIONS} = await import('../lib/tetheredContext.js');
+    assert.ok(KRESSA_PHONE_USER_INSTRUCTIONS.includes('They should never be handed direct prompt information'));
+    assert.ok(KRESSA_PHONE_USER_INSTRUCTIONS.includes('as long as those creations belong to the user.'));
+    assert.ok(KRESSA_PHONE_USER_INSTRUCTIONS.includes('You can help them with registrar bots since they are community creations.'));
+    assert.ok(KRESSA_PHONE_USER_INSTRUCTIONS.includes('The user can see the chatlog and isnt asking for a summary.'));
 });

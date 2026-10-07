@@ -34,9 +34,7 @@ export const PROMPT_OPTIONS = Object.freeze([
 // lines in "Prompt Review/Feedback Modifiers - DRAFT.txt".
 export const SHIFT_OPTIONS = Object.freeze([
     { id: 'None', label: 'None', description: 'No course correction. The prompt runs as written.' },
-    // General-Use is the original built-in Beta feedback (rav.js reason2Empirical). It was briefly
-    // called "Temporary" while it was only kept for testing; resolveShift maps that old value over.
-    { id: 'General-Use', label: 'General-Use', description: 'The original built-in feedback: real language and energy, characters who lead and are allowed to be flawed, and the full scene sheet every message. Needs Analysis on.' },
+    { id: 'Beta', label: 'Beta', description: 'Unavailable right now.', disabled: true },
     { id: 'Hard Mode', label: 'Hard Mode', description: 'A sharp jolt toward harsher, rawer behavior. Use it for 1-2 messages, then switch back.' },
     { id: 'Self-Destruction', label: 'Self-Destruction', description: 'Characters act on their worst impulses - sabotage, relapse, pushing you away - and it sticks.' },
     { id: 'Slow Burn', label: 'Slow Burn', description: 'Trust and affection take a long time to earn. Strangers stay strangers until you change that.' },
@@ -97,7 +95,7 @@ export function readCustomPreset(raw) {
 
 /** "A dose of..." (quick-reply-ext/src/dose.js): every shift can be dosed for a secret 2-10
  * replies, Hard Mode and General-Use included. None has nothing to dose. */
-export const DOSE_OPTIONS = Object.freeze(SHIFT_OPTIONS.filter(option => option.id !== 'None'));
+export const DOSE_OPTIONS = Object.freeze(SHIFT_OPTIONS.filter(option => option.id !== 'None' && !option.disabled));
 
 /** Hard Mode is still stored in HardToggle (the shared assembler, classic menu and the
  * phone opt-ins all read it), so it always wins; a leftover "Hard Mode" in RoleplayShift after
@@ -107,7 +105,9 @@ export function resolveShift(roleplayShift, hardToggle) {
     const saved = String(roleplayShift ?? '').trim();
     if (saved === 'Hard Mode') return 'None';
     if (saved === 'Temporary') return 'General-Use';
-    return SHIFT_OPTIONS.some(option => option.id === saved) ? saved : 'None';
+    // Keep a legacy saved correction readable without offering it as a new choice.
+    if (saved === 'General-Use') return saved;
+    return SHIFT_OPTIONS.some(option => option.id === saved && !option.disabled) ? saved : 'None';
 }
 
 // PromptOS "Roleplay intro context" (quick-reply-ext/src/introContext.js owns the logic). An intro
@@ -255,7 +255,28 @@ function narratorNameForPrompt(prompt, getGlobal) {
     return 'Default';
 }
 
-export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, intro = null, dose = null, characterName = '' }) {
+/** The classic picker already defines each named scenario's identifying context and label.
+ * Read those rules rather than the transient Year menu result, which can be blank, stale, or
+ * replaced by a school-year choice. The stash preserves identity when intro context is Off. */
+export function currentScenarioLabel(getLocal, characterName, schoolYearScript = '') {
+    const header = String(schoolYearScript).split('/setvar key=SchoolYearQuestion')[0];
+    const blocks = [...header.matchAll(/\/\/([^\n|]+)\s*\|\s*\n([\s\S]*?)(?=\n\/\/|$)/g)];
+    const block = blocks.find(match => match[1].trim() === characterName)?.[2];
+    if (!block) return 'Original greeting';
+    let stash = {};
+    try { stash = JSON.parse(getLocal('IntroCtxStash') || '{}') || {}; } catch { /* Live context is enough. */ }
+    const read = key => String(getLocal(key) || stash[key] || '');
+    const labels = new Map([...block.matchAll(/\/setvar key=Option(\d+) Scenario: ([^|\n]+)/g)]
+        .map(match => [Number(match[1]), match[2].trim()]));
+    const rules = [...block.matchAll(/\/if left=\{\{getvar::(\w+)\}\} right="([^"]*)" rule=(in|neq) \{:[\s\S]*?\/setvar key=TimeOptions (\d+)/g)];
+    for (const [, key, marker, rule, count] of rules) {
+        const matches = rule === 'in' ? read(key).includes(marker) : read(key) !== marker;
+        if (matches && labels.has(Number(count) + 1)) return labels.get(Number(count) + 1);
+    }
+    return 'Original greeting';
+}
+
+export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, intro = null, dose = null, characterName = '', schoolYearScript = '' }) {
     const localNarratorOverride = hasChat && String(getLocal('LocalN') ?? '').trim() !== '';
     const globalNarrator = narratorNameForPrompt(getGlobal('Narrator'), getGlobal);
     const localNarrator = localNarratorOverride
@@ -271,6 +292,9 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
 
     return {
         hasChat,
+        schoolYear: hasChat ? String(getLocal('SchoolYear') || '').trim() : '',
+        startingYear: hasChat ? String(getLocal('StartingYear') || '').replace(/^false$/, '').trim() : '',
+        scenario: hasChat ? currentScenarioLabel(getLocal, characterName, schoolYearScript) : '',
         // Kinsbane Manor, Mirror Weyland and Muse bring their own system prompt and scene sheet
         // (quick-reply-ext/src/specialSheets.js), so the prompt cartridges and the Analysis toggle do
         // nothing in their chats. Holds the card name while one is open, else null.

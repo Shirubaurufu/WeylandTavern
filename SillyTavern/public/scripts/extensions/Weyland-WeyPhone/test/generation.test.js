@@ -1,7 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution } from '../lib/generation.js';
+import { buildTextingSystemPrompt, buildSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution } from '../lib/generation.js';
 import { WEYPHONE_GEMINI_BYPASS } from '../lib/phonePromptPolicy.js';
+import { estimatePhoneRequestTokens, PHONE_THREAD_MAX_TOKENS } from '../lib/requestBudget.js';
+
+test('texting history has a separate 10K allowance including the latest text, without shortening the profile', () => {
+    const history = Array.from({ length: 60 }, (_, index) => ({
+        role: index % 2 ? 'assistant' : 'user', content: `${index}: ${'x'.repeat(2000)}`,
+    }));
+    const original = structuredClone(history);
+    const messages = buildMessages({ systemPromptText: 'PROFILE'.repeat(1000), history,
+        userMessage: 'latest queued text', historyMaxTokens: PHONE_THREAD_MAX_TOKENS });
+    assert.equal(messages[0].content, 'PROFILE'.repeat(1000));
+    assert.ok(estimatePhoneRequestTokens(messages.slice(1)) <= PHONE_THREAD_MAX_TOKENS);
+    assert.equal(messages.at(-1).content, 'latest queued text');
+    assert.ok(!messages.some(message => message.content.startsWith('0: ')));
+    assert.ok(messages.some(message => message.content.startsWith('59: ')));
+    assert.deepEqual(history, original);
+});
 
 test('buildSystemPrompt joins non-empty sections in main->WIbefore->description->personality->scenario->WIafter order', () => {
     const result = buildSystemPrompt({
@@ -27,7 +43,7 @@ test('buildSystemPrompt skips empty/whitespace-only sections', () => {
     assert.equal(result, 'MAIN\n\nPERSONALITY\n\nWIAFTER');
 });
 
-test('group prompts place relationship context near the end before the final no-thoughts rule', () => {
+test('group texting puts relationship and texting rules before profiles and lore', () => {
     const result = buildGroupSystemPrompt({
         participants: [{ name: 'Miu', personalityText: 'warm' }, { name: 'Bastet', personalityText: 'prickly' }],
         worldInfo: 'WORLD INFO',
@@ -35,8 +51,9 @@ test('group prompts place relationship context near the end before the final no-
         relationshipContext: 'RELATIONSHIP CONTEXT',
         finalInstructions: 'THOUGHTS DISABLED',
     });
-    assert.ok(result.indexOf('WORLD INFO') < result.indexOf('TEXTING RULES'));
-    assert.ok(result.indexOf('TEXTING RULES') < result.indexOf('RELATIONSHIP CONTEXT'));
+    assert.ok(result.indexOf('RELATIONSHIP CONTEXT') < result.indexOf('TEXTING RULES'));
+    assert.ok(result.indexOf('TEXTING RULES') < result.indexOf('## Miu'));
+    assert.ok(result.indexOf('## Bastet') < result.indexOf('WORLD INFO'));
     assert.ok(result.indexOf('RELATIONSHIP CONTEXT') < result.indexOf('THOUGHTS DISABLED'));
 });
 
@@ -327,4 +344,52 @@ test('resolveModelOverride: explicit setting wins, then live model, then empty',
     assert.equal(resolveModelOverride({ settingsModel: '', liveModel: '' }), '');
     assert.equal(resolveModelOverride({}), '');
     assert.equal(resolveModelOverride({ settingsModel: ' glm-4.7-thinking ' }), 'glm-4.7-thinking');
+});
+
+// Exercise the complete texting request with real phone framing, profiles and reference context.
+// Supplying legacy RP fields must never reintroduce the master prompt or closing instructions.
+test('standalone Kressa texting preserves reference context and ends on the latest user burst', async () => {
+    const { TEXTING_MODE_INSTRUCTIONS, TEXTING_THOUGHTS_DISABLED } = await import('../lib/textingModeInstructions.js');
+    const { KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS } = await import('../lib/tetheredContext.js');
+    const system = buildTextingSystemPrompt({
+        discussionInstructions: KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS,
+        relationshipContext: 'RELATIONSHIP', textingInstructions: TEXTING_MODE_INSTRUCTIONS,
+        personaContext: 'PERSONA', firstContactBlock: '', worldInfoBefore: 'LORE BEFORE',
+        descriptionText: 'KRESSA DESCRIPTION', personalityText: 'KRESSA PERSONALITY',
+        worldInfoAfter: 'LORE AFTER', memoryBlock: 'PHONE MEMORY', tetheredBlock: 'SHARED ROLEPLAY',
+        finalInstructions: TEXTING_THOUGHTS_DISABLED,
+        systemPrompt: 'LEGACY MASTER PROMPT', postHistory: 'LEGACY RP CLOSING RULES',
+    });
+    const sections = [KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS, 'RELATIONSHIP', TEXTING_MODE_INSTRUCTIONS,
+        'PERSONA', 'LORE BEFORE', 'KRESSA DESCRIPTION', 'KRESSA PERSONALITY', 'LORE AFTER',
+        'PHONE MEMORY', 'SHARED ROLEPLAY', TEXTING_THOUGHTS_DISABLED];
+    const body = system.replace(/^\[(?:END )?WEYPHONE SECTION: [^\n]+\]\n?/gm, '').trim();
+    assert.equal(body.replace(/\n{3}/g, '\n\n'), sections.join('\n\n'));
+    const opens = [...system.matchAll(/^\[WEYPHONE SECTION: ([^\n]+)\]$/gm)].map(match => match[1]);
+    const closes = [...system.matchAll(/^\[END WEYPHONE SECTION: ([^\n]+)\]$/gm)].map(match => match[1]);
+    assert.deepEqual(opens, closes);
+    assert.equal(opens.length, sections.length);
+    assert.ok(!system.includes('LEGACY'));
+    assert.equal(system.split(TEXTING_MODE_INSTRUCTIONS).length, 2);
+    const messages = buildMessages({systemPromptText: system,
+        history: [{role: 'user', content: 'first queued bubble'}], userMessage: 'latest queued bubble'});
+    assert.equal(messages.at(-1).content, 'first queued bubble\nlatest queued bubble');
+});
+
+test('ordinary first-contact texts retain persona and stranger framing before character context', () => {
+    const result = buildTextingSystemPrompt({textingInstructions: 'TEXTING', personaContext: 'PERSONA',
+        firstContactBlock: 'FIRST CONTACT', personalityText: 'CHARACTER', finalInstructions: 'NO THOUGHTS'});
+    assert.ok(result.indexOf('USER PERSONA') < result.indexOf('FIRST CONTACT'));
+    assert.ok(result.indexOf('FIRST CONTACT') < result.indexOf('CHARACTER PERSONALITY'));
+    assert.ok(!result.includes('DISCUSSION INSTRUCTIONS'));
+    assert.ok(!result.includes('LORE BEFORE PROFILE'));
+    assert.ok(result.endsWith('NO THOUGHTS\n[END WEYPHONE SECTION: FINAL REPLY INSTRUCTIONS]'));
+});
+
+test('section transitions preserve supplied wording and whitespace verbatim', () => {
+    const profile = '  [PROFILE]\nOriginal wording.\n  ';
+    const lore = 'Lore uses its own [MARKERS] and {{macros}}.';
+    const result = buildTextingSystemPrompt({descriptionText: profile, worldInfoAfter: lore});
+    assert.ok(result.includes(`[WEYPHONE SECTION: CHARACTER DESCRIPTION]\n${profile}\n[END WEYPHONE SECTION: CHARACTER DESCRIPTION]`));
+    assert.ok(result.includes(`[WEYPHONE SECTION: LORE AFTER PROFILE]\n${lore}\n[END WEYPHONE SECTION: LORE AFTER PROFILE]`));
 });
