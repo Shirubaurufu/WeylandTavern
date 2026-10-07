@@ -30,7 +30,7 @@ export const UNDERSTUDY_TOP_MODELS = ['gemini-3.8-flash', 'deepseek-v4-pro-think
 // so an update never resets an existing user's chosen palette.
 export const COPYCAT_PALETTES = Object.freeze([
     { id: 'opening-night', label: 'Velvet Paws', colors: ['#160d15', '#7d003d', '#ff747c'] },
-    { id: 'green-room', label: 'Mossy Window', colors: ['#0d1512', '#1d3a30', '#d8a657'] },
+    { id: 'green-room', label: 'Green Bean', colors: ['#0d1512', '#1d3a30', '#d8a657'] },
     { id: 'after-hours', label: 'Midnight Zoomies', colors: ['#10111d', '#292442', '#a98cff'] },
     { id: 'terminal-bloom', label: 'Neon Whiskers', colors: ['#10191a', '#29494c', '#ff79bd'] },
 ]);
@@ -62,6 +62,10 @@ export const UNDERSTUDY_STATUS_LINES = [
     'Batting away flat phrasing…',
     'Hunting for where it flinched…',
     'Landing on the right words…',
+    'Asking Lucky a dumb lore question..',
+    "Chewing on sonnet's ankle..",
+    'Loafing in the corner..',
+    'Rolling around on the floor..',
 ];
 
 // The phone's shared app bar is hidden for Copycat (it only repeated "Copycat" and the help
@@ -106,7 +110,7 @@ function choiceRow({ group, options, value }) {
 
 function sourceCard(target, scope, isSpanScoped, noSpans) {
     return `
-    <section class="wp-understudy-card">
+    <section class="wp-understudy-card wp-understudy-source-card">
         <div class="wp-understudy-card-head">
             <span class="wp-understudy-who">${escapeHtml(target.characterName)}</span>
             <span class="wp-understudy-role">Last reply</span>
@@ -135,14 +139,13 @@ function readingPicker(target) {
         </div>`;
 }
 
-function stageView({ target, draft, generating, error, settings, applied, take, statusIndex, feedback, scope, isSpanScoped, noSpans, showOriginal, catnipOnce = [] }) {
-    const hasDraft = Boolean(draft.trim());
+function stageView({ target, draft, generating, error, settings, applied, take, statusIndex, feedback, scope, isSpanScoped, noSpans, showOriginal, tutorialStep = '' }) {
+    const hasDraft = Boolean(draft.trim()) && !['reply', 'note', 'generate'].includes(tutorialStep);
     return `
     <div class="wp-copycat-section-head">
-        <div><span>Current reply</span><strong>${escapeHtml(scope.label)}</strong></div>
+        <div><strong>Rewrite Responses</strong><p class="wp-copycat-section-sub">Copycat will chew on the AI's last response and spit out something thats probably better.</p></div>
         <button type="button" id="wp-understudy-refresh" class="wp-copycat-refresh" title="Point Copycat at the newest reply and clear anything left over from an older one."><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
     </div>
-    <div class="wp-copycat-section-sub">${hasDraft ? `Copy ${take} ready to review` : 'Nudge the next copy'}</div>
     ${hasDraft ? '' : sourceCard(target, scope, isSpanScoped, noSpans)}
     ${noSpans ? `<div class="wp-understudy-note wp-understudy-note-warn"><i class="fa-solid fa-triangle-exclamation"></i><span>No ${escapeHtml(scope.spanKind)} in this reply. Choose another rewrite scope under Edits.</span></div>` : ''}
     ${error ? `<div class="wp-understudy-note wp-understudy-note-error"><i class="fa-solid fa-circle-exclamation"></i><span>${escapeHtml(error)}</span></div>` : ''}
@@ -163,7 +166,7 @@ function stageView({ target, draft, generating, error, settings, applied, take, 
     <section class="wp-understudy-note-box">
         <div class="wp-understudy-note-head"><label for="wp-understudy-feedback"><i class="fa-solid fa-paw" aria-hidden="true"></i> Catnip note</label><button type="button" id="wp-catnip-open"><i class="fa-solid fa-jar" aria-hidden="true"></i> Catnip Jar <small>${catnipRecipes(settings).length}</small></button></div>
         <textarea id="wp-understudy-feedback" class="wp-understudy-feedback" rows="2" spellcheck="false" placeholder="Write custom instructions for your rewrite here.">${escapeHtml(feedback)}</textarea>
-        <div class="wp-catnip-active">${catnipRecipes(settings).filter(recipe => recipe.auto || catnipOnce.includes(recipe.id)).map(recipe => `<span>${escapeHtml(recipe.name)} · ${recipe.auto ? 'always' : 'once'}</span>`).join('')}</div>
+        <div class="wp-catnip-active">${catnipRecipes(settings).filter(recipe => recipe.auto).map(recipe => `<span>${escapeHtml(recipe.name)} · always</span>`).join('')}</div>
         <label class="wp-understudy-deviate" title="Let Copycat choose a different direction instead of only rewording this one."><span><strong>Let it wander</strong><small>${isSpanScoped ? 'Whole-passage rewrites only' : 'Tell the AI it’s allowed to make major changes'}</small></span><span class="wp-copycat-switch"><input type="checkbox" id="wp-understudy-deviate"${settings.allowDeviation ? ' checked' : ''}${isSpanScoped ? ' disabled' : ''} /><i></i></span></label>
     </section>
     ${hasDraft ? `
@@ -224,7 +227,7 @@ function editsView({ settings, thoughtsMode = 'unknown' }) {
 
     <section class="wp-copycat-edit-block">
         <h4><i class="fa-solid fa-clock" aria-hidden="true"></i> Scene context</h4>
-        <p class="wp-copycat-edit-note">How many recent messages ride along with the rewrite. Copycat always gets the character's full profile; this is just how much of the conversation comes with it.</p>
+        <p class="wp-copycat-edit-note">How many recent messages ride along with the rewrite.<br>Copycat always gets the character's full profile; this is just how much of the conversation comes with it.<br><br><strong>Looks small, right?</strong><br>Thats because models are more willing to do creative stuff with a smaller chatlog.</p>
         <label class="wp-copycat-stepper" for="wp-understudy-context">
             <input id="wp-understudy-context" type="number" min="0" max="${UNDERSTUDY_MAX_CONTEXT}" step="1" value="${context}" />
             <span>messages <em>(recommended: ${UNDERSTUDY_RECOMMENDED_CONTEXT}; max: ${UNDERSTUDY_MAX_CONTEXT})</em></span>
@@ -232,8 +235,8 @@ function editsView({ settings, thoughtsMode = 'unknown' }) {
     </section>
 
     <section class="wp-copycat-edit-block">
-        <h4><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Instructions from your chat</h4>
-        <p class="wp-copycat-edit-note">Your language and POV settings always travel with a rewrite. Choose which other instructions come along.</p>
+        <h4><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Optional Instructions</h4>
+        <p class="wp-copycat-edit-note">Your language and POV settings always travel with a rewrite, but you can choose which other instructions come along.</p>
         ${toggleRowMarkup({ id: 'wp-understudy-authors-notes', label: 'Author’s notes', sub: 'Include enabled chat and character notes on every rewrite', checked: settings.sendAuthorsNotes === true })}
         ${toggleRowMarkup({ id: 'wp-understudy-course-corrections', label: 'Course corrections', sub: 'Include the active Course Correction or dose', checked: settings.sendCourseCorrections === true })}
         ${toggleRowMarkup({ id: 'wp-understudy-modes', label: 'Message modes', sub: 'Tell Copycat the register when the reply is already tagged ONYX, RUBY or OPAL', checked: settings.sendModes !== false })}
@@ -246,7 +249,7 @@ function editsView({ settings, thoughtsMode = 'unknown' }) {
  * @param {HTMLElement} container #wp-screen-body
  * @param {object} state
  */
-export function renderUnderstudyScreen(container, { target, draft, generating, error, settings, applied, take = 0, showOriginal = false, statusIndex = 0, feedback = '', section = 'stage', thoughtsMode = 'unknown', catnipOnce = [] }) {
+export function renderUnderstudyScreen(container, { target, draft, generating, error, settings, applied, take = 0, showOriginal = false, statusIndex = 0, feedback = '', section = 'stage', thoughtsMode = 'unknown', tutorialStep = '' }) {
     const activeSection = section === 'edits' ? 'edits' : 'stage';
     if (activeSection === 'edits') {
         container.innerHTML = `<div class="wp-understudy">${copycatMasthead()}${copycatNavigation('edits')}<main class="wp-copycat-content">${editsView({ settings, thoughtsMode })}</main></div>`;
@@ -259,7 +262,7 @@ export function renderUnderstudyScreen(container, { target, draft, generating, e
     const scope = UNDERSTUDY_SCOPES[effectiveUnderstudyScope(settings.scope, thoughtsMode)];
     const isSpanScoped = Boolean(scope.spanKind);
     const noSpans = isSpanScoped && target.spanCount === 0;
-    const state = { target, draft, generating, error, settings, applied, take, showOriginal, statusIndex, feedback, scope, isSpanScoped, noSpans, catnipOnce };
+    const state = { target, draft, generating, error, settings, applied, take, showOriginal, statusIndex, feedback, scope, isSpanScoped, noSpans, tutorialStep };
     container.innerHTML = `<div class="wp-understudy">${copycatMasthead()}${copycatNavigation('stage')}<main class="wp-copycat-content">${stageView(state)}</main></div>`;
 }
 
@@ -289,8 +292,8 @@ export function renderUnderstudySettingsScreen(container, { settings, currentLiv
                 ${modelSelect('wp-understudy-model', settings.modelOverride ?? '')}
                 ${modelQuickfills('wp-understudy-model', UNDERSTUDY_CAST_MODELS)}
                 <span class="wp-settings-sublabel">Backup model</span>
-                ${fallbackModelSelect('wp-understudy-fallback', settings.fallbackModel, understudyRecommendedFallback(settings.modelOverride))}
-                <small class="wp-settings-recommend-disclaimer">Gemini 3.8 Flash is the strongest here by a clear margin and is the default. DeepSeek V4 Pro Thinking is the solid second. Avoid non-thinking DeepSeek for rewrites: it tends to hand back what you gave it.</small>
+                ${fallbackModelSelect('wp-understudy-fallback', settings.fallbackModel ?? '', 'deepseek-v4-pro-thinking').replace('No fallback, fail instead of retrying', 'Disabled')}
+                <small class="wp-settings-recommend-disclaimer">Recommended backup: DeepSeek V4 Pro Thinking. Avoid non-thinking DeepSeek for rewrites: it tends to hand back what you gave it.</small>
             </label>
         </section>
 

@@ -15,8 +15,7 @@ function populateControlPreviews(guide, screen) {
             copy.setAttribute('aria-hidden', 'true');
             preview.prepend(copy, ' ');
         }
-        for (const property of ['color', 'border-color', 'border-style', 'border-width', 'border-radius', 'font-family', 'font-weight', 'text-transform', 'letter-spacing']) preview.style.setProperty(property, style.getPropertyValue(property));
-        if (!['rgba(0, 0, 0, 0)', 'transparent'].includes(style.backgroundColor)) preview.style.backgroundColor = style.backgroundColor;
+        for (const property of ['color', 'background-color', 'background-image', 'border-color', 'border-style', 'border-width', 'border-radius', 'font-family', 'font-weight', 'text-transform', 'letter-spacing']) preview.style.setProperty(property, style.getPropertyValue(property));
     }
 }
 
@@ -30,7 +29,7 @@ function renderCardExample(container, screen) {
     }
     container.replaceChildren();
     const caption = doc.createElement('figcaption');
-    caption.textContent = 'Card preview — controls are shown for reference';
+    caption.textContent = 'Card preview - controls are shown for reference';
     const replica = card.cloneNode(true);
     for (const element of [replica, ...replica.querySelectorAll('*')]) {
         for (const attr of [...element.attributes]) if (attr.name === 'id' || attr.name.startsWith('data-') || attr.name.startsWith('on')) element.removeAttribute(attr.name);
@@ -120,7 +119,7 @@ export function createAppTutorial({ panel, onFinish, prepareStep = () => {}, onC
             ${step.indented ? `<p class="wp-tour-indented">${tutorialText(step.indented)}</p>` : ''}
             ${step.paragraphs ? step.paragraphs.map(text => `<p>${tutorialText(text)}</p>`).join('') : ''}
             ${step.example ? '<figure class="wp-tour-example"></figure>' : ''}
-            ${step.bullets ? `<ul class="wp-tour-bullets">${step.bullets.map(item => `<li>${tutorialText(item)}</li>`).join('')}</ul>` : ''}
+            ${step.bullets ? `<ul class="wp-tour-bullets">${step.bullets.map((item, index) => `<li${appKey === 'registrar' && ((step.id === 'welcome' && index === 1) || (step.id === 'browse' && index === 2)) ? ' class="wp-tour-compact-line"' : ''}>${tutorialText(item)}</li>`).join('')}</ul>` : ''}
             <p class="wp-tour-warning" role="status" hidden></p></div>
             <footer><button type="button" data-tour="back" ${page === 0 ? 'disabled' : ''}>Back</button><span class="wp-tour-track" aria-hidden="true"><span style="width:${100 * (page + 1) / tour.steps.length}%"></span></span><button type="button" class="wp-tour-next" data-tour="next">${page === tour.steps.length - 1 ? 'Finish guide' : 'Next'} <span aria-hidden="true">→</span></button></footer>
         </section>`;

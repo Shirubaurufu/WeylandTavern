@@ -833,12 +833,13 @@ export function renderMemoryScreen(container, memories, editingMemoryId = null, 
         <div class="wp-memory-settings-subheading">Tethered mode</div>
         <label class="wp-memory-settings-label wp-checkbox-label">
             <input type="checkbox" id="wp-tethered-full-history-checkbox" ${tetheredHistoryCap === null ? 'checked' : ''} />
-            All messages since the main roleplay's last memory
+            Recent messages since the main roleplay's last memory (up to 35)
         </label>
         <label class="wp-memory-settings-label">Or, last
-            <input type="number" id="wp-tethered-history-cap-input" min="1" value="${tetheredHistoryCap ?? ''}" ${tetheredHistoryCap === null ? 'disabled' : ''} />
+            <input type="number" id="wp-tethered-history-cap-input" min="1" max="35" value="${tetheredHistoryCap === null ? '' : Math.min(35, tetheredHistoryCap)}" ${tetheredHistoryCap === null ? 'disabled' : ''} />
             messages of the main roleplay
         </label>
+        <div class="wp-memory-settings-label">Observe includes up to 35 roleplay messages or 10,000 estimated tokens, whichever comes first. Phone history has a separate 10,000 estimated-token limit.</div>
     </div>
 </div>`;
 }

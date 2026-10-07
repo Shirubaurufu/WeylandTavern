@@ -13,6 +13,8 @@ import {
     readNarrativeSnapshot,
     resolveShift,
     SHIFT_OPTIONS,
+    currentScenarioLabel,
+    DOSE_OPTIONS,
 } from '../lib/narrativeSettings.js';
 import { renderNarrativeSettingsScreen } from '../lib/ui/apps/narrativeSettings.js';
 import { applyGeminiBypass, GEMINI_BOX6_EXPLICIT, GEMINI_BYPASS_PROMPT, stripGeminiExplicitBox } from '../../quick-reply-ext/src/promptModifiers.js';
@@ -106,7 +108,7 @@ test('every Roleplay Shift the picker offers has a prompt body (or is handled fr
     // Custom Preset's text is the player's own (test/customShift.test.js covers it).
     const fromRav = ['None', 'General-Use', 'Hard Mode', 'Custom Preset'];
     for (const option of SHIFT_OPTIONS) {
-        if (fromRav.includes(option.id)) continue;
+        if (option.disabled || fromRav.includes(option.id)) continue;
         assert.ok(String(SHIFT_BODIES[option.id] ?? '').length > 500, `${option.id} should have an encoded body`);
     }
 });
@@ -196,7 +198,7 @@ test('Narrative renders a phone-native control surface without embedding prompt 
     renderNarrativeSettingsScreen(target, { snapshot, tab: 'essentials' });
     assert.match(target.innerHTML, /data-narrative-tab="style"/);
     assert.match(target.innerHTML, /data-narrative-action="set-shift"/);
-    for (const option of SHIFT_OPTIONS) {
+    for (const option of SHIFT_OPTIONS.filter(item => !item.disabled)) {
         assert.match(target.innerHTML, new RegExp(`data-narrative-action="set-shift" data-value="${option.id}"`));
     }
     assert.match(target.innerHTML, /Course correction<span class="wp-narrative-slash">/);
@@ -313,7 +315,7 @@ test('A dose of... card: arm, pick from dosable shifts, live banner never shows 
     assert.match(target.innerHTML, /wp-narrative-shift-card[^"]*is-armed/);
     assert.match(target.innerHTML, /data-narrative-action="start-dose" data-value="Hard Mode"/);
     assert.match(target.innerHTML, /data-narrative-action="start-dose" data-value="Toxicity"/);
-    assert.match(target.innerHTML, /data-narrative-action="start-dose" data-value="General-Use"/);
+    assert.doesNotMatch(target.innerHTML, /data-narrative-action="start-dose" data-value="General-Use"/);
     assert.match(target.innerHTML, /data-narrative-action="start-dose" data-value="None"[^>]*disabled/);
     assert.doesNotMatch(target.innerHTML, /data-narrative-action="start-dose" data-value="Toxicity"[^>]*disabled/);
     assert.doesNotMatch(target.innerHTML, /data-narrative-action="set-shift"/);
@@ -346,4 +348,38 @@ test('the dose snapshot only exists with a chat open', () => {
     assert.deepEqual(readNarrativeSnapshot({ getGlobal, getLocal, hasChat: true, dose: { shift: 'Horror' } }).dose, { shift: 'Horror' });
     assert.equal(readNarrativeSnapshot({ getGlobal, getLocal, hasChat: false, dose: { shift: 'Horror' } }).dose, null);
     assert.equal(readNarrativeSnapshot({ getGlobal, getLocal, hasChat: true }).dose, null);
+});
+
+test('active scenario comes from greeting context, not a stale or cancelled year picker', () => {
+    const path = fileURLToPath(new URL('../../../../../data/default-user/QuickReplies/Weyland.json', import.meta.url));
+    const script = JSON.parse(readFileSync(path, 'utf8')).qrList.find(item => item.label === 'School Year').message;
+    const locals = { Scenario: 'Summer wants to drop out of college.', Year: '' };
+    const read = key => locals[key];
+    assert.equal(currentScenarioLabel(read, 'Summer', script), 'Cheerleader Tryouts');
+    locals.Year = 'Sophomore';
+    assert.equal(currentScenarioLabel(read, 'Summer', script), 'Cheerleader Tryouts');
+    locals.Scenario = 'Moonlight Festival';
+    assert.equal(currentScenarioLabel(read, 'Summer', script), 'Moonlight Festival');
+    locals.IntroCtxStash = JSON.stringify({ Scenario: locals.Scenario });
+    locals.Scenario = '';
+    assert.equal(currentScenarioLabel(read, 'Summer', script), 'Moonlight Festival');
+    delete locals.IntroCtxStash;
+    locals.Year = 'Scenario: Moonlight Festival';
+    assert.equal(currentScenarioLabel(read, 'Summer', script), 'Original greeting');
+    assert.equal(currentScenarioLabel(() => 'ONCE GAVEN IS GONE', 'Yue-Lin', script), 'The Breaking');
+    const snapshot = readNarrativeSnapshot({ getGlobal: () => '', getLocal: key => key === 'Scenario' ? 'drop out of college' : '', hasChat: true, characterName: 'Summer', schoolYearScript: script });
+    assert.equal(snapshot.scenario, 'Cheerleader Tryouts');
+});
+
+test('Beta course correction is unavailable for both regular selection and doses', () => {
+    assert.ok(SHIFT_OPTIONS.find(item => item.id === 'Beta')?.disabled);
+    assert.ok(!SHIFT_OPTIONS.some(item => item.id === 'General-Use'));
+    assert.ok(!DOSE_OPTIONS.some(item => ['Beta', 'General-Use'].includes(item.id)));
+    assert.equal(resolveShift('Beta', 'Off'), 'None');
+    const target = { innerHTML: '' };
+    for (const doseArmed of [false, true]) {
+        renderNarrativeSettingsScreen(target, { snapshot: { hasChat: true, shift: 'None', modes: {}, mental: {} }, doseArmed });
+        assert.match(target.innerHTML, /wp-narrative-shift-key" disabled aria-disabled="true"[^>]*title="Unavailable right now\."[^>]*>[\s\S]*?<strong>Beta<\/strong>/);
+        assert.doesNotMatch(target.innerHTML, /data-value="(?:Beta|General-Use)"/);
+    }
 });

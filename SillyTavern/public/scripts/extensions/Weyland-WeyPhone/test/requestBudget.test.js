@@ -5,7 +5,22 @@ import {
     estimatePhoneRequestTokens,
     limitPhoneRequestMessages,
     PHONE_REQUEST_MAX_INPUT_TOKENS,
+    limitRecentHistory,
 } from '../lib/requestBudget.js';
+
+test('history window stops at the first oversized recent entry rather than skipping to older messages', () => {
+    const messages = [{ content: 'old' }, { content: 'x'.repeat(1000) }, { content: 'new' }];
+    assert.deepEqual(limitRecentHistory(messages, 100), [{ content: 'new' }]);
+});
+
+test('one oversized newest message stays bounded and does not mutate stored text', () => {
+    const message = { role: 'user', content: 'START-' + '😀'.repeat(40000) + '-END' };
+    const result = limitRecentHistory([message], 10000);
+    assert.ok(estimatePhoneRequestTokens(result) <= 10000);
+    assert.match(result[0].content, /^START-/);
+    assert.match(result[0].content, /-END$/);
+    assert.ok(message.content.length > result[0].content.length);
+});
 
 test('phone request budget leaves ordinary requests unchanged', () => {
     const messages = [

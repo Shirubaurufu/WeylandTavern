@@ -15,7 +15,7 @@ export function buildCatnipFeedback(config, note = '', onceIds = []) {
     const once = new Set(onceIds);
     const recipes = catnipRecipes(config).filter(recipe => recipe.auto || once.has(recipe.id));
     // The current, explicit note comes last so it can refine a standing recipe.
-    return [...recipes.map(recipe => `[Catnip recipe: ${recipe.name}]\n${recipe.instructions}`), String(note).trim()].filter(Boolean).join('\n\n');
+    return [...recipes.map(recipe => `[Catnip nip: ${recipe.name}]\n${recipe.instructions}`), String(note).trim()].filter(Boolean).join('\n\n');
 }
 
 function substitute(context, text) {

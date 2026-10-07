@@ -4,6 +4,9 @@
 // that trims earlier than most real tokenizers would, leaving ample transport/model headroom.
 
 export const PHONE_REQUEST_MAX_INPUT_TOKENS = 35_000;
+export const PHONE_THREAD_MAX_TOKENS = 10_000;
+export const OBSERVE_CHATLOG_MAX_TOKENS = 10_000;
+export const OBSERVE_CHATLOG_MAX_MESSAGES = 35;
 export const PHONE_REQUEST_ESTIMATED_CHARS_PER_TOKEN = 3.2;
 const MESSAGE_OVERHEAD_TOKENS = 8;
 const TRIM_MARKER = '\n\n[...older WeyPhone context omitted to stay within the phone request limit...]\n\n';
@@ -25,6 +28,26 @@ function truncateMiddle(content, maxTokens) {
     const available = maxChars - marker.length;
     const head = Math.floor(available * 0.55);
     return [...source.slice(0, head), ...marker, ...source.slice(-(available - head))].join('');
+}
+
+// Keep a contiguous newest window; never skip a large recent message to resurrect older lore.
+// Only a single message larger than the entire allowance is shortened. Stored history is untouched.
+export function limitRecentHistory(messages, maxTokens) {
+    const selected = [];
+    let remaining = maxTokens;
+    for (let index = messages.length - 1; index >= 0; index--) {
+        const message = messages[index];
+        const cost = estimatePhoneRequestTokens([message]);
+        if (cost > remaining) {
+            if (!selected.length && maxTokens > MESSAGE_OVERHEAD_TOKENS) {
+                selected.unshift({ ...message, content: truncateMiddle(message.content, maxTokens) });
+            }
+            break;
+        }
+        selected.unshift({ ...message });
+        remaining -= cost;
+    }
+    return selected;
 }
 
 /**

@@ -302,3 +302,15 @@ test('an unloaded item keeps its paused state after merging in the fresher catal
     assert.equal(visible.active, false);
     assert.equal(visible.summary, 'new summary', 'fresher catalog metadata still wins for everything but active');
 });
+
+
+test('My World separates characters and locations, including collection members, while preserving saved state', () => {
+    const character = { key: 'character:1', kind: 'character', name: 'One', active: false };
+    const place = { key: 'location:2', kind: 'location', name: 'Hall' };
+    const group = { key: 'collection:3', kind: 'collection', name: 'Group', members: [character.key, place.key] };
+    const state = { tab: 'library', libraryKind: 'character', query: '', sort: 'name', items: [{ ...character, active: undefined }, place, group], library: { items: [character, place], sources: [group] } };
+    assert.deepEqual(visibleRegistrarItems(state).map(item => [item.key, item.active]), [[character.key, false]]);
+    assert.deepEqual(visibleRegistrarItems({ ...state, libraryKind: 'location' }).map(item => item.key), [place.key]);
+    assert.deepEqual(visibleRegistrarItems({ ...state, libraryKind: 'collection' }).map(item => item.key), [group.key]);
+    assert.deepEqual(visibleRegistrarItems({ ...state, libraryKind: 'location', query: 'One' }), []);
+});

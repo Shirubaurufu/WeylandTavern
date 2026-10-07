@@ -14,7 +14,7 @@ test('seen flags are independent and existing completion stays respected', () =>
 test('inline references are escaped, accessible text rather than active app controls', () => {
     const rendered = tutorialText('<script> [[world]] & [[load]]');
     assert.ok(rendered.includes('&lt;script&gt;'));
-    assert.ok(rendered.includes('>My world</span>'));
+    assert.ok(rendered.includes('>My World</span>'));
     assert.ok(rendered.includes('>Load</span>'));
     assert.ok(!rendered.includes('<button'));
     assert.ok(!rendered.includes('data-rg-tab'));

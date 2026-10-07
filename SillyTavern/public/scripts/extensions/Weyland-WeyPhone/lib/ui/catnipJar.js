@@ -4,22 +4,22 @@ export function closeCatnipJar(panel) {
     panel?.querySelector('.wp-catnip-overlay')?.remove();
 }
 
-export function showCatnipJar(panel, { getConfig, save, getOnce, setOnce, note = '', onClose }) {
+export function showCatnipJar(panel, { getConfig, save, getNote, setNote, onClose }) {
     closeCatnipJar(panel);
     const origin = document.activeElement;
     const overlay = document.createElement('div');
     overlay.className = 'wp-catnip-overlay';
     overlay.innerHTML = `<section class="wp-catnip-dialog" role="dialog" aria-modal="true" aria-labelledby="wp-catnip-title">
         <header class="wp-catnip-header"><h2 id="wp-catnip-title"><i class="fa-solid fa-jar" aria-hidden="true"></i> Catnip Jar</h2><button type="button" class="wp-catnip-close" aria-label="Close Catnip Jar"><i class="fa-solid fa-xmark"></i></button></header>
-        <p class="wp-catnip-description">Save your secret spices here for future use.~</p>
+        <p class="wp-catnip-description">Save your favorite nip here for future rewrites.~</p>
         <div class="wp-catnip-list"></div>
-        <button type="button" class="wp-catnip-new"><i class="fa-solid fa-plus"></i> New recipe</button>
+        <button type="button" class="wp-catnip-new"><i class="fa-solid fa-plus"></i> New nip</button>
         <form class="wp-catnip-form" hidden>
-            <h3>New recipe</h3>
-            <label>Name<input name="name" maxlength="80" required placeholder="Name your recipe"></label>
-            <label>Instructions<textarea name="instructions" rows="4" maxlength="6000" required placeholder="Your secret spices…"></textarea></label>
+            <h3>New nip</h3>
+            <label>Name<input name="name" maxlength="80" required placeholder="Name your nip"></label>
+            <label>Instructions<textarea name="instructions" rows="4" maxlength="6000" required placeholder="Your nip instructions…"></textarea></label>
             <label class="wp-catnip-auto">Automatically apply<span class="wp-copycat-switch"><input name="auto" type="checkbox"><i></i></span></label>
-            <div class="wp-catnip-actions"><button type="submit" class="wp-catnip-save"><i class="fa-solid fa-check"></i> Save recipe</button><button type="button" class="wp-catnip-cancel"><i class="fa-solid fa-xmark"></i> Cancel</button></div>
+            <div class="wp-catnip-actions"><button type="submit" class="wp-catnip-save"><i class="fa-solid fa-check"></i> Save nip</button><button type="button" class="wp-catnip-cancel"><i class="fa-solid fa-xmark"></i> Cancel</button></div>
         </form>
         <p class="wp-catnip-status" role="status"></p>
     </section>`;
@@ -38,9 +38,9 @@ export function showCatnipJar(panel, { getConfig, save, getOnce, setOnce, note =
     };
     const edit = recipe => {
         editingId = recipe?.id ?? null; form.reset();
-        form.querySelector('h3').textContent = recipe ? 'Edit recipe' : 'New recipe';
+        form.querySelector('h3').textContent = recipe ? 'Edit nip' : 'New nip';
         form.elements.namedItem('name').value = recipe?.name ?? '';
-        form.elements.namedItem('instructions').value = recipe?.instructions ?? note;
+        form.elements.namedItem('instructions').value = recipe?.instructions ?? getNote();
         form.elements.namedItem('auto').checked = recipe?.auto ?? false;
         form.hidden = false; form.elements.namedItem('name').focus();
     };
@@ -48,7 +48,7 @@ export function showCatnipJar(panel, { getConfig, save, getOnce, setOnce, note =
     const render = () => {
         list.replaceChildren();
         const recipes = catnipRecipes(getConfig());
-        if (!recipes.length) list.append(node('p', 'Your jar is empty. Add your first recipe below.', 'wp-catnip-empty'));
+        if (!recipes.length) list.append(node('p', 'Your jar is empty. Add your first nip below.', 'wp-catnip-empty'));
         for (const recipe of recipes) {
             const card = node('section', undefined, 'wp-catnip-recipe');
             card.append(node('h3', recipe.name), node('p', recipe.instructions));
@@ -59,23 +59,25 @@ export function showCatnipJar(panel, { getConfig, save, getOnce, setOnce, note =
             input.setAttribute('aria-label', `Automatically apply ${recipe.name}`);
             input.addEventListener('change', () => {
                 update(catnipRecipes(getConfig()).map(r => r.id === recipe.id ? { ...r, auto: input.checked } : r));
-                if (input.checked) setOnce(getOnce().filter(id => id !== recipe.id));
                 render(); list.querySelector(`[data-recipe-toggle="${CSS.escape(recipe.id)}"]`)?.focus();
             });
             input.dataset.recipeToggle = recipe.id;
             toggle.append(input, node('i')); auto.append(toggle); card.append(auto);
             const actions = node('div', undefined, 'wp-catnip-actions');
-            const queued = getOnce().includes(recipe.id);
-            const once = button(queued ? 'Queued once' : 'Use once', queued ? 'check' : 'leaf', () => {
-                setOnce(queued ? getOnce().filter(id => id !== recipe.id) : [...getOnce(), recipe.id]);
-                render(); status.textContent = queued ? 'Recipe removed from the next rewrite.' : 'Recipe queued for your next manual rewrite of this reply.';
+            const use = button('Use', 'leaf', () => {
+                const apply = () => { setNote(recipe.instructions); close(); };
+                if (!String(getNote()).trim()) { apply(); return; }
+                // Ask inside the jar, keeping the existing note untouched until explicitly replaced.
+                const actions = node('div', undefined, 'wp-catnip-actions');
+                const replace = button('Overwrite', 'check', apply);
+                actions.append(replace, button('Cancel', 'xmark', () => { status.replaceChildren(); use.focus(); }));
+                status.replaceChildren(node('p', 'Overwrite your current Catnip Note with this nip?'), actions);
+                replace.focus();
             });
-            once.disabled = recipe.auto; once.setAttribute('aria-pressed', String(queued));
-            actions.append(once, button('Edit', 'pen', () => edit(recipe)), button('Delete', 'trash-can', () => {
+            actions.append(use, button('Edit', 'pen', () => edit(recipe)), button('Delete', 'trash-can', () => {
                 update(catnipRecipes(getConfig()).filter(r => r.id !== recipe.id));
-                setOnce(getOnce().filter(id => id !== recipe.id));
                 if (editingId === recipe.id) form.hidden = true;
-                render(); status.textContent = 'Recipe deleted.';
+                render(); status.textContent = 'Nip deleted.';
                 const undo = button('Undo', 'rotate-left', () => { update([...catnipRecipes(getConfig()), recipe]); render(); status.replaceChildren(); });
                 status.append(' ', undo);
             }));
@@ -95,7 +97,6 @@ export function showCatnipJar(panel, { getConfig, save, getOnce, setOnce, note =
         const recipes = catnipRecipes(getConfig()); const index = recipes.findIndex(r => r.id === editingId);
         if (index < 0) recipes.push(recipe); else recipes[index] = recipe;
         update(recipes);
-        if (recipe.auto) setOnce(getOnce().filter(id => id !== recipe.id));
         render(); form.hidden = true; status.textContent = `Saved “${name}”.`; overlay.querySelector('.wp-catnip-new').focus();
     });
     overlay.addEventListener('click', event => { event.stopPropagation(); if (event.target === overlay) close(); });
