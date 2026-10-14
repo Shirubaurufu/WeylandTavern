@@ -9,7 +9,8 @@ import { assembleRoleplayShiftItem } from '../../../quick-reply-ext/src/roleplay
 import { buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName } from '../../../quick-reply-ext/src/oocMode.js';
 import { buildSpecialSheetShift, specialSheetBoxes } from '../../../quick-reply-ext/src/specialSheets.js';
 import { narratorBuildState, narratorSelection } from '../../../quick-reply-ext/src/narratorSelection.js';
-import { withThoughtRules } from '../../../quick-reply-ext/src/promptModifiers.js';
+import { greetingThoughtSet, withThoughtRules } from '../../../quick-reply-ext/src/promptModifiers.js';
+import { scenarios } from '../../../quick-reply-ext/src/scenarios.js';
 
 const source = readFileSync(new URL('../../../quick-reply-ext/index.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 function between(start, end) {
@@ -21,7 +22,7 @@ const assembler = between('async function XXX(charName) {', '\n/**\n * @param {i
 const shiftBuilder = between('function buildRoleplayShiftItem(', '\n/** GENERATION_AFTER_COMMANDS');
 const custom = between('function customShiftPreset()', '\n// Every shift can be dosed');
 
-export async function assemble(charName = 'Rosa', globalExtras = {}, localExtras = {}, dose = null) {
+export async function assemble(charName = 'Rosa', globalExtras = {}, localExtras = {}, dose = null, greetingSwipe = 0) {
     // Compatibility fixtures exercise the original High placement. Default tests override it with undefined.
     const globals = new Map(Object.entries({ PromptChoice: 'Mini Prompt', Narrator: 'NARRATOR', NarratorStrength: 'High', MentalDirectivesReset20261005: '1', RPPOV: 'POV', AnalysisToggle: 'Enabled', ...globalExtras }));
     const locals = new Map(Object.entries(localExtras));
@@ -37,6 +38,7 @@ export async function assemble(charName = 'Rosa', globalExtras = {}, localExtras
         SpecialChar: async () => {}, Clear: async () => {}, DebugLog: () => {},
         strings: { whtml: 'HTML INSTRUCTIONS', krirav: 'KRIS HARD MODE' },
         buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName, narratorBuildState, narratorSelection, NARRATOR_SUBBOT_NAMES: [], withThoughtRules,
+        greetingThoughtSet, scenarios, getFirstMessage: () => ({ swipe_id: greetingSwipe }),
         console: { error: (...args) => { throw new Error(args.join(' ')); } },
     };
     runInNewContext(`${custom}\n${shiftBuilder}\n${assembler}\nthis.assemble = XXX;`, context);

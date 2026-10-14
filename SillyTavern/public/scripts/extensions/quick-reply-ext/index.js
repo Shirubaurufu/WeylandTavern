@@ -30,7 +30,7 @@ import { detector } from "./src/similarity.js";
 import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
 import { buildOocPostHistory, buildOocSystemPrompt, cardPostHistoryExtras, cardSystemPromptExtras, isOocModeEnabled, stripFromMessages } from "./src/oocMode.js";
 import { NARRATOR_SUBBOTS, NARRATOR_SUBBOT_NAMES } from "./src/narratorSubbots.js";
-import { applyGeminiBypassForModel, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
+import { applyGeminiBypassForModel, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
 import { BAPHOMET_VAR, applyBaphometToRequest, baphometHidden, baphometThoughts } from "./src/baphomet.js";
 import { applyKinsbaneCommand } from "./src/kinsbaneCommands.js";
 import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.js";
@@ -2730,7 +2730,9 @@ async function XXX(charName) {
         } else if (charName === "Cerberus Sisters" && getLocalVariable("CerberusSister") === "Fawne" && rav.thinkYes) {
             setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
         } else if (getLocalVariable("SpecialThoughts") && rav.thinkSpec) {
-            setLocalVariable("ThoughtSet", rav.thinkSpec);
+            // The greeting's own thoughts block (drunk Jenn and the like, see greetingThoughtSet); rav.thinkSpec is only the
+            // "thoughts disabled" line, kept as the fallback for a greeting that has none.
+            setLocalVariable("ThoughtSet", greetingThoughtSet(scenarios.get(charName), getFirstMessage("char")?.swipe_id) || rav.thinkSpec);
         } else {
             setLocalVariable("ThoughtSet", "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]");
         }

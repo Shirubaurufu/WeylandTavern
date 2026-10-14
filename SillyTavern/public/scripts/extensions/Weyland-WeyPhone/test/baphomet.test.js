@@ -58,7 +58,8 @@ test('Baphomet thoughts: one voice, 1-2 per response, no third-person rule, narr
         assert.ok(out.includes(THOUGHT_RULES[0]), `${name}: secrets rule`);
         assert.ok(out.includes("- NEVER speak as a narrator in {{char}}'s thoughts."), `${name}: narrator rule`);
         assert.ok(!out.includes('3rd person in {{char}}'), `${name}: Baphomet is not Bap, so no third-person ban`);
-        assert.ok(out.indexOf('Every bracket is him') < out.indexOf('</thought directions>'), `${name}: inside the block`);
+        assert.ok(out.indexOf('Every bracket is him') < out.indexOf('[END THOUGHT DIRECTIONS]'), `${name}: inside the block`);
+        assert.ok(!/thought directions>/i.test(out), `${name}: no leftover <thought directions> tag`);
         assert.ok(!out.includes('never narrates the scene'), `${name}: that line was dropped, the narrator rule covers it`);
     }
     assert.equal(baphometThoughts(''), '');
