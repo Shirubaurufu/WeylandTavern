@@ -25,6 +25,7 @@ import { findLoreBookEntry, setEntryField } from "./lorebook.js";
 import { getFirstMessage } from "./chat.js";
 import { getCurrentCharacterName } from "./general.js";
 import strings from "./strings.js";
+import { BAPHOMET_VAR, baphometHidden } from "./baphomet.js";
 
 const STASH = "IntroCtxStash";
 const MODE = "IntroCtxMode";
@@ -152,6 +153,22 @@ const VARIANT_GROUPS = [
         apply(id) {
             // Same values as his greeting popup (Scenarios(), case "Kris").
             setLocalVariable("Krisrav", id === "hard" ? strings.krirav : getLocalVariable("postrav"));
+        },
+    },
+    {
+        id: "bap-baphomet",
+        label: "Baphomet Visibility",
+        ownsContext: false,
+        applies: (charName) => charName === "Bap",
+        options: [
+            { id: "enabled", label: "Enabled", description: "Baphomet's vicious commentary is visible." },
+            { id: "disabled", label: "Disabled", description: "Baphomet remains, but you won't hear his cries." },
+        ],
+        // Only a chat variable: the text is cut from each outgoing request (OnRequestReady) and XXX builds the
+        // thoughts block from it, so the picker's rebuild after a click is all that's needed. See src/baphomet.js.
+        current: () => (baphometHidden(getLocalVariable(BAPHOMET_VAR)) ? "disabled" : "enabled"),
+        apply(id) {
+            setLocalVariable(BAPHOMET_VAR, id === "disabled" ? "disabled" : "enabled");
         },
     },
 ];

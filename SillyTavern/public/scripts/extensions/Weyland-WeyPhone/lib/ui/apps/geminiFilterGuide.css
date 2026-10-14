@@ -252,3 +252,21 @@
 
 /* Smart card: centered title above the two mockups. */
 .wp-gf-mocks-title { display: block; margin: 4px 0 6px; color: var(--wn-ink); font-size: 11.5px; font-weight: 800; text-align: center; }
+
+/* Time-of-day theory card (loadTheory; two waves, Asia's workday and the West's): amber instead of the guide's blue so it reads as "a theory", not an
+   explainer. The chart is an illustrative shape; the bars are plain spans sized inline. */
+.wp-gf-theory { border-color: color-mix(in srgb, var(--gf-h1) 55%, var(--wn-line)); background: linear-gradient(145deg, color-mix(in srgb, var(--wn-paper) 86%, var(--gf-h1) 14%), color-mix(in srgb, var(--wn-paper-2) 86%, var(--gf-h1) 14%)); }
+.wp-gf-theory .wp-gf-num { background: var(--gf-h1); color: #fff; }
+.wp-gf-theory .wp-gf-eyebrow { color: color-mix(in srgb, var(--gf-h1) 75%, var(--wn-ink)); }
+.wp-gf-theory .wp-gf-more > summary i { color: var(--gf-h1); }
+.wp-gf-day { margin: 4px 0 12px; padding: 9px 10px 8px; border: 1px dashed color-mix(in srgb, var(--gf-h1) 55%, transparent); border-radius: 10px; background: rgba(255, 255, 255, .2); }
+.wp-gf-day-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.wp-gf-day-title span { color: var(--wn-ink); font-size: 10.5px; font-weight: 800; }
+.wp-gf-day-title b { color: color-mix(in srgb, var(--gf-h1) 70%, var(--wn-ink)); font-size: 9px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.wp-gf-day-bars { display: flex; align-items: flex-end; gap: 2px; height: 64px; padding-bottom: 2px; border-bottom: 1px solid var(--wn-line); }
+.wp-gf-day-bars span { flex: 1 1 0; min-width: 0; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, var(--gf-h2), var(--gf-h1)); opacity: .9; }
+.wp-gf-day-axis { display: grid; grid-template-columns: 2fr 6fr 3fr 6fr 7fr; gap: 2px; margin-top: 4px; }
+.wp-gf-day-axis span { overflow: hidden; color: var(--wn-ink-muted); font-size: 8.5px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.wp-gf-day-axis .is-peak { color: var(--wn-ink); font-weight: 800; }
+.wp-gf-callout.is-theory { margin: 4px 0 10px; background: color-mix(in srgb, var(--gf-h1) 14%, transparent); }
+.wp-gf-callout.is-theory i { color: var(--gf-h1); }

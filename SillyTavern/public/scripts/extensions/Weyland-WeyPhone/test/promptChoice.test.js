@@ -6,6 +6,7 @@ import { registerMiniPrompt } from '../../quick-reply-ext/src/promptRegistry.js'
 import { assemblePromptLayers, preparePromptBase, resolvePromptChoice, safePreparePromptBase, usesSceneSheet } from '../../quick-reply-ext/src/promptAssembly.js';
 import { PROMPT_OPTIONS } from '../lib/narrativeSettings.js';
 import { assemble } from './helpers/promptAssemblyHarness.js';
+import { formatterHarness } from './helpers/formatterHarness.js';
 
 const beta = ravs.get('Beta Prompt');
 
@@ -29,6 +30,9 @@ test('the Beta slot is held: listed, disabled, and the only disabled option', ()
     assert.equal(beta.disabled, true);
     assert.deepEqual(PROMPT_OPTIONS.filter(option => option.disabled).map(option => option.id), ['Beta Prompt']);
     assert.match(PROMPT_OPTIONS.find(option => option.id === 'Current Prompt').description, /default and recommended/i);
+    // Beta Prompt 2 + the Curse Booster were pulled 2026-10-13: nothing registers or lists it until it is restored on purpose.
+    assert.ok(!PROMPT_OPTIONS.some(option => option.id === 'Beta Prompt 2'));
+    assert.ok(!ravs.has('Beta Prompt 2'));
 });
 
 test('Mini is registered outside rav.js, and a failed build only costs the Mini choice', () => {
@@ -112,12 +116,11 @@ test('Old Prompt 2025 with Analysis on gets its own short scene sheet in the pos
     assert.ok(!base.post.includes('SCENE SHEET') && !base.post.includes('THINK BEFORE RESPONDING'));
 });
 
-test('2025\'s sheet envelope is exactly what the Formatter hides, even when the closing line is missing', () => {
-    const src = readFileSync(new URL('../../Weyland-Formatter/index.js', import.meta.url), 'utf8');
-    const literal = /sceneSheetFull: \/(.*)\/,/.exec(src)[1];
-    const re = new RegExp(literal);
+test('2025\'s sheet envelope is exactly what the Formatter hides, even when the closing line is missing', async () => {
+    const formatter = formatterHarness();
     const header = '¦¦ Saturday, Oct 18th ~ 9:28 AM ~ Dormitory ~¦¦';
     const sheet = 'SCENE SHEET\nBOARD [1/4]\n- notes\nTRUTH [2/4]\n- more\nVOICE [3/4]\nFOOTER [4/4]\nOkay. Here is my complete rough draft, starting with the header.\nEND OF SCENE SHEET';
-    assert.equal(`${sheet}\n${header}\n*She waves.*`.replace(re, '').trim(), `${header}\n*She waves.*`);
-    assert.equal(`SCENE SHEET\nBOARD [1/4]\n- notes\n${header}\n*She waves.*`.replace(re, '').trim(), `${header}\n*She waves.*`);
+    const expected = await formatter.format(`${header}\n\n*She waves.*`);
+    assert.equal(await formatter.format(`${sheet}\n${header}\n\n*She waves.*`), expected);
+    assert.equal(await formatter.format(`SCENE SHEET\nBOARD [1/4]\n- notes\n${header}\n\n*She waves.*`), expected);
 });

@@ -8,9 +8,13 @@ export function escapeRegistrar(value) {
 const e = escapeRegistrar;
 const labels = { character: 'Characters', location: 'Locations', collection: 'Collections', library: 'My World' };
 
+function isWip(item) {
+    return (item.kind === 'character' || item.kind === 'location') && item.status === 'wip';
+}
+
 function wipBadge(item) {
-    return item.kind === 'character' && item.status === 'wip'
-        ? '<span class="rg-wip-badge" title="Work in progress — this character is still being developed"><i class="fa-solid fa-pencil" aria-hidden="true"></i> WIP <span class="wp-sr-only">— Work in progress</span></span>' : '';
+    return isWip(item)
+        ? `<span class="rg-wip-badge" title="Work in progress — this ${e(item.kind)} is still being developed"><i class="fa-solid fa-pencil" aria-hidden="true"></i> WIP <span class="wp-sr-only">— Work in progress</span></span>` : '';
 }
 
 function expressionsBadge(item) {
@@ -88,7 +92,7 @@ function detail(item, state) {
         <div class="rg-detail-heading">
             <div class="rg-detail-heading-name"><span class="rg-eyebrow">${e(item.kind)} · No. ${e(item.id)}</span><h2>${e(item.name)}</h2>${item.surname ? `<p class="rg-surname">${e(item.surname)}</p>` : ''}</div>
             <p class="rg-detail-summary">${e(item.summary)}</p>
-            ${wipBadge(item)}${expressionsBadge(item)}${item.kind === 'character' && item.status === 'wip' ? '<p class="rg-wip-note">Work in progress: this character is still being developed. Their details may be incomplete or change in future updates.</p>' : ''}
+            ${wipBadge(item)}${expressionsBadge(item)}${isWip(item) ? `<p class="rg-wip-note">Work in progress: this ${e(item.kind)} is still being developed. ${item.kind === 'character' ? 'Their' : 'Its'} details may be incomplete or change in future updates.</p>` : ''}
             <div class="rg-byline">Created by <b>${e(item.owner || 'the community')}</b><br>Updated ${e(date)}</div>
         </div>
         <div class="rg-import-box"><span class="rg-eyebrow">${source ? 'In your world' : 'Not yet imported'}</span>

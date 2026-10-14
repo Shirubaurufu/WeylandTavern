@@ -4,13 +4,16 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
 import { readSecret } from './secrets.js';
+import { invalidateThumbnail } from './thumbnails.js';
+import { executeCharacterRemoval, forgetInRecord, isPlainName, listOtherCards, planCharacterRemoval } from '../weyland-character-removal.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const router = express.Router();
 const rateLimits = {
   'fetch-key': { lastCall: 0, cooldown: 2000 },
   'fetch-manifests': { lastCall: 0, cooldown: 2000 },
-  'download': {lastCall: 0, cooldown: 5000 }
+  'download': {lastCall: 0, cooldown: 5000 },
+  'remove-character': { lastCall: 0, cooldown: 800 }
 };
 
 const HELIX_BASE = 'https://helixmind.online';
@@ -31,6 +34,13 @@ let pendingDiff = null;
 /** @type {import('http').ServerResponse | null} */
 let activeStream = null;
 let downloadInProgress = false;
+/**
+ * Stops the download that is running right now (set by /download, called by /download-cancel).
+ * Cancel used to only close the browser's progress stream: the server kept downloading every file,
+ * and the Downloader waited for a "complete" event it had stopped listening for.
+ * @type {(() => void) | null}
+ */
+let cancelActiveDownload = null;
 
 // ============================================================
 // HELPERS
@@ -296,6 +306,17 @@ async function healLocalManifestFromDisk(userPath, remoteManifest, localManifest
         checks.push(async () => {
             let localChar = localCharMap.get(key);
             let healed = 0;
+            // The other direction: the record says "installed" but the card is gone (deleted by
+            // hand, or by a cleanup tool). Without this the Downloader kept showing it as Installed
+            // forever, with no way to get it back short of "Force Refresh Manifest". Forget the whole
+            // entry, not just the card, so a re-download fetches every file again instead of trusting
+            // the old record about sprites that may have been deleted alongside it.
+            if (localChar?.version != null && await sizeOnDisk(pngPath) === null) {
+                localChar.version = null;
+                localChar.subcharacters = [];
+                if (localChar.lorebooks) localChar.lorebooks = [];
+                return 1;
+            }
             // A character not in the record is only worth checking if its card is on disk;
             // otherwise it is simply not installed and every file lookup would miss.
             if (!localChar && await sizeOnDisk(pngPath) === null) return 0;
@@ -886,8 +907,17 @@ router.get('/fetch-manifests', async (request, response) => {
 
         // Compute and store diff
         pendingDiff = computeDiff(remoteManifest, localManifest);
-        
-        response.status(200).json({ remoteManifest: stripZoneHashes(remoteManifest), localManifest, pendingDiff });
+
+        // Cards on disk that are not part of the roster (the stock "Assistant" card, imports). The
+        // Downloader lists them so they can be removed: Weyland's card check kicks those chats out
+        // before SillyTavern's own delete button can be reached.
+        let otherCards = [];
+        try {
+            const charactersPath = join(__dirname, '..', '..', 'data', userHandle, 'characters');
+            otherCards = listOtherCards(await readdir(charactersPath), remoteManifest, localManifest);
+        } catch { /* no characters folder yet */ }
+
+        response.status(200).json({ remoteManifest: stripZoneHashes(remoteManifest), localManifest, pendingDiff, otherCards });
     } catch (error) {
         console.error('/weyland/fetch-manifests: Failed to fetch manifests:', error);
         response.status(500).json({ error: `/weyland/fetch-manifests: ${error.message}` });
@@ -940,7 +970,13 @@ router.post('/download', async (request, response) => {
         let consecutiveFailures = 0;
         const consecutiveFailedCharacters = new Set();
         let aborted = false;
+        let userCancelled = false;
         const abortController = new AbortController();
+        cancelActiveDownload = () => {
+            userCancelled = true;
+            aborted = true;
+            abortController.abort();
+        };
 
         /** A file landed: reset both the batch-wide and this character's failure streaks. */
         const recordSuccess = (characterName) => {
@@ -1139,18 +1175,28 @@ router.post('/download', async (request, response) => {
             emitEvent('error', { character: 'Download record', message: `Your files were saved, but the record of them could not be: ${saveProblem}. They will be recognised on the next update check.` });
         }
 
-        // `aborted` in this event reads as "cancelled by user" in the terminal, and the server
-        // never cancels on a user's behalf, so an outage stop is reported through its error line
-        // and the failed list instead.
-        emitEvent('complete', { aborted: false, failed: failed.length > 0 ? failed : undefined });
+        // `aborted` in this event reads as "cancelled by user" in the terminal, so it is only set
+        // when the player pressed Cancel. An outage stop is reported through its error line and the
+        // failed list instead.
+        emitEvent('complete', { aborted: userCancelled, failed: failed.length > 0 ? failed : undefined });
         activeStream?.end();
         activeStream = null;
 
-        response.status(200).json({ success: true });
+        response.status(200).json({ success: true, cancelled: userCancelled });
     } catch (error) {
         console.error('/weyland/download: Failed to download files:', error);
         response.status(500).json({ error: `/weyland/download: ${error.message}` });
+    } finally {
+        cancelActiveDownload = null;
     }
+});
+
+// Cancel from the Downloader's terminal. Files already saved stay saved (and recorded), so a
+// cancelled character simply shows "Update" afterwards and finishes on the next download.
+router.post('/download-cancel', (request, response) => {
+    if (!cancelActiveDownload) return response.status(200).json({ cancelled: false });
+    cancelActiveDownload();
+    return response.status(200).json({ cancelled: true });
 });
 
 router.get('/download-stream', (request, response) => {
@@ -1171,6 +1217,62 @@ router.get('/download-stream', (request, response) => {
       activeStream = null;
     }
   });
+});
+
+/**
+ * Removes one character the Downloader manages, or one card that is not part of the roster.
+ * Body: { name: string, kind: 'roster' | 'other' }. Chats are always kept (see weyland-character-removal.js).
+ * Planning uses the same manifests the Downloader just showed, so it removes exactly what it installed.
+ */
+router.post('/remove-character', async (request, response) => {
+    const { limited, remaining } = checkRateLimit('remove-character');
+    if (limited) {
+        return response.status(429).json({ error: `Please wait ${remaining} second(s) before removing another character.` });
+    }
+    try {
+        const userHandle = request.header('X-User-Handle') || 'default-user';
+        const name = String(request.body?.name ?? '');
+        const kind = request.body?.kind === 'other' ? 'other' : 'roster';
+        if (!isPlainName(name)) return response.status(400).json({ error: 'Invalid character name' });
+
+        const userPath = join(__dirname, '..', '..', 'data', userHandle);
+        const charactersPath = join(userPath, 'characters');
+        const worldsPath = join(userPath, 'worlds');
+        const thumbnails = (file) => request.user?.directories && invalidateThumbnail(request.user.directories, 'avatar', file);
+
+        if (kind === 'other') {
+            // Only a card the roster does not know, and only the card itself: nothing else on disk
+            // can be attributed to it, and its chats stay like every other removal.
+            const known = listOtherCards([`${name}.png`], typeof remoteManifest === 'object' ? remoteManifest : null,
+                typeof localManifest === 'object' ? localManifest : null);
+            if (!known.length) return response.status(400).json({ error: `${name} is part of the roster; remove it from its own row instead.` });
+            const plan = { name, card: `${name}.png`, expressions: [], lorebooks: [], folders: [], sharedSubs: [], sharedLorebooks: [] };
+            const result = await executeCharacterRemoval(plan, { charactersPath, worldsPath, invalidateThumbnail: thumbnails });
+            if (result.problems.length) return response.status(500).json({ error: result.problems.join('; '), ...result });
+            return response.status(200).json({ success: true, ...result });
+        }
+
+        if (!localManifest || typeof localManifest === 'string' || !remoteManifest || typeof remoteManifest === 'string') {
+            return response.status(400).json({ error: 'Check for updates first, then try again.' });
+        }
+        const plan = planCharacterRemoval({ name, remoteManifest, localManifest });
+        const result = await executeCharacterRemoval(plan, { charactersPath, worldsPath, invalidateThumbnail: thumbnails });
+
+        // Forget it in the record even if a file or two could not be deleted: the card is what makes
+        // a character "installed", and a leftover sprite is harmless (a re-download overwrites it).
+        if (forgetInRecord(localManifest, plan.name)) await saveLocalManifest(localManifest);
+        pendingDiff = computeDiff(remoteManifest, localManifest);
+
+        return response.status(200).json({
+            success: result.problems.length === 0,
+            removed: result.removed,
+            problems: result.problems,
+            keptShared: [...plan.sharedSubs, ...plan.sharedLorebooks],
+        });
+    } catch (error) {
+        console.error('/weyland/remove-character: failed:', error);
+        return response.status(500).json({ error: `/weyland/remove-character: ${error.message}` });
+    }
 });
 
 function simulateDownloadTask(charName, fileIndex, total) {

@@ -381,24 +381,24 @@ test('migrateStaleModelNames rewrites a renamed model id everywhere it can be st
         },
     };
     migrateStaleModelNames(settings);
-    assert.equal(settings.modelOverride, 'gemini-3.1-pro-preview');
-    assert.equal(settings.textingModelOverride, 'gemini-3.1-pro-preview');
-    assert.equal(settings.kressaModel, 'gemini-3.1-pro-preview');
-    assert.equal(settings.pawxai.modelOverride, 'gemini-3.1-pro-preview');
-    assert.equal(settings.conversations.conv_1.memoryPrimaryModel, 'gemini-3.1-pro-preview');
-    assert.equal(settings.conversations.conv_1.memoryBackupModel, 'gemini-3.1-pro-preview');
+    assert.equal(settings.modelOverride, 'gemini-3.8-flash');
+    assert.equal(settings.textingModelOverride, 'gemini-3.8-flash');
+    assert.equal(settings.kressaModel, 'gemini-3.8-flash');
+    assert.equal(settings.pawxai.modelOverride, 'gemini-3.8-flash');
+    assert.equal(settings.conversations.conv_1.memoryPrimaryModel, 'gemini-3.8-flash');
+    assert.equal(settings.conversations.conv_1.memoryBackupModel, 'gemini-3.8-flash');
 });
 
 test('migrateStaleModelNames leaves unrelated model ids untouched and is idempotent', () => {
     const settings = {
         modelOverride: 'minimax-m3',
-        conversations: { conv_1: { id: 'conv_1', memoryPrimaryModel: 'minimax-m3', memoryBackupModel: 'gemini-3.1-pro-preview' } },
+        conversations: { conv_1: { id: 'conv_1', memoryPrimaryModel: 'minimax-m3', memoryBackupModel: 'gemini-3.8-flash' } },
     };
     migrateStaleModelNames(settings);
     migrateStaleModelNames(settings);
     assert.equal(settings.modelOverride, 'minimax-m3');
     assert.equal(settings.conversations.conv_1.memoryPrimaryModel, 'minimax-m3');
-    assert.equal(settings.conversations.conv_1.memoryBackupModel, 'gemini-3.1-pro-preview');
+    assert.equal(settings.conversations.conv_1.memoryBackupModel, 'gemini-3.8-flash');
 });
 
 test('migrateStaleModelNames replaces both retired GLM ids and is stable on a second load', () => {

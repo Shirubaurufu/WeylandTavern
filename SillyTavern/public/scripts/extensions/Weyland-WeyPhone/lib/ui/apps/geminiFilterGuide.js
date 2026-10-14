@@ -26,12 +26,20 @@
 // character reply, last user message weighted most, notes after it), averages over length, and is
 // deterministic. Claims stay hedged where the evidence is ("mostly", "likely"). Keep the "nobody
 // outside Google knows the real math" caveat if this is ever edited.
+//
+// The time-of-day card (loadTheory, 2026-10-11) is the one place the page says "this is a theory" out loud. Lucky's
+// observation across many players: blocks and blank replies (BOTH filters) peak during busy weekday hours and
+// fall away off-hours, and the same conversation that was blocked at peak goes through later. It is BIMODAL
+// (Lucky, 2026-10-11): Asia is a huge LLM market with different business hours, so there are two waves a day with a
+// lull between them, and the clock that matters is the world's, not the player's local one. The load-balancing
+// explanation is a guess and the copy must keep saying so. Its chart is an illustrative shape, labelled as such;
+// never put real numbers on it unless someone actually measures.
 
 /** The exact text Google returns. Shown verbatim so players can match it against their screen. */
 export const GEMINI_FILTER_ERROR = 'The prompt could not be submitted. The prompt contains sensitive words that violate Google\'s Generative AI Prohibited Use policy. Try rephrasing the prompt. If you think this was an error, send feedback.';
 
 /** geminiFilterGuide.css sits next to this module; it's linked once, the first time the page opens. */
-function ensureStylesheet() {
+export function ensureGeminiGuideStylesheet() {
     if (typeof document === 'undefined' || document.getElementById('wp-gemini-guide-css')) return;
     const link = document.createElement('link');
     link.id = 'wp-gemini-guide-css';
@@ -300,7 +308,7 @@ function troubleWords() {
 function noReroll() {
     const attempt = n => `<div class="wp-gf-try"><small>Try ${n}</small><i class="fa-solid fa-ban" aria-hidden="true"></i><span>Blocked</span></div>`;
     return section('6', 'The big one', 'Rerolling won\'t help', `
-        <p>There's no person on the other end making a judgment call.<br>It's just <b><i>math</i></b>.<br>The same message <b><i>always</i></b> gets the same answer out, every time.</p>
+        <p>There's no person on the other end making a judgment call.<br>It's just <b><i>math</i></b>.<br>At any given moment, the same message <b><i>always</i></b> gets the same answer out. (The time of day might change that answer. See the theory card near the bottom.)</p>
         <strong class="wp-gf-tries-title">Don't reroll without changing anything!</strong>
         <div class="wp-gf-tries" role="img" aria-label="Three rerolls of the same message, all blocked">${attempt(1)}${attempt(2)}${attempt(3)}</div>
         <p>Rerolling a blocked message just gets you blocked again and wastes another try.<br>The good news works the same way, though: <b>once a version gets through, it'll keep getting through.</b></p>
@@ -358,6 +366,43 @@ function smartFilter() {
     `, ' wp-gf-smart');
 }
 
+/** The time-of-day theory. Its own amber card (not numbered, not blue) so it reads as a different KIND of
+ * content from the explainer sections: this one is a pattern plus a guess, and says so before anything else.
+ * The bars are an illustrative shape, labelled "not measured data"; heights are hand-set percentages. */
+function loadTheory() {
+    // Two waves, not one lump: Asia's working day, a lull, then the West's working day, with the deep quiet at the
+    // ends. 24 columns; the exact hours are not claimed (the chart has no clock), only the two-hump shape.
+    const shape = [14, 20, 36, 62, 86, 96, 100, 90, 66, 44, 38, 50, 74, 92, 100, 96, 84, 62, 42, 28, 20, 16, 14, 12];
+    const bars = shape.map(pct => `<span style="height:${pct}%"></span>`).join('');
+    return `
+    <section class="wp-narrative-card wp-gf-card wp-gf-theory">
+        <div class="wp-gf-head"><span class="wp-gf-num"><i class="fa-solid fa-clock"></i></span><div><span class="wp-gf-eyebrow">A theory, not a fact</span><h3>It may depend on what time it is</h3></div></div>
+        <p><b>We have no hard evidence for this.</b> What we do have is a pattern, and it's a clear one.</p>
+        <div class="wp-gf-day" role="img" aria-label="An illustrative chart, not measured data. Blocked and blank replies come in two waves a day, one during business hours in Asia and one during business hours in the West, with a lull between them and the quietest stretches at the ends.">
+            <div class="wp-gf-day-title"><span>Blocked and blank replies</span><b>Rough shape, not real numbers</b></div>
+            <div class="wp-gf-day-bars" aria-hidden="true">${bars}</div>
+            <div class="wp-gf-day-axis" aria-hidden="true"><span>Quiet</span><span class="is-peak">Asia</span><span>Lull</span><span class="is-peak">The West</span><span>Quiet</span></div>
+        </div>
+        <p>Refusals and blank replies seem to spike when business hours are at full throttle, and there are <b>two waves</b> of that every day, not one. Asia is a massive LLM market and works different hours from the West, so the busy stretches don't line up. Between the waves, and in the dead of night for both, they drop off hard and almost anything starts going through.</p>
+        <strong class="wp-gf-subhead">What players keep telling us</strong>
+        <ul class="wp-gf-list">
+            <li><b>During a wave:</b> normal assistant and business messages go through perfectly, while even innocent roleplay actions start getting filtered.</li>
+            <li><b>In the lull or the quiet:</b> the same conversation, with the same content, the same word choices and the same messages, goes through with no resistance at all.</li>
+        </ul>
+        <div class="wp-gf-callout is-theory">
+            <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+            <p><b>Our guess:</b> Google may be using the filters partly to manage load, steering capacity away from roleplay traffic when demand is high. Google has never said anything like this and we can't prove it. We're sharing it because the pattern is real, even though the reason is only a guess.</p>
+        </div>
+        ${more('So what do I do with this?', `
+            <ul class="wp-gf-list">
+                <li><b>If nothing about your message changed,</b> it might not be you. Try again later, ideally in the lull between the two waves or in the dead of night.</li>
+                <li><b>Your own clock isn't the one that matters.</b> What seems to count is when the world's offices are busy, not when it's busy where you live.</li>
+                <li><b>It seems to hit both filters.</b> The word block and the blank or cut off replies both seem to follow it.</li>
+                <li><b>It doesn't replace the advice above.</b> Heavy words get blocked at any hour. The theory only explains why the same message can be blocked at one time of day and fine at another.</li>
+            </ul>`)}
+    </section>`;
+}
+
 function faq() {
     return `
     <section class="wp-narrative-card wp-gf-card wp-gf-faq">
@@ -376,12 +421,12 @@ function faq() {
 /**
  * @param {HTMLElement} container  #wp-screen-body
  */
-export function renderGeminiFilterGuide(container) {
-    ensureStylesheet();
+export function renderGeminiFilterGuide(container, { fromErrorHelp = false } = {}) {
+    ensureGeminiGuideStylesheet();
     container.innerHTML = `
 <div class="wp-narrative wp-gf">
     <div class="wp-narrative-content">
-        <button type="button" class="wp-gf-back" data-narrative-guide="close"><i class="fa-solid fa-chevron-left"></i> PromptOS</button>
+        <button type="button" class="wp-gf-back" data-narrative-guide="close"><i class="fa-solid fa-chevron-left"></i> ${fromErrorHelp ? 'Back to error information' : 'PromptOS'}</button>
         ${hero()}
         ${whatsHappening()}
         ${scoresWords()}
@@ -391,8 +436,9 @@ export function renderGeminiFilterGuide(container) {
         ${noReroll()}
         ${stepByStep()}
         ${smartFilter()}
+        ${loadTheory()}
         ${faq()}
-        <button type="button" class="wp-gf-back wp-gf-back-end" data-narrative-guide="close"><i class="fa-solid fa-chevron-left"></i> Back to PromptOS</button>
+        <button type="button" class="wp-gf-back wp-gf-back-end" data-narrative-guide="close"><i class="fa-solid fa-chevron-left"></i> ${fromErrorHelp ? 'Back to error information' : 'Back to PromptOS'}</button>
     </div>
 </div>`;
 }

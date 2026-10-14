@@ -1047,6 +1047,9 @@ async function openOverlay(initialQuery) {
   applySettingsToUI();
   $('#wbv-modal-overlay').css('display', 'flex');
   state.open = true;
+  // Tells other extensions the viewer is up. WeyPhone listens and puts the phone away, since the viewer would otherwise
+  // sit on top of an open phone panel (the phone tile, the chat-bar frame button, /weybooru and the menu all land here).
+  document.dispatchEvent(new CustomEvent('wbv:opened'));
 
   const qInit = typeof initialQuery === 'string' ? initialQuery.trim() : '';
   if (qInit) {

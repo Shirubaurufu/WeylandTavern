@@ -1,20 +1,29 @@
 
-const ANALYSIS_BLOCK_RE = /<analysis>[\s\S]*?<\/analysis>/;
+const ANALYSIS_BLOCK_RE = /<analysis>[\s\S]*?<\/analysis>/i;
 // Beta's tag-free replacement for the analysis block (see phonePromptPolicy.js): a "SCENE SHEET"
 // line through an "END OF SCENE SHEET" line. Phone requests strip the procedure, but a model can
 // still echo one, so it is treated exactly like an analysis block.
-const SCENE_SHEET_BLOCK_RE = /^[ \t]*SCENE SHEET[ \t]*$[\s\S]*?^[ \t]*END OF SCENE SHEET[ \t]*$/m;
-const SCENE_SHEET_OPEN_RE = /^[ \t]*SCENE SHEET[ \t]*$/m;
+const SCENE_SHEET_BLOCK_RE = /^[ \t]*(?:SCENE SHEET|\[SCENE SHEET\])[ \t]*$[\s\S]*?^[ \t]*(?:END OF SCENE SHEET|\[END OF SCENE SHEET\])[ \t]*$/im;
+const SCENE_SHEET_OPEN_RE = /^[ \t]*(?:SCENE SHEET|\[SCENE SHEET\])[ \t]*$/im;
 
 /** Drops a leading scratch block. Returns null when one was opened but never closed. */
 function stripScratchBlock(text) {
-    for (const [block, open] of [[ANALYSIS_BLOCK_RE, /<analysis>/], [SCENE_SHEET_BLOCK_RE, SCENE_SHEET_OPEN_RE]]) {
-        const match = text.match(block);
-        if (match) return text.slice(match.index + match[0].length);
-        // Opened but never closed (e.g. generation cut off mid-block): nothing usable survives.
-        if (open.test(text)) return null;
+    let rest = text;
+    while (rest) {
+        let removed = false;
+        for (const [block, open] of [[ANALYSIS_BLOCK_RE, /<analysis>/i], [SCENE_SHEET_BLOCK_RE, SCENE_SHEET_OPEN_RE]]) {
+            const match = rest.match(block);
+            if (match) {
+                rest = rest.slice(match.index + match[0].length);
+                removed = true;
+                break;
+            }
+            // Opened but never closed (e.g. generation cut off mid-block): nothing usable survives.
+            if (open.test(rest)) return null;
+        }
+        if (!removed) break;
     }
-    return text;
+    return rest;
 }
 const INCOMING_LINE_RE = /^Incoming¦[^¦]*¦[^¦]*¦(.*)$/;
 const GROUP_INCOMING_LINE_RE = /^Incoming[¦|│][^¦|│]*[¦|│]([^¦|│]*)[¦|│](.*)$/;

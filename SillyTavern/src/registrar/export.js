@@ -8,7 +8,9 @@ export function buildRegistrarBook(items, entryKeys = {}) {
     const book = { entries: {} };
     const characters = items.filter(item => item.kind === 'character');
     const locations = items.filter(item => item.kind === 'location');
-    let roster = "[CHARACTER ROSTER - FRESHMAN YEAR]\nThe following is a list of special named NPC's that live on and around the campus. If an NPC is 'not yet in college', they should NEVER appear on campus randomly, and should only appear in roleplay if {{char}} specifically looks for them.\n";
+    // Titled "BONUS REGISTRAR ROSTER" so the model can tell these community characters from the official roster (the
+// entry's comment stays "Character Roster": WeyPhone's registrarLorebook.js finds the roster by that comment).
+    let roster = "[BONUS REGISTRAR ROSTER]\n- The following is a list of special named NPC's that live on and around the campus.\n- You are encouraged to use these characters (and your own unique character creations!) to flesh out public scenes with believable NPCs!\n- If an NPC is 'not yet in college', they should NEVER appear on campus randomly, and should only appear in roleplay if {{char}} specifically looks for them.\n- Use these to provide references to characters without making assumptions about other parts of their appearance.\n- NEVER make up fake last names.\n";
     characters.forEach((item, index) => {
         // Allocate locally instead of characterId*5: upstream IDs can otherwise collide
         // with the website's fixed 8000 location namespace in mixed collections.
@@ -19,9 +21,9 @@ export function buildRegistrarBook(items, entryKeys = {}) {
         }
         const names = item.name.split(',').map(name => name.trim());
         const aliases = names.slice(1);
-        roster += `${names[0]}: (${aliases.length ? `AKA: [${aliases.toString()}], ` : ''}${item.species}, ${item.roster ? `${item.roster}, ` : ''}${item.gender}, Username: ${item.onlineHandle}, {{getvar:${item.schoolYear}}},${item.major ? ` Major: ${item.major},` : ''} ${item.dwelling})\n`;
+        roster += `${names[0]}: (${aliases.length ? `AKA: [${aliases.toString()}], ` : ''}${item.species}, ${item.roster ? `${item.roster}, ` : ''}${item.gender}, Username: ${item.onlineHandle}, {{getvar::${item.schoolYear}}},${item.major ? ` Major: ${item.major},` : ''} ${item.dwelling})\n`;
     });
-    if (characters.length) book.entries[5000] = buildRosterEntry(5000, roster + '[END CHARACTER ROSTER]');
+    if (characters.length) book.entries[5000] = buildRosterEntry(5000, roster + '[END BONUS REGISTRAR ROSTER]');
     if (characters.length) entryKeys[5000] = 'shared/roster';
     let next = Math.max(8000, 5001 + characters.length * 5);
     const listId = next++;

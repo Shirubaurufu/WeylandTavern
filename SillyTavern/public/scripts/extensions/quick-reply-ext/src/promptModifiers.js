@@ -99,9 +99,10 @@ export function addShiftRouteLine(body, scope = 'restarted') {
 // Salem and Lauren came out the same (Lucky, 2026-10-04). Box 1 sets the register for the whole sheet,
 // so the narrator goes there. assemblePromptLayers moves the narrator's own text
 // ({{getvar::LocalNarrator}}) into post-history, after the client note; this box points there.
+// Keep this as a voice reminder only. Prewriting a mandatory sentence and checking it again
+// later caused narrators to recycle the same lines (Lucky, 2026-10-09).
 // Keyed on the literal "SPARK [1/6]" ... "BOARD [2/6]" headers; if they're gone it warns and changes nothing.
 const SPARK_BOX = /SPARK \[1\/6\][\s\S]*?(?=\n\s*BOARD \[2\/6\])/;
-const GHOST_NARRATOR_LINE = '- What narrator are you this message, and how does that shape the output?';
 
 export function addNarratorGreenRoom(body, narrator = '', early = false) {
     const source = String(body ?? '');
@@ -111,17 +112,16 @@ export function addNarratorGreenRoom(body, narrator = '', early = false) {
         console.warn('[WQR] Narrator: box 1 markers not found in the Beta body, so the narrator green room was NOT added.');
         return source;
     }
+    return source.replace(SPARK_BOX, () => narratorGreenRoomBox(name, early));
+}
+
+// The box text itself. Split out (with a numbering argument) for Beta Prompt 2's fifteen-box sheet, which is backed up
+// under "Prompt Review/Beta 2 Tests/Backup - Beta 2 + Curse Booster (2026-10-13)"; behaviour-neutral for Beta's six boxes.
+export function narratorGreenRoomBox(name, early = false, number = '1/6') {
     const location = early ? 'after the character card, before the lorebooks' : 'in the post-history instructions (after the Weyland Tavern client note, when present)';
-    const box = `NARRATOR GREEN ROOM [1/6] — Get into character. You're up first.
-The player picked ${name} to narrate, on purpose. Find [CRITICAL - NARRATOR - ${name.toUpperCase()}] ${location} and reread it, especially ${name}'s writing style section. Then, AS ${name}, first person, in ${name}'s voice:
-- What does ${name} think of what the user just did, and whose side is ${name} on? Those opinions come from ${name}'s block, not from your default warmth.
-- Quote two techniques from ${name}'s writing style and say exactly where each one lands in THIS message.
-- Write one sentence that only ${name} would write. It goes in the draft, word for word.
-- One line of energy, the way ${name} gets excited. ${name}'s energy is not every narrator's energy.
-If another narrator would write this message the same way, the player's pick did nothing. Stay ${name} for the rest of the sheet AND the draft.`;
-    // Box 5's generic narrator question becomes the follow-through check, right before box 6 picks a path.
-    const ghost = `- ${name} check: are your two techniques and your green-room sentence in the path you are about to commit to? If not, put them there now.`;
-    return source.replace(SPARK_BOX, () => box).replace(GHOST_NARRATOR_LINE, () => ghost);
+    return `NARRATOR GREEN ROOM [${number}] — Use the selected narrator's voice.
+The player picked ${name} to narrate, on purpose. Find [CRITICAL - NARRATOR - ${name.toUpperCase()}] ${location} and reread it, especially ${name}'s writing style section.
+Let ${name}'s voice and opinions come from that block. Stay ${name} for the rest of the sheet and the narration.`;
 }
 
 export function stripGeminiExplicitBox(body) {
@@ -173,3 +173,50 @@ export function applyGeminiBypassForModel(messages, model) {
     }
     return result;
 }
+
+// Rules for character thoughts (the [bracketed] inner voice), added to every thoughts-ON block (rav.thinkYes) at the
+// three ThoughtSet assignments in XXX. They ride inside that block, so they cost nothing unless thoughts are on, and they
+// live here rather than in rav.js because upstream regenerates rav.js.
+// - Secrets (2026-10-11): every prompt keeps secrets out of the NARRATION because {{user}} reads it, and that was also
+//   steering thoughts away from the character's own secrets. Worded as permission, not instruction: thoughts MAY touch a
+//   secret when it's on the character's mind, never just to reveal it.
+// - Voice (2026-10-11): a narrator persona (Lauren) used a thoughts block to commentate. Thoughts are the character's own
+//   first-person head, never third person, never narration. Lucky's wording, verbatim.
+export const THOUGHT_RULES = [
+    "- Keeping secrets applies to narration, dialogue and actions, not to thoughts. A character's thoughts may touch a secret when it's genuinely on their mind; never add one just to reveal it.",
+    "- NEVER speak in 3rd person in {{char}}'s thoughts.",
+    "- NEVER speak as a narrator in {{char}}'s thoughts.",
+];
+
+export function withThoughtRules(thinkYes) {
+    const block = String(thinkYes ?? '');
+    if (!block) return block;
+    const missing = THOUGHT_RULES.filter(line => !block.includes(line));
+    if (!missing.length) return block;
+    const lines = missing.join('\n');
+    // Inside the block when it has its closing tag, so they read as more of the thought guidelines.
+    if (block.includes('</thought directions>')) return block.replace('</thought directions>', `${lines}\n</thought directions>`);
+    return `${block}\n${lines}`;
+}
+
+// Official roster header (2026-10-12). The encoded rsbRT opens with "NEVER describe named characters without
+// [<name> INFO]", which Lucky suspected the model reads as "never describe a named character at all". It now gets the
+// same bulleted header as the Registrar roster, swapped in here at runtime (like the thought rules) because strings.js is
+// regenerated from Fox's masters and an edit to the encoded text would be reverted. Only the header line is replaced;
+// every character line below it is untouched, and text that doesn't open with the old header is returned as is.
+export const ROSTER_HEADER = [
+    "[CHARACTER ROSTER]",
+    "- The following is a list of special named NPC's that live on and around the campus.",
+    "- You are encouraged to use these characters (and your own unique character creations!) to flesh out public scenes with believable NPCs!",
+    "- If an NPC is 'not yet in college', they should NEVER appear on campus randomly, and should only appear in roleplay if {{char}} specifically looks for them.",
+    "- Use these to provide references to characters without making assumptions about other parts of their appearance.",
+    "- NEVER make up fake last names.",
+].join('\n');
+
+export function withRosterHeader(roster) {
+    const text = String(roster ?? '');
+    if (!/^\[CHARACTER ROSTER\]/.test(text) || text.startsWith(ROSTER_HEADER)) return text;
+    const end = text.indexOf('\n');
+    return end < 0 ? ROSTER_HEADER : `${ROSTER_HEADER}${text.slice(end)}`;
+}
+

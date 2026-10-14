@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { ravs } from '../../quick-reply-ext/src/promptRegistry.js';
 import { preparePromptBase } from '../../quick-reply-ext/src/promptAssembly.js';
-import { GEMINI_BYPASS_PROMPT } from '../../quick-reply-ext/src/promptModifiers.js';
+import { GEMINI_BYPASS_PROMPT, withThoughtRules } from '../../quick-reply-ext/src/promptModifiers.js';
 import { PROMPT_OPTIONS, SHIFT_OPTIONS } from '../lib/narrativeSettings.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions } from '../lib/promptResolution.js';
 import { renderNarrativeSettingsScreen } from '../lib/ui/apps/narrativeSettings.js';
@@ -72,7 +72,7 @@ test('all choices preserve global and chat-local narrators/POV, language, focus,
         const expanded = expand(locals.get('ravteg') + locals.get('postrav'), locals, globals);
         for (const slot of slots) assert.ok(expanded.includes(`TEST_${slot}`), `${name}: ${slot}`);
         assert.ok(expanded.includes('CHAT_NARRATOR') && expanded.includes('CHAT_POV'));
-        assert.ok(expanded.includes(entryFor(name).thinkYes), `${name}: character thoughts`);
+        assert.ok(expanded.includes(withThoughtRules(entryFor(name).thinkYes)), `${name}: character thoughts`);
         const inherited = await assemble('Rosa', { PromptChoice: name });
         const text = expand(inherited.locals.get('ravteg') + inherited.locals.get('postrav'), inherited.locals, inherited.globals);
         assert.ok(text.includes('NARRATOR') && text.includes('POV'), `${name}: inherited narrator/POV`);

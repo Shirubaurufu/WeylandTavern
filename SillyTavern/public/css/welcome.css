@@ -208,6 +208,7 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
 
 .welcomeInfoButtons {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     gap: 10px;
     margin: 15px 0;
@@ -474,12 +475,35 @@ body.big-avatars .welcomeRecent .recentChatList .recentChat .chatMessageContaine
     color: inherit;
 }
 
-.welcomeInfoButtons,
+/* Keep the information buttons above the community links, even when a row wraps on mobile. */
+.welcomeInfoButtonRow,
 .infoNavigation {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
+}
+
+/* Character Downloader shortcut: its own row, wider than the pill buttons, light grey so it reads as a utility. */
+.welcomeDownloaderButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: min(100%, 420px);
+    padding: 10px 20px;
+    border-radius: 15px;
+    background-color: #1e1e1e;
+    border: 1px solid var(--SmartThemeBorderColor);
+    color: #c9c9c9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: calc(var(--mainFontSize) * 0.9);
+}
+
+.welcomeDownloaderButton:hover {
+    background-color: var(--white30a);
+    color: #ececec;
 }
 
 #paw-patrol-login,

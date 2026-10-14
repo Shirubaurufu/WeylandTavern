@@ -91,3 +91,44 @@ test('Course correction has a "?" that opens its explainer as a multi-paragraph 
     renderNoticeDialog(dialog, { title: 'x', body: 'one', bullets: ['a'] });
     assert.match(dialog.innerHTML, /<p>one<\/p>\s*<ul><li>a<\/li><\/ul>/);
 });
+
+test('the time-of-day card says it is a theory, sits between the smart filter and the FAQ, and keeps the claims hedged', () => {
+    const target = { innerHTML: '' };
+    renderGeminiFilterGuide(target);
+    const html = target.innerHTML;
+    const text = html.replace(/<[^>]+>/g, ' ');
+    assert.ok(html.includes('A theory, not a fact') && html.includes('It may depend on what time it is'));
+    assert.ok(html.indexOf('The "smart" filter') < html.indexOf('A theory, not a fact'));
+    assert.ok(html.indexOf('A theory, not a fact') < html.indexOf('Things people ask'));
+    // Honest framing: no hard evidence, the explanation is a guess, and the chart is a shape, not data.
+    assert.match(text, /We have no hard evidence for this/);
+    assert.match(text, /Our guess:/);
+    assert.match(text, /the reason is only a guess/);
+    assert.match(html, /aria-label="An illustrative chart, not measured data\./);
+    assert.match(text, /Rough shape, not real numbers/);
+    // Both reported observations are present.
+    assert.match(text, /normal assistant and business messages go through perfectly/);
+    assert.match(text, /Your own clock isn't the one that matters/);
+    assert.match(text, /same conversation, with the same content, the same word choices and the same messages/);
+    // Bimodal, not one lump (Asia and the West work different hours): two named waves with a lull between them.
+    assert.match(text, /Asia\s+Lull\s+The West/);
+    assert.match(text, /two waves/);
+    assert.match(text, /Asia is a massive LLM market/);
+    const heights = [...html.matchAll(/<span style="height:(\d+)%"><\/span>/g)].map(match => Number(match[1]));
+    assert.equal(heights.length, 24);
+    // Exactly two humps: count the local maxima that rise well above their surroundings.
+    const peaks = heights.filter((h, i) => i > 0 && i < heights.length - 1 && h >= heights[i - 1] && h > heights[i + 1] && h >= 90);
+    assert.equal(peaks.length, 2, 'two waves, with a dip between them');
+    const low = Math.min(...heights.slice(heights.indexOf(peaks[0]) + 1, heights.lastIndexOf(peaks[1])));
+    assert.ok(low <= 50, 'the lull is a real dip');
+    assert.doesNotMatch(html, /data-narrative-action/);
+    assert.doesNotMatch(html, /data-narrative-action/);
+});
+
+test('the "never reroll" section no longer promises the same answer at every time of day', () => {
+    const target = { innerHTML: '' };
+    renderGeminiFilterGuide(target);
+    const text = target.innerHTML.replace(/<[^>]+>/g, ' ');
+    assert.match(text, /At any given moment, the same message\s+always\s+gets the same answer out/);
+    assert.match(text, /time of day might change that answer/);
+});

@@ -17,7 +17,7 @@ import { catnipRecipes } from '../../copycatInstructions.js';
 import { UNDERSTUDY_SCOPES, UNDERSTUDY_NARRATORS, availableUnderstudyScopes, effectiveUnderstudyScope, understudyScopeHint } from '../../understudy.js';
 import { modelSelect, fallbackModelSelect, modelQuickfills, toggleRowMarkup } from './settings.js';
 
-export const UNDERSTUDY_CAST_MODELS = ['gemini-3.8-flash', 'deepseek-v4-pro-thinking', 'gemini-3.1-pro-preview', 'gemma-4-31b-it', 'minimax-m3'];
+export const UNDERSTUDY_CAST_MODELS = ['gemini-3.8-flash', 'deepseek-v4-pro-thinking', 'gemma-4-31b-it', 'minimax-m3'];
 // The two standouts, best first. Which one is recommended as the fallback depends on which is
 // selected as the primary: recommending the same model as its own backup would not help.
 //

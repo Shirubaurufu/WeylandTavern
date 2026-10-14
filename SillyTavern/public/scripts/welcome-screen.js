@@ -228,6 +228,26 @@ async function sendWelcomePanel(chats, expand = false) {
             });
         });
 
+        // Light-grey "Character Downloader" shortcut. The downloader extension owns the modal, so click its own
+        // opener (it also refreshes the roster first); fall back to showing the modal if no opener exists yet.
+        fragment.querySelectorAll('.welcomeDownloaderButton').forEach((button) => {
+            button.addEventListener('click', function() {
+                const opener = document.getElementById('weylandOpenDownloader')
+                    || document.getElementById('wt-char-menu-btn')
+                    || document.getElementById('wt-nav-button');
+                if (opener instanceof HTMLElement) {
+                    opener.click();
+                    return;
+                }
+                const modal = document.getElementById('wt-modal-overlay');
+                if (modal instanceof HTMLElement) {
+                    modal.style.display = 'flex';
+                } else {
+                    toastr.warning('The Character Downloader is not loaded. Refresh the page and try again.');
+                }
+            });
+        });
+
         fragment.querySelectorAll('.infoNavigation .info_button').forEach((button) => {
             button.addEventListener('click', function() {
                 const infoType = this.getAttribute('data-info-type');

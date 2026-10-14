@@ -1612,12 +1612,11 @@ function checkRefusal(data, state) {
     const refusal = choice?.delta?.refusal ?? choice?.message?.refusal ?? (data?.delta?.stop_reason === 'refusal' ? t`No reason given.` : null);
     if (!refusal || state?.refusalShown) return;
     if (state) state.refusalShown = true;
-    // Provider text goes into an HTML toast, so it is escaped.
-    const said = $('<div>').text(String(refusal)).html();
     if (ANTI_DISTILLATION_REFUSAL.test(refusal)) {
-        toastr.error(`${t`The provider's anti-distillation check blocked this message. That check targets people copying the model, not roleplay, but it can misfire. Swipe to try again; if it keeps happening, switch PromptOS to the Beta Prompt.`}<br><br><small>${said}</small>`,
-            t`Message blocked (anti-distillation)`, { timeOut: 20000, extendedTimeOut: 10000, escapeHtml: false });
+        toastr.error(t`Claude's distillation protection was triggered.`);
     } else {
+        // Provider text goes into an HTML toast, so it is escaped.
+        const said = $('<div>').text(String(refusal)).html();
         toastr.error(said, t`The provider refused this message`, { timeOut: 15000, escapeHtml: false });
     }
 }

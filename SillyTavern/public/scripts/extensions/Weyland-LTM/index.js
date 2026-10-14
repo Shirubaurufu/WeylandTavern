@@ -34,6 +34,7 @@ import { main_api } from '../../../script.js';
 import { SlashCommand } from '../../slash-commands/SlashCommand.js';
 import { SlashCommandParser } from '../../slash-commands/SlashCommandParser.js';
 import { getLocalVariable } from "../../variables.js";
+import { bindMobileViewport } from './mobile-ui.js';
 
 const ctx = SillyTavern.getContext();
 const {
@@ -56,7 +57,7 @@ const EXT_VERSION = '1.6.0';
 const RECOMMENDED_LTM_MODEL = 'gemini-3.8-flash';
 // NOTE: LTM keeps its own list rather than sharing WeyPhone's ALTERNATE_PHONE_MODELS — the two
 // extensions are independently installable, so a model added to one must be added here too.
-const ALTERNATE_LTM_MODELS = ['minimax-m3', 'gemini-3.1-pro-preview'];
+const ALTERNATE_LTM_MODELS = ['minimax-m3'];
 // Second choice when the chosen model errors out. MiniMax M3 is the house fallback
 // across WeyPhone/PawXai/Kressa too: cheap, fast, available, and never Sonnet.
 const FALLBACK_LTM_MODEL = 'minimax-m3';
@@ -68,7 +69,9 @@ const FALLBACK_LTM_MODEL = 'minimax-m3';
 // appears as a literal anywhere any more — they only survive as values saved in
 // existing users' settings, which is exactly what this map is for.
 const STALE_MODEL_RENAMES = {
-    'gemini-3-pro-preview': 'gemini-3.1-pro-preview',
+    // Gemini 3.1 Pro was discontinued by Google without notice (2026-10-12); both of its ids move to 3.8 Flash.
+    'gemini-3-pro-preview': 'gemini-3.8-flash',
+    'gemini-3.1-pro-preview': 'gemini-3.8-flash',
     'gemini-3.6-flash': 'gemini-3.8-flash',
     'gemini-3.7-flash': 'gemini-3.8-flash',
     // Helix lost access to GLM 4.7 entirely (2026-09-15); a stored setting pointing at either id
@@ -1116,7 +1119,10 @@ function buildRequestPayload(messages, stream, modelOverride = undefined) {
         // supports it (OpenAI-family, OpenRouter, xAI, etc.) — cuts down on
         // the "thinks for a while then stops without ever writing the entry"
         // failure mode. Harmless no-op on sources that don't honor it.
-        reasoning_effort: 'min',
+        // OpenRouter passes this straight through as reasoning.effort and rejects 'min' with a 400 (its
+        // accepted values are minimal/low/medium/high/xhigh/max, tested 2026-10-12 on claude-haiku-5.5); the OpenAI
+        // path maps min -> minimal on the server, OpenRouter's doesn't.
+        reasoning_effort: source === 'openrouter' ? 'minimal' : 'min',
     };
     // No model resolvable — let the backend/provider use its default rather
     // than sending an empty string.
@@ -1653,7 +1659,7 @@ async function autoSaveJob(job) {
         jobs.delete(job.id);
         discardDraftState(job.chatId);
         await demoteExcessLTMs();
-        toast('success', 'LTM auto-saved 🧠');
+        toast('success', 'LTM auto-saved');
         return true;
     } catch (err) {
         ltmWarn('auto-save failed', err);
@@ -1740,13 +1746,13 @@ function updateChip({ trigger = false } = {}) {
     const readyManual = chatJobs.filter(j => j.status === 'ready' && !j.autoTriggered);
     const failed = chatJobs.filter(j => j.status === 'failed').length;
 
-    if (generatingManual.length) return setChip('🧠 LTM generating…', 'info');
+    if (generatingManual.length) return setChip('LTM generating…', 'info');
     if (generatingAuto.length) {
         return setChip(settings.autoLtmMode === 'full' ? 'Generating LTM…' : 'Drafting an LTM…', 'urgent');
     }
-    if (readyManual.length) return setChip(`📝 ${readyManual.length} LTM draft${readyManual.length > 1 ? 's' : ''} ready`, 'ready');
+    if (readyManual.length) return setChip(`${readyManual.length} LTM draft${readyManual.length > 1 ? 's' : ''} ready`, 'ready');
     if (readyAuto.length && settings.autoLtmMode === 'semi') return setChip('LTM ready for approval', 'urgent');
-    if (failed) return setChip('⚠️ LTM failed — click to reroll', 'error');
+    if (failed) return setChip('LTM failed. Click to reroll.', 'error');
 
     // The passive due-nudge only applies to Off mode — Semi/Full both
     // auto-trigger the instant the cap is hit (maybeAutoTrigger, above), so
@@ -1769,7 +1775,7 @@ function buildModalHtml() {
 <div id="${MODAL_ID}" style="display:none; position:fixed; inset:0; z-index:99990; pointer-events:none;">
   <div id="wlm-modal">
     <div id="wlm-titlebar">
-      <span class="wlm-title">🧠 Long-Term Memory</span>
+      <span class="wlm-title">Long-Term Memory</span>
       <div class="wlm-titlebar-actions">
         <!-- Quick model switcher: swapping the LTM model is the single most common
              settings trip, so it lives here instead of behind the ⚙ panel.
@@ -1778,16 +1784,16 @@ function buildModalHtml() {
              because focus()ing a select does not open its native dropdown. -->
         <span class="wlm-model-chip-label">Model:</span>
         <select id="wlm-model-chip-select" class="wlm-model-chip-select" title="Which model writes your memories. This only affects LTM generation — your roleplay chat model is untouched."></select>
-        <button id="wlm-settings-btn" title="Open LTM settings — model, cadence, point of view, and more">LTM Settings ⚙</button>
-        <button id="wlm-close-btn" title="Close">✕</button>
+        <button id="wlm-settings-btn" title="Open LTM settings — model, cadence, point of view, and more">Settings</button>
+        <button id="wlm-close-btn" title="Close" aria-label="Close Long-Term Memory">✕</button>
       </div>
     </div>
     <div id="wlm-body">
       <div id="wlm-sidebar">
         <div class="wlm-sidebar-actions">
-          <button id="wlm-new-btn" class="wlm-btn-primary" title="Generate a new LTM from recent messages">+ New LTM</button>
+          <button id="wlm-new-btn" class="wlm-btn-primary" title="Generate a new LTM from recent messages">New LTM</button>
           <button id="wlm-merge-btn" class="wlm-btn-sm" disabled title="Check two entries below, then merge them">Merge</button>
-          <button id="wlm-bulk-delete-btn" class="wlm-btn-sm wlm-btn-danger" disabled title="Check one or more entries below, then delete them">🗑 Delete Selected</button>
+          <button id="wlm-bulk-delete-btn" class="wlm-btn-sm wlm-btn-danger" disabled title="Check one or more entries below, then delete them">Delete Selected</button>
         </div>
         <div id="wlm-progress-row">
           <div class="wlm-progress-line" title="LEFT: the message number where your last saved memory stopped. Everything after it is not yet remembered.&#10;RIGHT: the message number where the next memory is due — when you reach it, LTM offers to make one. '(now N)' is the message you are on right now.">
@@ -1816,7 +1822,7 @@ function buildModalHtml() {
       </div>
       <div id="wlm-editor">
         <div id="wlm-editor-header">
-          <button id="wlm-mobile-expand-btn" class="wlm-btn-sm wlm-mobile-only" title="Expand the editor to use most of the screen">⤢</button>
+          <button id="wlm-mobile-expand-btn" class="wlm-btn-sm wlm-mobile-only" title="Expand the editor to use most of the screen" aria-controls="wlm-entry-list" aria-expanded="true">Expand</button>
           <span id="wlm-editor-title">No entry selected</span>
           <div class="wlm-editor-meta">
             <span id="wlm-token-count"></span>
@@ -1824,14 +1830,14 @@ function buildModalHtml() {
           </div>
         </div>
         <input id="wlm-title-input" type="text" placeholder="Memory title" style="display:none" title="Rename this memory. Overrides whatever '# Title' line is in the text below." />
-        <textarea id="wlm-editor-body" spellcheck="false" placeholder="Select an LTM from the sidebar, or hit '+ New LTM' to generate a draft from your recent messages."></textarea>
+        <textarea id="wlm-editor-body" spellcheck="false" placeholder="Select an LTM from the sidebar, or hit 'New LTM' to generate a draft from your recent messages."></textarea>
         <div id="wlm-editor-actions">
           <span id="wlm-editor-status"></span>
-          <button id="wlm-stop-btn" class="wlm-btn-sm wlm-btn-danger" style="display:none" title="Cancel the current generation">■ Stop</button>
-          <button id="wlm-reroll-btn" class="wlm-btn-sm" disabled title="Generate a new attempt. For a saved entry, regenerates from the original messages if known, otherwise rewrites the existing text.">🔁 Reroll</button>
-          <button id="wlm-pin-btn" class="wlm-btn-sm" disabled title="Keep this memory permanently loaded — pinned entries are never demoted to vectorized-only.">📌 Pin</button>
-          <button id="wlm-delete-btn" class="wlm-btn-sm wlm-btn-danger" disabled title="Delete this memory permanently.">🗑 Delete</button>
-          <button id="wlm-save-btn" class="wlm-btn-primary" disabled title="Save this draft/edit to the character's memory.">💾 Save</button>
+          <button id="wlm-stop-btn" class="wlm-btn-sm wlm-btn-danger" style="display:none" title="Cancel the current generation">Stop</button>
+          <button id="wlm-reroll-btn" class="wlm-btn-sm" disabled title="Generate a new attempt. For a saved entry, regenerates from the original messages if known, otherwise rewrites the existing text.">Reroll</button>
+          <button id="wlm-pin-btn" class="wlm-btn-sm" disabled title="Keep this memory permanently loaded — pinned entries are never demoted to vectorized-only."><span class="wlm-button-label">Pin</span></button>
+          <button id="wlm-delete-btn" class="wlm-btn-sm wlm-btn-danger" disabled title="Delete this memory permanently.">Delete</button>
+          <button id="wlm-save-btn" class="wlm-btn-primary" disabled title="Save this draft/edit to the character's memory.">Save</button>
         </div>
       </div>
       <div id="wlm-settings-pane" style="display:none">
@@ -1926,12 +1932,15 @@ function buildModalHtml() {
 }
 
 let modalInjected = false;
+let disposeMobileViewport;
 
 function injectModal() {
     if (modalInjected && document.getElementById(MODAL_ID)) return;
+    disposeMobileViewport?.();
     document.getElementById(MODAL_ID)?.remove();
     document.body.insertAdjacentHTML('beforeend', buildModalHtml());
     modalInjected = true;
+    disposeMobileViewport = bindMobileViewport(document.getElementById('wlm-modal'));
 
     document.getElementById('wlm-close-btn').addEventListener('click', closePanel);
     document.getElementById('wlm-settings-btn').addEventListener('click', () => toggleSettingsView());
@@ -2291,6 +2300,8 @@ function toggleSettingsView(force) {
     if (showSettings) loadSettingsIntoForm();
     pane.style.display = showSettings ? 'flex' : 'none';
     editor.style.display = showSettings ? 'none' : 'flex';
+    // On phones the list is stacked above the pane; style.css hides it while settings are open.
+    document.getElementById('wlm-modal')?.classList.toggle('wlm-settings-open', showSettings);
 }
 
 // Mobile-only (see the `.wlm-mobile-only` / `.wlm-mobile-expanded` rules in
@@ -2302,18 +2313,30 @@ function toggleSettingsView(force) {
 // down to just its action buttons.
 function toggleMobileExpand() {
     const modal = document.getElementById('wlm-modal');
-    const btn = document.getElementById('wlm-mobile-expand-btn');
+    // Touch browsers may leave the textarea focused when tapping a button.
+    // Dismiss its keyboard before revealing the list and toolbar.
+    const active = document.activeElement;
+    if (modal.contains(active) && active?.matches('input, textarea')) active.blur();
+    modal.classList.remove('wlm-mobile-editing');
     const expanded = modal.classList.toggle('wlm-mobile-expanded');
-    btn.textContent = expanded ? '⤡' : '⤢';
-    btn.title = expanded ? 'Shrink the editor back down' : 'Expand the editor to use most of the screen';
+    updateMobileListToggle(expanded);
+}
+
+// Use the same visible label and accessibility state after selection, reset
+// and a manual toggle. An unexplained arrow made the list look unavailable.
+function updateMobileListToggle(expanded) {
+    const btn = document.getElementById('wlm-mobile-expand-btn');
+    if (!btn) return;
+    btn.textContent = expanded ? 'Memories' : 'Expand';
+    btn.title = expanded ? 'Show the memory list' : 'Expand the editor to use most of the screen';
+    btn.setAttribute('aria-expanded', String(!expanded));
 }
 
 /** No-op outside the mobile breakpoint — see toggleMobileExpand. */
 function autoExpandEditorOnMobile() {
     if (!window.matchMedia('(max-width: 700px)').matches) return;
     document.getElementById('wlm-modal')?.classList.add('wlm-mobile-expanded');
-    const btn = document.getElementById('wlm-mobile-expand-btn');
-    if (btn) { btn.textContent = '⤡'; btn.title = 'Shrink the editor back down'; }
+    updateMobileListToggle(true);
 }
 
 function setupDragging() {
@@ -2322,7 +2345,9 @@ function setupDragging() {
     let dragging = false, offX = 0, offY = 0;
 
     titlebar.addEventListener('mousedown', (ev) => {
-        if (/** @type {HTMLElement} */ (ev.target).closest('button')) return;
+        // The model <select> lives in the titlebar too. preventDefault() below cancels a
+        // select's native dropdown (it only highlighted on tap), so controls are never a drag handle.
+        if (/** @type {HTMLElement} */ (ev.target).closest('button, select, input, option')) return;
         dragging = true;
         const rect = modal.getBoundingClientRect();
         offX = ev.clientX - rect.left;
@@ -2417,7 +2442,8 @@ async function refreshSidebar() {
     for (const job of getJobsForChat(chatId)) {
         const row = document.createElement('div');
         row.className = 'wlm-sidebar-row wlm-row-draft';
-        row.textContent = `${statusIcon(job.status)} Draft — ${statusLabel(job.status)}`;
+        row.dataset.wlmJobId = job.id;
+        row.textContent = `Draft: ${statusLabel(job.status)}`;
         row.addEventListener('click', () => selectJob(job));
         listEl.appendChild(row);
     }
@@ -2431,6 +2457,7 @@ async function refreshSidebar() {
     entries.forEach((entry, idx) => {
         const row = document.createElement('div');
         row.className = 'wlm-sidebar-row';
+        row.dataset.wlmEntryUid = String(entry.uid);
         if (entry.legacy) row.title = 'Created by the old LTM system';
 
         const checkbox = document.createElement('input');
@@ -2446,8 +2473,17 @@ async function refreshSidebar() {
 
         const titleLine = document.createElement('div');
         titleLine.className = 'wlm-sidebar-row-title';
-        titleLine.textContent = `${idx + 1}. ${entry.pinned ? '📌 ' : ''}${entry.vectorized ? '🔍 ' : ''}${displayName(entry.title)}`;
+        titleLine.textContent = `${idx + 1}. ${displayName(entry.title)}`;
         label.appendChild(titleLine);
+
+        // Preserve the meaning of the old pin/search emojis with readable badges.
+        if (entry.pinned || entry.vectorized) {
+            const badges = document.createElement('div');
+            badges.className = 'wlm-entry-badges';
+            if (entry.pinned) appendMemoryBadge(badges, 'Pinned', 'This memory always stays loaded.');
+            if (entry.vectorized) appendMemoryBadge(badges, 'On demand', 'This older memory is recalled when it is relevant to the conversation.');
+            label.appendChild(badges);
+        }
 
         if (entry.date) {
             const dateLine = document.createElement('div');
@@ -2464,13 +2500,31 @@ async function refreshSidebar() {
     if (!listEl.children.length) {
         const empty = document.createElement('div');
         empty.className = 'wlm-sidebar-empty';
-        empty.textContent = 'No memories yet. Hit + New LTM to create the first one.';
+        empty.textContent = 'No memories yet. Hit New LTM to create the first one.';
         listEl.appendChild(empty);
     }
+    highlightSelectedMemory();
 }
 
-function statusIcon(status) {
-    return { queued: '⏳', generating: '⚡', ready: '📝', failed: '⚠️' }[status] ?? '•';
+function appendMemoryBadge(container, text, title) {
+    const badge = document.createElement('span');
+    badge.className = 'wlm-entry-badge';
+    badge.textContent = text;
+    badge.title = title;
+    container.appendChild(badge);
+}
+
+function highlightSelectedMemory() {
+    const selected = selectedRef.current;
+    document.querySelectorAll('#wlm-entry-list .wlm-sidebar-row').forEach(row => {
+        const current = selected?.kind === 'job'
+            ? row.dataset.wlmJobId === selected.job.id
+            : selected?.kind === 'entry' && row.dataset.wlmEntryUid === String(selected.entry.uid);
+        // Bulk-selection uses wlm-selected; keep the editing highlight separate.
+        row.classList.toggle('wlm-current', Boolean(current));
+        if (current) row.setAttribute('aria-current', 'true');
+        else row.removeAttribute('aria-current');
+    });
 }
 
 function statusLabel(status) {
@@ -2511,7 +2565,7 @@ function clearEditorDisplay() {
     updateTokenCount('');
     const btn = id => /** @type {HTMLButtonElement} */ (document.getElementById(id));
     if (btn('wlm-reroll-btn')) btn('wlm-reroll-btn').disabled = true;
-    if (btn('wlm-pin-btn')) { btn('wlm-pin-btn').disabled = true; btn('wlm-pin-btn').textContent = '📌 Pin'; }
+    if (btn('wlm-pin-btn')) { btn('wlm-pin-btn').disabled = true; btn('wlm-pin-btn').querySelector('.wlm-button-label').textContent = 'Pin'; }
     if (btn('wlm-delete-btn')) btn('wlm-delete-btn').disabled = true;
     if (btn('wlm-save-btn')) btn('wlm-save-btn').disabled = true;
     if (btn('wlm-merge-btn')) btn('wlm-merge-btn').disabled = true;
@@ -2522,8 +2576,8 @@ function clearEditorDisplay() {
     // visible again for picking something else (mobile only; a no-op class
     // toggle above the breakpoint).
     document.getElementById('wlm-modal')?.classList.remove('wlm-mobile-expanded');
-    const expandBtn = document.getElementById('wlm-mobile-expand-btn');
-    if (expandBtn) { expandBtn.textContent = '⤢'; expandBtn.title = 'Expand the editor to use most of the screen'; }
+    updateMobileListToggle(false);
+    highlightSelectedMemory();
 }
 
 /**
@@ -2552,6 +2606,7 @@ function showTitleInputWith(value) {
 
 function selectJob(job) {
     selectedRef.current = { kind: 'job', job };
+    highlightSelectedMemory();
     const title = job.status === 'ready' ? 'Draft — ready to review'
         : job.status === 'failed' ? `Draft — failed (${job.error ?? 'unknown error'})`
         : 'Draft — generating…';
@@ -2568,6 +2623,7 @@ function selectJob(job) {
 
 function selectEntry(entry) {
     selectedRef.current = { kind: 'entry', entry };
+    highlightSelectedMemory();
     document.getElementById('wlm-editor-title').textContent = displayName(entry.title) + (entry.legacy ? '  (legacy)' : '');
     // Resolved for display/editing — if this entry was saved during the
     // brief window with the {{char}}/{{user}} bug, editing and re-saving
@@ -2591,7 +2647,7 @@ function setEditorButtons(sel) {
     btn('wlm-stop-btn').style.display = generating ? '' : 'none';
     btn('wlm-reroll-btn').disabled = generating;
     btn('wlm-pin-btn').disabled = sel.kind !== 'entry';
-    btn('wlm-pin-btn').textContent = sel.kind === 'entry' && sel.entry.pinned ? '📌 Unpin' : '📌 Pin';
+    btn('wlm-pin-btn').querySelector('.wlm-button-label').textContent = sel.kind === 'entry' && sel.entry.pinned ? 'Unpin' : 'Pin';
     btn('wlm-delete-btn').disabled = generating;
     btn('wlm-save-btn').disabled = generating;
     document.getElementById('wlm-editor-status').textContent =
@@ -2808,7 +2864,7 @@ async function onSaveClicked() {
         }
 
         await demoteExcessLTMs();
-        toast('success', 'Memory saved 🧠');
+        toast('success', 'Memory saved');
         selectedRef.current = null;
         clearEditorDisplay();
         await refreshSidebar();

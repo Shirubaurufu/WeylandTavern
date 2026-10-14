@@ -60,11 +60,83 @@ test('updating an import preserves unloaded members', () => {
     assert.equal(librarySummary(book).items.find(row => row.key === 'character:999').active, false);
 });
 
+test('public and WIP locations are visible, labelled and importable without exposing other statuses', () => {
+    const lookingGlass = { ...location, locationId: 14, name: 'The Looking Glass/Rabbit Hole', status: 'wip' };
+    const rows = normalizeCatalog({ location: [location, lookingGlass,
+        { ...lookingGlass, locationId: 15, status: 'private' },
+        { ...lookingGlass, locationId: 16, status: 'draft' },
+        { ...lookingGlass, locationId: 17, status: 'unknown' },
+        { ...lookingGlass, locationId: 18, status: 'public', deletedAt: 'now' },
+        { ...lookingGlass, locationId: 19, deletedAt: 'now' },
+    ], collection: [{ ...collection, status: 'wip' }] });
+    assert.deepEqual(rows.map(row => row.id), [1, 14]);
+    const items = rows.map(row => publicItem(row));
+    const book = changeLibrary(empty(), 'install', 'location:14', rows);
+    const library = librarySummary(book);
+    assert.equal(library.items[0].status, 'wip');
+    assert.ok(Object.values(book.entries).some(row => row.comment === lookingGlass.name && row.content.includes(lookingGlass.description)));
+    assert.ok(Object.values(book.entries).some(row => row.comment === `${lookingGlass.name}, Studio`));
+    const state = { items, library, tab: 'location', query: 'Looking Glass', sort: 'name', page: 0,
+        browseFilters: { onlyExpressions: true, tags: ['furry'] } };
+    assert.deepEqual(visibleRegistrarItems(state).map(row => row.key), ['location:14']);
+    const target = { innerHTML: '', querySelectorAll: () => [] };
+    renderRegistrar(target, state);
+    assert.match(target.innerHTML, /rg-wip-badge/);
+    assert.match(target.innerHTML, /Work in progress — this location is still being developed/);
+    renderRegistrar(target, { ...state, detail: 'location:14' });
+    assert.match(target.innerHTML, /Work in progress: this location is still being developed/);
+    assert.doesNotMatch(target.innerHTML, /data-rg-install="location:14"\s+disabled/);
+    renderRegistrar(target, { ...state, items: [items[0]], query: '', library: null });
+    assert.doesNotMatch(target.innerHTML, /rg-wip-badge/);
+    renderRegistrar(target, { ...state, tab: 'library', libraryKind: 'location', items: [] });
+    assert.match(target.innerHTML, /rg-wip-badge/, 'saved WIP locations keep their label when the live catalog is unavailable');
+});
+
+test('the API and both collection modes include WIP locations and import their lore', async () => {
+    const lookingGlass = { ...location, locationId: 14, name: 'The Looking Glass/Rabbit Hole', status: 'wip' };
+    const curated = { ...collection, selectedCharacters: encodeURIComponent('[999,"L1","L14","L15","L16"]') };
+    const dynamic = { ...collection, collectionId: 3, selectionMode: 'Dynamic', filter: encodeURIComponent('type:location'), deselectedCharacters: '[]' };
+    const rows = normalizeCatalog({ character: [npc], collection: [curated, dynamic], location: [location, lookingGlass,
+        { ...lookingGlass, locationId: 15, status: 'private' }, { ...lookingGlass, locationId: 16, deletedAt: 'now' },
+    ] });
+    assert.deepEqual(collectionMembers(rows.find(row => row.kind === 'collection' && row.id === 2), rows).map(row => `${row.kind}:${row.id}`), ['character:999', 'location:1', 'location:14']);
+    assert.deepEqual(collectionMembers(rows.find(row => row.kind === 'collection' && row.id === 3), rows).map(row => row.id), [1, 14]);
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'weyphone-registrar-wip-location-'));
+    const app = express();
+    app.use(express.json());
+    app.use((req, _res, next) => { req.user = { directories: { worlds: dir } }; next(); });
+    app.use('/api/registrar', createRegistrarRouter(async () => rows, () => {}));
+    const server = app.listen(0, '127.0.0.1');
+    await new Promise(resolve => server.once('listening', resolve));
+    const root = `http://127.0.0.1:${server.address().port}/api/registrar`;
+    try {
+        const list = await (await fetch(`${root}/catalog`)).json();
+        assert.deepEqual(list.items.filter(row => row.kind === 'location').map(row => [row.key, row.status]), [['location:1', 'public'], ['location:14', 'wip']]);
+        assert.deepEqual(list.items.find(row => row.key === 'collection:2').members, ['character:999', 'location:1', 'location:14']);
+        for (const key of ['location:14', 'collection:2', 'collection:3']) {
+            const response = await fetch(`${root}/library`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'install', key }) });
+            assert.equal(response.status, 200);
+            const library = await response.json();
+            assert.equal(library.items.find(row => row.key === 'location:14').status, 'wip');
+        }
+        const book = await readLibrary({ worlds: dir });
+        assert.equal(Object.values(book.entries).filter(row => row.comment === lookingGlass.name).length, 1);
+        assert.ok(Object.values(book.entries).some(row => row.comment === 'Location List' && row.content.includes(lookingGlass.name)));
+    } finally { await new Promise(resolve => server.close(resolve)); await fs.rm(dir, { recursive: true, force: true }); }
+});
+
 test('subbot export preserves macro age, roster, companions, aliases and selective lore', () => {
     const book = buildRegistrarBook([npc]);
     const entries = Object.values(book.entries);
     assert.equal(entries.length, 6);
     assert.equal(entries.find(row => row.comment === 'Character Roster').constant, true);
+    // ST only expands {{getvar::name}} (double colon); the single-colon form reached the model as literal text.
+    const roster = entries.find(row => row.comment === 'Character Roster');
+    assert.doesNotMatch(roster.content, /\{\{getvar:[^:]/);
+    assert.match(roster.content, /\{\{getvar::[A-Za-z0-9-]+\}\}/);
+    assert.match(roster.content, /^\[BONUS REGISTRAR ROSTER\]\n- The following is a list of special named NPC's/);
+    assert.match(roster.content, /\n- NEVER make up fake last names\.\n/);
+    assert.match(roster.content, /\[END BONUS REGISTRAR ROSTER\]$/);
     const profile = entries.find(row => row.comment === 'Testy');
     assert.match(profile.content, /\{\{getvar::22YO\}\}/);
     assert.match(profile.content, /Studio Outfit/);
@@ -314,3 +386,4 @@ test('My World separates characters and locations, including collection members,
     assert.deepEqual(visibleRegistrarItems({ ...state, libraryKind: 'collection' }).map(item => item.key), [group.key]);
     assert.deepEqual(visibleRegistrarItems({ ...state, libraryKind: 'location', query: 'One' }), []);
 });
+

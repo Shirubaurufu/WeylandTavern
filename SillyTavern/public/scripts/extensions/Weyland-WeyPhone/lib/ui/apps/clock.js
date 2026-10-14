@@ -146,9 +146,10 @@ function tabsMarkup(activeTab) {
 /**
  * The app-wide Time-source control. Drives the phone's displayed clock AND the concrete mode fresh
  * timers/alarms start on. Pressing either segment toggles (handled in index.js), so data-default-mode
- * is only a marker of which side was tapped.
+ * is only a marker of which side was tapped. Exported because Settings shows the very same control
+ * (one setting, two doors): people looking for "phone time" go to Settings, not the Clock.
  */
-function defaultControlMarkup(defaultMode) {
+export function defaultControlMarkup(defaultMode) {
     const seg = (mode, label) => `<button type="button" class="wp-clock-default-btn${defaultMode === mode ? ' wp-selected' : ''}" data-default-mode="${mode}">${label}</button>`;
     return `
 <div class="wp-clock-default">

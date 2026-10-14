@@ -261,6 +261,7 @@ import { initServerHistory } from './scripts/server-history.js';
 import { initSettingsSearch } from './scripts/setting-search.js';
 import { initBulkEdit } from './scripts/bulk-edit.js';
 import { getContext } from './scripts/st-context.js';
+import { createNarratorSettingsSync } from './scripts/narrator-settings-sync.js';
 import { extractReasoningFromData, initReasoning, parseReasoningInSwipes, PromptReasoning, ReasoningHandler, removeReasoningFromString, updateReasoningUI } from './scripts/reasoning.js';
 import { accountStorage } from './scripts/util/AccountStorage.js';
 import { initWelcomeScreen, getPermanentAssistantAvatar } from './scripts/welcome-screen.js';
@@ -363,6 +364,19 @@ export let isChatSaving = false;
 let chat_create_date = '';
 let firstRun = false;
 let settingsReady = false;
+
+export const narratorSettingsSync = createNarratorSettingsSync({
+    getGlobals: () => extension_settings.variables.global,
+    fetchValues: async () => {
+        const response = await fetch('/api/settings/narrator', {
+            method: 'POST', headers: getRequestHeaders(), body: '{}', cache: 'no-cache', signal: AbortSignal.timeout(5000),
+        });
+        // An older backend keeps the local behavior until the installation is restarted.
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`Narrator settings could not be refreshed (${response.status}).`);
+        return response.json();
+    },
+});
 let currentVersion = '0.0.0';
 export let displayVersion = 'WeylandTavern';
 
@@ -6868,6 +6882,7 @@ export async function getSettings() {
     const data = await response.json();
     if (data.result != 'file not find' && data.settings) {
         settings = JSON.parse(data.settings);
+        narratorSettingsSync.initialize(settings.extension_settings?.variables?.global, settings.weylandNarratorRevision ?? 0);
         if (settings.username !== undefined && settings.username !== '') {
             name1 = settings.username;
             $('#your_name').text(name1);
@@ -7021,11 +7036,12 @@ export async function saveSettings(loopCounter = 0) {
         selected_proxy: selected_proxy,
     };
 
+    const narratorSave = narratorSettingsSync.prepareSave();
     try {
         const result = await fetch('/api/settings/save', {
             method: 'POST',
             headers: getRequestHeaders(),
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ ...payload, weylandNarratorBaseline: narratorSave.baseline }),
             cache: 'no-cache',
         });
 
@@ -7033,6 +7049,9 @@ export async function saveSettings(loopCounter = 0) {
             throw new Error(`Failed to save settings: ${result.statusText}`);
         }
 
+        const savedResult = await result.json();
+        if (savedResult.result !== 'ok') throw new Error('The server could not save settings.');
+        narratorSettingsSync.acceptSave(narratorSave, savedResult.narrator, savedResult.narratorRevision);
         settings = payload;
         await eventSource.emit(event_types.SETTINGS_UPDATED);
         return true;

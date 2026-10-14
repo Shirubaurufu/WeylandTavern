@@ -263,3 +263,21 @@ test('Mien full-screen mode keeps expression navigation, apply, and an exit cont
     assert.match(container.innerHTML, /id="wp-mien-apply"/);
     assert.match(container.innerHTML, /anger/);
 });
+
+// 2026-10-13: tapping the big preview opens the same full-screen view the header's expand button does.
+test('Mien: the preview image opens full screen, and only the inline preview (not the full-screen picture) does', async () => {
+    const { readFileSync } = await import('node:fs');
+    const container = target();
+    renderMienScreen(container, {
+        gallery: { character: { name: 'Summer' }, source: 'local', selectedOutfitId: 'a', outfits: [{ id: 'a', label: 'Festival' }], expressions: [{ label: 'joy', path: '/joy.avif' }] },
+    });
+    assert.match(container.innerHTML, /<figure class="wp-mien-preview">\s*<img [^>]*title="Tap to view full screen"/);
+    const full = target();
+    renderMienScreen(full, {
+        gallery: { character: { name: 'Summer' }, source: 'local', selectedOutfitId: 'a', outfits: [{ id: 'a', label: 'Festival' }], expressions: [{ label: 'joy', path: '/joy.avif' }] },
+        fullscreen: true,
+    });
+    assert.doesNotMatch(full.innerHTML, /wp-mien-preview/, 'the full-screen picture is not a second tap target');
+    const index = readFileSync(new URL('../index.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+    assert.match(index, /event\.target\.closest\('#wp-mien-fullscreen'\) \|\| event\.target\.closest\('\.wp-mien-preview img'\)\) \{\s*mienFullscreen = true;/);
+});

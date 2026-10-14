@@ -60,6 +60,7 @@ test('course corrections resolve hard mode, ordinary shifts, custom text, and li
     assert.equal(copycatCourseCorrection(context({ RoleplayShift: 'Hard Mode', HardToggle: 'Off' }), beta), '');
     assert.equal(copycatCourseCorrection(context({ RoleplayShift: 'General-Use', AnalysisToggle: 'Disabled' }), beta), '');
     assert.equal(copycatCourseCorrection(context({ RoleplayShift: 'General-Use' }), beta), 'General feedback');
+    assert.equal(copycatCourseCorrection(context({ RoleplayShift: 'General-Use' }), beta, { sheetless: true }), '');
     const ctx = context({ RoleplayShift: 'None', HardToggle: 'On', RoleplayShiftCustom: JSON.stringify({ name: 'My recipe', text: 'Custom direction' }) }, { DoseLive: 'true', DoseShift: 'Custom Preset' });
     const output = copycatCourseCorrection(ctx, beta);
     assert.match(output, /Custom direction/); assert.doesNotMatch(output, /Hard directive/);

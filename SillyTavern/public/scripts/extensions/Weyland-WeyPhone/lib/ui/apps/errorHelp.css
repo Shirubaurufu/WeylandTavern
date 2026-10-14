@@ -1,0 +1,80 @@
+/* Uses the Gemini guide's card, LCD, numbered steps and disclosure styles. */
+.wp-eh .wp-narrative-content { min-width: 0; }
+.wp-eh .wp-gf-intro h2 { overflow-wrap: anywhere; line-height: 1.18; }
+.wp-eh .wp-eh-search-label { display: block; margin: 14px 0 6px; color: var(--wn-ink); font-size: 11px; font-weight: 700; }
+.wp-eh .wp-eh-search { display: flex; align-items: center; gap: 9px; padding: 0 10px; border: 1px solid var(--wn-line); border-radius: 9px; background: var(--wn-paper-2); color: var(--wn-ember); }
+#wp-panel .wp-eh .wp-eh-search input { width: 100%; min-width: 0; margin: 0; padding: 11px 0; border: 0; background: transparent; box-shadow: none; color: var(--wn-ink); font: inherit; font-size: 12px; }
+.wp-eh .wp-eh-search:focus-within { outline: 2px solid var(--wn-accent-soft); outline-offset: 2px; }
+.wp-eh .wp-eh-search + p { margin-top: 8px; }
+.wp-eh .wp-eh-group { margin: 2px 0 18px; }
+.wp-eh .wp-eh-group h3 { margin: 0 0 7px; color: var(--wn-ember); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.wp-eh .wp-eh-list { display: grid; gap: 7px; }
+.wp-eh .wp-eh-result { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--wn-line); border-radius: 10px; background: var(--wn-paper); color: var(--wn-ink); text-align: left; cursor: pointer; }
+.wp-eh .wp-eh-result:hover { background: color-mix(in srgb, var(--gf-blue) 10%, var(--wn-paper)); border-color: var(--gf-blue); }
+.wp-eh .wp-eh-result > span { display: grid; gap: 4px; min-width: 0; }
+.wp-eh .wp-eh-result strong { font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+.wp-eh .wp-eh-result small { color: var(--gf-text); font-size: 11px; line-height: 1.45; }
+.wp-eh .wp-eh-result > i { flex: 0 0 auto; color: var(--wn-ember); font-size: 10px; }
+.wp-eh .wp-eh-example { white-space: pre-wrap; overflow-wrap: anywhere; font-family: 'JetBrains Mono', monospace; }
+#wp-panel[data-app="narrative"] .wp-eh-notice .wp-narrative-lcd-meta b { color: var(--wn-accent-soft); }
+/* These steps carry the main instructions, so give them the guide's full body-text contrast. */
+.wp-eh .wp-eh-step-copy p { color: var(--gf-text); font-size: 11.5px; line-height: 1.55; }
+.wp-eh .wp-eh-explanation p + p, .wp-eh .wp-eh-step-copy p + p { margin-top: 12px; }
+.wp-eh .wp-eh-note { margin-top: 14px; }
+.wp-eh .wp-eh-note p + p { margin-top: 10px; }
+.wp-eh .wp-eh-actions { display: grid; gap: 8px; margin-top: 14px; }
+.wp-eh .wp-eh-actions button { min-height: 40px; white-space: normal; line-height: 1.4; }
+.wp-eh .wp-eh-sources { display: grid; gap: 9px; }
+.wp-eh .wp-eh-sources a { color: var(--wn-ember); font-size: 11px; line-height: 1.4; }
+.wp-eh .wp-eh-empty { padding: 16px; border: 1px dashed var(--wn-line); border-radius: 10px; color: var(--wn-ink); }
+.wp-eh .wp-eh-empty p { margin: 8px 0 12px; }
+/* "Where it usually goes wrong": the Gemini guide's checked-stack rows, reused for the reply's path.
+   Its l0 rows are struck through ("not checked"); here l0 means "probably fine", so no strike. */
+.wp-eh .wp-eh-route-title { display: block; margin: 14px 0 6px; color: var(--wn-ink); font-size: 11.5px; font-weight: 800; }
+.wp-eh .wp-eh-route { margin-bottom: 2px; }
+.wp-eh .wp-eh-route .wp-gf-stack-row span { font-weight: 400; text-decoration: none; }
+/* The name side gets the room; the rating label wraps first. With the stack's default
+   flex: 0 0 auto label, "OFTEN, A FILTER" squeezed "The AI model" onto two lines. */
+.wp-eh .wp-eh-route .wp-gf-stack-row > span { display: flex; flex: 1 1 auto; align-items: center; gap: 9px; min-width: 0; }
+.wp-eh .wp-eh-route .wp-gf-stack-row > small { flex: 0 1 auto; max-width: 38%; line-height: 1.25; text-align: right; }
+.wp-eh .wp-eh-route .wp-gf-stack-row > span > i { flex: 0 0 18px; color: var(--wn-ink-muted); font-size: 12px; text-align: center; }
+.wp-eh .wp-eh-route .wp-gf-stack-row > span > span { display: grid; gap: 1px; min-width: 0; }
+.wp-eh .wp-eh-route .wp-gf-stack-row b { color: var(--wn-ink); font-size: 11px; }
+.wp-eh .wp-eh-route .wp-eh-route-sub { color: var(--wn-ink-muted); font-size: 9.5px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.wp-eh .wp-eh-route .wp-gf-stack-row.l3 > span > i { color: var(--gf-h3); }
+.wp-eh .wp-eh-route .wp-gf-stack-row.l2 > span > i { color: var(--gf-h2); }
+.wp-eh .wp-eh-route .wp-gf-stack-row.l1 > span > i { color: var(--gf-h1); }
+/* Pictures inside steps. The itemization mock is dark like SillyTavern's real popup, so it looks
+   like what the player is about to open, not like part of the phone. */
+.wp-eh .wp-eh-figure { margin: 10px 0 12px; }
+.wp-eh .wp-eh-figure img { display: block; max-width: 100%; height: auto; border-radius: 9px; box-shadow: 0 4px 12px rgba(0, 0, 0, .25); }
+.wp-eh .wp-eh-figure figcaption { margin-top: 5px; color: var(--wn-ink-muted); font-size: 9.5px; line-height: 1.4; }
+.wp-eh .wp-eh-itemize { padding: 10px 11px; border-radius: 10px; background: #1c1c1c; color: #c9c3bd; font: 11px/1.35 'Noto Sans', system-ui, sans-serif; box-shadow: 0 4px 12px rgba(0, 0, 0, .3); }
+.wp-eh .wp-eh-it-title { margin-bottom: 9px; color: #c04a40; font-size: 13px; font-weight: 700; text-align: center; }
+.wp-eh .wp-eh-it-body { display: grid; grid-template-columns: 34px 1fr; gap: 10px; }
+.wp-eh .wp-eh-it-bar { display: flex; flex-direction: column; overflow: hidden; border-radius: 6px; }
+.wp-eh .wp-eh-it-bar span { flex-basis: 0; }
+.wp-eh .wp-eh-it-bar .is-sys { background: #808080; }
+.wp-eh .wp-eh-it-bar .is-card { background: #cd5c5c; }
+.wp-eh .wp-eh-it-bar .is-wi { background: #ffd700; }
+.wp-eh .wp-eh-it-bar .is-chat { background: #98fb98; }
+.wp-eh .wp-eh-it-rows { display: grid; gap: 4px; }
+.wp-eh .wp-eh-it-row { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 2px 8px; padding: 3px 6px; border-radius: 6px; }
+.wp-eh .wp-eh-it-row b { color: #c04a40; font-weight: 600; }
+.wp-eh .wp-eh-it-row.is-sys span { color: #9a9a9a; }
+.wp-eh .wp-eh-it-row.is-card span { color: #c04a40; }
+.wp-eh .wp-eh-it-row.is-wi span { color: #ffd700; }
+.wp-eh .wp-eh-it-row.is-chat span { color: #98fb98; }
+.wp-eh .wp-eh-it-row.is-sub { margin-top: -2px; font-size: 10px; }
+.wp-eh .wp-eh-it-row.is-sub span::before { content: '-- '; }
+.wp-eh .wp-eh-it-row.is-sub b { color: #c9c3bd; font-weight: 400; }
+/* The two suspects: outlined, with the threshold written underneath. */
+.wp-eh .wp-eh-it-row.is-watch { outline: 1.5px dashed #ffd700; outline-offset: -1px; background: rgba(255, 215, 0, .07); }
+.wp-eh .wp-eh-it-row em { grid-column: 1 / -1; color: #ffd700; font-size: 9.5px; font-style: normal; font-weight: 700; }
+.wp-eh .wp-eh-it-row em i { margin-right: 3px; font-size: 8.5px; }
+.wp-eh .wp-eh-it-total { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 6px; border-top: 1px solid #333; color: #c04a40; font-size: 10.5px; }
+.wp-eh .wp-eh-it-total + .wp-eh-it-total { margin-top: 0; border-top: 0; }
+.wp-eh .wp-eh-coverage { margin-top: 10px; }
+.wp-eh .wp-eh-count { margin: 0 0 7px; font-size: 10.5px; }
+.wp-eh button:focus-visible, .wp-eh summary:focus-visible, .wp-eh a:focus-visible { outline: 2px solid var(--wn-accent-soft); outline-offset: 3px; }
+.wp-eh h2:focus { outline: none; }

@@ -1,31 +1,46 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { applyPhoneHardModePolicy, stripAnalysisProcedure } from '../lib/phonePromptPolicy.js';
+import { applyPhoneCourseCorrection, phoneCourseCorrection, stripAnalysisProcedure } from '../lib/phonePromptPolicy.js';
 import { ravs } from '../../quick-reply-ext/src/promptRegistry.js';
+import { assembleRoleplayShiftItem } from '../../quick-reply-ext/src/roleplayShiftItem.js';
 import { resolveMasterPrompt } from '../lib/promptResolution.js';
 
 const PROMPT = 'Before\n{{getglobalvar::Coach}}\nAfter {{user}}';
-
-test('phone prompts strip Coach by default', () => {
-    assert.equal(applyPhoneHardModePolicy(PROMPT), 'Before\n\nAfter {{user}}');
+const beta = ravs.get('Beta Prompt');
+// The same variables PromptOS writes: RoleplayShift / HardToggle / RoleplayShiftCustom globals,
+// DoseLive / DoseShift chat locals.
+const context = (global = {}, local = {}) => ({
+    substituteParams: text => text.replace(/\{\{getglobalvar::([^}]+)}}/g, (_, key) => global[key] ?? '').replace(/\{\{getvar::([^}]+)}}/g, (_, key) => local[key] ?? ''),
 });
 
-test('phone prompts strip Coach while the phone opt-in is off', () => {
-    assert.equal(applyPhoneHardModePolicy(PROMPT, { hardModeEnabled: true }), 'Before\n\nAfter {{user}}');
+test('the Coach slot is always removed, and a correction takes its place', () => {
+    assert.equal(applyPhoneCourseCorrection(PROMPT), 'Before\n\nAfter {{user}}');
+    assert.equal(applyPhoneCourseCorrection(PROMPT, 'FIX'), 'Before\nFIX\nAfter {{user}}');
+    assert.equal(applyPhoneCourseCorrection('No slot', 'FIX'), 'FIX\n\nNo slot');
+    assert.equal(applyPhoneCourseCorrection('{{ GETGLOBALVAR :: coach }} {{getglobalvar::Other}}'), ' {{getglobalvar::Other}}');
 });
 
-test('phone prompts strip Coach while global Hard Mode is off', () => {
-    assert.equal(applyPhoneHardModePolicy(PROMPT, { allowHardMode: true }), 'Before\n\nAfter {{user}}');
+test('course corrections reach the phone only when the player opts in', () => {
+    assert.equal(phoneCourseCorrection(context({ RoleplayShift: 'Slow Burn' }), beta, false), '');
+    assert.equal(phoneCourseCorrection(context({ HardToggle: 'On' }), beta, false), '');
+    assert.equal(phoneCourseCorrection(context({ RoleplayShift: 'None' }), beta, true), '');
 });
 
-test('phone prompts preserve Coach only when both switches are on', () => {
-    assert.equal(applyPhoneHardModePolicy(PROMPT, { allowHardMode: true, hardModeEnabled: true }), PROMPT);
-});
-
-test('Coach macro matching tolerates whitespace and case without touching other macros', () => {
-    const input = '{{ GETGLOBALVAR :: coach }} {{getglobalvar::Other}}';
-    assert.equal(applyPhoneHardModePolicy(input), ' {{getglobalvar::Other}}');
+test('every kind of course correction reaches the phone, in its no-scene-sheet form', () => {
+    // A regular Roleplay Shift (this is what the old Hard Mode-only switch silently dropped).
+    const shift = phoneCourseCorrection(context({ RoleplayShift: 'Slow Burn' }), beta, true);
+    assert.ok(shift.startsWith('[COURSE CORRECTION]\n'));
+    assert.ok(shift.includes(assembleRoleplayShiftItem('Slow Burn', beta, false)));
+    assert.doesNotMatch(shift, /RECOGNITION box|^2\. /m);
+    // Hard Mode uses the current directive, not the legacy Coach text.
+    assert.ok(phoneCourseCorrection(context({ HardToggle: 'On', RoleplayShift: 'Hard Mode' }), beta, true).includes(beta.directive));
+    // A live dose wins over the saved shift; a Custom Preset carries the player's own words.
+    const dose = phoneCourseCorrection(context({ RoleplayShift: 'Slow Burn', RoleplayShiftCustom: JSON.stringify({ name: 'Mine', text: 'My own direction' }) }, { DoseLive: 'true', DoseShift: 'Custom Preset' }), beta, true);
+    assert.match(dose, /My own direction/);
+    assert.ok(!dose.includes(assembleRoleplayShiftItem('Slow Burn', beta, false)));
+    // General-Use is written around the scene sheet, which phone requests never have.
+    assert.equal(phoneCourseCorrection(context({ RoleplayShift: 'General-Use', AnalysisToggle: 'Enabled' }), beta, true), '');
 });
 
 // Mirrors resolveCharacterPrompt: every compatible base gets the phone's optional Coach slot.

@@ -386,6 +386,28 @@ function injectTracker(retries = 20) {
     }
 }
 
+/**
+ * "Test Message" (stock SillyTavern, API panel) spends a real message, but it is not a chat
+ * generation, so GENERATION_ENDED never fires and the count above it sat stale until the menu was
+ * reopened. Its request gives no event to hook either, so after a click this re-reads usage a few
+ * times (the provider's count also lags a moment) and stops as soon as the number moves. Then it
+ * tells the home screen's own counter (welcomeinfo.js), which is often visible behind this menu.
+ */
+let testMessageWatch = 0;
+async function refreshAfterTestMessage() {
+    if (!trackerEl || !getHelixApiKey()) return;
+    const watch = ++testMessageWatch;
+    const text = () => trackerEl?.querySelector('#hm-api-messages-used-text')?.textContent ?? '';
+    const before = text();
+    for (const delayMs of [2500, 2500, 4000, 6000, 9000]) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        if (watch !== testMessageWatch || !trackerEl) return; // a newer click took over
+        await refreshUsage();
+        if (text() !== before && /\d/.test(text())) break;
+    }
+    document.dispatchEvent(new CustomEvent('weyland:helix-usage-changed'));
+}
+
 function syncKeyState() {
     if (!trackerEl) return;
     const key = getHelixApiKey();
@@ -397,6 +419,11 @@ function syncKeyState() {
 
 jQuery(async () => {
     injectTracker();
+
+    // Capture phase: openai.js binds the button itself; this only listens, it never interferes.
+    document.addEventListener('click', (event) => {
+        if (event.target instanceof Element && event.target.closest('#test_api_button')) void refreshAfterTestMessage();
+    }, true);
 
     eventSource.on(event_types.SETTINGS_UPDATED, () => {
         // Visibility only — never fetch on arbitrary settings saves. Key changes are picked up

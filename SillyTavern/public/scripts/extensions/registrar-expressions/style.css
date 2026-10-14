@@ -125,3 +125,22 @@ body.registrar-hide-side-character::after {
         transform:translateX(-30%);
     }
 }
+
+/* "Peek at the expression" (peek.js): while body[expression-peek=true] the chat UI fades out so the portrait is all
+   that's on screen. Same element list the old magnifying-glass button hid. The portraits are not in this list. */
+body[expression-peek=true] #top-bar,
+body[expression-peek=true] #sheld,
+body[expression-peek=true] #chat,
+body[expression-peek=true] #send_form,
+body[expression-peek=true] #options,
+body[expression-peek=true] .header_div,
+body[expression-peek=true] .nav-menu,
+body[expression-peek=true] .options-content,
+body[expression-peek=true] #dialogue_popup,
+body[expression-peek=true] .drawer-content,
+body[expression-peek=true] #character_popup,
+body[expression-peek=true] .toast-container {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.25s ease;
+}

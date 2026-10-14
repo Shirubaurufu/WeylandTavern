@@ -7,6 +7,8 @@
 
 import { specialSheetBoxes } from '../../quick-reply-ext/src/specialSheets.js';
 import { resolveNarratorStrength } from '../../quick-reply-ext/src/narratorStrength.js';
+import { narratorSelection } from '../../quick-reply-ext/src/narratorSelection.js';
+import { scenarios } from '../../quick-reply-ext/src/scenarios.js';
 
 export const NARRATIVE_TABS = Object.freeze(['essentials', 'style', 'modes', 'perspective']);
 
@@ -21,6 +23,8 @@ export const PROMPT_OPTIONS = Object.freeze([
     { id: 'Current Prompt', label: 'Current', description: 'The default and recommended prompt.' },
     // Held since 2026-10-03: the old Beta graduated to Current. The slot stays on the shelf, greyed out and not selectable,
     // until there is a new beta to bring forward. Flip `disabled` off (and give it a description) when that day comes.
+    // (Beta Prompt 2 + the Curse Booster were pulled again on 2026-10-13, Lucky: not ready. Backed up under
+    // "Prompt Review/Beta 2 Tests/Backup - Beta 2 + Curse Booster (2026-10-13)"; its README lists the hunks to put back.)
     { id: 'Beta Prompt', label: 'Beta', description: 'Empty slot. Nothing in testing right now.', disabled: true },
     { id: 'Old Prompt 2026', label: '2026', description: 'The prompt used before Weyland’s second anniversary.' },
     { id: 'Old Prompt 2025', label: '2025', description: 'The older Sonnet 3.7-era prompt.' },
@@ -248,24 +252,20 @@ export function extractPovDirective(script, optionId) {
 }
 
 function narratorNameForPrompt(prompt, getGlobal) {
-    const value = String(prompt ?? '');
-    for (const option of NARRATOR_OPTIONS) {
-        if (value && value === String(getGlobal(option.globalKey) ?? '')) return option.id;
-    }
-    return 'Default';
+    return narratorSelection(prompt, getGlobal);
 }
 
 /** The classic picker already defines each named scenario's identifying context and label.
  * Read those rules rather than the transient Year menu result, which can be blank, stale, or
  * replaced by a school-year choice. The stash preserves identity when intro context is Off. */
-export function currentScenarioLabel(getLocal, characterName, schoolYearScript = '') {
+export function currentScenarioLabel(getLocal, characterName, schoolYearScript = '', greeting = null) {
     const header = String(schoolYearScript).split('/setvar key=SchoolYearQuestion')[0];
     const blocks = [...header.matchAll(/\/\/([^\n|]+)\s*\|\s*\n([\s\S]*?)(?=\n\/\/|$)/g)];
     const block = blocks.find(match => match[1].trim() === characterName)?.[2];
     if (!block) return 'Original greeting';
     let stash = {};
     try { stash = JSON.parse(getLocal('IntroCtxStash') || '{}') || {}; } catch { /* Live context is enough. */ }
-    const read = key => String(getLocal(key) || stash[key] || '');
+    const read = key => String(getLocal(key) || stash[key] || greeting?.[key] || '');
     const labels = new Map([...block.matchAll(/\/setvar key=Option(\d+) Scenario: ([^|\n]+)/g)]
         .map(match => [Number(match[1]), match[2].trim()]));
     const rules = [...block.matchAll(/\/if left=\{\{getvar::(\w+)\}\} right="([^"]*)" rule=(in|neq) \{:[\s\S]*?\/setvar key=TimeOptions (\d+)/g)];
@@ -276,7 +276,15 @@ export function currentScenarioLabel(getLocal, characterName, schoolYearScript =
     return 'Original greeting';
 }
 
-export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, intro = null, dose = null, characterName = '', schoolYearScript = '' }) {
+export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, intro = null, dose = null, characterName = '', schoolYearScript = '', greetingIndex = null }) {
+    // Weyland initializes greeting variables on the first user message. Preview the same
+    // canonical greeting before then, without running setup or changing the chat's variables.
+    const greeting = hasChat && getLocal('ScenarioSet') !== 'true' && !getLocal('PastRP') && Number.isInteger(greetingIndex)
+        ? scenarios.get(characterName)?.greetings?.[greetingIndex] : null;
+    const startingYear = String(getLocal('StartingYear') || '').replace(/^false$/, '').trim() || greeting?.StartingYear || '';
+    const offset = { Freshman: 0, Sophomore: 1, Junior: 2, Senior: 3, Alumni: 4 }[startingYear];
+    const schoolYear = String(getLocal('SchoolYear') || '').trim()
+        || (greeting && offset !== undefined ? `${2020 + offset}-${2021 + offset}` : '');
     const localNarratorOverride = hasChat && String(getLocal('LocalN') ?? '').trim() !== '';
     const globalNarrator = narratorNameForPrompt(getGlobal('Narrator'), getGlobal);
     const localNarrator = localNarratorOverride
@@ -289,16 +297,18 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
     const prompt = savedPrompt === 'Beta Prompt' ? 'Current Prompt' : savedPrompt;
     const thinking = String(getGlobal('ThinkingFramework') || 'Disabled').trim();
     const localPovLabel = hasChat ? String(getLocal('RPPOVLocalSet') ?? '').trim() : '';
+    const analysisEnabled = enabled(getGlobal('AnalysisToggle') || 'Enabled');
+    const builtInPrompt = hasChat && specialSheetBoxes(characterName) ? characterName : null;
 
     return {
         hasChat,
-        schoolYear: hasChat ? String(getLocal('SchoolYear') || '').trim() : '',
-        startingYear: hasChat ? String(getLocal('StartingYear') || '').replace(/^false$/, '').trim() : '',
-        scenario: hasChat ? currentScenarioLabel(getLocal, characterName, schoolYearScript) : '',
+        schoolYear: hasChat ? schoolYear : '',
+        startingYear: hasChat ? startingYear : '',
+        scenario: hasChat ? currentScenarioLabel(getLocal, characterName, schoolYearScript, greeting) : '',
         // Kinsbane Manor, Mirror Weyland and Muse bring their own system prompt and scene sheet
         // (quick-reply-ext/src/specialSheets.js), so the prompt cartridges and the Analysis toggle do
         // nothing in their chats. Holds the card name while one is open, else null.
-        builtInPrompt: hasChat && specialSheetBoxes(characterName) ? characterName : null,
+        builtInPrompt,
         prompt,
         hardMode: on(getGlobal('HardToggle')),
         shift: resolveShift(getGlobal('RoleplayShift'), getGlobal('HardToggle')),
@@ -312,7 +322,7 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
         // Unset (a fresh account, or anyone who hasn't touched this yet) defaults to On — the
         // analysis has always run unconditionally until this toggle existed, so "never set" must
         // read the same as "explicitly on" rather than silently going quiet for existing users.
-        analysisEnabled: enabled(getGlobal('AnalysisToggle') || 'Enabled'),
+        analysisEnabled,
         thinking,
         globalNarrator,
         narratorStrength: resolveNarratorStrength(getGlobal('NarratorStrength')),

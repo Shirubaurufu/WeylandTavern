@@ -10,6 +10,7 @@ import { DOSE_OPTIONS, EXPERIMENTAL_MODE_VARIABLES, FOCUS_OPTIONS, INTRO_CONSTAN
 import { ASSET_BASE_URL } from '../../assetPaths.js';
 import { narratorPickerHtml, playNarratorMotion } from './narratorPicker.js';
 import { narratorStrengthHtml } from './narratorStrength.js';
+import { errorHelpHomeCard } from './errorHelp.js';
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -231,8 +232,8 @@ function analysisCard(snapshot) {
                 <ul class="wp-narrative-bullets">
                     <li>Better memory</li>
                     <li>Better output, generally</li>
-                    <li>Sonnet sees the biggest boost</li>
-                    <li>Longer response time (~20s more)</li>
+                    <li>Sonnet, GLM, Deepseek and Gemini Pro see the biggest boost</li>
+                    <li>Longer response time (~40s more)</li>
                 </ul>
             </div>
             <div class="wp-narrative-compare-col${on ? '' : ' wp-narrative-compare-active'}">
@@ -241,7 +242,7 @@ function analysisCard(snapshot) {
                     <li>Potentially more creative (untested)</li>
                     <li>Worse memory / contextual understanding</li>
                     <li>Gemma and 3.8 Flash see an output boost</li>
-                    <li>Faster response time (~20s saved)</li>
+                    <li>Faster response time (~40s saved)</li>
                 </ul>
             </div>
         </div>
@@ -277,7 +278,7 @@ function geminiBypassCard(snapshot) {
     return `
     <section class="wp-narrative-card wp-narrative-gemini-card${on ? ' is-on' : ''}">
         <div class="wp-narrative-card-heading"><div><h3>Gemini Bypass (Beta)</h3></div><i class="fa-solid fa-bolt"></i></div>
-        <p>Adds an experimental layer that may improve the reliability of Gemini-based models including Gemini 3.1 Pro, 3.8 Flash and Gemma. On the Beta prompt it also removes the explicit warm-up section that Gemini refuses to work with.</p>
+        <p>Adds an experimental layer that may improve the reliability of Gemini-based models including Gemini 3.8 Flash and Gemma. On the Beta prompt it also removes the explicit warm-up section that Gemini refuses to work with.</p>
         <button type="button" class="wp-narrative-gemini-toggle" data-narrative-action="toggle-gemini-bypass" aria-pressed="${on}">
             <span><strong>${on ? 'Enabled' : 'Disabled'}</strong><small>Gemini reasoning-loop safeguard</small></span>
             <span class="wp-narrative-switch${on ? ' is-on' : ''}" aria-hidden="true"><i></i></span>
@@ -367,7 +368,8 @@ function essentials(snapshot) {
         <p>Allows you to set the internal year forward and jump to other roleplay greetings, along with their embedded context entries.</p>
         <button type="button" class="wp-narrative-primary" data-narrative-action="school-year" ${snapshot.hasChat ? '' : 'disabled'}>Choose year or scenario <i class="fa-solid fa-chevron-right"></i></button>
     </section>
-    ${introContextCard(snapshot)}`;
+    ${introContextCard(snapshot)}
+    ${errorHelpHomeCard()}`;
 }
 
 /** Sits under "Change School Year or Scenario": that card picks which intro you start with, this one
@@ -410,6 +412,11 @@ const NARRATOR_BLURB = [
 function style(snapshot) {
     return `
     ${narratorPickerHtml({ options: NARRATOR_OPTIONS, selected: snapshot.globalNarrator, from: snapshot.narratorFrom, busy: snapshot.narratorBusy, blurb: NARRATOR_BLURB })}
+    ${snapshot.localNarratorOverride ? `<section class="wp-narrative-card">
+        <div class="wp-narrative-card-heading"><div><span>Current chat only</span><h3>Narrator override</h3></div><span class="wp-narrative-local-badge">ACTIVE</span></div>
+        <p>${escapeHtml(snapshot.localNarrator === 'Default' ? 'No narrator' : snapshot.localNarrator)} is selected for this chat. The global default above applies when this override is cleared.</p>
+        <button type="button" class="wp-narrative-secondary" data-narrative-action="reset-local-narrator">Use global narrator</button>
+    </section>` : ''}
     ${narratorStrengthHtml({ strength: snapshot.narratorStrength, disabled: Boolean(snapshot.builtInPrompt) })}`;
 }
 

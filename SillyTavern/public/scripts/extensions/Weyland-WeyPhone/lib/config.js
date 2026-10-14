@@ -148,6 +148,8 @@ export const defaultSettings = Object.freeze({
         onboarded: false,
         appTutorials: {},
         batteryTracker: true,
+        // Settings -> Phone & Clock: open straight to the home screen instead of the lock screen.
+        skipLockScreen: false,
     },
 });
 
@@ -255,7 +257,29 @@ export function getSettings(extensionSettings) {
     migrateStaleModelNames(settings);
     migrateRemoveAethel(settings);
     migratePhoneAppKeys(settings);
+    reconcileClockSource(settings.ui);
     return settings;
+}
+
+/**
+ * The phone's displayed time (ui.rpClockEnabled) and the Clock app's Time source
+ * (ui.clockDefaultTimeMode) are ONE switch in the UI, but they started as two settings and drifted:
+ * new installs default the Clock to Roleplay (Lucky's call) while the display flag only existed once
+ * someone pressed the switch, so a fresh phone showed "Roleplay" selected over a real-time clock.
+ * Rule, applied on every load (idempotent):
+ *   - display flag set (an explicit choice, e.g. the old Settings toggle): it wins, the Clock follows;
+ *   - display flag never set: it follows the Clock default (Roleplay unless chosen otherwise).
+ * Plain strings rather than clockStorage's TIME_MODE so config.js keeps no extra imports.
+ * @param {object} ui settings.ui
+ */
+export function reconcileClockSource(ui) {
+    if (!ui || typeof ui !== 'object') return;
+    if (typeof ui.rpClockEnabled === 'boolean') {
+        ui.clockDefaultTimeMode = ui.rpClockEnabled ? 'rp' : 'real';
+    } else {
+        ui.rpClockEnabled = ui.clockDefaultTimeMode !== 'real';
+        if (typeof ui.clockDefaultTimeMode !== 'string') ui.clockDefaultTimeMode = 'rp';
+    }
 }
 
 /**

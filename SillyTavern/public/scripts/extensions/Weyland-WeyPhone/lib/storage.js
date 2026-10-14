@@ -1,4 +1,5 @@
 import { getRoleplayMode, isValidRoleplayMode, ROLEPLAY_MODES } from './roleplayMode.js';
+import { protectRepliedCaptures } from './roleplayCapture.js';
 
 /**
  * @typedef {Object} Conversation
@@ -9,11 +10,11 @@ import { getRoleplayMode, isValidRoleplayMode, ROLEPLAY_MODES } from './roleplay
  * @property {number} lastActive
  */
 
-// Defaults chosen by the operator: Gemini 3.8 Flash as primary, Gemini 3.1 Pro as the fallback
-// if the primary model call fails. (GLM 4.7 was the original primary; retired below once Helix
+// Defaults chosen by the operator: Gemini 3.8 Flash as primary, MiniMax M3 (the house fallback) as the
+// fallback if the primary model call fails. (GLM 4.7 was the original primary; retired below once Helix
 // lost access to it.)
 export const DEFAULT_MEMORY_PRIMARY_MODEL = 'gemini-3.8-flash';
-export const DEFAULT_MEMORY_BACKUP_MODEL = 'gemini-3.1-pro-preview';
+export const DEFAULT_MEMORY_BACKUP_MODEL = 'minimax-m3';
 
 // HelixMind renamed this exact model id (2026-07-30) with no change to the underlying model.
 // Existing settings/conversations already hold a real STRING value for these fields, so the
@@ -23,7 +24,9 @@ export const DEFAULT_MEMORY_BACKUP_MODEL = 'gemini-3.1-pro-preview';
 // gemini-3.6-flash is superseded by 3.8 (2026-09-14) and is now obsolete — same treatment, so
 // anyone still pinned to it moves across instead of quietly failing every phone/Kressa/PawXai call.
 const STALE_MODEL_RENAMES = {
-    'gemini-3-pro-preview': 'gemini-3.1-pro-preview',
+    // Gemini 3.1 Pro was discontinued by Google without notice (2026-10-12); both of its ids move to 3.8 Flash.
+    'gemini-3-pro-preview': 'gemini-3.8-flash',
+    'gemini-3.1-pro-preview': 'gemini-3.8-flash',
     'gemini-3.6-flash': 'gemini-3.8-flash',
     'gemini-3.7-flash': 'gemini-3.8-flash',
     // Helix lost access to GLM 4.7 entirely (2026-09-15) — both the thinking and plain ids now
@@ -125,6 +128,7 @@ export function getConversation(settings, id) {
 export function appendMessage(settings, id, message) {
     const conversation = getConversation(settings, id);
     if (!conversation) return undefined;
+    if (message.role === 'user' && !message.capturedFromRoleplay) protectRepliedCaptures(conversation);
     conversation.messages.push(message);
     conversation.lastActive = genTimestamp();
     return conversation;

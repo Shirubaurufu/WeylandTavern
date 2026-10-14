@@ -3,6 +3,8 @@ import { eventSource, event_types } from '../../events.js';
 import { isMobile } from '../../RossAscends-mods.js';
 import { getExpressionLabel } from '../expressions/index.js';
 import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, getGroupCardMembers } from '../quick-reply-ext/src/expressionCharacters.js';
+import { buildProseMatcher, findProseMentions } from './prose-names.js';
+import { initExpressionPeek } from './peek.js';
 
 const DEBUG = false;
 const LOGGING_PREFIX = '[Registrar-Expressions]';
@@ -112,7 +114,7 @@ function extractPathSpeakerName(path) {
     return match ? match[1].toLowerCase() : null;
 }
 
-function getSpeakerNames() {
+async function getSpeakerNames() {
     const context = SillyTavern.getContext();
     const names = [];
     const seen = new Set(EXCLUDED_SPEAKERS);
@@ -148,9 +150,9 @@ function getSpeakerNames() {
     const chat = Array.isArray(context.chat) ? context.chat : [];
     const latestAssistant = [...chat].reverse().find((m) => m && !m.is_user && !m.is_system);
     if (latestAssistant?.mes) {
-        // TODO: Consider matching against a canonical name list from the registrar
-        //     This would enable matching when speaker headers aren't done properly
-        //     But would produce false positives if non-present names are mentioned
+        // Tagged speakers (below) come first and always win. Names that only appear as the subject of
+        // an `*action*` ("*Bob runs down the street.*") are added after them; see prose-names.js for
+        // why that is limited to known names in action text and never reads dialogue.
         // `matchAll` returns a one-shot iterator — do not log via `Array.from(matches)` then loop the same object.
         const matches = [...latestAssistant.mes.matchAll(SPEAKER_NAME_PATTERN)];
         if (DEBUG) {
@@ -162,8 +164,46 @@ function getSpeakerNames() {
                 pushUnique(name);
             }
         }
+
+        // The player's own persona is never a side character, even if the model narrates them.
+        const userName = String(context.name1 || '').trim().toLowerCase();
+        if (userName) seen.add(userName);
+        for (const name of (await getProseMentions(latestAssistant.mes)).keys()) {
+            pushUnique(name);
+        }
     }
     return names;
+}
+
+// Compiled once per set of known names (official cast + installed cards + aliases + the player's
+// imported Registrar characters). The key changes when any of those do, e.g. after an import.
+let proseMatcherCache = null;
+async function getProseMatcher() {
+    ensureOfficialCharacterMap();
+    resolveAlias(''); // builds aliasMap
+    const local = await getLocalRegistrarIndex();
+    const key = `${officialCharacterMap.size}|${aliasMap.size}`;
+    if (proseMatcherCache?.local === local && proseMatcherCache.key === key) return proseMatcherCache.matcher;
+    const surfaces = [...officialCharacterMap.keys(), ...aliasMap.keys(), ...local.keys()]
+        .filter((name) => name.length <= MAX_NAME_LENGTH && name.split(/\s+/).length <= MAX_NAME_WORDS && !EXCLUDED_SPEAKERS.has(name));
+    proseMatcherCache = { local, key, matcher: buildProseMatcher(surfaces) };
+    return proseMatcherCache.matcher;
+}
+
+/**
+ * Characters named as the subject of an `*action*` in this message, with the text that shows their mood.
+ * Speaker tags are blanked first so `**Bob:**` can't be mistaken for the edge of an action.
+ * @param {string} mes
+ * @returns {Promise<Map<string, string>>} lowercase name -> moment for the classifier
+ */
+async function getProseMentions(mes) {
+    try {
+        return findProseMentions(String(mes).replace(SPEAKER_NAME_PATTERN, ' '), await getProseMatcher(), resolveAlias);
+    } catch (e) {
+        // Never let name-spotting in prose cost the tagged speakers their portraits.
+        if (DEBUG) console.log(`${LOGGING_PREFIX} prose name matching failed`, e);
+        return new Map();
+    }
 }
 
 function getRightBaseExpressionPath() {
@@ -320,26 +360,37 @@ async function getSpeakerEmotion(name) {
         return defaultEmotion;
     }
 
-    // Get the last quote from the specified character
-    let snippet = String(latestAssistant.mes).trim();
-    const matches = latestAssistant.mes.matchAll(SPEAKER_NAME_PATTERN);
-    for (const match of matches) {
-        let nameTag = (match[1] ?? match[2]).trim(); // SPEAKER_NAME_PATTERN could match group 1 or 2
-        if (nameTag) {
-            nameTag = resolveAlias(nameTag);
-            if (nameTag !== name) continue;
-            if (nameTag.length > MAX_NAME_LENGTH) continue;
-            if (nameTag.split(/\s+/).length > MAX_NAME_WORDS) continue;
-
-            // Capture the text from the name to the next line break
-            let quote = latestAssistant.mes.slice(match.index + match[0].length);
-            const endMatch = quote.match(/[\r\n]+/);
-            if (endMatch) {
-                quote = quote.slice(0, endMatch.index);
-            }
-            snippet = quote;
-            break;
+    // Get the LAST quote from the specified character: a character who speaks twice in one reply
+    // ends the message in the mood of their second line, and that is the pose that should show.
+    const mes = String(latestAssistant.mes);
+    let snippet = mes.trim();
+    const tags = [...mes.matchAll(SPEAKER_NAME_PATTERN)];
+    let last = -1;
+    tags.forEach((match, i) => {
+        let nameTag = (match[1] ?? match[2] ?? '').trim(); // SPEAKER_NAME_PATTERN could match group 1 or 2
+        if (!nameTag) return;
+        nameTag = resolveAlias(nameTag);
+        if (nameTag !== name) return;
+        if (nameTag.length > MAX_NAME_LENGTH) return;
+        if (nameTag.split(/\s+/).length > MAX_NAME_WORDS) return;
+        last = i;
+    });
+    if (last >= 0) {
+        // Their block runs from the tag to the NEXT speaker tag (or the end of the message).
+        const start = tags[last].index + tags[last][0].length;
+        const end = tags[last + 1]?.index ?? mes.length;
+        const lines = mes.slice(start, end).split(/[\r\n]+/).map((line) => line.trim()).filter(Boolean);
+        // Usually the tag shares its line with the dialogue, so that line is the quote. When the tag
+        // stands alone (or the line is too short to classify) the quote starts on the next line;
+        // keep reading lines of the same block until there is enough text to classify.
+        snippet = lines[0] ?? '';
+        for (let i = 1; snippet.length < 8 && i < lines.length; i++) {
+            snippet += ` ${lines[i]}`;
         }
+    } else {
+        // No tag for this name: they were spotted in action prose, so classify that moment.
+        const moment = (await getProseMentions(mes)).get(name);
+        if (moment) snippet = moment;
     }
 
     if (snippet.length >= 8) {
@@ -676,7 +727,7 @@ async function setExpressions(){
     if ((sideExpressionsEnabled && (!left.path || !right.path))) {
 
         // Get the list of speakers in the scene
-        const speakers = getSpeakerNames();
+        const speakers = await getSpeakerNames();
         if (DEBUG) {
             console.log(`${LOGGING_PREFIX} Scene characters`, speakers);
         }
@@ -895,6 +946,8 @@ function initExtension() {
     // Hide the base right side character
     document.body.classList.add(RIGHT_BASE_EXPRESSION_HIDE_CLASS);
 
+    // Mobile magnifying-glass button: temporarily hide the chat UI to look at the portrait.
+    initExpressionPeek();
 }
 
 jQuery(initExtension);

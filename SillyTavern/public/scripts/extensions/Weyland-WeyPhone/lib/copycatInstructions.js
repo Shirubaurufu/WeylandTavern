@@ -47,7 +47,10 @@ export function copycatAuthorsNotes(context) {
     return substitute(context, text);
 }
 
-export function copycatCourseCorrection(context, beta) {
+/** The active course correction (a live dose, Hard Mode, the saved Roleplay Shift or Custom Preset),
+ * in its no-scene-sheet form. `sheetless`: the request has no scene sheet at all (WeyPhone texting
+ * and social Sync), so General-Use, which is written around the sheet's boxes, sends nothing. */
+export function copycatCourseCorrection(context, beta, { sheetless = false } = {}) {
     if (!beta) return '';
     const dose = variable(context, 'DoseLive', true) === 'true' ? variable(context, 'DoseShift', true) : '';
     const saved = variable(context, 'RoleplayShift');
@@ -62,7 +65,7 @@ export function copycatCourseCorrection(context, beta) {
     // Copycat has its own output contract, so ordinary corrections use the existing no-sheet
     // variant. General-Use is only active with Analysis enabled in the host prompt.
     const general = ['General-Use', 'Temporary'].includes(shift);
-    const analysis = (variable(context, 'AnalysisToggle') || 'Enabled').toLowerCase() === 'enabled';
+    const analysis = !sheetless && (variable(context, 'AnalysisToggle') || 'Enabled').toLowerCase() === 'enabled';
     const body = assembleRoleplayShiftItem(shift, beta, general && analysis, undefined, custom);
     return substitute(context, body);
 }

@@ -66,6 +66,22 @@ and editing continues to show the original source text.
 
 See the changelog for capture setup, Scrub messages, Kressa's special boundary, and LTM sharing.
 
+### Swiping roleplay replies with texts
+
+Outgoing texts shown again in a roleplay reply won't be added to your phone a second time.
+Until you reply in WeyPhone, captured texts follow the selected roleplay swipe. A swipe with
+no texts removes that reply's contribution; swiping back restores it.
+
+Sending a reply in WeyPhone keeps the exchange you answered. Later roleplay rerolls, edits or
+deletions won't replace it, and the main model still receives it in the current texting log
+under the existing context and memory limits. Deleting your phone reply doesn't undo this
+protection. Texts already included in a saved phone memory are also kept.
+
+A roleplay branch inherits its own copy of the parent's associated phone threads. Answered
+exchanges stay intact, and changing an unanswered reply in the branch leaves the parent's
+phone log alone. Old captures are connected to their source when the saved turn and text both
+match; unmatched older history is left in place.
+
 ## One-call Sync
 
 One explicit **Sync** request refreshes The Chronicle, Chitter, Discorgi, and Yip Yap together.
@@ -88,7 +104,8 @@ Export a backup before moving servers or making a major installation change.
 - Install directly at `public/scripts/extensions/Weyland-WeyPhone/`, not under `third-party/`.
 - App definitions live in `lib/appRegistry.js`.
 - The unified social prompt/parser live in `lib/unifiedPrompt.js` and `lib/unifiedParsing.js`.
-- Roleplay capture/injection lives in `lib/roleplayTether.js` and `lib/roleplayMode.js`.
+- Roleplay parsing/injection lives in `lib/roleplayTether.js` and `lib/roleplayMode.js`;
+  source tracking, reply protection and swipe events live in `lib/roleplayCapture.js`.
 - All Connection Profile requests pass through `lib/requestBudget.js`, which keeps estimated input
   below 35K tokens by retaining required instructions and newest context first.
 - Cross-tab/device merge helpers live in `lib/settingsSync.js`.

@@ -101,7 +101,7 @@ const APP_HELP = {
     },
     mien: {
         intro: 'A pocket expression gallery for the character in your active chat.',
-        bullets: ['Choose among every installed outfit available for the character.', 'Browse sprites or open the immersive full-screen viewer without changing the chat portrait.', 'Tap Set in chat to apply one expression temporarily.', 'The next character message returns expression control to SillyTavern.', 'If local sprites are missing, Mien checks each Registrar outfit gallery.'],
+        bullets: ['Choose among every installed outfit available for the character.', 'Browse sprites, or tap the big preview to open the full-screen viewer, without changing the chat portrait.', 'Tap Set in chat to apply one expression temporarily.', 'The next character message returns expression control to SillyTavern.', 'If local sprites are missing, Mien checks each Registrar outfit gallery.'],
     },
     clock: {
         intro: 'A simple clock with timers and alarms.',

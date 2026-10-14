@@ -8,6 +8,8 @@ import { SHIFT_BODIES, SHIFT_FRAME, SHIFT_SCOPES } from '../../../quick-reply-ex
 import { assembleRoleplayShiftItem } from '../../../quick-reply-ext/src/roleplayShiftItem.js';
 import { buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName } from '../../../quick-reply-ext/src/oocMode.js';
 import { buildSpecialSheetShift, specialSheetBoxes } from '../../../quick-reply-ext/src/specialSheets.js';
+import { narratorBuildState, narratorSelection } from '../../../quick-reply-ext/src/narratorSelection.js';
+import { withThoughtRules } from '../../../quick-reply-ext/src/promptModifiers.js';
 
 const source = readFileSync(new URL('../../../quick-reply-ext/index.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 function between(start, end) {
@@ -34,7 +36,7 @@ export async function assemble(charName = 'Rosa', globalExtras = {}, localExtras
         introHadScenario: () => false,
         SpecialChar: async () => {}, Clear: async () => {}, DebugLog: () => {},
         strings: { whtml: 'HTML INSTRUCTIONS', krirav: 'KRIS HARD MODE' },
-        buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName, NARRATOR_SUBBOT_NAMES: [],
+        buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName, narratorBuildState, narratorSelection, NARRATOR_SUBBOT_NAMES: [], withThoughtRules,
         console: { error: (...args) => { throw new Error(args.join(' ')); } },
     };
     runInNewContext(`${custom}\n${shiftBuilder}\n${assembler}\nthis.assemble = XXX;`, context);

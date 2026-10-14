@@ -1,0 +1,840 @@
+/* Dorm Layouts directory (scripts/dorm-directory.js).
+   Built on the user's theme colours (Weyland Ember by default: red text, amber accents, near-black
+   panels) with the Character Info site's touches: polaroid portraits and handwritten names. */
+
+@font-face {
+    font-family: 'Mynerve';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/css/fonts/Mynerve-latin.woff2') format('woff2');
+}
+
+.dd {
+    --dd-ink: var(--SmartThemeBodyColor, #c54b4b);
+    --dd-accent: var(--SmartThemeQuoteColor, #c67412);
+    --dd-muted: var(--SmartThemeEmColor, #919191);
+    --dd-panel: rgba(255, 255, 255, 0.035);
+    --dd-panel-strong: rgba(255, 255, 255, 0.06);
+    --dd-line: rgba(255, 255, 255, 0.08);
+    --dd-paper: #f4efe6;
+    --dd-cream: #efe6d6;
+    --dd-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --dd-hand: 'Mynerve', 'Segoe Print', 'Bradley Hand', cursive;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    color: var(--dd-ink);
+}
+
+.dd-loading {
+    padding: 28px 0;
+    text-align: center;
+    color: var(--dd-muted);
+}
+
+.dd-loading i {
+    margin-right: 6px;
+    color: var(--dd-accent);
+}
+
+/* ---------- Header ---------- */
+.dd-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 2px 0;
+}
+
+.dd-title {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.dd-eyebrow {
+    font-size: 0.68em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--dd-muted);
+}
+
+.dd-title h2 {
+    margin: 2px 0 0;
+    font-size: 1.7em;
+    letter-spacing: 0.01em;
+    color: var(--dd-ink);
+}
+
+.dd-script {
+    font-family: var(--dd-hand);
+    font-size: 1.15em;
+    color: var(--dd-accent);
+    margin-top: 3px;
+    transform: rotate(-2deg) translateX(8px);
+    transform-origin: left;
+}
+
+.dd-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: var(--dd-panel);
+    border: 1px solid var(--dd-line);
+}
+
+.dd-total b {
+    font-family: var(--dd-mono);
+    font-size: 1.35em;
+    line-height: 1;
+    color: var(--dd-accent);
+}
+
+.dd-total span {
+    font-size: 0.66em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dd-muted);
+}
+
+.dd-stale {
+    margin: 0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.82em;
+    color: var(--dd-muted);
+    background: var(--dd-panel);
+}
+
+/* ---------- Search ---------- */
+.dd-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--dd-line);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dd-search:focus-within {
+    border-color: color-mix(in srgb, var(--dd-accent) 70%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--dd-accent) 18%, transparent);
+}
+
+.dd-search > i {
+    color: var(--dd-muted);
+}
+
+.dd-search input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--dd-cream);
+    font: inherit;
+    font-size: 0.98em;
+}
+
+.dd-search input::placeholder {
+    color: var(--dd-muted);
+    opacity: 0.85;
+}
+
+.dd-search input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.dd-clear {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--dd-panel-strong);
+    color: var(--dd-muted);
+    cursor: pointer;
+}
+
+.dd-clear[hidden] {
+    display: none;
+}
+
+.dd-clear:hover {
+    color: var(--dd-cream);
+}
+
+/* ---------- Floor tabs ---------- */
+.dd-floors {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--dd-line);
+}
+
+.dd-floor {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 6px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--dd-muted);
+    font: inherit;
+    font-size: 0.86em;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, opacity 0.18s;
+}
+
+.dd-floor b {
+    min-width: 22px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-family: var(--dd-mono);
+    font-size: 0.85em;
+    background: var(--dd-panel-strong);
+    color: inherit;
+}
+
+.dd-floor:hover {
+    color: var(--dd-cream);
+}
+
+.dd-floor.is-active {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--dd-ink) 32%, transparent), color-mix(in srgb, var(--dd-ink) 18%, transparent));
+    color: var(--dd-cream);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dd-ink) 55%, transparent);
+}
+
+.dd-floor.is-active b {
+    background: var(--dd-accent);
+    color: #1a1208;
+}
+
+.dd-floor.is-empty {
+    opacity: 0.45;
+}
+
+/* ---------- Floor plan ---------- */
+.dd-plan {
+    position: relative;
+    margin: 0;
+    padding: 8px 8px 0;
+    border-radius: 14px;
+    background: var(--dd-paper);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 10px 28px rgba(0, 0, 0, 0.45);
+    cursor: zoom-in;
+    overflow: hidden;
+    outline: none;
+}
+
+.dd-plan:focus-visible {
+    box-shadow: 0 0 0 3px var(--dd-accent), 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.dd-plan .dd-plan-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3908 / 2546;
+    border-radius: 8px;
+    transition: opacity 0.25s;
+}
+
+.dd-plan.is-loading .dd-plan-img {
+    opacity: 0.25;
+}
+
+.dd-plan .dd-pins {
+    position: absolute;
+    inset: 8px 8px auto 8px;
+    aspect-ratio: 3908 / 2546;
+}
+
+.dd-plan-caption {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 4px 8px;
+    font-size: 0.78em;
+    color: #6b625a;
+}
+
+.dd-plan-caption span:first-child {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.dd-plan-help {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.dd-plan-help i {
+    margin-right: 4px;
+}
+
+.dd-expand {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 9px;
+    background: rgba(20, 16, 14, 0.78);
+    color: #f4efe6;
+    cursor: pointer;
+    opacity: 0;
+    transform: scale(0.92);
+    transition: opacity 0.18s, transform 0.18s;
+}
+
+.dd-plan:hover .dd-expand,
+.dd-plan:focus-visible .dd-expand {
+    opacity: 1;
+    transform: none;
+}
+
+@media (hover: none) {
+    .dd-expand {
+        opacity: 0.85;
+        transform: none;
+    }
+}
+
+/* Pins sit on the room-number labels: a small amber dot on every occupied room, and a glowing
+   ring plus a name tag on the rooms that are selected or match the search. */
+.dd-pins {
+    pointer-events: none;
+}
+
+.dd-pin {
+    position: absolute;
+    width: var(--box-w);
+    height: var(--box-h);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.dd-pin-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--dd-accent);
+    box-shadow: 0 0 0 1.5px var(--dd-paper), 0 0 6px color-mix(in srgb, var(--dd-accent) 80%, transparent);
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.dd-pin-ring {
+    position: absolute;
+    inset: -2px;
+    border-radius: 5px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.dd-pin:hover .dd-pin-ring {
+    border-color: color-mix(in srgb, var(--dd-accent) 70%, transparent);
+    background: color-mix(in srgb, var(--dd-accent) 10%, transparent);
+}
+
+.dd-pin.is-dim .dd-pin-dot {
+    opacity: 0.25;
+    transform: scale(0.7);
+}
+
+.dd-pin.is-lit {
+    z-index: 2;
+}
+
+.dd-pin.is-lit .dd-pin-ring {
+    border-color: var(--dd-accent);
+    background: color-mix(in srgb, var(--dd-accent) 16%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--dd-accent) 28%, transparent), 0 0 18px color-mix(in srgb, var(--dd-accent) 70%, transparent);
+    animation: dd-pulse 1.8s ease-in-out infinite;
+}
+
+.dd-pin.is-lit .dd-pin-dot {
+    transform: scale(1.25);
+}
+
+@keyframes dd-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dd-accent) 28%, transparent), 0 0 14px color-mix(in srgb, var(--dd-accent) 55%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--dd-accent) 12%, transparent), 0 0 22px color-mix(in srgb, var(--dd-accent) 80%, transparent); }
+}
+
+/* The name tag that floats over a lit room (below it near the top edge, nudged in at the sides). */
+.dd-tag {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px 4px 4px;
+    border-radius: 999px;
+    background: rgba(18, 14, 12, 0.92);
+    border: 1px solid color-mix(in srgb, var(--dd-accent) 60%, transparent);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    transform: translateX(-50%);
+    white-space: nowrap;
+    pointer-events: none;
+    animation: dd-tag-in 0.22s ease-out;
+}
+
+.dd-tag.is-below {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+
+.dd-tag.is-left {
+    left: auto;
+    right: 0;
+    transform: none;
+}
+
+.dd-tag.is-right {
+    left: 0;
+    transform: none;
+}
+
+@keyframes dd-tag-in {
+    from { opacity: 0; translate: 0 4px; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+.dd-tag-face {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 20%;
+    border: 1.5px solid var(--dd-cream);
+}
+
+.dd-tag-face + .dd-tag-face {
+    margin-left: -12px;
+}
+
+.dd-tag-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.dd-tag-text b {
+    font-family: var(--dd-hand);
+    font-weight: 400;
+    font-size: 1.02em;
+    color: var(--dd-cream);
+}
+
+.dd-tag-text small {
+    font-family: var(--dd-mono);
+    font-size: 0.66em;
+    color: var(--dd-accent);
+}
+
+/* ---------- Resident cards ---------- */
+.dd-list-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 2px 0;
+}
+
+.dd-list-head h3 {
+    margin: 0;
+    font-size: 1em;
+    letter-spacing: 0.04em;
+    color: var(--dd-ink);
+}
+
+.dd-list-hint {
+    font-size: 0.76em;
+    color: var(--dd-muted);
+}
+
+.dd-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.dd-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px 9px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--dd-line);
+    background: var(--dd-panel);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+
+.dd-card:hover {
+    background: var(--dd-panel-strong);
+    border-color: color-mix(in srgb, var(--dd-accent) 40%, transparent);
+    transform: translateY(-1px);
+}
+
+.dd-card.is-selected {
+    border-color: var(--dd-accent);
+    background: color-mix(in srgb, var(--dd-accent) 9%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--dd-accent) 40%, transparent), 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* Polaroid: cream frame with a thicker bottom, tilted a touch, straightening on hover. */
+.dd-polaroid {
+    display: block;
+    padding: 3px 3px 9px;
+    background: var(--dd-cream);
+    border-radius: 2px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+    transform: rotate(var(--tilt, 0deg));
+    transition: transform 0.2s;
+}
+
+.dd-card:hover .dd-polaroid,
+.dd-card.is-selected .dd-polaroid {
+    transform: rotate(0deg) scale(1.04);
+}
+
+.dd-face {
+    display: block;
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    object-position: center 18%;
+    background: #2a2622;
+}
+
+.dd-initial {
+    display: grid;
+    place-items: center;
+    font-family: var(--dd-hand);
+    font-size: 1.3em;
+    color: var(--dd-cream);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--dd-ink) 55%, #222), #221c1a);
+}
+
+.dd-card-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.15;
+}
+
+.dd-name {
+    font-family: var(--dd-hand);
+    font-size: 1.3em;
+    color: var(--dd-cream);
+}
+
+.dd-fullname,
+.dd-roommates {
+    font-size: 0.74em;
+    color: var(--dd-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dd-roommates i {
+    margin-right: 3px;
+    color: var(--dd-accent);
+}
+
+.dd-room {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-family: var(--dd-mono);
+    font-size: 1.05em;
+    font-weight: 700;
+    color: var(--dd-accent);
+    line-height: 1.05;
+}
+
+.dd-room small {
+    font-family: inherit;
+    font-size: 0.55em;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dd-muted);
+}
+
+.dd-empty {
+    grid-column: 1 / -1;
+    padding: 18px;
+    border-radius: 12px;
+    text-align: center;
+    color: var(--dd-muted);
+    background: var(--dd-panel);
+    border: 1px dashed var(--dd-line);
+}
+
+.dd-empty i {
+    margin-right: 6px;
+}
+
+/* ---------- Lives elsewhere ---------- */
+.dd-elsewhere {
+    border-radius: 12px;
+    border: 1px solid var(--dd-line);
+    background: var(--dd-panel);
+    overflow: hidden;
+}
+
+.dd-elsewhere summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    list-style: none;
+    color: var(--dd-ink);
+    font-weight: 600;
+}
+
+.dd-elsewhere summary::-webkit-details-marker {
+    display: none;
+}
+
+.dd-elsewhere summary::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    margin-left: auto;
+    font-size: 0.75em;
+    color: var(--dd-muted);
+    transition: transform 0.2s;
+}
+
+.dd-elsewhere[open] summary::after {
+    transform: rotate(180deg);
+}
+
+.dd-badge {
+    padding: 0 7px;
+    border-radius: 999px;
+    font-family: var(--dd-mono);
+    font-size: 0.78em;
+    background: var(--dd-panel-strong);
+    color: var(--dd-muted);
+}
+
+.dd-elsewhere-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 2px 12px;
+    padding: 0 12px 12px;
+}
+
+.dd-away {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 0;
+    min-width: 0;
+}
+
+.dd-away-face {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 18%;
+    border: 1.5px solid color-mix(in srgb, var(--dd-cream) 70%, transparent);
+    font-size: 0.85em !important;
+}
+
+.dd-away span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.dd-away b {
+    font-weight: 600;
+    font-size: 0.86em;
+    color: var(--dd-cream);
+}
+
+.dd-away small {
+    font-size: 0.74em;
+    color: var(--dd-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------- Full-size plan ---------- */
+.dd-lightbox {
+    --dd-accent: var(--SmartThemeQuoteColor, #c67412);
+    --dd-paper: #f4efe6;
+    --dd-cream: #efe6d6;
+    --dd-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+    --dd-hand: 'Mynerve', 'Segoe Print', cursive;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    background: rgba(8, 6, 6, 0.86);
+    backdrop-filter: blur(6px);
+    animation: dd-fade 0.18s ease-out;
+}
+
+.dd-lightbox.is-closing {
+    animation: dd-fade 0.16s ease-in reverse forwards;
+}
+
+@keyframes dd-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.dd-lightbox-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    color: #f4efe6;
+    font-weight: 600;
+}
+
+.dd-lightbox-bar > span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dd-lightbox-floors {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.dd-lightbox-floors button,
+.dd-lightbox-close {
+    border: 0;
+    border-radius: 8px;
+    padding: 6px 12px;
+    background: transparent;
+    color: #cfc7bd;
+    font: inherit;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+.dd-lightbox-floors button.is-active {
+    background: var(--dd-accent);
+    color: #1a1208;
+}
+
+.dd-lightbox-close {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 1.1em;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.dd-lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.dd-lightbox-stage {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    padding: 0 14px 14px;
+    overflow: auto;
+}
+
+.dd-lightbox-plan {
+    position: relative;
+    width: min(100%, calc((100dvh - 80px) * 3908 / 2546));
+    border-radius: 12px;
+    background: var(--dd-paper);
+    padding: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.dd-lightbox-plan > img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+}
+
+.dd-lightbox-plan .dd-pins {
+    position: absolute;
+    inset: 10px;
+}
+
+.dd-lightbox .dd-tag {
+    font-size: 15px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dd-pin.is-lit .dd-pin-ring,
+    .dd-tag,
+    .dd-lightbox {
+        animation: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .dd-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .dd-floor span {
+        font-size: 0.92em;
+    }
+}

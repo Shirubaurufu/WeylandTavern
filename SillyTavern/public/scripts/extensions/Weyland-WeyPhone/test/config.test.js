@@ -9,7 +9,12 @@ test('MODULE_NAME is WeyPhone', () => {
 test('getSettings creates the settings object on first call', () => {
     const extensionSettings = {};
     const settings = getSettings(extensionSettings);
-    assert.deepEqual(settings, defaultSettings);
+    // reconcileClockSource fills the clock pair on load. It is deliberately NOT in the defaults:
+    // the ui backfill would stamp it onto old saves first and override their Clock app choice.
+    assert.deepEqual(settings, {
+        ...defaultSettings,
+        ui: { ...defaultSettings.ui, rpClockEnabled: true, clockDefaultTimeMode: 'rp' },
+    });
     assert.equal(extensionSettings[MODULE_NAME], settings);
     assert.equal(settings.contactRenames.Loona, '[REDACTED]');
 });

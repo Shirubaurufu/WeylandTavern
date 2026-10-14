@@ -5,6 +5,7 @@ import { getRequestHeaders, showSwipeButtons } from '../../../script.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, applySpecialCase } from './lib/promptResolution.js';
 import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLorebookContactProfile, resolveWorldInfoTethered, resolveWorldInfoUntethered } from './lib/worldInfo.js';
 import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
+import { narratorSettingsSync } from '../../../script.js';
 import { buildSystemPrompt, buildTextingSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
 import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
@@ -90,17 +91,21 @@ import { NARRATIVE_HELP, renderNarrativeSettingsScreen } from './lib/ui/apps/nar
 import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
 import { renderCustomShiftScreen } from './lib/ui/apps/customShift.js';
 import { renderGeminiFilterGuide } from './lib/ui/apps/geminiFilterGuide.js';
+import { renderErrorHelpScreen, updateErrorHelpSearch } from './lib/ui/apps/errorHelp.js';
+import { getErrorHelpCard } from './lib/errorHelpCatalog.js';
+import { ERROR_HELP_EVENT } from '../../weyland-error-notice.js';
 import { installGeminiBlockNotice } from './lib/ui/geminiBlockNotice.js';
 // Only for Custom Preset's starting example (Slow Burn's player quote); quick-reply-ext owns the text.
 import { SHIFT_BODIES } from '../quick-reply-ext/src/roleplayShifts.js';
-import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, dedupeCapturedMessages, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
+import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
+import { adoptLegacyRoleplayCapture, createCaptureId, ensureCaptureSource, inheritRoleplayThreads, installRoleplayCaptureEvents, pruneMissingRoleplayCaptures, reconcileRoleplayCapture } from './lib/roleplayCapture.js';
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './lib/roleplayMode.js';
 import { buildContactContextBlock, buildGroupContactContextBlock, buildPersonaContextBlock, resolveContactContext } from './lib/contactContext.js';
 import { applySettingsPatch, createSettingsPatch, mergeWeyPhoneSettings, replaceSettingsInPlace, settingsChangedDuringRefresh } from './lib/settingsSync.js';
 import { ravs } from '../quick-reply-ext/src/promptRegistry.js';
 import { charPer } from '../quick-reply-ext/src/charper.js';
 import { world_names } from '../../world-info.js';
-import { applyPhoneHardModePolicy, stripAnalysisProcedure } from './lib/phonePromptPolicy.js';
+import { applyPhoneCourseCorrection, phoneCourseCorrection, stripAnalysisProcedure } from './lib/phonePromptPolicy.js';
 import { isGeneralMessagingContact } from './lib/contactVisibility.js';
 import { formatGenerationCooldown, generationAllowance, generationRateTier, recordGenerationRequest } from './lib/generationRateLimit.js';
 
@@ -143,6 +148,12 @@ const NARRATOR_MOTION_MS = 850;
 let narrativeCustom = null;
 // Gemini word-filter README (session-only): true while that page is open over PromptOS.
 let narrativeGuide = false;
+let narrativeErrorHelp = null;
+// The screen's slide-in plays only when the player actually goes somewhere new (another view,
+// phone app or conversation). Refreshes re-render the same screen and used to replay it, which
+// looked like an app switch that never happened (Lucky, 2026-10-09). See showScreen.
+let lastScreenKey = '';
+let screenEnterTimer = null;
 // Toggling a Storytelling Settings variable reruns a Quick Reply script, which can take several
 // seconds with nothing else on screen changing. This guards against a second click landing
 // mid-rebuild (which would read a stale "before" snapshot) while the busy spinner is showing.
@@ -290,6 +301,9 @@ const phoneState = {
 
 // dnd-aware toast helper for WeyPhone's own chatter. Errors always get through.
 function wpToast(kind, message, title = 'WeyPhone') {
+    // Problems also go to the Settings log (tags stripped; some messages carry markup), so a
+    // player who dismissed the popup can still copy what went wrong. Logged even under Do Not Disturb.
+    if (kind === 'error' || kind === 'warning') pushLogLine(`${kind === 'error' ? 'Error' : 'Warning'}: ${String(message ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}`);
     if (phoneState.dnd && kind !== 'error') return;
     toastr[kind](message, title);
 }
@@ -777,7 +791,7 @@ async function resolveCharacterPrompt(context, character, { lorebookContact = fa
     const systemPrompt = includeMasterPrompt ? `{{getglobalvar::Coach}}\n\n${ravEntry.teg}` : '';
 
     // Phone requests never carry the analysis procedure (see stripAnalysisProcedure) - only the
-    // Coach/Hard Mode slot survives, and applyPhoneHardModePolicy decides whether it stays.
+    // Coach slot survives, as the spot where applyPhoneCourseCorrection puts an opted-in correction.
     return {
         systemPrompt: stripAnalysisProcedure(systemPrompt),
         postHistory: stripAnalysisProcedure(postHistory),
@@ -948,10 +962,6 @@ function rerenderIfStillViewing(conversationId, messages) {
     if (conversation) updateRegenerateEnabled(conversation);
 }
 
-function isGlobalHardModeEnabled(context) {
-    return String(context.variables.global.get('HardToggle') ?? '').trim().toLowerCase() === 'on';
-}
-
 function recordIncomingDmNotification(context, settings, conversationId, conversation, incomingMessages) {
     if (currentView === 'conversation' && currentConversationId === conversationId) return false;
     const latest = [...incomingMessages].reverse().find(message => message?.role === 'assistant' && message.content);
@@ -1093,10 +1103,9 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
         const mainHistory = convertMainChatToMessages(context.chat);
 
         const systemPromptText = buildSystemPrompt({
-            systemPrompt: applyPhoneHardModePolicy(resolved.systemPrompt, {
-                allowHardMode: Boolean(settings.phoneHardModeEnabled),
-                hardModeEnabled: isGlobalHardModeEnabled(context),
-            }),
+            // phoneHardModeEnabled is the saved key behind "Allow course corrections" (kept so existing opt-ins carry over).
+            systemPrompt: applyPhoneCourseCorrection(resolved.systemPrompt,
+                phoneCourseCorrection(context, ravs.get('Beta Prompt'), Boolean(settings.phoneHardModeEnabled))),
             worldInfoBefore: '',
             descriptionText: resolved.descriptionText,
             personalityText: resolved.personalityText,
@@ -1699,11 +1708,10 @@ async function generateReply(conversationId, conversation, context, settings) {
             discussionInstructions: joinNonEmptySections([
                 isKressa ? KRESSA_PHONE_USER_INSTRUCTIONS : '',
                 kressaObserverInstructions,
-                // Preserve the separate, explicit Hard Mode opt-in without bringing back the RP prompt.
-                applyPhoneHardModePolicy('{{getglobalvar::Coach}}', {
-                    allowHardMode: Boolean(isKressa ? settings.kressaHardModeEnabled : settings.phoneHardModeEnabled),
-                    hardModeEnabled: isGlobalHardModeEnabled(context),
-                }),
+                // The explicit course-correction opt-in, without bringing back the RP prompt. Kressa has
+                // her own switch; both keep their old *HardModeEnabled keys so existing opt-ins carry over.
+                phoneCourseCorrection(context, ravs.get('Beta Prompt'),
+                    Boolean(isKressa ? settings.kressaHardModeEnabled : settings.phoneHardModeEnabled)),
             ]),
             relationshipContext,
             textingInstructions: TEXTING_MODE_INSTRUCTIONS,
@@ -3073,7 +3081,14 @@ async function appendUnderstudyTakeAsSwipe(body, index, expectedKey = '') {
         return false;
     }
 
-    const original = understudySplitMessage(message.mes);
+    // Header and footer come from the reading the BODY was performed from, never from whatever the chat
+    // happens to be showing. The two differ whenever Copycat's source is pinned to another swipe than the
+    // displayed one, and it is pinned after every apply so a retake performs the original again. Reading
+    // them off the displayed message produced a take with no header or footer when an error swipe (a Gemini
+    // filter block, 324 characters, nothing else in it) was on screen while Copycat rewrote the earlier
+    // Sonnet reply (Loona #21, 2026-10-10).
+    const sourcePick = understudyPickedReading(message);
+    const original = understudySplitMessage(understudyReadings(message)[sourcePick] ?? message.mes);
     const rebuilt = understudyJoinMessage({ header: original.header, body: String(body).trim(), footer: original.footer });
 
     // A message that has never been swiped has no swipes[] yet. Seed it with what is
@@ -3105,7 +3120,10 @@ async function appendUnderstudyTakeAsSwipe(body, index, expectedKey = '') {
     });
 
     const settings = getSettings(context.extensionSettings);
-    const extra = structuredClone(message.extra ?? {});
+    // The take's bookkeeping (original model, reasoning, timings) is also the performed reading's, not the
+    // displayed swipe's: #21 above carried the filter-error swipe's Gemini extra. When the displayed swipe IS
+    // the source (the normal case) this is exactly the old behaviour.
+    const extra = structuredClone((sourcePick !== message.swipe_id && message.swipe_info?.[sourcePick]?.extra) || message.extra || {});
     // Traceable the same way Weyland-Router tags the model that produced a message.
     extra.weyland_understudy = true;
     // The model that actually produced this text, which may be the fallback. Only falls back
@@ -3193,6 +3211,9 @@ async function appendUnderstudyTakeAsSwipe(body, index, expectedKey = '') {
     if (Array.isArray(message.swipes) && message.swipes[message.swipe_id] !== undefined) {
         message.swipes[message.swipe_id] = message.mes;
     }
+    // Copycat creates a selected swipe without the host's swipe-click event. Notify consumers
+    // only after formatting, just as the normal message editor does.
+    if (context.eventTypes.MESSAGE_UPDATED) await context.eventSource.emit(context.eventTypes.MESSAGE_UPDATED, index);
     await context.saveChat();
     return true;
 }
@@ -3550,6 +3571,18 @@ function handleFormatWeyPhone() {
 }
 
 function handleScreenBodyClick(event) {
+    const errorCard = event.target.closest('[data-error-help-card]');
+    if (errorCard && getErrorHelpCard(errorCard.dataset.errorHelpCard)) {
+        narrativeErrorHelp = { query: narrativeErrorHelp?.query ?? '', articleId: errorCard.dataset.errorHelpCard };
+        renderNarrativeScreenNow();
+        focusErrorHelpHeading();
+        return;
+    }
+    const errorAction = event.target.closest('[data-error-help-action]');
+    if (errorAction) {
+        void handleErrorHelpAction(errorAction.dataset.errorHelpAction);
+        return;
+    }
     // Any tap primes audio playback for the going-off sound (browsers gate audio on a user gesture).
     unlockAudio();
     if (event.target.closest('#wp-alert-dismiss')) { dismissCurrentAlert(); return; }
@@ -3604,6 +3637,8 @@ function handleScreenBodyClick(event) {
     if (narrativeTab) {
         currentNarrativeTab = narrativeTab.dataset.narrativeTab;
         renderNarrativeScreenNow();
+        // Another tab may have changed the narrator or OOC mode while this section was away.
+        if (currentNarrativeTab === 'style' || currentNarrativeTab === 'modes') void refreshNarratorScreen();
         return;
     }
     // Gemini word-filter README: a static page, so it opens/closes here instead of going through
@@ -3618,6 +3653,7 @@ function handleScreenBodyClick(event) {
         renderNarrativeScreenNow();
         const body = document.getElementById('wp-screen-body');
         if (opening) body?.scrollTo({ top: 0 });
+        else if (narrativeErrorHelp) focusErrorHelpHeading();
         else body?.querySelector('.wp-narrative-gemini-card')?.scrollIntoView({ block: 'center' });
         return;
     }
@@ -3714,7 +3750,8 @@ function handleScreenBodyClick(event) {
         }
         return;
     }
-    if (event.target.closest('#wp-mien-fullscreen')) {
+    // The header's expand button, or a tap on the expression in the preview box itself, opens the full-screen view.
+    if (event.target.closest('#wp-mien-fullscreen') || event.target.closest('.wp-mien-preview img')) {
         mienFullscreen = true;
         renderMienScreenNow();
         return;
@@ -3854,6 +3891,12 @@ function handleScreenBodyClick(event) {
         settings.ui.rpClockEnabled = (next === TIME_MODE.RP); // phone clock follows the same switch
         queueWeyPhoneSave(context);
         renderStatusBarNow();
+        // The same control also sits in Settings -> Phone & Clock; redraw whichever screen it was on.
+        showScreen(currentView === 'settings-app' ? 'settings-app' : 'clock');
+        return;
+    }
+    // Settings -> Phone & Clock: jump to the Clock app (timers and alarms share the switch above).
+    if (event.target.closest('#wp-settings-open-clock')) {
         showScreen('clock');
         return;
     }
@@ -4399,6 +4442,7 @@ function handleScreenBodyClick(event) {
         if (appKey === 'narrative') {
             narrativeCustom = null;
             narrativeGuide = false;
+            narrativeErrorHelp = null;
         }
         // Mirrors openNotificationTarget's shade-entry behavior — any app tile opened directly
         // from the home screen should clear its own badge too, not just Messages. Guarded on a
@@ -5039,6 +5083,13 @@ function handleScreenBodyChange(event) {
         // Reflect the new name in the hero/title immediately ('change' fires on commit, so the
         // re-render doesn't steal focus mid-typing).
         if (currentView === 'contact-detail') showScreen('contact-detail');
+        return;
+    }
+    if (event.target.id === 'wp-settings-skip-lock') {
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        settings.ui.skipLockScreen = event.target.checked;
+        queueWeyPhoneSave(context);
         return;
     }
     if (event.target.id === 'wp-settings-battery-tracker') {
@@ -5937,6 +5988,7 @@ function narrativeIntroContext(context) {
 }
 
 function narrativeSnapshot(context = SillyTavern.getContext()) {
+    const greeting = context.chat?.find(message => !message.is_user && !message.is_system);
     return readNarrativeSnapshot({
         getGlobal: key => context.variables?.global?.get(key),
         getLocal: key => context.variables?.local?.get(key),
@@ -5945,6 +5997,7 @@ function narrativeSnapshot(context = SillyTavern.getContext()) {
         dose: narrativeDose(context),
         // Solo chats only: a group has no characterId, and a group never runs a special card's own prompt.
         characterName: context.characters?.[context.characterId]?.name ?? '',
+        greetingIndex: greeting && !greeting.mes?.includes('Tavern Tails') ? (greeting.swipe_id ?? 0) : null,
         schoolYearScript: String(globalThis.quickReplyApi?.getQrByLabel?.('Weyland', 'School Year')?.message ?? ''),
     });
 }
@@ -5959,10 +6012,54 @@ function narrativeDose(context) {
     }
 }
 
+function focusErrorHelpHeading() {
+    const body = document.getElementById('wp-screen-body');
+    body?.scrollTo({ top: 0 });
+    body?.querySelector('.wp-eh h2')?.focus({ preventScroll: true });
+}
+
+async function handleErrorHelpAction(action) {
+    if (action === 'dns') {
+        // Open the existing control, so this guide cannot create a second settings source.
+        try {
+            const { openWeylandNetworkSettings } = await import('../weyland-network/index.js');
+            await openWeylandNetworkSettings();
+        } catch (error) {
+            console.warn('[WeyPhone] Could not open DNS settings:', error);
+            renderNoticeDialog(document.getElementById('wp-app-help'), { title: 'DNS Routing', body: 'Open the API connection panel and tap its shield button to find DNS Routing: 1.1.1.1.' });
+        }
+        return;
+    }
+    if (action === 'registrar') {
+        // The Registrar's own Token cost button is the real answer for community-character lore,
+        // so take the player there instead of describing it. Help state is left as-is.
+        showScreen('registrar');
+        return;
+    }
+    if (action === 'home') {
+        narrativeErrorHelp = null;
+        narrativeGuide = false;
+        currentNarrativeTab = 'essentials';
+    } else if (action === 'gemini') {
+        narrativeGuide = true;
+    } else if (action === 'open' || action === 'list' || action === 'clear') {
+        narrativeErrorHelp = { articleId: null, query: action === 'list' ? narrativeErrorHelp?.query ?? '' : '' };
+        narrativeCustom = null;
+        narrativeGuide = false;
+    } else return;
+    renderNarrativeScreenNow();
+    document.getElementById('wp-screen-body')?.scrollTo({ top: 0 });
+    if (narrativeErrorHelp && !narrativeGuide) focusErrorHelpHeading();
+}
+
 function renderNarrativeScreenNow() {
     const context = SillyTavern.getContext();
     if (narrativeGuide) {
-        renderGeminiFilterGuide(document.getElementById('wp-screen-body'));
+        renderGeminiFilterGuide(document.getElementById('wp-screen-body'), { fromErrorHelp: Boolean(narrativeErrorHelp) });
+        return;
+    }
+    if (narrativeErrorHelp) {
+        renderErrorHelpScreen(document.getElementById('wp-screen-body'), narrativeErrorHelp);
         return;
     }
     if (narrativeCustom) {
@@ -5988,6 +6085,15 @@ function renderNarrativeScreenNow() {
         anchorKey: narrativeAnchorKey,
     });
     if (preview) preview.animated = true;
+}
+
+async function refreshNarratorScreen() {
+    try {
+        await narratorSettingsSync.refresh();
+        if (currentView === 'narrative' && !narrativeActionPending) renderNarrativeScreenNow();
+    } catch (error) {
+        console.warn('[WeyPhone] Could not refresh narrator settings:', error);
+    }
 }
 
 /** Sets the regular (global) Roleplay Shift. Hard Mode still lives in HardToggle + Coach (the
@@ -6106,8 +6212,6 @@ async function handleNarrativeAction(button) {
     try {
         if (action === 'school-year') {
             await runWeylandQuickReply('School Year');
-        } else if (action === 'legacy-menu') {
-            await runWeylandQuickReply('NarrativeSettings');
         } else if (action === 'set-prompt') {
             // A held slot (the greyed-out Beta cartridge) has no action in the UI; refuse a stale or hand-made one too.
             const promptOption = PROMPT_OPTIONS.find(item => item.id === value);
@@ -6158,7 +6262,7 @@ async function handleNarrativeAction(button) {
             if (!before.hasChat || !globalThis.WeylandIntroContext) return;
             const [group, option] = value.split('|');
             await globalThis.WeylandIntroContext.setVariant(group, option);
-            // XXX re-syncs Standard Kris's post-history to the current prompt (see its Krisrav note).
+            // XXX re-syncs Standard Kris's post-history to the current prompt (see its Krisrav note), and rebuilds Bap's thoughts block.
             await rebuildNarrativePrompts('XXX');
         } else if (action === 'toggle-analysis') {
             if (before.builtInPrompt) return;   // locked in Kinsbane / Mirror / Muse chats (their sheet always runs)
@@ -6169,6 +6273,7 @@ async function handleNarrativeAction(button) {
             await rebuildNarrativePrompts('XXX');
         } else if (action === 'set-narrator-strength') {
             if (!['Low', 'High'].includes(value) || before.builtInPrompt || value === before.narratorStrength) return;
+            narratorSettingsSync.markChanged('NarratorStrength');
             global.set('NarratorStrength', value);
             await rebuildNarrativePrompts('XXX');
         } else if (action === 'set-global-narrator') {
@@ -6183,6 +6288,7 @@ async function handleNarrativeAction(button) {
                 narrativeNarratorPreview = { from: before.globalNarrator, to: option.id, animated: false, startedAt: Date.now() };
                 if (currentView === 'narrative') renderNarrativeScreenNow();
             }
+            narratorSettingsSync.markChanged('Narrator');
             global.set('Narrator', narratorPrompt);
             if (!before.localNarratorOverride && before.hasChat) local.set('LocalNarrator', narratorPrompt);
             await rebuildNarrativePrompts('XXX');
@@ -6226,6 +6332,7 @@ async function handleNarrativeAction(button) {
                 await rebuildNarrativePrompts('Framework', 'XXX');
             } else if (variable === OOC_MODE_VARIABLE) {
                 // OOC Mode swaps the whole base prompt inside XXX (quick-reply-ext/src/oocMode.js).
+                narratorSettingsSync.markChanged(variable);
                 global.set(variable, next);
                 await rebuildNarrativePrompts('XXX');
             } else {
@@ -6271,7 +6378,10 @@ async function handleNarrativeAction(button) {
             return;
         }
         // No success toast: PromptOS applies a pick almost instantly, so a green "updated" on every tap was noise. A failure
-        // still announces itself in the catch below.
+        // still announces itself in the catch below. The Settings log gets a line, so a support screenshot of it shows
+        // what was changed and when (it used to show little more than "WeyPhone initialized").
+        const logLine = describeNarrativeChange(action, value, variable, before);
+        if (logLine) pushLogLine(`PromptOS: ${logLine}`);
     } catch (error) {
         console.error('[WeyPhone] Narrative settings update failed:', error);
         wpToast('error', error?.message || 'Could not update Storytelling Settings.');
@@ -6292,11 +6402,46 @@ async function handleNarrativeAction(button) {
     }
 }
 
+/** One readable Settings-log line per applied PromptOS change. `before` is the snapshot taken
+ * before the change, so toggles report the state they moved to. Screen-only actions (arming a
+ * dose, opening an editor) return '' and log nothing. */
+function describeNarrativeChange(action, value, variable, before) {
+    const onOff = wasOn => (wasOn ? 'off' : 'on');
+    switch (action) {
+        case 'school-year': return 'opened School Year / Scenario';
+        case 'set-prompt': return `prompt set to ${value}`;
+        case 'toggle-hard': return `Hard Mode ${onOff(before.hardMode)}`;
+        case 'set-shift': return `Roleplay Shift set to ${value}`;
+        case 'start-dose': return `dose of ${value} started`;
+        case 'end-dose': return 'dose ended';
+        case 'set-intro-context': return `intro context set to ${value}`;
+        case 'set-intro-variant': return `intro variant set to ${value.replace('|', ': ')}`;
+        case 'toggle-analysis': return `Analysis ${onOff(before.analysisEnabled)}`;
+        case 'toggle-gemini-bypass': return `Gemini Bypass ${onOff(before.geminiBypass)}`;
+        case 'set-narrator-strength': return `narrator strength set to ${value}`;
+        case 'set-global-narrator': return `narrator set to ${value}`;
+        case 'set-local-narrator': return `this chat's narrator set to ${value}`;
+        case 'reset-local-narrator': return "this chat's narrator reset";
+        case 'set-thinking': return `thinking framework set to ${value}`;
+        case 'save-language': return 'language saved';
+        case 'reset-language': return 'language reset to English';
+        case 'toggle-mode': return `${variable} ${onOff(before.modes?.[variable])}`;
+        case 'toggle-mental': return `${variable} ${onOff(before.mental?.[variable])}`;
+        case 'set-global-pov': return `POV set to ${value}`;
+        case 'set-local-pov': return `this chat's POV set to ${value}`;
+        case 'reset-local-pov': return "this chat's POV reset";
+        case 'set-focus': return `focus set to ${value}`;
+        case 'toggle-command-visibility': return `command visibility ${before.commandsHidden ? 'shown' : 'hidden'}`;
+        default: return action.startsWith('custom-') ? `Custom Preset: ${action.slice('custom-'.length)}` : '';
+    }
+}
+
 function showScreen(view) {
     closeCatnipJar(document.getElementById('wp-panel'));
     closeMessageTimeEditor(document.getElementById('wp-panel'));
     appTutorial?.navigate(view);
     currentView = view;
+    if (view === 'narrative') void refreshNarratorScreen();
     if (view !== 'mien') mienFullscreen = false;
     // Navigating anywhere (including re-entering the same conversation) exits select mode —
     // stale selections/half-finished bulk deletes shouldn't survive a screen change.
@@ -6307,6 +6452,15 @@ function showScreen(view) {
     const panel = document.getElementById('wp-panel');
     const title = document.getElementById('wp-panel-title');
     const screenBody = document.getElementById('wp-screen-body');
+    // Mark real navigation for the CSS entrance; the mark is dropped right after the animation so
+    // in-place re-renders (which replace the children) stay still.
+    const screenKey = `${view}|${view === 'phone-app' ? currentPhoneApp : ''}|${view === 'conversation' ? currentConversationId : ''}`;
+    if (screenKey !== lastScreenKey) {
+        screenBody.dataset.enter = 'true';
+        clearTimeout(screenEnterTimer);
+        screenEnterTimer = setTimeout(() => { delete screenBody.dataset.enter; }, 250);
+    }
+    lastScreenKey = screenKey;
     panel.dataset.view = view;
     panel.dataset.mienFullscreen = String(view === 'mien' && mienFullscreen);
     const helpAppKey = helpAppKeyForView(view, settings);
@@ -7482,7 +7636,7 @@ function findCapturedThread(settings, participants, chatId) {
         && sameParticipants(conversation.participants?.length ? conversation.participants : [conversation.charName], participants));
 }
 
-/** Copy settled Phone¦/Texting¦ blocks into WeyPhone before the formatter sees them. */
+/** Match each selected roleplay reply to its contribution in the phone's saved history. */
 function handleRoleplayPhoneCapture(messageId, options = {}) {
     try {
         const context = SillyTavern.getContext();
@@ -7490,11 +7644,20 @@ function handleRoleplayPhoneCapture(messageId, options = {}) {
         const manual = options && typeof options === 'object' && options.manual === true;
         if ((!manual && !settings.captureRoleplayTextsEnabled) || !context.chatId) return 0;
         const message = context.chat?.[Number(messageId)];
-        if (!message || message.is_user || typeof message.mes !== 'string') return 0;
-        const scopes = locatePhoneScopes(message.mes);
-        if (!scopes.length) return 0;
+        if (!message || message.is_user || message.is_system || typeof message.mes !== 'string') return 0;
+        // At the rightmost swipe the previous text can still be in `mes` while the new slot
+        // is empty. Remove its unanswered captures before the new generation builds its prompt.
+        const emptySwipe = options?.swiping && Array.isArray(message.swipes)
+            && message.swipe_id >= message.swipes.length;
+        const scopes = emptySwipe || options?.clear ? [] : locatePhoneScopes(message.mes);
+        if (!scopes.length && !message.weyphoneCaptureId) return 0;
+        const hadSource = Boolean(message.weyphoneCaptureId);
+        const sourceId = ensureCaptureSource(message);
+        // Freeze the whole accepted reply, including rerolls that switch the phone's recipient.
+        if (Object.values(settings.conversations).some(conversation => conversation.roleplayChatId === context.chatId
+            && conversation.roleplayCaptures?.[sourceId]?.locked)) return 0;
         const knownNames = captureKnownNames(context, settings);
-        const capturedScopes = [];
+        const contributions = new Map();
         let capturedCount = 0;
         for (const scope of scopes) {
             const routed = routePhoneScope(scope, {
@@ -7550,26 +7713,38 @@ function handleRoleplayPhoneCapture(messageId, options = {}) {
             }
             if (routed.mode) conversation.roleplayWireMode = routed.mode;
             if (!conversation.userNickname && routed.userNickname) conversation.userNickname = routed.userNickname;
-            const newMessages = dedupeCapturedMessages(routed.messages, conversation.messages);
-            const addedMessages = [];
-            for (const captured of newMessages) {
-                const added = {
-                    ...captured,
-                    timestamp: genTimestamp(),
-                    mainChatAnchor: context.chat.length,
-                    capturedFromRoleplay: true,
-                };
-                appendMessage(settings, conversation.id, added);
-                addedMessages.push(added);
-                capturedCount++;
-            }
-            if (!manual) recordIncomingDmNotification(context, settings, conversation.id, conversation, addedMessages);
-            capturedScopes.push(scope);
+            // A reply can contain several phone screens for the same thread. Reconcile the
+            // complete contribution once, including threads omitted entirely by a new swipe.
+            const pending = contributions.get(conversation) ?? [];
+            pending.push(...routed.messages);
+            contributions.set(conversation, pending);
         }
-        if (!capturedScopes.length || capturedCount === 0) return 0;
-        queueWeyPhoneSave(context);
-        refreshVisibleScreen();
-        if (!options?.silent) {
+        for (const conversation of Object.values(settings.conversations)) {
+            if (conversation.roleplayChatId === context.chatId && conversation.roleplayCaptures?.[sourceId]
+                && canCapturePhoneScopeIntoConversation(conversation, conversation.roleplayWireMode, context.chatId)
+                && !contributions.has(conversation)) contributions.set(conversation, []);
+        }
+        let changed = false;
+        for (const [conversation, incoming] of contributions) {
+            const result = reconcileRoleplayCapture(conversation, sourceId, incoming, {
+                timestamp: genTimestamp, anchor: Number(messageId) + 1,
+            });
+            changed ||= result.changed;
+            capturedCount += result.added.length;
+            if (result.changed && conversation.id === currentConversationId) {
+                // Captures can disappear or move; stale array indices must not edit/delete a
+                // different bubble after the thread redraws.
+                editingMessageIndex = -1;
+                selectedMessageIndices.clear();
+            }
+            if (!manual && !options?.silent) recordIncomingDmNotification(context, settings, conversation.id, conversation, result.added);
+        }
+        if (!hadSource) void context.saveChat().catch(error => console.error('[WeyPhone] Could not save capture identity:', error));
+        if (changed) {
+            queueWeyPhoneSave(context);
+            refreshVisibleScreen();
+        }
+        if (capturedCount && !options?.silent) {
             pushLogLine(`Captured ${capturedCount} roleplay text${capturedCount === 1 ? '' : 's'} into WeyPhone`);
             wpToast('success', `Captured ${capturedCount} roleplay text${capturedCount === 1 ? '' : 's'} into WeyPhone.`);
         }
@@ -7603,6 +7778,58 @@ async function captureExistingRoleplay({ all = false } = {}) {
         wpToast('success', `Imported ${total} roleplay text${total === 1 ? '' : 's'} into WeyPhone.`);
     } else {
         wpToast('info', 'No compatible uncaptured phone blocks were found.');
+    }
+}
+
+function reconcileRoleplayPhoneHistory() {
+    const context = SillyTavern.getContext();
+    if (!context.chatId || !Array.isArray(context.chat)) return;
+    const settings = getSettings(context.extensionSettings);
+    let changed = false;
+    const legacyThreads = Object.values(settings.conversations).filter(conversation => conversation.roleplayChatId === context.chatId
+        && conversation.messages.some(message => message.capturedFromRoleplay && !message.roleplaySourceId));
+    if (legacyThreads.length) {
+        const knownNames = captureKnownNames(context, settings);
+        for (const [index, message] of context.chat.entries()) {
+            if (!message || message.is_user || message.is_system) continue;
+            const contributions = new Map();
+            for (const scope of locatePhoneScopes(message.mes)) {
+                const routed = routePhoneScope(scope, {
+                    userName: context.name1 || 'User', knownNames,
+                    userNicknames: legacyThreads.map(thread => thread.userNickname).filter(Boolean),
+                });
+                if (!routed) continue;
+                const thread = legacyThreads.find(thread => sameParticipants(thread.participants ?? [thread.charName], routed.participants));
+                if (thread) contributions.set(thread, [...(contributions.get(thread) ?? []), ...routed.messages]);
+            }
+            const sourceId = message.weyphoneCaptureId || createCaptureId();
+            for (const [thread, incoming] of contributions) {
+                if (!adoptLegacyRoleplayCapture(thread, sourceId, incoming, index + 1)) continue;
+                message.weyphoneCaptureId = sourceId;
+                changed = true;
+            }
+        }
+        if (changed) void context.saveChat().catch(error => console.error('[WeyPhone] Could not save capture identities:', error));
+    }
+    changed = inheritRoleplayThreads(settings, context.chatId, context.chatMetadata?.main_chat,
+        context.chat, createConversation) || changed;
+    if (settings.captureRoleplayTextsEnabled) {
+        changed = pruneMissingRoleplayCaptures(Object.values(settings.conversations), context.chatId,
+            context.chat, genTimestamp) || changed;
+        // Reopening a chat or entering a branch can restore a different selected swipe. Update
+        // known sources only; opening a chat is not a request to backfill its entire history.
+        const knownSources = new Set(Object.values(settings.conversations)
+            .filter(thread => thread.roleplayChatId === context.chatId)
+            .flatMap(thread => Object.keys(thread.roleplayCaptures ?? {})));
+        for (const [index, message] of context.chat.entries()) {
+            if (knownSources.has(message?.weyphoneCaptureId)) handleRoleplayPhoneCapture(index, { silent: true });
+        }
+    }
+    if (changed) {
+        editingMessageIndex = -1;
+        selectedMessageIndices.clear();
+        queueWeyPhoneSave(context);
+        refreshVisibleScreen();
     }
 }
 
@@ -7696,9 +7923,10 @@ function initPanel() {
     function setPanelOpen(open) {
         panel.classList.toggle('wp-open', open);
         if (open) {
-            // Picking the phone up always lands on the lock screen — the diegetic entry point.
+            // Picking the phone up lands on the lock screen (the diegetic entry point), unless the
+            // player turned on Settings -> Phone & Clock -> "Skip the lock screen".
             showScreen('home');
-            setLocked(true);
+            setLocked(!getSettings(SillyTavern.getContext().extensionSettings).ui?.skipLockScreen);
             renderStatusBarNow();
             maybeShowOnboarding();
             void refreshWeyPhoneSettings(SillyTavern.getContext()).then(changed => {
@@ -7711,6 +7939,25 @@ function initPanel() {
             });
         }
     }
+
+    // Opening Weybooru (from the phone's tile, the chat bar, /weybooru or the menu) puts the phone away: the viewer is a
+    // full overlay and the player is done with the phone. Event comes from weybooru-viewer's openOverlay().
+    document.addEventListener('wbv:opened', () => {
+        if (panel.classList.contains('wp-open')) setPanelOpen(false);
+    });
+
+    // Error notices can take the player straight to help, even with the phone closed or locked.
+    document.addEventListener(ERROR_HELP_EVENT, event => {
+        const articleId = getErrorHelpCard(event.detail?.articleId)?.id ?? 'interrupted';
+        if (!panel.classList.contains('wp-open')) setPanelOpen(true);
+        setLocked(false);
+        document.getElementById('wp-onboarding').style.display = 'none';
+        narrativeCustom = null;
+        narrativeGuide = false;
+        narrativeErrorHelp = { articleId, query: '' };
+        showScreen('narrative');
+        focusErrorHelpHeading();
+    });
 
     // First pickup ever: paginated intro cards over the whole screen. Deliberately button-only
     // (no swipe-to-dismiss) so the message-budget warning on the last card can't be skipped past
@@ -7739,12 +7986,36 @@ function initPanel() {
     // WeyTav already exposes a phone button in the main chatbar. Its old Quick Reply command is
     // superseded by WeyPhone, so intercept that dynamically-rendered button in capture phase and
     // use it as the single launcher. Capture phase prevents the obsolete !Phone QR from firing.
+    // If WeyPhone fails to load, this never runs and the click reaches the "Check Phone" Quick Reply, which now only
+    // shows a "WeyPhone is not running, refresh / repair" popup (the old "whose phone" flow is retired). The
+    // button title is what ties the two together, so don't rename it (test/phoneButtonFallback.test.js checks).
     document.addEventListener('click', (event) => {
         const launcher = event.target.closest('[title="View Character\'s Phone"]');
         if (!launcher) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         setPanelOpen(!panel.classList.contains('wp-open'));
+    }, true);
+    // The old Storytelling Settings toolbar button (the NarrativeSettings Quick Reply) is superseded by
+    // PromptOS, so send it there instead of the /buttons popup chain. Same capture-phase trick as the
+    // launcher above. The Quick Reply itself must stay: PromptOS reads its script for the canonical
+    // Hard Mode / language / clothing / POV text. When WeyPhone fails to load, that Quick Reply starts with a guard that
+    // shows a "PromptOS is not running, refresh / repair" popup and aborts (the rest of its script stays as-is).
+    // Going through here also keeps the popup menu from setting Narrator without narratorSettingsSync.markChanged().
+    document.addEventListener('click', (event) => {
+        const launcher = event.target.closest('[title="Storytelling Settings"]');
+        if (!launcher) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        // Same state the PromptOS app tile resets, so a stale Custom Preset / guide page never reopens.
+        narrativeCustom = null;
+        narrativeGuide = false;
+        narrativeErrorHelp = null;
+        // setPanelOpen(true) lands on the lock screen; skip it when the phone is already up so
+        // the player keeps their place, then unlock and jump straight to PromptOS.
+        if (!panel.classList.contains('wp-open')) setPanelOpen(true);
+        setLocked(false);
+        showScreen('narrative');
     }, true);
     closeButton.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -7755,6 +8026,11 @@ function initPanel() {
         if (phoneState.locked) setDimmed(true);
     });
     const goBack = () => {
+        if (currentView === 'narrative' && narrativeErrorHelp) {
+            if (narrativeGuide) { narrativeGuide = false; renderNarrativeScreenNow(); focusErrorHelpHeading(); }
+            else void handleErrorHelpAction(narrativeErrorHelp.articleId ? 'list' : 'home');
+            return;
+        }
         if (currentView === 'registrar' && registrarApp.back()) {
             return;
         } else if (currentView === 'twitter-following') {
@@ -7939,7 +8215,12 @@ function initPanel() {
 
     updateRoleplayModeAvailability();
     const context = SillyTavern.getContext();
-    context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, handleRoleplayPhoneCapture);
+    installRoleplayCaptureEvents({
+        getContext: () => SillyTavern.getContext(),
+        capture: handleRoleplayPhoneCapture,
+        reconcileChat: reconcileRoleplayPhoneHistory,
+    });
+    reconcileRoleplayPhoneHistory();
     // RP-time timers advance with the story, so a new message (carrying a fresh scene header) is
     // their tick. Real-time timers are unaffected (they run off the wall-clock interval).
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpTimersOnMessage);
@@ -7999,6 +8280,13 @@ function initPanel() {
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateRoleplayModeAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, refreshHomeScreenAvailability);
     context.eventSource.on(context.eventTypes.CHAT_CHANGED, updateLoreWarningAvailability);
+    // PromptOS contains per-chat settings too. A new chat or greeting swipe must not keep
+    // the previous chat's year/scenario (or the no-chat state) until the app is reopened.
+    for (const eventName of ['CHAT_CHANGED', 'CHAT_CREATED', 'MESSAGE_SWIPED', 'USER_MESSAGE_RENDERED']) {
+        context.eventSource.on(context.eventTypes[eventName], () => {
+            if (currentView === 'narrative') renderNarrativeScreenNow();
+        });
+    }
     // Gemini word-filter rejections arrive as chat messages; this tacks a "don't reroll, see the
     // PromptOS guide" note onto them (display only, see lib/ui/geminiBlockNotice.js).
     try {
@@ -8008,6 +8296,7 @@ function initPanel() {
     }
     const refreshAfterResume = () => {
         if (document.visibilityState === 'hidden') return;
+        void refreshNarratorScreen();
         void refreshWeyPhoneSettings(SillyTavern.getContext()).then(changed => {
             if (!changed) return;
             applyWallpaper();
@@ -8036,6 +8325,11 @@ function initPanel() {
     const screenBody = document.getElementById('wp-screen-body');
     initMessageTimeGestures(screenBody, handleChangeMessageTime);
     screenBody.addEventListener('click', handleScreenBodyClick);
+    screenBody.addEventListener('input', event => {
+        if (event.target.id !== 'wp-error-search' || !narrativeErrorHelp) return;
+        narrativeErrorHelp.query = event.target.value;
+        updateErrorHelpSearch(screenBody, narrativeErrorHelp.query);
+    });
     screenBody.addEventListener('change', handleScreenBodyChange);
     screenBody.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && event.target.id === 'wp-input') {

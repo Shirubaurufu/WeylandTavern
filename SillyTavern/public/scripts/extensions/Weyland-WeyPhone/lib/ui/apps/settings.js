@@ -3,6 +3,8 @@
 import { APP_REGISTRY } from '../../appRegistry.js';
 import { TETHER_CONTEXT_MESSAGE_OPTIONS } from '../../roleplayTether.js';
 import { communityContactsSummaryMarkup } from './communityContacts.js';
+import { defaultControlMarkup } from './clock.js';
+import { getDefaultTimeMode } from '../../clockStorage.js';
 
 // Display labels paired 1:1 with TETHER_CONTEXT_MESSAGE_OPTIONS ([15,30,45,60,0]); the trailing 0
 // stop means "no cap", shown as "All".
@@ -35,7 +37,7 @@ export const FALLBACK_PHONE_MODEL = 'minimax-m3';
 // This one list feeds the quickfill buttons on WeyPhone's own model fields, Kressa's model field,
 // and PawXai's — all three import it from here, so a model added below shows up in all of them.
 // (Weyland-LTM keeps a separate list of its own; new models need adding there too.)
-export const ALTERNATE_PHONE_MODELS = ['minimax-m3', 'deepseek-v4-pro', 'gemma-4-31b-it', 'gemini-3.1-pro-preview'];
+export const ALTERNATE_PHONE_MODELS = ['minimax-m3', 'deepseek-v4-pro', 'gemma-4-31b-it'];
 
 /**
  * Fallback-model dropdown. Same option list as the primary picker plus an explicit
@@ -375,8 +377,28 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     </button>
 </div>`;
 
-    // The Roleplay-time clock toggle moved to the Clock app's "Time source" control (it now drives
-    // both the phone's displayed clock and the default for new timers/alarms).
+    // Phone & Clock. The Real/Roleplay switch lived here, then moved into the Clock app (where it also
+    // sets the default for new timers and alarms), where players stopped finding it. It is now in both
+    // places as the SAME control (clock.js defaultControlMarkup, one setting), so either route works.
+    const timeMode = getDefaultTimeMode(settings);
+    const phoneSection = `
+<div class="wp-settings-section wp-settings-phone">
+    <div class="wp-settings-section-title">Phone &amp; Clock</div>
+    <div class="wp-settings-field wp-settings-field-column wp-settings-timesource">
+        ${defaultControlMarkup(timeMode)}
+        <div class="wp-settings-hint"><b>Real</b> uses your device's clock. <b>Roleplay</b> follows the time in your current scene's header (and real time when a scene has none).</div>
+    </div>
+    <button type="button" id="wp-settings-open-clock" class="wp-settings-link-row">
+        <span>Open the Clock app <small>Timers and alarms use this same switch.</small></span>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    </button>
+    ${toggleRowMarkup({
+        id: 'wp-settings-skip-lock',
+        label: 'Skip the lock screen',
+        sub: 'Picking up the phone opens straight to the home screen',
+        checked: Boolean(settings.ui?.skipLockScreen),
+    })}
+</div>`;
 
     const batterySection = `
 <div class="wp-settings-section">
@@ -439,10 +461,10 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
         <span class="wp-settings-sublabel">Fallback if that model fails</span>
         ${fallbackModelSelect('wp-settings-texting-fallback', settings.textingFallbackModel)}
     </label>
-    <label class="wp-settings-field wp-settings-field-column" title="Which saved connection WeyPhone sends through. Leave this on your current chat connection unless you run more than one provider.">
-        <span>Connection for WeyPhone <small>(almost everyone should leave this alone)</small></span>
+    <label class="wp-settings-field wp-settings-field-column wp-settings-field-captioned" title="Which saved connection WeyPhone sends through. Leave this on your current chat connection unless you run more than one provider.">
+        <span>Connection for WeyPhone <small>Almost everyone should leave this alone.</small></span>
         ${connectionProfileSelect('wp-settings-profile', settings.connectionProfileId)}
-        <small class="wp-settings-recommend-disclaimer"><strong>Lucky strongly recommends Minimax M3 or DeepSeek V4</strong> for WeyPhone generation. He asks that users avoid Sonnet here so Sonnet capacity stays available to the wider community.</small>
+        <small class="wp-settings-recommend-disclaimer"><strong>Lucky strongly recommends Gemini 3.8 Flash, Minimax M3 or DeepSeek V4</strong> for WeyPhone generation. He asks that users avoid Sonnet here so Sonnet capacity stays available to the wider community.</small>
     </label>
 </div>`;
 
@@ -476,11 +498,11 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     <div class="wp-settings-section-title">Generation Behavior</div>
     ${toggleRowMarkup({
         id: 'wp-settings-hard-mode',
-        label: 'Allow Hard Mode in WeyPhone',
-        sub: 'Apply Weyland Hard Mode to supported phone requests while the global Hard Mode toggle is on',
+        label: 'Allow course corrections to work on WeyPhone',
+        sub: 'Send your active Roleplay Shift, dose or Hard Mode along with texts and social Sync',
         checked: Boolean(settings.phoneHardModeEnabled),
     })}
-    <div class="wp-settings-hint">Off by default. The global storytelling toggle cannot affect WeyPhone unless you enable this. Kressa has her own independent setting.</div>
+    <div class="wp-settings-hint">Off by default. Course corrections you pick in PromptOS only reach WeyPhone when this is on. Kressa has her own setting in her app.</div>
 </div>`;
 
     const formatSection = `
@@ -516,6 +538,7 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     container.innerHTML = `
 <div class="wp-settings">
     ${wallpaperSection}
+    ${phoneSection}
     ${batterySection}
     ${communityContactsSummaryMarkup({ count: communityContactCount })}
     ${tetherSection}

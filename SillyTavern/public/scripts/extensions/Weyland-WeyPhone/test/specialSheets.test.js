@@ -12,6 +12,7 @@ import { ravs } from '../../quick-reply-ext/src/promptRegistry.js';
 import { buildSpecialSheetShift, SPECIAL_SHEET_CARDS, specialSheetBoxes } from '../../quick-reply-ext/src/specialSheets.js';
 import { readNarrativeSnapshot } from '../lib/narrativeSettings.js';
 import { renderNarrativeSettingsScreen } from '../lib/ui/apps/narrativeSettings.js';
+import { formatterHarness } from './helpers/formatterHarness.js';
 
 const repoFile = rel => fileURLToPath(new URL(`../../../../../../${rel}`, import.meta.url));
 const unescapeQr = t => t.replace(/\\([{}|])/g, '$1');
@@ -72,7 +73,9 @@ test('Kinsbane keeps its fixed 2nd person and gains HTML; Mirror keeps its own P
     const k = prompts['Kinsbane Manor'];
     assert.match(k.sys, /\{\{getglobalvar::HTMLPrompt\}\}\n---\n\[Message Modes\]/);
     assert.match(k.sys, /Always write in 2ND PERSON/);
-    assert.doesNotMatch(k.post, /RPPOV|Language|ThoughtSet|ClothingTracker/);
+    assert.doesNotMatch(k.post, /RPPOV|Language|ClothingTracker/);
+    // Kinsbane carries the shared default-off thoughts policy (tests/special-character-thoughts.test.mjs), exactly once.
+    assert.equal(k.post.split('{{getvar::ThoughtSet}}').length, 2);
     assert.match(prompts['Mirror Weyland'].post, /\{\{getglobalvar::RPPOV\}\}/);
     // Mirror's MHR..WJS macros are written raw on purpose (filled in when the Mirror QR runs).
     assert.match(mirrorRaw('Mi33var'), /\n\{\{getglobalvar::MHR\}\}\n/);
@@ -101,10 +104,10 @@ test('Kinsbane and Mirror bind the draft to a VERDICT, and a dead end is a full 
 
 test('the Formatter hides a special sheet exactly like Beta\'s', async () => {
     const reply = 'SCENE SHEET\nSTATE OF PLAY [1/15] - quiet hour, nothing yet\n[2/15] fuck this house\nEND OF SCENE SHEET\n¦¦ Saturday, Oct 18th ~ 9:28 PM ~ Foyer ~ ¦¦\n\n*The floor creaks.*\n\n[Fear] [RC]';
-    const sceneSheetFull = /^\s*SCENE SHEET[ \t]*\r?\n[\w\W]*?(?:\n[ \t]*END OF SCENE SHEET[ \t]*(?=\r?\n|$)|\n(?=¦¦))/;
-    const formatter = readFileSync(repoFile('SillyTavern/public/scripts/extensions/Weyland-Formatter/index.js'), 'utf8');
-    assert.ok(formatter.includes(String(sceneSheetFull).slice(1, -1)), 'this test mirrors the Formatter\'s sceneSheetFull');
-    assert.equal(reply.replace(sceneSheetFull, '').trim().split('\n')[0], '¦¦ Saturday, Oct 18th ~ 9:28 PM ~ Foyer ~ ¦¦');
+    const formatter = formatterHarness();
+    const formatted = await formatter.format(reply);
+    assert.equal(formatted.split('\n')[0], '¦¦ Saturday, Oct 18th ~ 9:28 PM ~ Foyer ~ ¦¦');
+    assert.doesNotMatch(formatted, /SCENE SHEET|STATE OF PLAY|fuck this house/);
 });
 
 test('buildSpecialSheetShift: nothing without a shift, General-Use stays Beta-only, real shifts get a numbered RECOGNITION box', () => {

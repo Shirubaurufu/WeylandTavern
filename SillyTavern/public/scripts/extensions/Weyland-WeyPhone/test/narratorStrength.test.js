@@ -46,11 +46,13 @@ test('the Narrators action saves strength and rebuilds once; stale and repeated 
     const globals = new Map();
     const rebuilds = [];
     const context = {
+        narratorSettingsSync: { markChanged: () => {} },
         narrativeActionPending:false, narrativeNarratorPreview:null, narrativeAnchorKey:'', currentView:'narrative',
         SillyTavern:{getContext:()=>({variables:{global:globals,local:new Map()}})},
         narrativeSnapshot:()=>({narratorStrength:resolveNarratorStrength(globals.get('NarratorStrength'))}),
         narrativeQuickReplyScript:()=>'',
         rebuildNarrativePrompts:async name=>rebuilds.push(name),
+        pushLogLine:()=>{},
         renderNarrativeScreenNow:()=>{},
         console:{error:(...args)=>assert.fail(args.join(' '))},wpToast:()=>assert.fail('unexpected toast'),
     };

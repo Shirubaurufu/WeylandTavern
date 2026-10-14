@@ -1,0 +1,11 @@
+{
+    "name": "Weyland-UI-Switch",
+    "display_name": "Weyland UI Switch",
+    "description": "One-click switch between the Streamlined UI and the full SillyTavern UI.",
+    "version": "1.0.0",
+    "author": "Weyland Tavern",
+    "loading_order": 1000,
+    "js": "index.js",
+    "css": "style.css",
+    "optional": false
+}

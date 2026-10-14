@@ -52,9 +52,15 @@ Auto-trigger only evaluates the **currently active** chat — it runs off `Silly
 
 **Tag the cast cards before release** — untagged multi-char bots will produce first-person entries from an ambiguous "I". This is a card-authoring step on our side; users never see or touch it (cards are locked down, and the settings UI deliberately doesn't mention tags).
 
-**Default model.** Fresh installs default `modelOverride` to `gemini-3.8-flash`. Existing installs that already have saved settings keep whatever they had — the default only applies when `extensionSettings['Weyland-LTM']` doesn't exist yet. The settings panel has one-click quick-fill buttons for the recommended model plus two alternates (`minimax-m3`, `gemini-3.1-pro-preview`) — Lucky wants Sonnet reserved for actual roleplay messaging rather than spent on LTM summarization.
+**Default model.** Fresh installs default `modelOverride` to `gemini-3.8-flash`. Existing installs that already have saved settings keep whatever they had — the default only applies when `extensionSettings['Weyland-LTM']` doesn't exist yet. The settings panel has one-click quick-fill buttons for the recommended model plus one alternate (`minimax-m3`) — Lucky wants Sonnet reserved for actual roleplay messaging rather than spent on LTM summarization.
 
 ## Key files / functions map
+
+**Mobile editor.** At widths up to 700px, the title/settings/close controls share one row and the model dropdown occupies the row below. Action buttons use text labels without icons and stay 36px tall. The editor title and editable memory title remain separate. `mobile-ui.js` binds the panel height and top offset to `visualViewport`, with window-height fallback for WebViews. While an editor field has focus and space is tight, the model row and sidebar temporarily hide; they return when focus leaves or the keyboard closes. These updates only change layout, preserving unsaved text, caret and textarea scroll position. Desktop dimensions and dragging remain unchanged. Viewport subscriptions are disposed if the panel is replaced.
+
+Run `node --test tests/weyland-ltm-mobile.test.mjs` from the SillyTavern directory for keyboard resize/panning, focus transitions, desktop/zoom isolation, WebView fallback and listener cleanup checks.
+
+**Panel polish.** Desktop and mobile actions and notifications now use plain text. Sidebar entries retain pin/vectorized status as Pinned/On demand badges. `wlm-current` identifies the entry or draft being edited, separately from `wlm-selected` bulk-selection checkboxes, and survives sidebar refreshes. The mobile list toggle is labelled Memories/Expand with `aria-controls` and `aria-expanded`. Keyboard-height taps keep the button in place until its click runs. Desktop sidebar actions use two rows to fit the sidebar, and the title field shares the editor's dark styling.
 
 | Concern | Where |
 |---|---|
