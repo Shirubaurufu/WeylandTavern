@@ -57,6 +57,7 @@ import { currentRpMoment, rpMinutesBetween } from './lib/rpTime.js';
 import { pushLogLine, getLogLines, clearLogLines } from './lib/debugLog.js';
 import { createWeyPhoneBackup, parseWeyPhoneBackup, restoreWeyPhoneBackup } from './lib/settingsBackup.js';
 import { findMostRecentRpTime } from './lib/rpClock.js';
+import { installYearNudge } from './lib/yearNudge.js';
 import { getTier, appVisibleForTier } from './lib/tier.js';
 import { KRESSA_PALETTES, renderKressaSettingsScreen } from './lib/ui/apps/kressaSettings.js';
 import { renderDiscorgiSettingsScreen } from './lib/ui/apps/discorgiSettings.js';
@@ -6271,6 +6272,9 @@ async function handleNarrativeAction(button) {
         } else if (action === 'toggle-gemini-bypass') {
             global.set('GeminiBypassToggle', before.geminiBypass ? 'Disabled' : 'Enabled');
             await rebuildNarrativePrompts('XXX');
+        } else if (action === 'toggle-add-year') {
+            // Read at send time by lib/yearNudge.js, so there is no prompt to rebuild.
+            global.set('AddYearToggle', before.addYear ? 'Disabled' : 'Enabled');
         } else if (action === 'set-narrator-strength') {
             if (!['Low', 'High'].includes(value) || before.builtInPrompt || value === before.narratorStrength) return;
             narratorSettingsSync.markChanged('NarratorStrength');
@@ -6418,6 +6422,7 @@ function describeNarrativeChange(action, value, variable, before) {
         case 'set-intro-variant': return `intro variant set to ${value.replace('|', ': ')}`;
         case 'toggle-analysis': return `Analysis ${onOff(before.analysisEnabled)}`;
         case 'toggle-gemini-bypass': return `Gemini Bypass ${onOff(before.geminiBypass)}`;
+        case 'toggle-add-year': return `Add Year to RP ${onOff(before.addYear)}`;
         case 'set-narrator-strength': return `narrator strength set to ${value}`;
         case 'set-global-narrator': return `narrator set to ${value}`;
         case 'set-local-narrator': return `this chat's narrator set to ${value}`;
@@ -8225,6 +8230,11 @@ function initPanel() {
     // their tick. Real-time timers are unaffected (they run off the wall-clock interval).
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpTimersOnMessage);
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpAlarmsOnMessage);
+    installYearNudge({
+        getContext: () => SillyTavern.getContext(),
+        isEnabled: () => narrativeSnapshot().addYear,
+        getSchoolYear: () => narrativeSnapshot().schoolYear,
+    });
     // Copycat auto mode waits for the reply to SETTLE, not just arrive: SillyTavern emits
     // MESSAGE_RECEIVED before it finishes storing the swipe, and starting then made every automatic
     // rewrite look stale and get discarded. See lib/settledTrigger.js.

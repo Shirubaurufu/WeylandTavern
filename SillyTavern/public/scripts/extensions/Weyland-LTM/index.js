@@ -510,6 +510,31 @@ function extractMessageHeader(mes) {
     return { date, time, location: location || '', tag: (tag || '').replace(/[()]/g, '') };
 }
 
+// The QR extension stores the chat's school year as "2020-2021" (see SetSchoolYear in
+// quick-reply-ext). Headers only carry month and day, so the calendar year is derived
+// from it: Jul-Dec falls in the first year, Jan-Jun in the second.
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const MONTH_DAY_RE = /\b([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b/g;
+const HAS_YEAR_RE = /\b(?:19|20)\d{2}\b/;
+
+/** @returns {{start:number, end:number} | null} */
+function getSchoolYear() {
+    const m = String(getLocalVariable('SchoolYear') ?? '').match(/^\s*(\d{4})\s*-\s*(\d{4})\s*$/);
+    return m ? { start: Number(m[1]), end: Number(m[2]) } : null;
+}
+
+/** Adds the calendar year after the month/day ("Friday, Dec 18th, 2020"). A year already in the header wins. */
+function withCalendarYear(date, schoolYear) {
+    if (!date || !schoolYear || HAS_YEAR_RE.test(date)) return date;
+    for (const m of date.matchAll(MONTH_DAY_RE)) {
+        const month = MONTHS.indexOf(m[1].slice(0, 3).toLowerCase());
+        if (month === -1) continue;
+        const year = month >= 6 ? schoolYear.start : schoolYear.end;
+        return date.slice(0, m.index + m[0].length) + `, ${year}` + date.slice(m.index + m[0].length);
+    }
+    return date;
+}
+
 /**
  * Walks the message range in order and returns every header found,
  * de-duping consecutive repeats (edited/regenerated messages often repeat
@@ -853,6 +878,8 @@ function buildLTMPrompt(chatHistoryText, timeline = []) {
     const openWorld = isOpenWorldRun();
     const povMode = resolvePovMode();
     const wtMemory = getLocalVariable("WTMemory");
+    const schoolYear = getSchoolYear();
+    timeline = timeline.map(h => ({ ...h, date: withCalendarYear(h.date, schoolYear) }));
     const anchor = timeline.length ? timeline[timeline.length - 1] : null;
 
     const timelineBlock = timeline.length
@@ -866,11 +893,13 @@ function buildLTMPrompt(chatHistoryText, timeline = []) {
 
     const dateInstruction = anchor
         ? `- The in-story date and time is already known from the excerpt's own message headers (see TIME MARKERS above) — do NOT infer or invent one. The output template below already has the correct value filled in on the date/time line; reproduce that line exactly as written, character for character.`
-        : `- Determine the IN-STORY date and time from context clues in the excerpt itself (explicit dates/times, time-of-day cues, anything establishing the story's own timeline). This is a FICTIONAL scene — it has no relation to today's real-world calendar date, so never use that. If the excerpt gives no explicit date, use a relative marker instead (e.g. "Later that evening", "The next morning") rather than inventing a specific one.`;
+        : `- Determine the IN-STORY date and time from context clues in the excerpt itself (explicit dates/times, time-of-day cues, anything establishing the story's own timeline). This is a FICTIONAL scene — it has no relation to today's real-world calendar date, so never use that. If the excerpt gives no explicit date, use a relative marker instead (e.g. "Later that evening", "The next morning") rather than inventing a specific one.${schoolYear
+            ? ` The story takes place in the ${schoolYear.start}-${schoolYear.end} school year: when you write a specific date, add the single calendar year after the month and day — ${schoolYear.start} for July through December, ${schoolYear.end} for January through June. If the excerpt itself states a year, use that one instead. Never write the school-year range.`
+            : ''}`;
 
     const dateLine = anchor
         ? `[${anchor.date} - ${anchor.time}]`
-        : `[IN-STORY DATE AND TIME, taken from the excerpt's own timeline — e.g. "Saturday, June 4th - 11:51 PM" — or a relative marker like "Later that evening" if the excerpt gives no explicit date. Do NOT use today's real-world date.]`;
+        : `[IN-STORY DATE AND TIME, taken from the excerpt's own timeline — e.g. "Saturday, June 4th${schoolYear ? `, ${schoolYear.end}` : ''} - 11:51 PM" — or a relative marker like "Later that evening" if the excerpt gives no explicit date. Do NOT use today's real-world date.]`;
 
     const povInstruction = openWorld
         ? `- Write in THIRD PERSON as a neutral, dispassionate narrator — a plain factual account, like an incident report, with no characterization. This is an open-world scene with NO main character: name every person who appears exactly as the excerpt names them, and never treat any one of them as the viewpoint character. Limit the account to what ${user} was present for (no spoilers, no off-screen events, no other characters' private secrets).`

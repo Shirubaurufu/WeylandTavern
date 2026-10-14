@@ -367,6 +367,10 @@ function essentials(snapshot) {
         ${snapshot.hasChat ? `<p class="wp-narrative-current-scenario"><strong>Current:</strong> ${escapeHtml([snapshot.startingYear, snapshot.schoolYear, snapshot.scenario].filter(Boolean).join(' · ') || 'Original greeting')}</p>` : ''}
         <p>Allows you to set the internal year forward and jump to other roleplay greetings, along with their embedded context entries.</p>
         <button type="button" class="wp-narrative-primary" data-narrative-action="school-year" ${snapshot.hasChat ? '' : 'disabled'}>Choose year or scenario <i class="fa-solid fa-chevron-right"></i></button>
+        <button type="button" class="wp-narrative-gemini-toggle wp-narrative-year-toggle" data-narrative-action="toggle-add-year" aria-pressed="${snapshot.addYear}">
+            <span><strong>Add Year to RP: ${snapshot.addYear ? 'Enabled' : 'Disabled'}</strong><small>Adds the calendar year to scene headers</small></span>
+            <span class="wp-narrative-switch${snapshot.addYear ? ' is-on' : ''}" aria-hidden="true"><i></i></span>
+        </button>
     </section>
     ${introContextCard(snapshot)}
     ${errorHelpHomeCard()}`;

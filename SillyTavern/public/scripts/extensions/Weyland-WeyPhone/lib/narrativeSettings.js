@@ -319,6 +319,8 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
         dose: hasChat ? dose : null,
         customPreset: readCustomPreset(getGlobal('RoleplayShiftCustom')),
         geminiBypass: enabled(getGlobal('GeminiBypassToggle')),
+        // Off unless turned on. Read at prompt time by lib/yearNudge.js.
+        addYear: enabled(getGlobal('AddYearToggle')),
         // Unset (a fresh account, or anyone who hasn't touched this yet) defaults to On — the
         // analysis has always run unconditionally until this toggle existed, so "never set" must
         // read the same as "explicitly on" rather than silently going quiet for existing users.
