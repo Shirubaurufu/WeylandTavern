@@ -5416,6 +5416,9 @@ html body .st-modal-overlay#wbv-modal-overlay {
 .wp-narrative-gemini-toggle strong { font-size: 12px; }
 .wp-narrative-gemini-toggle small { color: var(--wn-ink-muted); font-size: 9px; }
 .wp-narrative-gemini-card.is-on .wp-narrative-switch { background: #4f7fc4; }
+/* "Add Year to RP" under the School Year card's primary button: same toggle shape, card colors. */
+.wp-narrative-year-toggle { margin-top: 10px; border-color: var(--wn-line); }
+.wp-narrative-year-toggle:hover { background: rgba(58, 18, 6, .05); }
 /* READ ME button at the bottom of the card: opens the Gemini word-filter guide
    (lib/ui/apps/geminiFilterGuide.js). A full-width labeled button rather than an icon because
    players who just got blocked need to see that there's something to read, and the chat's
