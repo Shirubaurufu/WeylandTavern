@@ -1,4 +1,5 @@
 import { converter } from '../script.js';
+import { renderDormDirectory } from './dorm-directory.js';
 
 let timelineLoaded = false;
 let welcomeTrackerCountdownInterval = null;
@@ -513,9 +514,16 @@ function initWelcomeInfoPanel() {
                 // Instead of fetching markdown, embed the webpage
                 embedWebpage('character');
             } else if (infoType === 'dorm') {
-                document.getElementById('dormInfo').style.display = 'block';
+                const dormSection = document.getElementById('dormInfo');
+                dormSection.style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="dorm"]').classList.add('active');
-                fetchAndRenderMarkdown('dorm');
+                // The searchable Sterling Hall directory (dorm-directory.js). If its data can't be
+                // reached at all, the plain floor-plan page still shows.
+                renderDormDirectory(dormSection).catch((error) => {
+                    console.warn('Dorm directory unavailable, showing the plain floor plans:', error);
+                    delete dormSection.dataset.ddReady;
+                    fetchAndRenderMarkdown('dorm');
+                });
             } else if (infoType === 'world') {
                 document.getElementById('worldInfo').style.display = 'block';
                 welcomePanel.querySelector('.infoNavigation .info_button[data-info-type="world"]').classList.add('active');
@@ -727,6 +735,15 @@ async function fetchAndRenderGoogleDoc() {
         container.innerHTML = `<p>Failed to load the timeline. Please try again later.</p>`;
     }
 }
+
+// The API panel's tracker (WT-HelixUsage) announces a new count after "Test Message", which spends a
+// message without being a chat generation. Keep the home screen's "Messages Available" in step.
+document.addEventListener('weyland:helix-usage-changed', () => {
+    const welcomePanel = document.querySelector('.welcomePanel');
+    if (welcomePanel && welcomePanel.querySelector('#hm-key-set')?.style.display !== 'none') {
+        void refreshWelcomeTrackerUsage(welcomePanel);
+    }
+});
 
 // Initialize when the DOM is fully loaded
 if (document.readyState === 'loading') {

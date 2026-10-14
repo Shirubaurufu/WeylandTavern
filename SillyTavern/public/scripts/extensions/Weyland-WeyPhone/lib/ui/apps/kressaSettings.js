@@ -73,13 +73,13 @@ export function renderKressaSettingsScreen(container, { settings, currentLiveMod
     <div class="wp-settings-section">
         <div class="wp-settings-section-title">Kressa's Behavior</div>
         <label class="wp-settings-toggle-row">
-            <span class="wp-settings-toggle-label">Allow Hard Mode for Kressa<span class="wp-settings-sub">Apply Weyland Hard Mode to Kressa while the global Hard Mode toggle is on</span></span>
+            <span class="wp-settings-toggle-label">Allow course corrections for Kressa<span class="wp-settings-sub">Send your active Roleplay Shift, dose or Hard Mode along with Kressa's replies</span></span>
             <span class="wp-toggle-switch">
                 <input id="wp-kressa-hard-mode" class="wp-toggle-input" type="checkbox" ${settings.kressaHardModeEnabled ? 'checked' : ''} />
                 <span class="wp-toggle-track"><span class="wp-toggle-thumb"></span></span>
             </span>
         </label>
-        <div class="wp-settings-hint">Off by default. Kressa ignores the global storytelling modifier unless you enable this setting.</div>
+        <div class="wp-settings-hint">Off by default. Kressa ignores PromptOS course corrections unless you turn this on.</div>
     </div>
 </div>`;
 }

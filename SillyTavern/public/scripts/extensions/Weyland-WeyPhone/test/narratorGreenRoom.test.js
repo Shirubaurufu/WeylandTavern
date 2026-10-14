@@ -11,18 +11,19 @@ import { assemble } from './helpers/promptAssemblyHarness.js';
 
 const beta = ravs.get('Beta Prompt');
 
-test('a named narrator replaces box 1 with their green room and keeps box 2', () => {
-    const body = addNarratorGreenRoom(beta.body, 'Salem');
-    assert.ok(!body.includes('SPARK [1/6]'));
-    assert.match(body, /NARRATOR GREEN ROOM \[1\/6\]/);
-    assert.ok(body.includes('[CRITICAL - NARRATOR - SALEM]'), 'points at the narrator block by its real header');
-    assert.match(body, /post-history instructions \(after the Weyland Tavern client note/);
-    assert.ok(!body.includes('right after the emotional modifiers'));
-    assert.match(body, /green room[\s\S]*BOARD \[2\/6\]/, 'box 2 follows the green room');
-    assert.equal(body.split('BOARD [2/6]').length, 2);
-    // Box 5's generic narrator question becomes the follow-through check.
-    assert.ok(!body.includes('What narrator are you this message'), 'box 5 narrator line marker still in the Beta body');
-    assert.match(body, /- Salem check: are your two techniques and your green-room sentence/);
+test('each narrator gets a voice reminder without mandatory planned wording or follow-through', () => {
+    for (const name of ['Lauren', 'Salem', 'Lucky']) {
+        for (const early of [false, true]) {
+            const body = addNarratorGreenRoom(beta.body, name, early);
+            assert.ok(!body.includes('SPARK [1/6]'));
+            assert.match(body, /NARRATOR GREEN ROOM \[1\/6\]/);
+            assert.ok(body.includes(`[CRITICAL - NARRATOR - ${name.toUpperCase()}]`));
+            assert.ok(body.includes(early ? 'after the character card, before the lorebooks' : 'post-history instructions (after the Weyland Tavern client note'));
+            assert.equal(body.split('BOARD [2/6]').length, 2, 'keeps the next box intact');
+            assert.ok(body.includes('What narrator are you this message'), 'keeps the ordinary narrator check');
+            assert.doesNotMatch(body, /Quote two techniques|Write one sentence|word for word|One line of energy|green-room sentence|your two techniques/);
+        }
+    }
 });
 
 test('all prompt choices put each narrator once in post-history, after any client note', async () => {

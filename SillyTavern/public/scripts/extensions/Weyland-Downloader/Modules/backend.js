@@ -128,6 +128,44 @@ export async function downloadCharacters(characterNames, reDownload = false) {
 }
 
 /**
+ * POST helper for the small Downloader actions below (CSRF token + user handle, JSON both ways).
+ * @param {string} path
+ * @param {object} body
+ * @returns {Promise<any>} the JSON reply; throws with the server's own message on failure
+ */
+async function postJson(path, body = {}) {
+    if (!csrfToken && !(await getCsrfToken())) throw new Error('Failed to get CSRF Token.');
+    const response = await fetch(path, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Csrf-Token': csrfToken,
+            'X-User-Handle': getCurrentUserHandle() || 'default-user',
+        },
+        body: JSON.stringify(body),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data?.error || `Request failed (${response.status})`);
+    return data;
+}
+
+/**
+ * Removes one character (its card, sprites and bundled lorebooks; chats are kept), or one card
+ * that is not part of the roster (kind 'other': the card only).
+ * @param {string} name manifest name (sysName) or card name without .png
+ * @param {'roster' | 'other'} kind
+ * @returns {Promise<{ success: boolean, removed: number, problems?: string[], keptShared?: string[] }>}
+ */
+export function removeCharacter(name, kind = 'roster') {
+    return postJson('/api/weyland/remove-character', { name, kind });
+}
+
+/** Asks the server to stop the download that is running. Saved files stay saved. */
+export function cancelDownload() {
+    return postJson('/api/weyland/download-cancel');
+}
+
+/**
  * Open an SSE connection to receive download progress events
  * @param {function(DownloadEvent): void} onEvent - callback for each event
  * @returns {EventSource} the SSE connection

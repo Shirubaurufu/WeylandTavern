@@ -4,7 +4,8 @@ import { quickReplyApi } from "../quick-reply/index.js";
 import { executeSlashCommandsWithOptions } from "../../slash-commands.js";
 
 import { getGlobalVariable, getLocalVariable } from "../../variables.js";
-import { chat, doNewChat, eventSource, event_types } from "../../../script.js";
+import { chat, doNewChat, eventSource, event_types, narratorSettingsSync } from "../../../script.js";
+import { narratorBuildState, narratorSelection } from './src/narratorSelection.js';
 import { selected_world_info, onWorldInfoChange } from "../../world-info.js";
 import { isMobile } from "../../RossAscends-mods.js";
 import { setPersonaLockState } from "../../personas.js";
@@ -27,9 +28,11 @@ import { describeIntroContext, INTRO_CONTEXT_STATE_VARS, introHadScenario, setIn
 import { activeDoseShift, applyDoseForGeneration, describeDose, endDose, startDose } from "./src/dose.js";
 import { detector } from "./src/similarity.js";
 import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
-import { buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName } from "./src/oocMode.js";
+import { buildOocPostHistory, buildOocSystemPrompt, cardPostHistoryExtras, cardSystemPromptExtras, isOocModeEnabled, stripFromMessages } from "./src/oocMode.js";
 import { NARRATOR_SUBBOTS, NARRATOR_SUBBOT_NAMES } from "./src/narratorSubbots.js";
-import { applyGeminiBypassForModel } from "./src/promptModifiers.js";
+import { applyGeminiBypassForModel, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
+import { BAPHOMET_VAR, applyBaphometToRequest, baphometHidden, baphometThoughts } from "./src/baphomet.js";
+import { applyKinsbaneCommand } from "./src/kinsbaneCommands.js";
 import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.js";
 import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
 import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
@@ -99,6 +102,69 @@ function OnRequestReady(data) {
     } catch (error) {
         console.error(`[WQR] OnRequestReady Error:`, error);
     }
+    // Its own try: a failure above must not leave the card's roleplay directions in an OOC chat.
+    try {
+        if (data && isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const cut = stripCardExtrasForOoc(data.messages);
+            if (cut) DebugLog(`OOC Mode: the card's own text after the prompt slots was left out (${cut})`);
+        }
+    } catch (error) {
+        console.error(`[WQR] OOC card-text cut Error:`, error);
+    }
+    // Bap's Baphomet Visibility (PromptOS). Also its own try, and skipped in OOC Mode, which already replaces her prompt slots.
+    try {
+        if (data && getCurrentCharacterName() === "Bap" && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const context = SillyTavern.getContext();
+            const card = context.characters?.[context.characterId];
+            const post = cardPostHistoryExtras(card?.data?.post_history_instructions);
+            const { muteCut, cuts } = applyBaphometToRequest(data.messages, {
+                hidden: baphometHidden(getLocalVariable(BAPHOMET_VAR)),
+                description: card?.data?.description,
+                postHistoryExtras: post,
+                personality: getLocalVariable("ArchAngel"),
+                scenarios: [getLocalVariable("ConstantScenario"), getLocalVariable("Scenario")],
+                substitute: (text) => context.substituteParams(text),
+            });
+            if (muteCut || cuts) DebugLog(`Baphomet: cut ${cuts} piece(s) and the !Mute paragraph (${muteCut})`);
+        }
+    } catch (error) {
+        console.error(`[WQR] Baphomet cut Error:`, error);
+    }
+    // !Look and journal codes in Kinsbane Manor / Aiko chats: the command changes the prompt for this one message
+    // (and its rerolls). See src/kinsbaneCommands.js. Skipped in OOC Mode, where the scene sheet isn't sent anyway.
+    try {
+        const name = getCurrentCharacterName();
+        if (data && (name === "Kinsbane Manor" || name === "Aiko") && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const { kind, changed } = applyKinsbaneCommand(data.messages, {
+                kinsbane: name === "Kinsbane Manor",
+                substitute: (text) => SillyTavern.getContext().substituteParams(text),
+            });
+            if (kind) DebugLog(`Command message (${kind}): prompt changed in ${changed} place(s)`);
+        }
+    } catch (error) {
+        console.error(`[WQR] Command message Error:`, error);
+    }
+}
+
+/**
+ * OOC Mode replaces the {{getvar::postrav}} and {{getvar::ravteg}} slots, but some cards append their
+ * own text after them: Yue-Lin's post-history ("[YUE LIN REASONING MODIFIER]"), Loona's system prompt
+ * ({{getvar::DrunkCoach}}). src/oocMode.js explains. That text is cut from the outgoing request here,
+ * once the macros are expanded, so what is removed is exactly what would have been sent. No-op in group
+ * chats (no single card) and for cards that don't use the slots.
+ * @param {Array} messages data.messages of the final request
+ * @returns {number} How many pieces were cut (0-2)
+ */
+function stripCardExtrasForOoc(messages) {
+    const context = SillyTavern.getContext();
+    const card = context.characters?.[context.characterId];
+    let cut = 0;
+    const post = cardPostHistoryExtras(card?.data?.post_history_instructions);
+    if (post) cut += stripFromMessages(messages, context.substituteParams(post));
+    // The system prompt is the first message; search from there so a later chat message can't be hit first.
+    const system = cardSystemPromptExtras(card?.data?.system_prompt);
+    if (system) cut += stripFromMessages(messages, context.substituteParams(system), { fromStart: true });
+    return cut;
 }
 
 /**
@@ -1029,7 +1095,7 @@ Room 313: Sofya & NPC`, true);
         }
         setLocalVariable("Roommates", strings.rsbRoommates, true);
         setLocalVariable("R268", earlyStart ? "looking for new dorm" : "room 268", true);
-        setLocalVariable("RT", strings.rsbRT, true);
+        setLocalVariable("RT", withRosterHeader(strings.rsbRT), true);
         setLocalVariable("WTavern", strings.rsbWTavern, true);
         setLocalVariable("KinsbaneLoc", "[KINSBANE MANOR] Potential Location: The Kinsbane Manor\nOnce-grand Victorian mansion that now stands as a testament to neglect and time's relentless march. The manor has long since been abandoned, though rumors surround the place of it possibly being haunted. Most will not approach the mansion unless on a dare. Aiko lives here alone. [END KINSBANE MANOR]\n-----", true);
         if (fCheck()) {
@@ -2573,6 +2639,24 @@ function buildRoleplayShiftItem(shift, rav, analysisOn, scope = SHIFT_SCOPES[shi
     return assembleRoleplayShiftItem(shift, rav, analysisOn, scope, customShiftPreset());
 }
 
+/** Refresh the account narrator and repair cached prompt layers before any real generation. */
+async function OnNarratorCheck(_type, _options, dryRun) {
+    if (dryRun) return;
+    try {
+        await narratorSettingsSync.refresh();
+    } catch (error) {
+        console.warn('[WQR] Narrator refresh failed; using the visible local selection.', error);
+    }
+    // Old chats can carry a baked Salem block even after the default changes. Rebuild before
+    // prompt assembly, including rerolls/continues and OOC, without rerunning every setting.
+    const initialized = getLocalVariable('Run') === 'true' || Boolean(getLocalVariable('ravteg'));
+    const inheritedMismatch = !String(getLocalVariable('LocalN') ?? '').trim()
+        && getLocalVariable('LocalNarrator') !== getGlobalVariable('Narrator');
+    if (initialized && (inheritedMismatch || getLocalVariable('NarratorBuiltFrom') !== narratorBuildState(getGlobalVariable, getLocalVariable))) {
+        await XXX();
+    }
+}
+
 /** GENERATION_AFTER_COMMANDS: count a dose reply and rebuild the prompt if the dose turned on/off. */
 async function OnDoseCheck(type, _options, dryRun) {
     try {
@@ -2623,7 +2707,8 @@ async function XXX(charName) {
         if (!charName) return;
         if (getLocalVariable("RPPOVLocalSet") === "") setLocalVariable("RPPOVLocal", getGlobalVariable("RPPOV"));
         if (/Kinsbane Manor|Aethel|Muse|Kressa/.test(charName)) await SpecialChar();
-        if (getLocalVariable("LocalN") === "") setLocalVariable("LocalNarrator", getGlobalVariable("Narrator"));
+        if (!String(getLocalVariable("LocalN") ?? '').trim()) setLocalVariable("LocalNarrator", getGlobalVariable("Narrator"));
+        const builtNarratorState = narratorBuildState(getGlobalVariable, getLocalVariable);
         // "Current" IS the Beta prompt since 2026-10-03 (the old normal Current is retired and the Beta slot is held for the next
         // beta). A saved "Beta Prompt" (the default since 2026-09-28), a missing choice or an unknown one lands on Current, and the
         // saved value is corrected so PromptOS shows the right cartridge. `pc` is the rav.js entry to build from.
@@ -2632,12 +2717,18 @@ async function XXX(charName) {
         const rav = ravs.get(pc);
         if (!rav) throw new Error("No rav found");
         const geminiBypassEnabled = String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled';
-        if (["Summer","Loona","Belle","Hannah","Seth","Lentyl","Briar","Willow","Bap","Dash"].includes(charName) && rav.thinkYes) {
-            setLocalVariable("ThoughtSet", rav.thinkYes);
+        if (charName === "Bap" && rav.thinkYes) {
+            // Baphomet is the only voice in Bap's thought brackets (see src/baphomet.js). With his visibility Disabled
+            // (PromptOS), nobody hears him, so no thoughts at all.
+            setLocalVariable("ThoughtSet", baphometHidden(getLocalVariable(BAPHOMET_VAR))
+                ? "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]"
+                : baphometThoughts(rav.thinkYes));
+        } else if (["Summer","Loona","Belle","Hannah","Seth","Lentyl","Briar","Willow","Dash"].includes(charName) && rav.thinkYes) {
+            setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
         } else if (charName === "Vera" && (getLocalVariable("Scenario") || introHadScenario()) && rav.thinkYes) {
-            setLocalVariable("ThoughtSet", rav.thinkYes);
+            setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
         } else if (charName === "Cerberus Sisters" && getLocalVariable("CerberusSister") === "Fawne" && rav.thinkYes) {
-            setLocalVariable("ThoughtSet", rav.thinkYes);
+            setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
         } else if (getLocalVariable("SpecialThoughts") && rav.thinkSpec) {
             setLocalVariable("ThoughtSet", rav.thinkSpec);
         } else {
@@ -2666,7 +2757,8 @@ async function XXX(charName) {
         // Shifts are written around Beta's scene sheet; a prompt with its own reasoning (2026) gets their no-scene-sheet form.
         const shiftItem = buildRoleplayShiftItem(shift, beta, usesSceneSheet(base, analysisOn), shiftScope);
         // The chat's narrator by name ('' for Default); Beta's box 1 becomes their green room (promptModifiers.js).
-        const activeNarrator = narratorName(getLocalVariable("LocalNarrator"));
+        const selectedNarrator = narratorSelection(getLocalVariable("LocalNarrator"), getGlobalVariable);
+        const activeNarrator = ['Default', 'Custom'].includes(selectedNarrator) ? '' : selectedNarrator;
         const assembled = assemblePromptLayers(base, beta, { analysisOn, shift, shiftItem, shiftScope, geminiBypassEnabled, narrator: activeNarrator, narratorStrength: getGlobalVariable("NarratorStrength") });
         // Kinsbane Manor, Mirror Weyland and Muse don't read ravteg; they open their own system prompt with
         // their own scene sheet, which always runs. A shift reaches them through two chat vars those sheets
@@ -2713,6 +2805,9 @@ async function XXX(charName) {
         if (charName === "Kris" && getLocalVariable("Krisrav") !== strings.krirav) {
             setLocalVariable("Krisrav", getLocalVariable("postrav"));
         }
+        // Record what was actually assembled before Clear yields; a pick made during that await
+        // must still cause the next generation to rebuild.
+        setLocalVariable('NarratorBuiltFrom', builtNarratorState);
         await Clear();
         DebugLog(`[P] XXX: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
     } catch (error) {
@@ -2823,6 +2918,7 @@ function registerSlashCommands() {
     // Doses count replies, so this has to run before EVERY generation's prompt is built (XXX
     // otherwise only runs on setup and settings changes). AFTER_COMMANDS rather than STARTED so a
     // slash-command-only send doesn't use up a dose. Only rebuilds when the dose turns on or off.
+    eventSource.on(event_types.GENERATION_AFTER_COMMANDS, OnNarratorCheck);
     eventSource.on(event_types.GENERATION_AFTER_COMMANDS, OnDoseCheck);
     DebugLog("Setup");
     registerSlashCommands();

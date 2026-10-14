@@ -15,7 +15,7 @@ test('Claude family is recognised by name across provider id styles', () => {
         'anthropic/claude-3.7-sonnet', 'Sonnet 5', 'OPUS', 'fable']) {
         assert.equal(isClaudeModel(id), true, id);
     }
-    for (const id of ['gemini-3.1-pro', 'gemini-3.8-flash', 'google/gemma-3-27b', 'mimo-v2', 'deepseek-chat',
+    for (const id of ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'google/gemma-3-27b', 'mimo-v2', 'deepseek-chat',
         'glm-5', 'minimax-m3', '', undefined, null]) {
         assert.equal(isClaudeModel(id), false, String(id));
     }
@@ -74,7 +74,7 @@ test('box 6: Claude keeps the warm-up, Gemini loses it, toggle off touches nothi
     assert.match(claude[0].content, /STILL cussing/);
 
     const gemini = payload();
-    assert.deepEqual(applyGeminiBypassForModel(gemini, 'gemini-3.1-pro'), { bypassRemoved: 0, box6Cut: 1 });
+    assert.deepEqual(applyGeminiBypassForModel(gemini, 'gemini-3.8-flash'), { bypassRemoved: 0, box6Cut: 1 });
     assert.equal(gemini[0].content, stripGeminiExplicitBox(on));
     assert.ok(gemini[0].content.startsWith(GEMINI_BYPASS_PROMPT));
     assert.doesNotMatch(gemini[0].content, /VULGARITY IS AUTHENTICITY|STILL cussing/);
@@ -82,7 +82,7 @@ test('box 6: Claude keeps the warm-up, Gemini loses it, toggle off touches nothi
 
     const off = assemblePromptLayers(base, beta, { analysisOn: true, geminiBypassEnabled: false }).teg;
     const offPayload = [{ role: 'system', content: off }];
-    assert.deepEqual(applyGeminiBypassForModel(offPayload, 'gemini-3.1-pro'), { bypassRemoved: 0, box6Cut: 0 });
+    assert.deepEqual(applyGeminiBypassForModel(offPayload, 'gemini-3.8-flash'), { bypassRemoved: 0, box6Cut: 0 });
     assert.equal(offPayload[0].content, off);
 });
 

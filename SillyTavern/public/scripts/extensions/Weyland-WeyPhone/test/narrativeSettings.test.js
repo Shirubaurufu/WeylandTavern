@@ -211,13 +211,20 @@ test('Narrative renders a phone-native control surface without embedding prompt 
         assert.match(target.innerHTML, new RegExp(`class="wp-narrative-cart" data-narrative-action="set-prompt" data-value="${id}"`));
     }
     // Beta is a held slot: drawn, greyed out, and with no action to click. Only the four real cartridges are counted.
+    // (Beta Prompt 2 + the Curse Booster were pulled on 2026-10-13; see the backup folder under "Prompt Review/Beta 2 Tests".)
     assert.match(target.innerHTML, /class="wp-narrative-cart is-held" disabled/);
     assert.doesNotMatch(target.innerHTML, /data-value="Beta Prompt"/);
     assert.match(target.innerHTML, /4 Promptcarts&trade; detected/);
     assert.doesNotMatch(target.innerHTML, /Beta recommended/);
+    assert.doesNotMatch(target.innerHTML, /Curse Booster/);
+    // Analysis card wording (2026-10-13): ~40s either side, and the models that gain most.
+    assert.match(target.innerHTML, /Longer response time \(~40s more\)/);
+    assert.match(target.innerHTML, /Faster response time \(~40s saved\)/);
+    assert.match(target.innerHTML, /Sonnet, GLM, Deepseek and Gemini Pro see the biggest boost/);
+    assert.doesNotMatch(target.innerHTML, /~20s/);
     assert.match(target.innerHTML, /wp-narrative-bay-help[\s\S]*foundational instruction set/, 'the explanation sits behind the ?');
     assert.match(target.innerHTML, /Gemini Bypass \(Beta\)/);
-    assert.match(target.innerHTML, /Adds an experimental layer that may improve the reliability of Gemini-based models including Gemini 3\.1 Pro, 3\.8 Flash and Gemma\./);
+    assert.match(target.innerHTML, /Adds an experimental layer that may improve the reliability of Gemini-based models including Gemini 3\.8 Flash and Gemma\./);
     assert.match(target.innerHTML, /data-narrative-action="toggle-gemini-bypass"/);
     assert.match(target.innerHTML, /data-narrative-action="toggle-analysis"/);
     assert.match(target.innerHTML, /Analysis · Recommended/);
@@ -382,4 +389,27 @@ test('Beta course correction is unavailable for both regular selection and doses
         assert.match(target.innerHTML, /wp-narrative-shift-key" disabled aria-disabled="true"[^>]*title="Unavailable right now\."[^>]*>[\s\S]*?<strong>Beta<\/strong>/);
         assert.doesNotMatch(target.innerHTML, /data-value="(?:Beta|General-Use)"/);
     }
+});
+
+test('fresh Willow greetings show the canonical year and scenario before the first user message', () => {
+    const path = fileURLToPath(new URL('../../../../../data/default-user/QuickReplies/Weyland.json', import.meta.url));
+    const script = JSON.parse(readFileSync(path, 'utf8')).qrList.find(item => item.label === 'School Year').message;
+    const options = { getGlobal: () => '', getLocal: () => '', hasChat: true, characterName: 'Willow', schoolYearScript: script };
+    const original = readNarrativeSnapshot({ ...options, greetingIndex: 0 });
+    assert.equal(original.startingYear, 'Freshman');
+    assert.equal(original.schoolYear, '2020-2021');
+    assert.equal(original.scenario, 'Original greeting');
+    assert.equal(readNarrativeSnapshot({ ...options, greetingIndex: 1 }).scenario, 'Pastries');
+    const target = { innerHTML: '' };
+    renderNarrativeSettingsScreen(target, { snapshot: original });
+    assert.match(target.innerHTML, /Freshman · 2020-2021 · Original greeting/);
+});
+
+test('saved chat settings win over the greeting preview, and no-chat has no preview', () => {
+    const locals = { ScenarioSet: 'true', StartingYear: 'Senior', SchoolYear: '2023-2024' };
+    const options = { getGlobal: () => '', getLocal: key => locals[key], hasChat: true, characterName: 'Willow', greetingIndex: 0 };
+    assert.equal(readNarrativeSnapshot(options).schoolYear, '2023-2024');
+    const closed = readNarrativeSnapshot({ ...options, hasChat: false });
+    assert.equal(closed.schoolYear, '');
+    assert.equal(closed.scenario, '');
 });

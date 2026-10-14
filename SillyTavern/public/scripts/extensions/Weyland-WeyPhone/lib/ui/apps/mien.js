@@ -102,7 +102,7 @@ export function renderMienScreen(container, {
     <div class="wp-mien-stage" data-mien-stage>
         <button type="button" class="wp-mien-step" id="wp-mien-prev" aria-label="Previous expression"${gallery.expressions.length < 2 ? ' disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>
         <figure class="wp-mien-preview">
-            <img src="${escapeHtml(selected.path)}" alt="${escapeHtml(labels[index])}" />
+            <img src="${escapeHtml(selected.path)}" alt="${escapeHtml(labels[index])}" title="Tap to view full screen" />
             <figcaption>${escapeHtml(labels[index])}</figcaption>
         </figure>
         <button type="button" class="wp-mien-step" id="wp-mien-next" aria-label="Next expression"${gallery.expressions.length < 2 ? ' disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>

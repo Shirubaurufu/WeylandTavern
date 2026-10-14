@@ -742,7 +742,7 @@ const UNCOMFORTABLE_DIRECTIVE = `[DO THE UNCOMFORTABLE THING]
 
 // The Everything scope, per thoughts mode. It sits after the THOUGHTS block, closest to the
 // output, so it outweighs it: listing thoughts flatly as part of the job read as "write thoughts"
-// on characters that have them disabled (Sayori, Copycat on Gemini 3.1 Pro, 2026-10-02). Off
+// on characters that have them disabled (Sayori, Copycat on Gemini, 2026-10-02). Off
 // never names thoughts at all; unknown keeps it conditional on the check above.
 const FULL_SCOPE_DIRECTIVES = Object.freeze({
     on: '[SCOPE]\nThe whole passage: dialogue, narration, thoughts. All of it is yours to redo.',

@@ -394,7 +394,15 @@ body:not(.altFont) .tip-warn{
 #tipBody::-webkit-scrollbar-thumb:hover{background:rgba(140,122,77,.8)}
 /* Tooltip "Room ###" title — always Rajdhani, matching the room-number labels on the map (NOT affected by the font toggle). */
 .trn{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:.5px}
-.tct{font-family:'Open Sans',sans-serif;font-size:11px;color:#c8b890;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+/* Room note under the resident cards: "Single room" or "Roommate: TBA". Quiet on purpose, it
+   answers "where's the roommate?" without competing with the cards. */
+.tip-note{
+  font-family:'Open Sans',sans-serif;font-size:11px;line-height:1.45;color:var(--mut);
+  padding:7px 14px 9px;border-top:1px dashed rgba(140,122,77,.55);
+}
+.tip-note[hidden]{display:none}
+.tip-note b{font-weight:700;color:var(--ink2);margin-right:4px;text-transform:uppercase;letter-spacing:.4px;font-size:10px}
+.tip-note.is-tba b{color:#7a5a1a}
 .rc{
   display:flex;align-items:center;gap:11px;
   padding:10px 12px;
@@ -506,7 +514,15 @@ body:not(.altFont) .th{
 }
 /* Everything on the note card is handwritten Mynerve EXCEPT the action chips. */
 body:not(.altFont) .trn{font-family:'Mynerve',cursive;font-size:18px;font-weight:400;letter-spacing:0;color:#5a3a1a}
-body:not(.altFont) .tct{font-family:'Mynerve',cursive;font-size:14px;font-weight:400;letter-spacing:0;text-transform:none;color:#7a6a4a}
+/* Handwritten mode: the note is a pencilled line at the bottom of the card. The last resident row
+   gives up its extra bottom padding to it. */
+body:not(.altFont) .tip-note{
+  font-family:'Mynerve',cursive;font-size:15px;color:#6a5a3a;
+  border-top:none;padding:0 20px 22px;
+}
+body:not(.altFont) .tip-note b{font-family:'Mynerve',cursive;font-weight:400;text-transform:none;letter-spacing:0;font-size:16px;color:#5a3a1a}
+body:not(.altFont) .tip-note.is-tba b{color:#8a5a1a}
+body:not(.altFont) #tipBody:has(+ .tip-note:not([hidden])) .rc:last-child{padding-bottom:8px}
 /* Push the resident rows below the red rule line. */
 body:not(.altFont) #tipBody{padding-top:14px}
 body:not(.altFont) .rc{
@@ -618,6 +634,40 @@ body:not(.altFont) .act.alt:hover{
   display:block;
 }
 .rav{cursor:zoom-in}
+
+/* ===== Resident search ===== */
+.dsearch{position:relative;width:100%;max-width:1180px;z-index:120}
+.dsearch input{
+  width:100%;height:38px;padding:0 14px 0 38px;
+  font:600 14px 'Open Sans',sans-serif;color:#2a1f0a;
+  background:var(--paper);border:1px solid #6b5d3a;border-radius:8px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 3px 10px rgba(0,0,0,.35);
+  outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.dsearch input::placeholder{color:#8c7a4d;font-weight:400}
+.dsearch input:focus{border-color:#a07a2a;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 0 0 3px rgba(255,204,102,.35),0 3px 10px rgba(0,0,0,.35)}
+.dsearch-icon{position:absolute;left:12px;top:11px;width:16px;height:16px;fill:none;stroke:#8c7a4d;stroke-width:2.2;stroke-linecap:round;pointer-events:none}
+.dsearch-list{
+  position:absolute;left:0;right:0;top:calc(100% + 4px);
+  list-style:none;max-height:280px;overflow-y:auto;scrollbar-width:thin;
+  background:var(--paper);border:1px solid #6b5d3a;border-radius:8px;
+  box-shadow:0 12px 30px rgba(0,0,0,.55);
+}
+.dsearch-list[hidden]{display:none}
+.dsearch-list li{
+  display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer;
+  border-bottom:1px solid rgba(140,122,77,.3);
+}
+.dsearch-list li:last-child{border-bottom:none}
+.dsearch-list li.on,.dsearch-list li:hover{background:rgba(255,204,102,.35)}
+.dsearch-list .ds-name{flex:1;min-width:0;font:600 14px 'Open Sans',sans-serif;color:#2a1f0a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsearch-list .ds-room{flex-shrink:0;font:700 13px 'Rajdhani',sans-serif;letter-spacing:.5px;color:#5a3a1a}
+.dsearch-list .ds-floor{flex-shrink:0;font:700 10px 'Open Sans',sans-serif;color:#f3ead2;background:#551111;border-radius:3px;padding:1px 5px}
+.dsearch-list .ds-empty{cursor:default;color:var(--mut);font:italic 13px 'Open Sans',sans-serif}
+.dsearch-list .ds-empty:hover{background:none}
+/* Rooms matching the search on the floor on show get a red ring. */
+.room.hit .rb{stroke:#a8332a !important;stroke-width:3 !important}
+body.embed-weyphone .dsearch input{height:36px;font-size:13px}
 
 /* Loading + error states */
 .status{
@@ -791,6 +841,14 @@ body:not(.altFont) .act.alt:hover{
 </header>
 
 <div class="wrap">
+  <!-- Resident search: names or room numbers across every floor of the building on show. Picking a
+       result switches to its floor and pins that room's card. -->
+  <div class="dsearch" id="dsearch">
+    <svg class="dsearch-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+    <input id="dsearchInput" type="search" placeholder="Find a resident or room…" autocomplete="off" spellcheck="false"
+           role="combobox" aria-expanded="false" aria-controls="dsearchList" aria-label="Find a resident or room"/>
+    <ul class="dsearch-list" id="dsearchList" role="listbox" hidden></ul>
+  </div>
   <!-- The legend (and the Sterling/O'See building selector that only appears
        with the community layer turned on) sits as an overlay inside the empty
        courtyard at the top-centre of the floor map, instead of as a separate
@@ -838,9 +896,11 @@ body:not(.altFont) .act.alt:hover{
     <!-- Empty-state placeholder, only visible on mobile when no room is pinned. -->
     <div class="ti-empty">Tap a room to see residents.</div>
     <div class="ti">
-      <div class="th"><span class="trn" id="tipRN"></span><span class="tct" id="tipCT"></span></div>
+      <div class="th"><span class="trn" id="tipRN"></span></div>
       <div id="tipWarn" class="tip-warn" hidden></div>
       <div id="tipBody"></div>
+      <!-- Single room / roommate-not-named-yet note, filled by fillTip (replaces the old "N Residents" count). -->
+      <div id="tipNote" class="tip-note" hidden></div>
     </div>
   </div>
 </div>
@@ -901,14 +961,16 @@ const BLDG_RE = {
 // floor 1–3, suf ∈ [02..29] ∪ [68..94]. Any digit run in a home string that
 // doesn't land inside this set is rejected, so "Room 200" or "apt 999" don't
 // silently misassign someone to a non-existent room.
+const RA_SUFFIXES = ['77½', '12½', '82½', '17½'];
 const VALID_ROOMS = (() => {
   const s = new Set();
   for (let f = 1; f <= 3; f++) {
     for (let n = 2;  n <= 29; n++) s.add(String(f) + String(n).padStart(2, '0'));
     for (let n = 68; n <= 94; n++) s.add(String(f) + String(n).padStart(2, '0'));
-    // The left wing's RA room (the gold room between 77 and the laundry) has no number of its
-    // own, so it goes by "77½": Sam, the RA, lives in "Room 277 1/2".
-    s.add(String(f) + '77½');
+    // RA rooms (gold) sit between numbered rooms, so each takes the number of the room before it
+    // plus a half: 77½ (west wing, above the laundry; Sam lives in "Room 277 1/2"), 12½ (its
+    // east-wing mirror), 82½ (beside 83) and 17½ (beside 18).
+    for (const ra of RA_SUFFIXES) s.add(String(f) + ra);
   }
   return s;
 })();
@@ -977,6 +1039,26 @@ function parseFirstName(name){
   return { firstName, nickName, formattedName };
 }
 
+// Homes that differ from the cast site until it is updated, by full cast name. Jenn moves in with
+// Lucy after the first day of classes (Lucky, 2026-10-09); data.json still lists her starting room
+// (276, Kris's). Delete an entry once the cast site agrees. Dorm Layouts
+// (public/scripts/dorm-directory-data.js, HOME_OVERRIDES) keeps the same list.
+const HOME_OVERRIDES = {
+  'Jenn Morrison': 'Sterling Hall, Room 268',
+};
+
+// Rooms known to have no roommate, beyond the ones that are single by design (every RA ½ room,
+// and x83 / x18, which the layout draws with a private bath). From Lucky, 2026-10-09: Briar 309,
+// Cairo 275, Kris 276, Rivera 282, Yue-Lin 288, Eve 317, Tawny 303 (Sam 277½ and Willow 383 are
+// covered by the design rule). A one-resident room NOT on this list gets "Roommate: TBA" instead.
+// Cast characters live in Sterling only, so this only applies there.
+const KNOWN_SINGLE_ROOMS = new Set(['309', '275', '276', '282', '288', '317', '303']);
+function isSingleRoom(id){
+  if(currentBldg !== 'sterling') return false;
+  const s = String(id);
+  return KNOWN_SINGLE_ROOMS.has(s) || s.endsWith('½') || /^\d(83|18)$/.test(s);
+}
+
 async function loadCastData(){
   const res = await fetch(CAST_DATA_URL, {cache:'no-cache'});
   if(!res.ok) throw new Error(`Cast site returned ${res.status}`);
@@ -991,7 +1073,7 @@ async function loadCastData(){
   R_CAST = {};
   for(const key in CHARACTERS){
     const c = CHARACTERS[key];
-    const room = parseRoom(c.home);
+    const room = parseRoom(HOME_OVERRIDES[c.name || key] ?? c.home);
     if(!room) continue;
     if(!R_CAST[room]) R_CAST[room] = [];
     R_CAST[room].push({
@@ -1508,7 +1590,7 @@ function layout(floor){
   vPair(11, 13, RW_OUT_X, y2, 'left');
   y2 += PAIR_H + VG;
   // Block 4 mirror: inner = RA + LAUNDRY ; outer = (115,117) paired
-  addRA(RW_IN_X, y2, WROOM, HROOM, 'tr');                  // PVT in NE corner (toward N-S hall)
+  addRA(RW_IN_X, y2, WROOM, HROOM, 'tr', '12½');           // PVT in NE corner (toward N-S hall)
   addSp('', RW_IN_X, y2 + HROOM, WROOM, HROOM, 'lau');
   vPair(15, 17, RW_OUT_X, y2, 'left');
   y2 += PAIR_H + VG;
@@ -1559,7 +1641,7 @@ function layout(floor){
   cx += 2 * ECELL_W;
   addSp('DORM\nCOMMONS', cx, NCY, DCW, NCH, 'com');
   cx += DCW;
-  addRA(cx, NCY, ECELL_W, NCH, 'br');                       // PVT in SE corner
+  addRA(cx, NCY, ECELL_W, NCH, 'br', '82½');                // PVT in SE corner
   cx += ECELL_W;
   addStudentRoomPvt(83, cx, NCY, ECELL_W, NCH, 'br');
 
@@ -1569,7 +1651,7 @@ function layout(floor){
   rx -= DCW;
   addSp('DORM\nCOMMONS', rx, NCY, DCW, NCH, 'com');
   rx -= ECELL_W;
-  addRA(rx, NCY, ECELL_W, NCH, 'bl');                       // PVT in SW corner
+  addRA(rx, NCY, ECELL_W, NCH, 'bl', '17½');                // PVT in SW corner
   rx -= ECELL_W;
   addStudentRoomPvt(18, rx, NCY, ECELL_W, NCH, 'bl');
 
@@ -1739,7 +1821,20 @@ function fillTip(id){
   if(!res.length) return false;
   document.getElementById('tipRN').innerHTML = 'Room ' + esc(id)
     + (isUserRoom(id) ? '<span class="you-badge" title="New players start in this room">Your default room</span>' : '');
-  document.getElementById('tipCT').textContent = res.length === 1 ? '1 Resident' : res.length + ' Residents';
+  // A lone resident is either in a known single, or their roommate just hasn't been written yet.
+  // Two or more residents need no note: the cards already say who shares the room.
+  const note = document.getElementById('tipNote');
+  if(res.length === 1){
+    const single = isSingleRoom(id);
+    note.className = 'tip-note ' + (single ? 'is-single' : 'is-tba');
+    note.innerHTML = single
+      ? '<b>Single room</b> <span>No roommate.</span>'
+      : '<b>Roommate: TBA</b> <span>They likely have a roommate, but they aren\'t named yet.</span>';
+    note.hidden = false;
+  } else {
+    note.hidden = true;
+    note.innerHTML = '';
+  }
   // Over-capacity warning row — sticky banner above the (scrollable) resident
   // list. Sterling/O'See rooms are 2-bed; anything more means players have
   // double-booked a room in the registrar.
@@ -1960,6 +2055,7 @@ function render(floor){
     });
   });
   updateStats();
+  highlightSearchHits();
 }
 
 function updateStats(){
@@ -2090,6 +2186,96 @@ function setFloor(f){
 document.querySelectorAll('#ftabs .ftab').forEach(t => {
   t.addEventListener('click', () => setFloor(+t.dataset.floor));
 });
+
+// ── RESIDENT SEARCH ─────────────────────────────────────────
+// Searches R, i.e. every floor of whichever building and layers are on show, so it always agrees
+// with the map. Each word must match a name, a first name or the room number; "212 1/2" and
+// "212.5" are read as "212½". Matching rooms on the current floor get a ring as you type.
+const searchInput = document.getElementById('dsearchInput');
+const searchList  = document.getElementById('dsearchList');
+let searchHits = [];
+let searchActive = -1;
+
+function normalizeSearch(q){
+  return String(q || '').toLowerCase().replace(/(\d)\s*(?:1\/2|\.5)/g, '$1½').trim();
+}
+function findResidents(q){
+  const words = normalizeSearch(q).split(/\s+/).filter(Boolean);
+  if(!words.length) return [];
+  const hits = [];
+  for(const id in R){
+    for(const p of R[id]){
+      const hay = [p.name, p.firstName, id, 'room ' + id].join(' ').toLowerCase();
+      if(words.every(w => hay.includes(w))) hits.push({ id, p });
+    }
+  }
+  // Room-number searches read best in room order; name searches alphabetically.
+  const byRoom = /^\d/.test(words[0]);
+  return hits.sort((a, b) => byRoom
+    ? a.id.localeCompare(b.id, undefined, { numeric:true })
+    : String(a.p.name).localeCompare(String(b.p.name)));
+}
+function highlightSearchHits(){
+  const ids = new Set(findResidents(searchInput?.value).map(h => h.id));
+  document.querySelectorAll('#svgWrap .room').forEach(el => el.classList.toggle('hit', ids.has(el.dataset.id)));
+}
+function closeSearchList(){
+  searchList.hidden = true;
+  searchInput.setAttribute('aria-expanded', 'false');
+  searchActive = -1;
+}
+function drawSearchList(){
+  searchHits = findResidents(searchInput.value).slice(0, 40);
+  highlightSearchHits();
+  if(!normalizeSearch(searchInput.value)){ closeSearchList(); return; }
+  searchActive = searchHits.length ? 0 : -1;
+  searchList.innerHTML = searchHits.length
+    ? searchHits.map((h, i) => `<li role="option" data-i="${i}" class="${i === 0 ? 'on' : ''}">`
+        + `<span class="ds-name">${esc(h.p.name)}</span>`
+        + `<span class="ds-room">Room ${esc(h.id)}</span>`
+        + `<span class="ds-floor">F${esc(h.id[0])}</span></li>`).join('')
+    : `<li class="ds-empty">Nobody here matches “${esc(searchInput.value.trim())}”.</li>`;
+  searchList.hidden = false;
+  searchInput.setAttribute('aria-expanded', 'true');
+}
+function pickSearchHit(i){
+  const hit = searchHits[i];
+  if(!hit) return;
+  closeSearchList();
+  searchInput.blur();
+  const floor = +hit.id[0];
+  if(floor !== currentFloor) setFloor(floor);
+  pinTip(hit.id);
+  // On phones the card docks under the map, so bring it into view.
+  if(window.matchMedia('(max-width:760px)').matches) tip.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+searchInput.addEventListener('input', drawSearchList);
+searchInput.addEventListener('focus', () => { if(searchInput.value.trim()) drawSearchList(); });
+searchInput.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    // Clears the search first; a second Escape falls through to unpinning the card.
+    if(searchInput.value){ e.stopPropagation(); searchInput.value = ''; drawSearchList(); }
+    return;
+  }
+  if(searchList.hidden || !searchHits.length) return;
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    searchActive = (searchActive + (e.key === 'ArrowDown' ? 1 : -1) + searchHits.length) % searchHits.length;
+    searchList.querySelectorAll('li').forEach((li, i) => li.classList.toggle('on', i === searchActive));
+    searchList.children[searchActive]?.scrollIntoView({ block:'nearest' });
+  } else if(e.key === 'Enter'){
+    e.preventDefault();
+    pickSearchHit(searchActive);
+  }
+});
+// pointerdown (not click) so the pick lands before the input's blur closes the list.
+searchList.addEventListener('pointerdown', e => {
+  const li = e.target.closest('li[data-i]');
+  if(!li) return;
+  e.preventDefault();
+  pickSearchHit(+li.dataset.i);
+});
+document.addEventListener('pointerdown', e => { if(!e.target.closest('#dsearch')) closeSearchList(); });
 
 // ── BUILDING TABS (Sterling / O'See) ────────────────────────
 // Visible only while the community layer is active. Switching buildings

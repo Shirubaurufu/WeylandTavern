@@ -21,8 +21,10 @@ export function decode(value) {
 }
 
 export function normalizeCatalog(parts) {
+    // WIP characters and locations are shared in the public feed and remain importable.
+    // Collections still require public status; private/deleted entries never enter the catalog.
     return Object.entries(ROUTES).flatMap(([kind]) => (parts[kind] || [])
-        .filter(row => row && !row.deletedAt && (row.status === 'public' || (kind === 'character' && row.status === 'wip')) && Number.isSafeInteger(Number(row[`${kind}Id`])) && row.name)
+        .filter(row => row && !row.deletedAt && (row.status === 'public' || ((kind === 'character' || kind === 'location') && row.status === 'wip')) && Number.isSafeInteger(Number(row[`${kind}Id`])) && row.name)
         .map(row => ({ ...row, kind, id: Number(row[`${kind}Id`]) })));
 }
 

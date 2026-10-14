@@ -820,7 +820,7 @@ export function renderMemoryScreen(container, memories, editingMemoryId = null, 
         exchanges
     </label>
     <label class="wp-memory-settings-label">Primary model
-        <input type="text" id="wp-memory-primary-model-input" placeholder="gemini-3.1-pro-preview" />
+        <input type="text" id="wp-memory-primary-model-input" placeholder="gemini-3.8-flash" />
     </label>
     <label class="wp-memory-settings-label">Backup model (used if primary fails)
         <input type="text" id="wp-memory-backup-model-input" placeholder="minimax-m3" />

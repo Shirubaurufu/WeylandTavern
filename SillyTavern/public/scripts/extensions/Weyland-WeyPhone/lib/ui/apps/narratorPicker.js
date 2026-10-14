@@ -66,7 +66,10 @@ function blurbHtml(blurb) {
  * @param {string[]} [p.blurb] the "what is a narrator?" paragraphs, kept behind the ? chip
  */
 export function narratorPickerHtml({ options, selected, from, busy = false, blurb = [] }) {
-    const current = options.find(option => option.id === selected) ?? options[0];
+    // An unrecognized saved persona is still a persona. Never label it "No narrator set".
+    const current = options.find(option => option.id === selected) ?? (selected
+        ? { id: selected, label: 'Custom', description: 'A saved narrator prompt is active.' }
+        : options[0]);
     const look = lookFor(current.id);
     const animating = Boolean(from) && from !== current.id;
     // When animating, the slats start in the previous narrator's state (see the file header).

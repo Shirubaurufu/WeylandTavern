@@ -1,0 +1,17 @@
+/* Weyland UI Switch: keep the label on one line next to "Manage extensions". */
+#weyland_ui_switch {
+    white-space: nowrap;
+}
+
+#weyland_ui_switch.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Streamlined UI: the button gets its own row at the top of the Settings panel. Left-aligned on purpose:
+   Streamlined UI pins its own "Advanced Options" toggle absolutely in the top-right corner of this panel. */
+#weyland_ui_switch_row {
+    display: flex;
+    justify-content: flex-start;
+    padding: 4px 0 8px;
+}

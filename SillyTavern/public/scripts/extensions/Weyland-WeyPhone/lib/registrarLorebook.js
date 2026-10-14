@@ -48,7 +48,7 @@ function normalizeHandle(value) {
 
 function rosterEntry(book) {
     return Object.values(book?.entries ?? {}).find(entry => entry && !entry.disable &&
-        (/character roster/i.test(String(entry.comment ?? '')) || /\[CHARACTER ROSTER\b/i.test(String(entry.content ?? ''))));
+        (/character roster/i.test(String(entry.comment ?? '')) || /\[(?:CHARACTER|BONUS REGISTRAR) ROSTER\b/i.test(String(entry.content ?? ''))));
 }
 
 function registrarRecordKind(book, name) {

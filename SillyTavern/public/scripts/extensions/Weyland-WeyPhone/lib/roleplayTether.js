@@ -242,6 +242,8 @@ export function sameParticipants(left, right) {
 function normalizeCapturedContent(value) {
     return String(value ?? '')
         .normalize('NFKC')
+        .replace(/[‘’]/g, "'")
+        .replace(/[“”]/g, '"')
         .trim()
         .replace(/\s+/g, ' ')
         // Models commonly repair or introduce a space after punctuation when replaying the
@@ -251,6 +253,16 @@ function normalizeCapturedContent(value) {
 }
 
 export function dedupeCapturedMessages(incoming, stored) {
+    // Outgoing phone texts are often redisplayed on the character's screen, interspersed with
+    // other lines rather than as a contiguous transcript prefix. Their position and displayed
+    // time don't make them new sends. Keep prefix matching below for character transcript echoes.
+    const outgoing = new Set(stored.filter(message => message.role === 'user')
+        .map(message => normalizeCapturedContent(message.content)));
+    return dedupeCapturedPrefix(incoming, stored)
+        .filter(message => message.role !== 'user' || !outgoing.has(normalizeCapturedContent(message.content)));
+}
+
+function dedupeCapturedPrefix(incoming, stored) {
     const same = (a, b) => a.role === b.role && normalizeName(a.speaker) === normalizeName(b.speaker)
         && normalizeCapturedContent(a.content) === normalizeCapturedContent(b.content);
     const max = Math.min(incoming.length, stored.length);
@@ -352,13 +364,13 @@ export function buildTetherInjectionPlan({ conversations, chatId, chatLength, ch
     for (const conversation of conversations) {
         if (!isConversationLinkedToChat(conversation, chatId)) continue;
         const participants = conversation.participants?.length ? conversation.participants : [conversation.charName];
-        // Captured messages already remain verbatim in the main roleplay. Only messages created
-        // later inside WeyPhone need to round-trip back, otherwise the prompt would duplicate the
-        // model's own original phone block and waste main-chat context. A user can also scrub an
-        // already-visible phone bubble from future injections without deleting it from WeyPhone.
+        // Unanswered captures still live in the selected roleplay reply. Once the user replies,
+        // keep that accepted exchange in the injected log: a later swipe/delete may remove its
+        // original roleplay text, but must not erase the message the user actually answered.
         const withinWindow = conversation.messages
             .slice(Math.max(conversation.lastMemoryMessageIndex ?? 0, 0))
-            .filter(message => !message.capturedFromRoleplay && !message.suppressedFromRoleplay);
+            .filter(message => (!message.capturedFromRoleplay || message.roleplayReplyLocked)
+                && !message.suppressedFromRoleplay);
         // Keep only the most recent `cap` messages so the injected block can't balloon. cap === 0
         // means the user chose "all" — keep the full un-summarized window.
         const recent = cap > 0 ? withinWindow.slice(-cap) : withinWindow;

@@ -965,3 +965,348 @@
         color: var(--rb-success);
     }
 }
+/* =========================================
+   QUEUE, REMOVAL & BULK CONFIRMATIONS (2026-10-09)
+   ========================================= */
+
+/* A row that is downloading: a bright edge, a soft wash and its own thin progress line, so a
+   player updating characters one by one can follow each one while the rest of the list stays
+   usable. Queued rows wait with a dimmer edge and an hourglass. */
+.char-row.is-downloading {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02) 60%, transparent);
+    box-shadow: inset 3px 0 0 var(--rb-accent);
+}
+
+.char-row.is-queued {
+    background: rgba(255, 255, 255, 0.025);
+    box-shadow: inset 3px 0 0 #555;
+}
+
+.char-row.is-queued .cell-name {
+    color: #bbb;
+}
+
+.row-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.06);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.row-progress span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), #fff);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+    transition: width 0.25s ease-out;
+}
+
+.status-active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    animation: wtdl-badge-pulse 1.6s ease-in-out infinite;
+}
+
+.status-queued {
+    background: transparent;
+    color: #9a9a9a;
+    border: 1px dashed #666;
+}
+
+.status-other {
+    background: rgba(181, 156, 255, 0.08);
+    color: #b9a8f5;
+    border: 1px solid rgba(181, 156, 255, 0.55);
+}
+
+@keyframes wtdl-badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+    50% { box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.28); }
+}
+
+.icon-btn.is-busy:disabled {
+    opacity: 1;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.35);
+    cursor: progress;
+}
+
+.icon-btn.is-queued {
+    color: #aaa;
+    border-style: dashed;
+}
+
+/* Hovering a queued row's hourglass previews what a click does: take it out of the queue. */
+.icon-btn.is-queued:hover:not(:disabled),
+.icon-btn.btn-remove-row:hover:not(:disabled) {
+    background: rgba(255, 51, 51, 0.12);
+    color: var(--rb-danger);
+    border-color: var(--rb-danger);
+}
+
+.char-row.is-other {
+    opacity: 0.75;
+}
+
+.char-row.is-other:hover {
+    opacity: 1;
+}
+
+.other-divider {
+    color: #9c90c9;
+}
+
+/* Remove: under Repair/Download, deliberately quiet. At rest it is a grey, barely-there striped bar
+   that must not draw the eye (Lucky: the red pulled attention straight to it); only aiming at it
+   brings up a muted red and the slow tape crawl, so it still reads as the careful button. */
+.info-remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: 1px solid #2a2626;
+    border-radius: 4px;
+    color: #6f6464;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+    background:
+        repeating-linear-gradient(-45deg, rgba(160, 60, 60, 0.07) 0 9px, transparent 9px 18px),
+        #121111;
+    background-size: 25.46px 25.46px, auto;
+    opacity: 0.55;
+    transition: opacity 0.25s, color 0.25s, border-color 0.25s;
+}
+
+.info-remove-btn.is-alone {
+    margin-top: auto;
+}
+
+.info-remove-btn:hover:not(:disabled),
+.info-remove-btn:focus-visible {
+    opacity: 0.9;
+    color: #b97b7b;
+    border-color: rgba(150, 70, 70, 0.55);
+    background:
+        repeating-linear-gradient(-45deg, rgba(160, 60, 60, 0.13) 0 9px, transparent 9px 18px),
+        #151111;
+    background-size: 25.46px 25.46px, auto;
+    animation: wtdl-hazard-crawl 1.6s linear infinite;
+    outline: none;
+}
+
+.info-remove-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+@keyframes wtdl-hazard-crawl {
+    from { background-position: 0 0, 0 0; }
+    to { background-position: 25.46px 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .info-remove-btn:hover:not(:disabled),
+    .status-active {
+        animation: none;
+    }
+}
+
+/* Confirmations. They open in SillyTavern's own popup (outside the roster window), so they
+   carry their own palette instead of the roster's --rb variables. */
+.wtdl-confirm {
+    --wtdl-ink: #ececec;
+    --wtdl-muted: #9a9a9a;
+    --wtdl-line: rgba(255, 255, 255, 0.1);
+    --wtdl-accent: #ffffff;
+    --wtdl-good: #5fd38a;
+    --wtdl-warn: #ffcc00;
+    --wtdl-danger: #ff5c5c;
+    text-align: left;
+    color: var(--wtdl-ink);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.wtdl-confirm-head {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.wtdl-confirm-head h3 {
+    margin: 0 0 2px;
+    font-size: 1.25em;
+    letter-spacing: 0.01em;
+    color: var(--wtdl-ink);
+}
+
+.wtdl-confirm-head p {
+    margin: 0;
+    color: var(--wtdl-muted);
+    font-size: 0.92em;
+}
+
+.wtdl-confirm-icon {
+    flex: 0 0 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+    color: var(--wtdl-accent);
+    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03));
+    box-shadow: 0 0 0 1px var(--wtdl-line), 0 0 24px rgba(255, 255, 255, 0.06);
+}
+
+.wtdl-confirm.is-danger .wtdl-confirm-icon {
+    color: var(--wtdl-danger);
+    background: radial-gradient(circle at 35% 30%, rgba(255, 92, 92, 0.22), rgba(255, 92, 92, 0.04));
+    box-shadow: 0 0 0 1px rgba(255, 92, 92, 0.35), 0 0 24px rgba(255, 92, 92, 0.12);
+}
+
+.wtdl-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.wtdl-stat {
+    padding: 10px 12px;
+    border: 1px solid var(--wtdl-line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.wtdl-stat b {
+    display: block;
+    font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+    font-size: 1.55em;
+    line-height: 1.1;
+    color: var(--wtdl-accent);
+}
+
+.wtdl-stat span {
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--wtdl-muted);
+}
+
+.wtdl-stat.is-update b { color: var(--wtdl-warn); }
+.wtdl-stat.is-size b { color: var(--wtdl-good); }
+
+.wtdl-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-height: 132px;
+    overflow-y: auto;
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--wtdl-line);
+    margin-bottom: 12px;
+}
+
+.wtdl-chip {
+    font-size: 0.78em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ddd;
+    white-space: nowrap;
+}
+
+.wtdl-chip.is-update {
+    border-color: rgba(255, 204, 0, 0.45);
+    color: #ffe17a;
+}
+
+.wtdl-chip.is-more {
+    border-style: dashed;
+    color: var(--wtdl-muted);
+}
+
+.wtdl-hint {
+    margin: 0;
+    font-size: 0.85em;
+    line-height: 1.5;
+    color: var(--wtdl-muted);
+}
+
+.wtdl-hint i {
+    color: var(--wtdl-warn);
+    margin-right: 4px;
+}
+
+.wtdl-hint b {
+    color: var(--wtdl-ink);
+}
+
+.wtdl-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.wtdl-col {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.88em;
+    line-height: 1.7;
+    color: #d6d6d6;
+}
+
+.wtdl-col.is-goes {
+    border: 1px solid rgba(255, 92, 92, 0.3);
+    background: rgba(255, 92, 92, 0.06);
+}
+
+.wtdl-col.is-stays {
+    border: 1px solid rgba(95, 211, 138, 0.3);
+    background: rgba(95, 211, 138, 0.06);
+}
+
+.wtdl-col ul {
+    margin: 0;
+    padding-left: 1.15em;
+}
+
+.wtdl-col li {
+    margin: 1px 0;
+}
+
+.wtdl-col.is-goes li::marker { color: var(--wtdl-danger); }
+.wtdl-col.is-stays li::marker { color: var(--wtdl-good); }
+
+.wtdl-col-title {
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.wtdl-col.is-goes .wtdl-col-title { color: var(--wtdl-danger); }
+.wtdl-col.is-stays .wtdl-col-title { color: var(--wtdl-good); }
+
+@media (max-width: 520px) {
+    .wtdl-columns { grid-template-columns: 1fr; }
+}

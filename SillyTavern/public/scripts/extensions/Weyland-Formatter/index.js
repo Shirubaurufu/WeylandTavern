@@ -1,10 +1,13 @@
 import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor, updateMessageBlock } from '../../../script.js';
 import { headerMuseStripExt } from './muse-header.js';
+import { extractPrivatePreparation, findPreparationReplyHeader, REPLY_HEADER, BAD_REPLY_HEADER, MUSE_REPLY_HEADER } from './private-preparation.js';
 import { power_user } from '../../power-user.js';
 import { getGlobalVariable } from '../../variables.js';
 import { substituteParams } from '../../../script.js';
 import { getTokenCountAsync } from '../../tokenizers.js';
 import { oai_settings } from '../../openai.js';
+import { showMessageInterrupted } from '../../weyland-error-notice.js';
+import { isOocModeEnabled } from '../quick-reply-ext/src/oocMode.js';
 const {extensionSettings, renderExtensionTemplateAsync, chat} = SillyTavern.getContext();
 
 const MODULE_NAME = "Weyland-Formatter";
@@ -138,9 +141,9 @@ let settings = undefined;
 const weylandRegex = {
     paragraphSplit: /\n\s*\n/,
     detectHeaderLegacy: /(?:^|(?<=\\n))(?:\*{1,3})?(([^"*~_`\n\r\\]*)~([^"*_`\n\r]*)[~\]\)])(?:\*{1,3})?(?:$|(?=\\n))/m,
-    detectHeader: /^¦+\s?(.+? ?(?:\(\w{4}\) ?)?)¦+$/m,
-    badHeader: /^[^\n¦]+(¦+\s?(.+? ?(?:\(\w{4}\) ?)?)¦+$)/m,
-    detectMuseHeader: /^(?:(?:MUSE EXPERIMENT:.+)|(?:(?:(?:Mon|Tue(?:s)?|Wed(?:nes)?|Thu(?:rs)?|Fri|Sat(?:ur)?|Sun)(?:day)?),.+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(Nov|Dec)(?:ember)?) \d{1,2}, \d+ - \d{1,2}:\d{1,2} [AP]M(?:\s.+)?)|(?:.+ \(CODE: ?\d+\))|(?:Collar Status: (?:(?:In)?Active|Monitoring Only.+))|(?:Evening Scene:.+))$/im,
+    detectHeader: REPLY_HEADER,
+    badHeader: BAD_REPLY_HEADER,
+    detectMuseHeader: MUSE_REPLY_HEADER,
     detectActionParagraph: /^\*[^"_*]*\*$/,
     detectWeybotRelations: /New [^{]+{[^}]+}/,
     greedyDetectAction: /(?<=[\s—]|^)\*([^"_\[\]\n\r]+)\*(?=[\s—]|$)/g,
@@ -152,11 +155,6 @@ const weylandRegex = {
     thinkEnd: /<.*\/.*think.*>$/,
 
     analysisFull: /<analysis>[\w\W]+?(?:<\/analysis>|\n(?=¦+\s?.+? ?(?:\(\w{4}\) ?)?¦+$))/i,
-    // Beta's tag-free replacement for <analysis> (2026-09-28): Anthropic refuses prompts that frame
-    // this step as reasoning, so it is now a "SCENE SHEET" line through "END OF SCENE SHEET". Ends
-    // at the header if the closing line is missing. Everything before the header is dropped anyway;
-    // this keeps experimental mode moving it into the reasoning panel like the analysis block.
-    sceneSheetFull: /^\s*SCENE SHEET[ \t]*\r?\n[\w\W]*?(?:\n[ \t]*END OF SCENE SHEET[ \t]*(?=\r?\n|$)|\n(?=¦¦))/,
 
     asterisk: /\*/g,
 
@@ -308,7 +306,7 @@ async function formatParagraphs(message) {
 
     // Remove additional tagged blocks
     message = replaceText(message, weylandRegex.analysisFull, "");
-    message = replaceText(message, weylandRegex.sceneSheetFull, "");
+    message = extractPrivatePreparation(message, findPreparationReplyHeader).text;
 
     let paragraphs = message.split(weylandRegex.paragraphSplit);
     let paragraphCount = paragraphs.length;
@@ -509,14 +507,17 @@ function replaceText(text, regex, replace) {
     return text;
 }
 
-async function formatNewMessage(messageId) {
+async function formatNewMessage(messageId, type) {
     if (settings === undefined) getSettings();
     const char = chat[messageId]?.name;
     if (messageId === 0 && char !== "Weybot") return;
     const blacklistChar = char === "Kressa" || char === "Kinsbane Manor";
     let mes = chat[messageId]?.mes;
     if (mes) {
-        if (!blacklistChar) {
+        // OOC asks for plain conversation. A saved roleplay analysis opener would make
+        // that valid reply look like unfinished reasoning. Still strip actual private
+        // preparation from the model's output in formatMessage below.
+        if (!blacklistChar && !isOocModeEnabled(getGlobalVariable('OOCMode'))) {
             if (!power_user.user_prompt_bias) {
                 mes = `${substituteParams(getGlobalVariable("Thinking"))}\n\n${mes.trim()}`;
                 console.log(`[Weyland-Debug] 1`);
@@ -531,6 +532,12 @@ async function formatNewMessage(messageId) {
         }
     }
     await formatMessage(messageId, mes);
+    // Notify only on newly received generation output, never on edits or history rendering.
+    // A nonempty draft that privacy cleanup removed is the interrupted-analysis case.
+    if (type !== 'first_message' && mes?.trim() && !chat[messageId]?.mes?.trim()
+        && !chat[messageId]?.is_user && !chat[messageId]?.is_system) {
+        showMessageInterrupted();
+    }
 }
 
 async function formatMessage(messageId, mes = undefined) {
@@ -546,15 +553,26 @@ async function formatMessage(messageId, mes = undefined) {
     preFormatLastMessage = originalMessage;
     window.preFormatLastMessage = originalMessage;
 
+    if (chat[messageId].is_user || chat[messageId].is_system) return;
+
+    // Privacy cleanup also runs with cosmetic formatting disabled, and before extracting
+    // images: an image inside a cut-off sheet must not turn it into a visible reply.
+    const preparation = extractPrivatePreparation(originalMessage, text => findPreparationReplyHeader(text, characterName));
+    originalMessage = preparation.text;
+    let reason = settings?.experimental && chat[messageId].extra.reasoning ? `${chat[messageId].extra.reasoning}\n\n---\n\n` : "";
+    if (settings?.experimental && preparation.reasoning) reason += preparation.reasoning;
+
     if (!settings?.enabled) {
+        chat[messageId].mes = originalMessage;
+        chat[messageId].extra.reasoning = reason;
         if (!settings?.experimental) {
             if (weylandRegex.thinkFull.test(originalMessage)) {
                 chat[messageId].mes = originalMessage.replace(weylandRegex.thinkFull, "").trim();
             } else if (weylandRegex.thinkStart.test(originalMessage)) {
-                if (weylandRegex.detectHeader) {
-                    chat[messageId].mes = originalMessage.slice(originalMessage.indexOf(originalMessage.match(weylandRegex.detectHeader))).trim();
-                } else if (chat[messageId].name === "Muse" && weylandRegex.detectMuseHeader) {
-                    chat[messageId].mes = originalMessage.slice(originalMessage.indexOf(originalMessage.match(weylandRegex.detectMuseHeader))).trim();
+                if (weylandRegex.detectHeader.test(originalMessage)) {
+                    chat[messageId].mes = originalMessage.slice(originalMessage.match(weylandRegex.detectHeader).index).trim();
+                } else if (chat[messageId].name === "Muse" && weylandRegex.detectMuseHeader.test(originalMessage)) {
+                    chat[messageId].mes = originalMessage.slice(originalMessage.match(weylandRegex.detectMuseHeader).index).trim();
                 } else {
                     chat[messageId].mes = "";
                 }
@@ -570,11 +588,6 @@ async function formatMessage(messageId, mes = undefined) {
 
     const formatMessageStartTime = performance.now();
 
-    const isUser = chat[messageId].is_user;
-    const isSystem = chat[messageId].is_system;
-
-    if (isUser || isSystem) return;
-
     // WeyGen RP images are appended after the footer, so the paragraph pass would strip them.
     // Pull them out before formatting and re-append them unchanged afterwards.
     const weygenImages = originalMessage.match(weylandRegex.weygenImage) ?? [];
@@ -589,7 +602,6 @@ async function formatMessage(messageId, mes = undefined) {
     }
 
     const thinkFull = originalMessage.match(weylandRegex.thinkFull);
-    let reason = settings?.experimental && chat[messageId].extra.reasoning ? `${chat[messageId].extra.reasoning}\n\n---\n\n` : "";
     if (thinkFull) {
         if (settings?.experimental) {
             reason = `${reason}${thinkFull[0].replace(weylandRegex.thinkStart,"").replace(weylandRegex.thinkEnd,"").trim()}`;
@@ -633,14 +645,6 @@ async function formatMessage(messageId, mes = undefined) {
             reason = `${reason}${thinkFull ? "\n\n---\n\n" : ""}${analysisFull[0].replace("<analysis>", "").replace("</analysis>","").trim()}`
         }
         originalMessage = originalMessage.replace(analysisFull[0], "").trim();
-    }
-
-    const sceneSheetFull = originalMessage.match(weylandRegex.sceneSheetFull);
-    if (sceneSheetFull) {
-        if (settings?.experimental) {
-            reason = `${reason}${reason ? "\n\n---\n\n" : ""}${sceneSheetFull[0].trim()}`;
-        }
-        originalMessage = originalMessage.replace(sceneSheetFull[0], "").trim();
     }
 
     chat[messageId].extra.reasoning = reason;

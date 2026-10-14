@@ -147,39 +147,51 @@
     <hr/>
 
     <div class="welcomeInfoButtons">
-        <button class="info_button" data-info-type="character">
-            <i class="fa-solid fa-user"></i>
-            <span>Character Info</span>
-        </button>
-        <button class="info_button" data-info-type="dorm">
-            <i class="fa-solid fa-building"></i>
-            <span>Dorm Layouts</span>
-        </button>
-        <button class="info_button" data-info-type="world">
-            <i class="fa-solid fa-earth-americas"></i>
-            <span>Weyland Lore</span>
-        </button>
-        <button class="info_button" data-info-type="timeline">
-            <i class="fa-solid fa-timeline"></i> Timeline
-        </button>    
-        <button class="info_button" data-info-type="help">
-            <i class="fa-solid fa-terminal"></i> Chat Help
-        </button>    
-        <button class="info_button" data-info-type="version">
-            <i class="fa-solid fa-circle-info"></i> Version Info
-        </button>
-        <a class="info_button" target="_blank" href="https://weybooru.com">
-            <i class="fa fa-palette"></i>
-            <span data-i18n="Image Board">Image Board</span>
-        </a>
-        <a class="info_button" target="_blank" href="https://www.patreon.com/cw/WeylandUniversity">
-            <i class="fa fa-coffee"></i>
-            <span data-i18n="Ko-Fi">Patreon</span>
-        </a>
-        <a class="info_button" target="_blank" href="https://discord.gg/weyland">
-            <i class="fa-brands fa-discord"></i>
-            <span data-i18n="Discord">Discord</span>
-        </a>
+        <div class="welcomeInfoButtonRow">
+            <button class="info_button" data-info-type="character">
+                <i class="fa-solid fa-user"></i>
+                <span>Character Info</span>
+            </button>
+            <button class="info_button" data-info-type="dorm">
+                <i class="fa-solid fa-building"></i>
+                <span>Dorm Layouts</span>
+            </button>
+            <button class="info_button" data-info-type="world">
+                <i class="fa-solid fa-earth-americas"></i>
+                <span>Weyland Lore</span>
+            </button>
+            <button class="info_button" data-info-type="timeline">
+                <i class="fa-solid fa-timeline"></i> Timeline
+            </button>
+            <button class="info_button" data-info-type="help">
+                <i class="fa-solid fa-terminal"></i> Chat Commands
+            </button>
+            <button class="info_button" data-info-type="version">
+                <i class="fa-solid fa-circle-info"></i> Version Info
+            </button>
+        </div>
+        <div class="welcomeInfoButtonRow">
+            <a class="info_button" target="_blank" href="https://weybooru.com">
+                <i class="fa fa-palette"></i>
+                <span data-i18n="Image Board">Image Board</span>
+            </a>
+            <a class="info_button" target="_blank" href="https://www.patreon.com/cw/WeylandUniversity">
+                <i class="fa fa-coffee"></i>
+                <span data-i18n="Ko-Fi">Patreon</span>
+            </a>
+            <a class="info_button" target="_blank" href="https://discord.gg/weyland">
+                <i class="fa-brands fa-discord"></i>
+                <span data-i18n="Discord">Discord</span>
+            </a>
+        </div>
+        <!-- Alternate path to the Character Downloader (the same one the extensions menu opens).
+             Deliberately NOT .info_button: those are wired to showInfoSection() by data-info-type. -->
+        <div class="welcomeInfoButtonRow">
+            <button type="button" class="welcomeDownloaderButton" id="welcomeOpenDownloader" title="Open the Character Downloader">
+                <i class="fa-solid fa-cloud-arrow-down"></i>
+                <span>Character Downloader</span>
+            </button>
+        </div>
     </div>
     <hr/>
     <div class="welcomeLinks">
@@ -275,7 +287,7 @@
                 <span>Timeline</span>
             </button>
             <button class="info_button" data-info-type="help">
-                <i class="fa-solid fa-terminal"></i> Chat Help
+                <i class="fa-solid fa-terminal"></i> Chat Commands
             </button>    
             <button class="info_button" data-info-type="version">
                 <i class="fa-solid fa-circle-info"></i> Version Info

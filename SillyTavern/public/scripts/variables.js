@@ -1,4 +1,4 @@
-import { chat_metadata, getCurrentChatId, saveSettingsDebounced } from '../script.js';
+import { chat_metadata, getCurrentChatId, narratorSettingsSync, saveSettingsDebounced } from '../script.js';
 import { extension_settings, saveMetadataDebounced } from './extensions.js';
 import { executeSlashCommandsWithOptions } from './slash-commands.js';
 import { SlashCommand } from './slash-commands/SlashCommand.js';
@@ -128,6 +128,9 @@ export function setGlobalVariable(name, value, args = {}) {
         }
     } else {
         extension_settings.variables.global[name] = value;
+        // Only explicit menu selections claim a narrator edit. NewEntries also uses this
+        // setter to refresh built-in prose, and must not override another tab's choice.
+        if (isTrueBoolean(String(args.narratorPick ?? 'false'))) narratorSettingsSync.markChanged(name);
     }
     saveSettingsDebounced();
     return value;
@@ -1095,6 +1098,13 @@ export function registerVariableCommands() {
         returns: 'the set global variable value',
         namedArgumentList: [
             SlashCommandNamedArgument.fromProps({
+                name: 'narratorPick',
+                description: 'explicit Narrator or NarratorStrength selection; repeated choices override stale tab values',
+                typeList: [ARGUMENT_TYPE.BOOLEAN],
+                enumList: ['true', 'false'],
+                defaultValue: 'false',
+            }),
+            SlashCommandNamedArgument.fromProps({
                 name: 'key',
                 description: 'variable name',
                 typeList: [ARGUMENT_TYPE.VARIABLE_NAME],
@@ -1123,6 +1133,8 @@ export function registerVariableCommands() {
             <div>
                 Set a global variable value and pass it down the pipe. The <code>index</code> argument is optional.
                 To convert the value to a specific JSON type when using <code>index</code>, use the <code>as</code> argument.
+                For an explicit narrator selection, use <code>narratorPick=true</code> with <code>key=Narrator</code> or <code>key=NarratorStrength</code>.
+                Leave it off for automatic template refreshes. It has no effect on other variables or indexed writes.
             </div>
             <div>
                 <strong>Example:</strong>

@@ -44,12 +44,14 @@ function escapeHtml(value) {
 }
 
 function describeLastLookup(status) {
-    if (!status?.lastLookup) return 'No HelixMind connection yet since Weyland Tavern started.';
+    if (!status) return "Couldn't check the last address lookup.";
+    // Only routed lookups are recorded by the server. No record doesn't imply no connection.
+    if (!status.lastLookup) return 'No HelixMind address lookup has been recorded yet.';
     const minutes = Math.max(0, Math.round((Date.now() - status.lastLookup) / 60000));
     const when = minutes === 0 ? 'just now' : minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
     return status.lastVia === 'cloudflare'
-        ? `Last HelixMind connection went through 1.1.1.1 (${when}).`
-        : `Last HelixMind connection used your internet provider's DNS (${when}).`;
+        ? `Last recorded HelixMind lookup used 1.1.1.1 (${when}).`
+        : `Last recorded HelixMind lookup used the computer's usual DNS (${when}).`;
 }
 
 async function fetchStatus() {
@@ -61,7 +63,7 @@ async function fetchStatus() {
     }
 }
 
-async function openPopup() {
+export async function openWeylandNetworkSettings() {
     const context = SillyTavern.getContext();
     const status = await fetchStatus();
     const html = `
@@ -70,19 +72,19 @@ async function openPopup() {
         <i class="fa-solid fa-shield-halved"></i>
         <h3>DNS Routing: 1.1.1.1</h3>
     </div>
-    <p>Some internet providers aren't compatible with the HelixMind connection, or filter it, which can stop your messages from going through.</p>
-    <p>To get around this, Weyland Tavern can send its HelixMind DNS requests through <b>1.1.1.1</b>. DNS is the internet's address book: it's how your computer looks up where a website lives.</p>
-    <p>1.1.1.1 is a well trusted, reputable DNS service run by Cloudflare. It's generally considered more private and secure than many internet providers' DNS, and it's often faster too.</p>
+    <p>Before Weyland can connect to HelixMind, it needs to look up its internet address. This is called DNS. Some internet providers block that lookup or send it to a warning page.</p>
+    <p>This setting asks Cloudflare's <b>1.1.1.1</b> service for HelixMind's address instead. It can help with those lookup problems, though it won't fix every connection error.</p>
     <p class="weyland-network-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> <a href="https://one.one.one.one/" target="_blank" rel="noopener noreferrer">Learn more about 1.1.1.1 from Cloudflare</a></p>
     <label class="checkbox_label weyland-network-toggle">
         <input type="checkbox" id="weyland_network_toggle" ${isEnabled() ? 'checked' : ''} />
         <span>Enable DNS routing through 1.1.1.1</span>
     </label>
-    <p class="weyland-network-reassure">This only affects requests made through Weyland Tavern. Your device's settings, your browser and your other apps are not changed, and you can switch this off at any time.</p>
+    <p class="weyland-network-reassure">This applies only to HelixMind address lookups made by Weyland. It leaves your device settings and other apps alone. You can switch it off at any time.</p>
     <p class="weyland-network-status">${escapeHtml(describeLastLookup(status))}</p>
     <details class="weyland-network-note">
         <summary>Still having trouble with this on?</summary>
-        <p>Your router, or a school or workplace network, may be filtering HelixMind directly. Those filters have to be turned off on that network, so try another network (like your phone's data) to check.</p>
+        <p>Your router or network may still be filtering the connection itself. Try another network, such as a phone hotspot, on the computer running Weyland.</p>
+        <p>Switching only the phone you use to open Weyland won't change the computer's connection to HelixMind. On a school or workplace network, ask its staff about connection restrictions.</p>
     </details>
 </div>`;
     // The toggle saves the moment it changes; the popup's own button just closes it.
@@ -124,7 +126,7 @@ function addButton(allowFallback = false) {
         button.className = 'menu_button fa-solid fa-shield-halved';
         button.setAttribute('role', 'button');
         button.setAttribute('aria-label', 'DNS Routing (1.1.1.1)');
-        button.addEventListener('click', () => void openPopup());
+        button.addEventListener('click', () => void openWeylandNetworkSettings());
     }
 
     if (reload) {

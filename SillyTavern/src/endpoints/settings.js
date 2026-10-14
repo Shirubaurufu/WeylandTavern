@@ -9,6 +9,7 @@ import { SETTINGS_FILE } from '../constants.js';
 import { getConfigValue, generateTimestamp, removeOldBackups } from '../util.js';
 import { getAllUserHandles, getUserDirectories } from '../users.js';
 import { getFileNameValidationFunction } from '../middleware/validateFileName.js';
+import { mergeNarratorSettings, narratorSettingsValues } from '../../public/scripts/narrator-settings-sync.js';
 
 const ENABLE_EXTENSIONS = !!getConfigValue('extensions.enabled', true, 'boolean');
 const ENABLE_EXTENSIONS_AUTO_UPDATE = !!getConfigValue('extensions.autoUpdate', true, 'boolean');
@@ -202,12 +203,24 @@ export const router = express.Router();
 router.post('/save', function (request, response) {
     try {
         const pathToSettings = path.join(request.user.directories.root, SETTINGS_FILE);
+        const stored = fs.existsSync(pathToSettings) ? JSON.parse(fs.readFileSync(pathToSettings, 'utf8')) : {};
+        mergeNarratorSettings(request.body, stored);
         writeFileAtomicSync(pathToSettings, JSON.stringify(request.body, null, 4), 'utf8');
         triggerAutoSave(request.user.profile.handle);
-        response.send({ result: 'ok' });
+        response.send({ result: 'ok', narrator: narratorSettingsValues(request.body.extension_settings?.variables?.global), narratorRevision: request.body.weylandNarratorRevision });
     } catch (err) {
         
         response.send(err);
+    }
+});
+
+// A lightweight account-scoped read works across LAN/Tailscale origins and different devices.
+router.post('/narrator', (request, response) => {
+    try {
+        const stored = JSON.parse(fs.readFileSync(path.join(request.user.directories.root, SETTINGS_FILE), 'utf8'));
+        response.send({ ...narratorSettingsValues(stored.extension_settings?.variables?.global), revision: stored.weylandNarratorRevision ?? 0 });
+    } catch {
+        response.sendStatus(500);
     }
 });
 

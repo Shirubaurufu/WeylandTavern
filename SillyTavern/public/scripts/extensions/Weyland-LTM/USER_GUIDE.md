@@ -9,12 +9,16 @@ Every so often (or whenever you want), your character quietly writes themselves 
 ## How to use it
 
 - Click the 🧠 brain icon in your quick-reply bar (or the Extensions menu → Long-Term Memory).
-- Hit **+ New LTM** to have your character summarize the recent conversation.
+- Hit **New LTM** to have your character summarize the recent conversation.
 - You'll see a little chip pop up in the corner when it's ready — you don't have to sit and wait, keep chatting and check back later.
 - Once it's done, read it over. Don't like something? Hit **Reroll** to try again, or just edit the text yourself.
 - Hit **Save** and it's locked in — your character will remember it from now on.
 
 ## Good to know
+
+On a phone, selecting a memory expands the editor. Tap **Memories** beside its name to bring the list back, or **Expand** to give the editor more room. When you're typing with the keyboard open, the model picker and list controls temporarily hide to leave more room for your text. They return when you leave the text field or close the keyboard.
+
+The memory you're editing has a highlighted border in the list. Checkboxes select memories for merging or deleting and don't change which one you're editing. **Pinned** memories always stay loaded; **On demand** memories are recalled when they're relevant to the conversation.
 
 - **You can edit anything.** Click a saved memory, tweak the text, save again. It's yours.
 - **You can delete or merge memories** — check the boxes next to a couple of old ones and combine them, or clean out ones you don't want anymore.

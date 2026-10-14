@@ -2016,8 +2016,9 @@
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-5px); }
     }
-    /* Screen-content entrance: subtle slide+fade on every navigation. */
-    #wp-screen-body > * { animation: wp-screen-in 180ms ease; }
+    /* Screen-content entrance: subtle slide+fade, only on real navigation. showScreen() sets
+       data-enter for 250ms when the view changes; refreshes re-render without it and stay still. */
+    #wp-screen-body[data-enter] > * { animation: wp-screen-in 180ms ease; }
     @keyframes wp-screen-in {
         from { opacity: 0.4; transform: translateX(6%); }
         to { opacity: 1; transform: none; }
@@ -2675,7 +2676,8 @@
 .wp-chitter-tabs button:hover { color: #f1f5f8; background: rgba(255, 255, 255, 0.035); }
 .wp-chitter-tabs .wp-active { color: #f1f5f8; }
 .wp-chitter-tabs .wp-active::after { content: ''; position: absolute; left: 28%; right: 28%; bottom: 0; height: 3px; border-radius: 3px; background: #1DA1F2; }
-.wp-chitter-pane { animation: wp-chitter-slide 180ms ease-out; }
+/* Only on arriving at the tab (see #wp-screen-body[data-enter]), never on a refresh of it. */
+#wp-screen-body[data-enter] .wp-chitter-pane { animation: wp-chitter-slide 180ms ease-out; }
 @keyframes wp-chitter-slide { from { opacity: 0.45; transform: translateX(18px); } to { opacity: 1; transform: none; } }
 .wp-chitter-following-pane { padding: 0 0 10px; background: #0e1419; }
 #wp-panel[data-app="feed"] .wp-twitter-following-item { margin: 0; border-radius: 0; border-bottom-color: #253341; background: transparent; color: #f1f5f8; }
@@ -3003,7 +3005,7 @@
 .wp-mien-meta { display: flex; justify-content: space-between; gap: 12px; margin: 1px 3px 8px; color: var(--wp-mien-dim); font-size: 10px; }
 .wp-mien-stage { display: grid; grid-template-columns: 38px minmax(0,1fr) 38px; align-items: center; gap: 6px; min-height: 275px; border-radius: 20px; background: radial-gradient(circle at 50% 35%,rgba(226,139,168,.16),transparent 62%),var(--wp-mien-surface); overflow: hidden; }
 .wp-mien-preview { min-width: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.wp-mien-preview img { display: block; width: 100%; height: 230px; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 10px 10px rgba(0,0,0,.28)); }
+.wp-mien-preview img { display: block; width: 100%; height: 230px; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 10px 10px rgba(0,0,0,.28)); cursor: zoom-in; }
 .wp-mien-preview figcaption { max-width: 100%; margin-top: 7px; color: var(--wp-mien-text); font-size: 13px; font-weight: 700; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wp-mien-step { width: 36px; height: 48px; padding: 0; border: 0; border-radius: 13px; background: rgba(255,255,255,.08); color: var(--wp-mien-text); cursor: pointer; }
 .wp-mien-step:hover:not(:disabled) { background: rgba(226,139,168,.22); }
@@ -3174,6 +3176,10 @@
 }
 .wp-settings-field-column { flex-direction: column; align-items: stretch; }
 .wp-settings-field-column input[type="text"] { width: auto; }
+/* A caption on its own line under the field name, in the dim settings tone (inline, it trailed
+   off the header in the theme's red). */
+.wp-settings-field-captioned > span:first-child { display: flex; flex-direction: column; gap: 3px; }
+.wp-settings-field-captioned > span:first-child small { color: var(--wp-text-dim); font-size: 10.5px; line-height: 1.35; }
 
 /* Model / fallback / connection-profile dropdowns. Matched to the text inputs
    directly above them so a field reads as one control stack. */
@@ -4983,9 +4989,7 @@ html body .st-modal-overlay#wbv-modal-overlay {
    the two surfaces read as one design language. The masthead and action buttons originally reused
    the popup's own Menu_Header/Menu_Button textures directly, but that read as too busy for a
    compact phone screen and left several buttons without a visible hover/press state — both are now
-   flat color instead, still built from the same sampled palette. Only the "classic menu" link at
-   the bottom keeps the original button texture, since that one visually points at the classic
-   popup it opens.
+   flat color instead, still built from the same sampled palette.
    -------------------------------------------------------------------------- */
 #wp-panel[data-app="narrative"] {
     --wn-bg: #150a08;
@@ -5691,19 +5695,6 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 .wp-narrative-language-row input { min-width: 0; padding: 10px; border: 1px solid var(--wn-line); border-radius: 10px; background: rgba(255, 255, 255, .3); color: var(--wn-ink); }
 .wp-narrative-language-row button { padding: 0 14px; }
 
-.wp-narrative-legacy { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px; text-align: center; }
-.wp-narrative-legacy button {
-    padding: 9px 14px;
-    border: 0;
-    border-radius: 8px;
-    background: url('/user/images/Weyland/Menu_Button.avif') center / 100% 100% no-repeat;
-    color: var(--wn-accent-2);
-    font-weight: 750;
-    transition: filter .12s;
-}
-.wp-narrative-legacy button:hover { filter: brightness(1.2); }
-.wp-narrative-legacy small { margin: 0; font-size: 9px; color: #c9a898; }
-
 @media (max-width: 380px) {
     .wp-narrative-choice-grid { grid-template-columns: 1fr; }
     .wp-narrative-choice { min-height: 0; }
@@ -6362,8 +6353,8 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 .wp-narrative-strength-keys button:hover:not(:disabled) { border-color: var(--wn-accent-2); }
 .wp-narrative-strength-keys button:focus-visible { outline: 2px solid #ffba91; outline-offset: 3px; }
 .wp-narrative-strength-keys button:disabled { opacity: .55; cursor: default; }
-.wp-narrative-strength-effects { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 16px; margin-top: 17px; padding-top: 12px; border-top: 1px solid #6b302a; text-align: center; font: 400 14px/1.5 'WP Share Tech Mono', ui-monospace, monospace; }
-.wp-narrative-strength-gain { color: var(--wn-accent-soft); }
+.wp-narrative-strength-effects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 16px; margin-top: 17px; padding-top: 12px; border-top: 1px solid #6b302a; text-align: center; font: 400 14px/1.5 'WP Share Tech Mono', ui-monospace, monospace; }
+.wp-narrative-strength-gain { color: var(--wn-accent-soft); text-shadow: 0 0 8px var(--wn-accent-2); }
 .wp-narrative-strength-cost { color: #c19b88; }
 @media (prefers-reduced-motion: reduce) { .wp-narrative-strength-keys button { transition: none; } }
 

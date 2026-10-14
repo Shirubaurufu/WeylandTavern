@@ -4,10 +4,12 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { ravs } from '../../quick-reply-ext/src/promptRegistry.js';
 import { assemble } from './helpers/promptAssemblyHarness.js';
+import { withThoughtRules } from '../../quick-reply-ext/src/promptModifiers.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions } from '../lib/promptResolution.js';
 import { stripAnalysisProcedure } from '../lib/phonePromptPolicy.js';
 import { readNarrativeSnapshot } from '../lib/narrativeSettings.js';
 import { renderNarrativeSettingsScreen } from '../lib/ui/apps/narrativeSettings.js';
+import { REPLY_HEADER } from '../../Weyland-Formatter/private-preparation.js';
 
 const mini = ravs.get('Mini Prompt');
 const beta = ravs.get('Beta Prompt');
@@ -27,7 +29,7 @@ test('Mini carries the exact live Beta UI contracts and all 28 supported express
     const expressions = [...mini.teg.matchAll(/^\[([A-Za-z]+)\] - /gm)].map(match => match[1]);
     assert.equal(new Set(expressions).size, 28);
     const formatter = readFileSync(new URL('../../Weyland-Formatter/index.js', import.meta.url), 'utf8');
-    const regex = name => runInNewContext(formatter.match(new RegExp(`${name}: (.+),\\r?\\n`))[1]);
+    const regex = name => runInNewContext(formatter.match(new RegExp(`${name}: (.+),\\r?\\n`))[1], { REPLY_HEADER });
     const header = regex('detectHeader');
     const footer = regex('expressionClothingParagraph');
     assert.ok(header.test('¦¦ Saturday, Oct 18th ~ 9:28 AM ~ Dormitory ~ (ONYX) ¦¦'));
@@ -56,7 +58,7 @@ test('Mini supports alternate expression view, HTML, character thoughts and Kris
     assert.ok(weybot.get('postrav').includes(beta.expaltshow));
     assert.match(weybot.get('postrav'), /HTML INSTRUCTIONS/);
     const { locals: summer } = await assemble('Summer');
-    assert.equal(summer.get('ThoughtSet'), beta.thinkYes);
+    assert.equal(summer.get('ThoughtSet'), withThoughtRules(beta.thinkYes));
     const { locals: kris } = await assemble('Kris');
     assert.equal(kris.get('Krisrav'), kris.get('postrav'));
 });
