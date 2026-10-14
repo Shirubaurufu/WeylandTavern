@@ -188,15 +188,38 @@ export const THOUGHT_RULES = [
     "- NEVER speak as a narrator in {{char}}'s thoughts.",
 ];
 
+// rav.js (every prompt's thinkYes) and Blake's second greeting wrap the thoughts block in "<thought directions>" ...
+// "</thought directions>": an XML-style tag with a space in its name, which is not a valid tag and matches nothing else in
+// Weyland's prompts. Lucky (2026-10-14): use the house bracket form, like [WINDIGO LORE] ... [END WINDIGO LORE]. Converted
+// here at send time, like the rules, because rav.js and scenarios.js are regenerated from Fox's masters and an edit there
+// would be reverted. Every thoughts-on path goes through withThoughtRules or baphometThoughts, which both call this.
+export const THOUGHT_BLOCK_OPEN = '[THOUGHT DIRECTIONS]';
+export const THOUGHT_BLOCK_CLOSE = '[END THOUGHT DIRECTIONS]';
+export function withThoughtBrackets(text) {
+    return String(text ?? '')
+        .replace(/<thought directions>/gi, THOUGHT_BLOCK_OPEN)
+        .replace(/<\/thought directions>/gi, THOUGHT_BLOCK_CLOSE);
+}
+
 export function withThoughtRules(thinkYes) {
-    const block = String(thinkYes ?? '');
+    const block = withThoughtBrackets(thinkYes);
     if (!block) return block;
     const missing = THOUGHT_RULES.filter(line => !block.includes(line));
     if (!missing.length) return block;
     const lines = missing.join('\n');
-    // Inside the block when it has its closing tag, so they read as more of the thought guidelines.
-    if (block.includes('</thought directions>')) return block.replace('</thought directions>', `${lines}\n</thought directions>`);
+    // Inside the block when it has its closing marker, so they read as more of the thought guidelines.
+    if (block.includes(THOUGHT_BLOCK_CLOSE)) return block.replace(THOUGHT_BLOCK_CLOSE, `${lines}\n${THOUGHT_BLOCK_CLOSE}`);
     return `${block}\n${lines}`;
+}
+
+// Greetings that switch thoughts on by themselves: scenarios.js gives them SpecialThoughts plus their own ThoughtSet (Jenn's
+// drunk intro, Blake's second; Fawne's Cerberus greeting has its own branch first). XXX rewrites ThoughtSet on every run, and for SpecialThoughts it
+// used to load rav.thinkSpec, which is only the "thoughts disabled" line, so those greetings never had thoughts (found
+// 2026-10-14 in Lucky's drunk-Jenn chats). The text is read from the scenarios map, not the chat variable, because every chat
+// started before this fix already had its copy overwritten. Returns '' when the greeting has no thoughts block of its own.
+export function greetingThoughtSet(charScenarios, greetingSwipe) {
+    const text = charScenarios?.greetings?.[greetingSwipe]?.ThoughtSet;
+    return text ? withThoughtRules(String(text)) : '';
 }
 
 // Official roster header (2026-10-12). The encoded rsbRT opens with "NEVER describe named characters without

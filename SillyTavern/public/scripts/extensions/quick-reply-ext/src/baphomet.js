@@ -22,7 +22,7 @@
 //
 // "!Mute" is retired: it was one sentence against four always-on instructions, so it only worked sometimes.
 // The "!Mute" paragraph is cut from every Bap request (both modes); PromptOS replaces it.
-import { THOUGHT_RULES } from "./promptModifiers.js";
+import { THOUGHT_BLOCK_CLOSE, THOUGHT_RULES, withThoughtBrackets } from "./promptModifiers.js";
 
 export const BAPHOMET_VAR = "BaphometVisibility";
 
@@ -51,13 +51,13 @@ const BAPHOMET_THOUGHT_LINES = [
  * @param {string} thinkYes rav.thinkYes of the active prompt
  */
 export function baphometThoughts(thinkYes) {
-    let block = String(thinkYes ?? "");
+    let block = withThoughtBrackets(thinkYes);   // [THOUGHT DIRECTIONS] ... [END THOUGHT DIRECTIONS], see promptModifiers.js
     if (!block) return block;
     block = block
         .replace(/\{\{random::1::2(?:::3)?(?:::4)?\}\}/, "{{random::1::2}}")
         .replace("{{char}}'s thought process as it happens", "Baphomet's commentary as it happens");
     const lines = [...BAPHOMET_THOUGHT_LINES, ...RULES_FOR_BAPHOMET].filter(line => !block.includes(line)).join("\n");
-    if (block.includes("</thought directions>")) return block.replace("</thought directions>", () => `${lines}\n</thought directions>`);
+    if (block.includes(THOUGHT_BLOCK_CLOSE)) return block.replace(THOUGHT_BLOCK_CLOSE, () => `${lines}\n${THOUGHT_BLOCK_CLOSE}`);
     return `${block}\n${lines}`;
 }
 
