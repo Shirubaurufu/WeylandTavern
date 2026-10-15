@@ -34,6 +34,67 @@ test('closed sheets are hidden, including consecutive blocks and CRLF', async ()
     assert.equal(await formatter.format(`SCENE SHEET\n${secret}\nEND OF SCENE SHEET`), '');
 });
 
+// GLM thinks inside <think>, then writes the whole sheet AGAIN in the reply. When that second copy's opening line is not exactly
+// "SCENE SHEET" alone at the very start, only its closing marker is certain, and the whole thing used to leak (Aerosplat, 2026-10-14).
+for (const [name, opening] of [
+    ['a lead-in line before the title', 'Okay, scene sheet time.\nSCENE SHEET'],
+    ['a title with extra text', 'SCENE SHEET [Rob]'],
+    ['a bold title', '**SCENE SHEET**'],
+    ['no title at all', ''],
+]) {
+    test(`a second sheet after <think> is hidden even with ${name}`, async () => {
+        const formatter = formatterHarness();
+        const expected = await formatter.format(reply);
+        const body = `${secret}\nOkay. Here is my completely user-ready rough draft! Okay. I'm starting with the header~`;
+        const raw = `<think>\nSCENE SHEET\n${secret}\nEND OF SCENE SHEET\n</think>\n${opening ? opening + '\n' : ''}${body}\nEND OF SCENE SHEET\n${reply}`;
+        assert.equal(await formatter.format(raw), expected);
+    });
+}
+
+// The same, with the closing line written loosely too (the shape Lucky guessed: bracketed, lower case, no "OF").
+for (const opening of ['Scene Sheet:', 'SCENE SHEET [Rob]', '[Scene sheet]']) {
+    for (const closing of ['[End scene sheet]', 'End of scene sheet', 'END SCENE SHEET', 'END OF SCENE SHEET.']) {
+        test(`a second sheet after <think> is hidden: "${opening}" ... "${closing}"`, async () => {
+            const formatter = formatterHarness();
+            const expected = await formatter.format(reply);
+            const raw = `<think>\n[Scene sheet]\n${secret}\n[End scene sheet]\n</think>\n${opening}\n${secret}\nOkay. I'm starting with the header~\n${closing}\n${reply}`;
+            assert.equal(await formatter.format(raw), expected);
+        });
+    }
+}
+
+// GLM puts a "---" rule between the closing line and the header; it showed above the header in every live reply (2026-10-14).
+test('a "---" rule between the sheet and the header does not reach the reply', async () => {
+    const formatter = formatterHarness();
+    const expected = await formatter.format(reply);
+    for (const rule of ['---', '***', '----  ']) {
+        assert.equal(await formatter.format(`SCENE SHEET\n${secret}\nEND OF SCENE SHEET\n\n${rule}\n\n${reply}`), expected);
+    }
+    // No sheet was removed, so a reply that opens with its own rule keeps it.
+    assert.match(await formatter.format(`---\n${reply}`), /<hr|---/);
+});
+
+// GLM through HM sometimes sends everything as reasoning and leaves the message empty (live test 2026-10-14, Summer).
+test('a reply stranded in reasoning is recovered, and only when a header follows the sheet', async () => {
+    const { recoverReplyFromReasoning } = await import('../../Weyland-Formatter/private-preparation.js');
+    const finder = text => text.match(/^¦+.+¦+$/m);
+    const got = recoverReplyFromReasoning(`SCENE SHEET\n${secret}\nEND OF SCENE SHEET\n\n---\n\n${reply}`, finder);
+    assert.equal(got.text, reply);
+    assert.match(got.reasoning, /SECRET/);
+    assert.doesNotMatch(got.reasoning, /She waves/);
+    assert.equal(recoverReplyFromReasoning(`SCENE SHEET\n${secret}\nEND OF SCENE SHEET\nno header here`, finder), null);
+    assert.equal(recoverReplyFromReasoning(`plain thinking, no sheet\n${reply}`, finder), null);
+    assert.equal(recoverReplyFromReasoning(undefined, finder), null);
+});
+
+test('an END OF SCENE SHEET line inside a finished reply is left alone', async () => {
+    const formatter = formatterHarness();
+    const withMarker = `${header}\n\n*She reads the card out loud.*\n\nEND OF SCENE SHEET\n\n*She laughs.*\n\n[Amusement] [RC]`;
+    const expected = await formatter.format(withMarker);
+    assert.match(expected, /She laughs/);
+    assert.match(expected, /END OF SCENE SHEET/);
+});
+
 test('Muse plain headers recover a reply after an unclosed sheet', async () => {
     const formatter = formatterHarness();
     const raw = `SCENE SHEET\n${secret}\nSaturday, October 18, 2025 - 9:28 AM\n\n*She waves.*`;

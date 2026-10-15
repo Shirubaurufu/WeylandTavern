@@ -1,6 +1,6 @@
 import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor, updateMessageBlock } from '../../../script.js';
 import { headerMuseStripExt } from './muse-header.js';
-import { extractPrivatePreparation, findPreparationReplyHeader, REPLY_HEADER, BAD_REPLY_HEADER, MUSE_REPLY_HEADER } from './private-preparation.js';
+import { extractPrivatePreparation, recoverReplyFromReasoning, repairReplyHeader, findPreparationReplyHeader, REPLY_HEADER, BAD_REPLY_HEADER, MUSE_REPLY_HEADER } from './private-preparation.js';
 import { power_user } from '../../power-user.js';
 import { getGlobalVariable } from '../../variables.js';
 import { substituteParams } from '../../../script.js';
@@ -238,7 +238,7 @@ const weylandRegex = {
     clothingAliasNaked: /\[naked\]/gi,
     weybotRelationships: /^New (?:Aquaintance|Friend|Hostile|Lover): ?{?.+?}?$/im,
     ltmFix: /(.*\n\n#.*[\s\S]*?\n\nMEMORY:[\s\S]*?\n\nFRAGMENTS:[\s\S]*?(?=\n\n))/im,
-    roughDraftRemove: /((?<=\n)\n+)? *\[D\] *(\n+(?=\n))?/i,
+    roughDraftRemove: /[ \t]*\[D\][ \t]*/i,
     weygenImage: /<img class="weygen-rp-image"[\s\S]*?\/>/g,
 };
 
@@ -303,6 +303,10 @@ async function formatParagraphs(message) {
 
     // Remove the rough draft marker "[D]"
     message = replaceText(message, weylandRegex.roughDraftRemove, "");
+    // Keep paragraph breaks when removing [D]. Older cleanup collapsed a trailing
+    // rule onto the footer, making Showdown render the metadata as a setext <h2>.
+    // Also repair that already-saved shape before splitting/recognising the footer.
+    message = message.replace(/^((?:\[[a-z0-9]+\][ \t]*){2,4})\r?\n[-=]{3,}[ \t]*(?=\r?\n|$)/gim, '$1');
 
     // Remove additional tagged blocks
     message = replaceText(message, weylandRegex.analysisFull, "");
@@ -513,6 +517,8 @@ async function formatNewMessage(messageId, type) {
     if (messageId === 0 && char !== "Weybot") return;
     const blacklistChar = char === "Kressa" || char === "Kinsbane Manor";
     let mes = chat[messageId]?.mes;
+    const previousText = mes;
+    const previousReasoning = chat[messageId]?.extra?.reasoning;
     if (mes) {
         // OOC asks for plain conversation. A saved roleplay analysis opener would make
         // that valid reply look like unfinished reasoning. Still strip actual private
@@ -532,6 +538,14 @@ async function formatNewMessage(messageId, type) {
         }
     }
     await formatMessage(messageId, mes);
+    // Streaming renders its final chunk BEFORE MESSAGE_RECEIVED. Redraw after cleanup
+    // so the visible reply and reasoning panel agree with the text we actually save.
+    // Non-streaming inserts a new message AFTER this event; leave its first render
+    // to the host, since updateReasoningUI requires an existing message element.
+    if (chat[messageId] && document.querySelector(`#chat [mesid="${messageId}"]`)
+        && (chat[messageId].mes !== previousText || chat[messageId].extra?.reasoning !== previousReasoning)) {
+        updateMessageBlock(messageId, chat[messageId]);
+    }
     // Notify only on newly received generation output, never on edits or history rendering.
     // A nonempty draft that privacy cleanup removed is the interrupted-analysis case.
     if (type !== 'first_message' && mes?.trim() && !chat[messageId]?.mes?.trim()
@@ -548,7 +562,7 @@ async function formatMessage(messageId, mes = undefined) {
     // greeting (and removes it right after), because that text does need formatting.
     if (messageId === 0 && characterName !== "Weybot" && !chat[0]?.extra?.weyland_force_format) return;
 
-    let originalMessage = mes ? mes : chat[messageId].mes;
+    let originalMessage = mes ?? chat[messageId].mes ?? '';
 
     preFormatLastMessage = originalMessage;
     window.preFormatLastMessage = originalMessage;
@@ -557,6 +571,14 @@ async function formatMessage(messageId, mes = undefined) {
 
     // Privacy cleanup also runs with cosmetic formatting disabled, and before extracting
     // images: an image inside a cut-off sheet must not turn it into a visible reply.
+    // A provider that sends the whole answer as reasoning leaves the message blank; take the reply back out of it.
+    if (!originalMessage?.trim() && chat[messageId].extra?.reasoning) {
+        const recovered = recoverReplyFromReasoning(chat[messageId].extra.reasoning, text => findPreparationReplyHeader(text, characterName));
+        if (recovered) {
+            originalMessage = recovered.text;
+            chat[messageId].extra.reasoning = recovered.reasoning;
+        }
+    }
     const preparation = extractPrivatePreparation(originalMessage, text => findPreparationReplyHeader(text, characterName));
     originalMessage = preparation.text;
     let reason = settings?.experimental && chat[messageId].extra.reasoning ? `${chat[messageId].extra.reasoning}\n\n---\n\n` : "";
@@ -587,6 +609,8 @@ async function formatMessage(messageId, mes = undefined) {
     }
 
     const formatMessageStartTime = performance.now();
+
+    originalMessage = repairReplyHeader(originalMessage);
 
     // WeyGen RP images are appended after the footer, so the paragraph pass would strip them.
     // Pull them out before formatting and re-append them unchanged afterwards.
