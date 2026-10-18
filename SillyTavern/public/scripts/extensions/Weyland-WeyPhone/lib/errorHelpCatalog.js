@@ -18,6 +18,8 @@
 // never shown. Paragraph lists (explanation, step text, note) may include `{ visual: name }`
 // to place a picture there; the names are defined in errorHelp.js. `actions` are buttons: home (PromptOS Home), gemini (the filter guide), dns (the
 // DNS Routing popup), registrar (the Registrar app).
+import { COMMUNITY_MODEL_LIMIT_ARTICLE, COMMUNITY_MODEL_LIMIT_TITLE, COMMUNITY_MODEL_LIMIT_BODY } from '../../../weyland-error-notice.js';
+
 const step = (title, text) => ({ title, text });
 const warpDocs = ['Cloudflare: the WARP app and its modes', 'https://developers.cloudflare.com/warp-client/warp-modes/'];
 
@@ -26,16 +28,26 @@ export const ERROR_HELP_CARDS = [
     {
         id: 'interrupted', group: 'Replies', title: 'Message Interrupted',
         summary: 'A blank reply, or one that stops partway through.',
-        aliases: ['blank message', 'empty response', 'empty reply', 'cut off', 'analysis interrupted', 'reasoning', 'nothing came back'],
+        aliases: ['blank message', 'empty response', 'empty reply', 'cut off', 'analysis interrupted', 'reasoning', 'nothing came back', 'mobile data', 'spotty connection', 'bad signal'],
         match: /message interrupted|blank (?:message|reply)|empty (?:response|reply)/i,
         example: 'Message Interrupted\nThe AI was mid-analysis when it was interrupted, either by a content filter, API issue or your ISP.',
         explanation: [
             'The reply got stopped before it was finished.',
             'A few different things can do that. A content filter can cut the AI off, the API can hiccup, or your internet provider can drop the connection.',
             "The message can't tell which one it was, so the steps below go one at a time, starting with the easiest.",
+            "If you're on mobile data or shaky Wi-Fi, keep that in mind the whole way through. A dropped connection looks exactly like a filter here, and the first step explains why.",
         ],
         route: { net: 1, helix: 1, model: [2, 'often, a filter'] },
         steps: [
+            // First since 2026-10-17 (Lucky: check what they're on before asking them to change anything).
+            // Players kept blaming filters for what turned out to be their signal. WeyTav's server cancels the
+            // model request when the browser's connection closes (chat-completions.js, request.socket 'close'
+            // -> controller.abort()), so a short drop is enough.
+            step('On mobile data or spotty Wi-Fi? Try a steadier connection', [
+                "This one fools a lot of people, because it looks exactly like a filter. If your connection drops while a reply is on its way, even for a couple of seconds, WeyTav stops waiting for it, and you get a blank or a half-finished message.",
+                "It's about the device you're chatting on, not just the computer running WeyTav. A phone on patchy mobile data can cut replies off even when the computer's internet is perfect.",
+                'Switch to Wi-Fi, or somewhere with better signal, and reroll. If it suddenly works, that was it.',
+            ]),
             step('Reroll once', 'Plenty of interruptions are one-offs. Give it another go before you change anything.'),
             step('Using Gemini? Turn on Gemini Bypass', [
                 "It's on PromptOS Home. Switch it on and reroll.",
@@ -49,10 +61,6 @@ export const ERROR_HELP_CARDS = [
             step('Check your connection', [
                 'If every model fails the same way, your connection is the more likely problem.',
                 "Turn on DNS Routing: 1.1.1.1 with the button below and try again. If that doesn't do it, the network test guide walks you through trying another connection.",
-            ]),
-            step('On mobile data? Try Wi-Fi', [
-                'A brief drop in signal while a reply is on its way can cut it off, and what is left can come out blank or as an empty response.',
-                'If it keeps happening on mobile data, try Wi-Fi, or move somewhere with steadier signal, then reroll.',
             ]),
         ],
         note: 'Change one thing at a time and reroll after each. That way, when it starts working, you know what fixed it.',
@@ -187,6 +195,7 @@ export const ERROR_HELP_CARDS = [
         route: { net: [3, 'usually here'], helix: 1 },
         steps: [
             step('Wait a few seconds and reroll', "If it works, you're done. A one-off is nothing to worry about."),
+            step('On mobile data or spotty Wi-Fi?', "A connection that drops for even a couple of seconds can hang up on a reply that's still coming in. That goes for the device you're chatting on too, not just the computer running WeyTav. Try Wi-Fi or a steadier spot and reroll."),
             step('Turn on DNS Routing: 1.1.1.1', [
                 "It's a switch in WeyTav for when your internet provider gets in the way of HelixMind. Turn it on with the button below, then try again.",
                 "It won't fix every cause, but it fixes a lot of them and takes a second.",
@@ -254,7 +263,10 @@ export const ERROR_HELP_CARDS = [
             step('Wait a minute, then try once', 'Rerolling over and over while a model is busy tends to make it worse. Give it a minute.'),
             step('Try another model', 'If a different model answers right away, the first one is probably overloaded. Switch back later.'),
             step('Turn Analysis off', 'With Analysis on, the AI plans before it writes, which takes longer. Turning it off can get the reply in before the time runs out.'),
-            step('If everything times out, check your connection', 'When every model times out, turn on DNS Routing: 1.1.1.1 and try the network test.'),
+            step('If everything times out, check your connection', [
+                'When every model times out, turn on DNS Routing: 1.1.1.1 and try the network test.',
+                "On mobile data or patchy Wi-Fi, a long reply has more time to get caught by a drop in signal. Try a steadier connection before you blame the model.",
+            ]),
         ],
         actions: ['home', 'dns'], related: ['server', 'network-test', 'interrupted'],
     },
@@ -359,6 +371,39 @@ export const ERROR_HELP_CARDS = [
         related: ['rate', 'key'],
     },
     {
+        // The shared daily pool (2026-10-17: Sonnet 4.5 has 2,000 a day, Gemini 4 Argon 500, rolling 24 hours).
+        // Update the model names in the swap step when the lineup changes. Lucky doesn't want this card to
+        // read as "keep trying", so it never suggests rerolling to catch a freed-up message.
+        id: COMMUNITY_MODEL_LIMIT_ARTICLE, group: 'API key and account', title: COMMUNITY_MODEL_LIMIT_TITLE,
+        summary: 'A shared model has used up its messages for everyone. Swap models.',
+        aliases: ['rpd limit', 'rpd', 'requests per day', 'community limit', 'daily limit', 'daily request limit', 'model group', 'requests per 24 hours', 'shared model', 'model maxed out', 'grp:beta'],
+        match: /community model maxed out|maximum usage for the day/i,
+        // Beats the generic 429 card when someone pastes the raw text: the old "rate limit exceeded: ...rpd limit=2000"
+        // or the 2026-10-18 'model group "beta" daily request limit exceeded (2000 requests per 24 hours)'.
+        specificMatch: /\brpd\s*limit\b|\bmodel\s+group\b[^\n]*?\bdaily\s+request\s+limit\b|community model maxed out/i,
+        example: `${COMMUNITY_MODEL_LIMIT_TITLE}\n${COMMUNITY_MODEL_LIMIT_BODY.replace('\n\n', ' ')}`,
+        explanation: [
+            "A few of our models come from a limited supply that the whole community shares. Each one only gets so many messages a day between all of us, and once they're used up, that model stops taking new ones for a while.",
+            "This isn't your key, your account or anything you did. Everyone trying that model right now is getting the same message. If you saw the raw version with a long code in it, that code belongs to Weyland's plan, not to you.",
+            "The limit runs on a rolling 24 hours, so it doesn't refill all at once at midnight. Messages free up bit by bit as older ones age out, which is why it can come back in a few hours.",
+            "Lucky's announcement on the Discord explains the whole situation with these models. It's under Links at the bottom of this page.",
+        ],
+        route: { helix: [3, 'shared limit'] },
+        steps: [
+            step('Swap to another model', [
+                'Open the API panel and pick something else. Right now the shared, limited ones are Sonnet 4.5 and Gemini 4 Argon, so anything outside those works.',
+                "GLM 5 (the non-thinking one) and regular Sonnet 5 are both good picks while you wait.",
+            ]),
+            step('Using the Router?', "If the Router is on and has other models in its pool, it skips this one by itself and you'll probably never see this message. If you're seeing it anyway, the Router is likely off, or this model is the only one in your pool."),
+            step("Check WeyPhone's model too", 'Texting, Copycat and app sync can each use their own model. If the phone is set to a shared model, swap it in WeyPhone Settings as well. Those features send a lot of messages, so they\'re better off on something else anyway.'),
+            step('Come back to it in a few hours', "There's no need to babysit it. Play on another model and try this one again later."),
+        ],
+        note: "Please don't keep rerolling to try and sneak a message through. If multiple people roll the same message immediately as it is freed, it can sometimes simply error out, using up the message and not distributing it to anyone. Instead, wait a couple hours and try again.",
+        related: ['rate', 'models', 'credits'],
+        // The 2026-10-17 models announcement (Sonnet 4.5, GLM 5, Gemini 4 Argon). Swap it when a newer one replaces it.
+        sources: [['The models announcement on Discord', 'https://discord.com/channels/1250835886216577034/1254241818200244314/1560732571866890242']],
+    },
+    {
         id: 'rate', group: 'API key and account', title: '429 / Too Many Requests',
         summary: 'Too many requests too fast. Slow down a little.',
         aliases: ['429', 'rate limit', 'too many requests', 'resource exhausted', 'RESOURCE_EXHAUSTED'],
@@ -372,9 +417,10 @@ export const ERROR_HELP_CARDS = [
             step('Wait a minute before trying again', 'If the message says how long to wait, wait that long. Rerolling straight away just adds another request to the pile.'),
             step('Let other requests finish', 'Other tabs, WeyPhone conversations and app syncs all share the same key. Let them finish before you try again.'),
             step('If it mentions quota or credits', "Then it's an account limit, not speed. The Quota guide covers that."),
+            step('If it says "rpd limit" or "daily request limit"', "Then it's a shared model that's out of messages for everyone, and waiting a minute won't fix it. The Community Model Maxed Out guide covers that."),
             step('Try another model', "If one model is slammed, another one might not be."),
         ],
-        related: ['credits', 'server'],
+        related: ['credits', COMMUNITY_MODEL_LIMIT_ARTICLE, 'server'],
     },
     {
         id: 'server', group: 'API key and account', title: '500 / 502 / 503 / Service Unavailable',
@@ -506,6 +552,7 @@ export const ERROR_HELP_CARDS = [
         ],
         steps: [
             step('Try the sync again', "This is often a one-off. If you also got an error like socket hang up, look that one up first."),
+            step('On mobile data?', "A sync is a long request, and a quick drop in signal partway through can leave it with nothing usable. If you're on patchy data, try again on Wi-Fi."),
             step('Try a different sync model', [
                 'In WeyPhone Settings, find "Model for social-app Sync". That\'s the model doing this job, separate from your main chat model.',
                 'Some models are better at it than others. If one keeps failing, swap it out.',
@@ -524,6 +571,7 @@ export const ERROR_HELP_CARDS = [
         ],
         steps: [
             step('Try once more', 'If an API error shows up as well, look that up. It\'s probably the reason.'),
+            step('On mobile data?', "If your connection blips while the memory is being written, it can come back blank. Try again on Wi-Fi or somewhere with better signal."),
             step('Check the memory model', "Memories have their own model and connection, in that chat's memory settings. If that model keeps coming back empty, try another."),
             step('Write it yourself if you need to', 'You can always write or edit a memory by hand and keep chatting.'),
         ],
@@ -606,9 +654,13 @@ export const ERROR_HELP_CARDS = [
         steps: [
             step('Figure out which device actually connects', [
                 'If WeyTav runs on your computer and you open it on your phone, the computer is the one talking to HelixMind.',
-                "So switching your phone to mobile data won't change anything. The computer is the one that needs a different network.",
+                "So for blocks and security filters, switching your phone to mobile data won't change anything. The computer is the one that needs a different network.",
+                "There's one exception. If replies come back blank or cut off, your phone's own connection matters too, because WeyTav stops waiting for a reply as soon as the device you're chatting on drops off. Patchy mobile data can cause that even when the computer's internet is perfect.",
             ]),
-            step('Put that device on another connection', 'A phone hotspot is the easiest option. Connect the computer to it and send one message.'),
+            step('Put that device on another connection', [
+                'A phone hotspot is the easiest option. Connect the computer to it and send one message.',
+                "Make sure the hotspot has decent signal first. A weak one can drop out mid-reply and make it look like the test failed.",
+            ]),
             step('Compare', [
                 'Works on the hotspot? Your usual network is the problem. Turn on DNS Routing: 1.1.1.1, check the network for security filters, or try WARP.',
                 "Fails on both? The network probably isn't it. A VPN or antivirus running on the computer can still be involved, so check those too.",

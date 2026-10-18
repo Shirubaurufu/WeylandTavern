@@ -7,7 +7,7 @@ import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLore
 import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
 import { narratorSettingsSync } from '../../../script.js';
 import { buildSystemPrompt, buildTextingSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
-import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
+import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, filterNewMessageContacts, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
 import { closeMessageTimeEditor, initMessageTimeGestures, showMessageTimeEditor } from './lib/ui/messageTimeEditor.js';
 import { withTypingState } from './lib/generationTracking.js';
@@ -98,7 +98,7 @@ import { ERROR_HELP_EVENT } from '../../weyland-error-notice.js';
 import { installGeminiBlockNotice } from './lib/ui/geminiBlockNotice.js';
 // Only for Custom Preset's starting example (Slow Burn's player quote); quick-reply-ext owns the text.
 import { SHIFT_BODIES } from '../quick-reply-ext/src/roleplayShifts.js';
-import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
+import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, resolvePhoneParticipantName, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
 import { adoptLegacyRoleplayCapture, createCaptureId, ensureCaptureSource, inheritRoleplayThreads, installRoleplayCaptureEvents, pruneMissingRoleplayCaptures, reconcileRoleplayCapture } from './lib/roleplayCapture.js';
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './lib/roleplayMode.js';
 import { buildContactContextBlock, buildGroupContactContextBlock, buildPersonaContextBlock, resolveContactContext } from './lib/contactContext.js';
@@ -4810,6 +4810,11 @@ function handleScreenBodyClick(event) {
         showScreen('conversation');
         return;
     }
+    if (event.target.closest('#wp-newmsg-search-clear')) {
+        const search = document.getElementById('wp-newmsg-search');
+        if (search) { search.value = ''; filterNewMessageContacts(document.getElementById('wp-screen-body'), ''); search.focus(); }
+        return;
+    }
     const contactItem = event.target.closest('.wp-contact-item');
     if (contactItem) {
         const context = SillyTavern.getContext();
@@ -7617,20 +7622,32 @@ function captureKnownNames(context, settings) {
     const candidates = [
         ...getCastEntries(settings).map(entry => entry.name),
         ...contactLorebookState.registrarContacts.map(entry => entry.name),
-        ...context.characters.map(character => character.name),
-        ...WEYLAND_ROSTER.map(character => character.name),
+        ...getCommunityContacts(settings).map(entry => entry.name),
     ].filter(Boolean);
     const names = [];
     for (const candidate of candidates) {
         if (!names.some(name => characterNamesEquivalent(name, candidate))) names.push(candidate);
     }
+    // Saved current-chat threads remain identifiable if a source book is temporarily absent.
+    // Full labels precede short card/legacy-thread labels, so George + George Smith is one
+    // identity only when George Smith is the unique known expansion. Canonical directory
+    // contacts named George and George Smith remain separate and ambiguous when abbreviated.
+    const localNames = [
+        ...Object.values(settings.conversations).filter(thread => thread.roleplayChatId === context.chatId)
+            .flatMap(thread => thread.participants?.length ? thread.participants : [thread.charName]),
+        ...(context.characters ?? []).map(character => character.name),
+        ...WEYLAND_ROSTER.map(character => character.name),
+    ].filter(Boolean).sort((a, b) => b.split(/\s+/).length - a.split(/\s+/).length);
+    for (const candidate of localNames) {
+        if (!resolvePhoneParticipantName(candidate, names)) names.push(candidate);
+    }
     return names;
 }
 
-function findCapturedThread(settings, participants, chatId) {
+function findCapturedThread(settings, participants, chatId, knownNames = []) {
     const conversations = Object.values(settings.conversations);
     const linkedThread = conversations.find(conversation => isConversationLinkedToChat(conversation, chatId)
-        && sameParticipants(conversation.participants?.length ? conversation.participants : [conversation.charName], participants));
+        && sameParticipants(conversation.participants?.length ? conversation.participants : [conversation.charName], participants, knownNames));
     // A user can explicitly Link an existing ordinary DM before the first in-roleplay phone block
     // arrives. Route the reply into that thread instead of creating a visually identical duplicate.
     if (linkedThread) return linkedThread;
@@ -7638,7 +7655,7 @@ function findCapturedThread(settings, participants, chatId) {
     // honoring Unlinked/Observe instead of creating a duplicate that silently reconnects itself.
     return conversations.find(conversation => conversation.roleplayTether
         && conversation.roleplayChatId === chatId
-        && sameParticipants(conversation.participants?.length ? conversation.participants : [conversation.charName], participants));
+        && sameParticipants(conversation.participants?.length ? conversation.participants : [conversation.charName], participants, knownNames));
 }
 
 /** Match each selected roleplay reply to its contribution in the phone's saved history. */
@@ -7673,7 +7690,7 @@ function handleRoleplayPhoneCapture(messageId, options = {}) {
                     .map(conversation => conversation.userNickname).filter(Boolean),
             });
             if (!routed) continue;
-            let conversation = findCapturedThread(settings, routed.participants, context.chatId);
+            let conversation = findCapturedThread(settings, routed.participants, context.chatId, knownNames);
             // Unlinked and Observe are intentionally one-way/non-participating. If a previously
             // captured thread was disconnected, do not silently reconnect it merely because the
             // model printed another phone block; the user can select Linked and manually rescan.
@@ -7732,7 +7749,7 @@ function handleRoleplayPhoneCapture(messageId, options = {}) {
         let changed = false;
         for (const [conversation, incoming] of contributions) {
             const result = reconcileRoleplayCapture(conversation, sourceId, incoming, {
-                timestamp: genTimestamp, anchor: Number(messageId) + 1,
+                timestamp: genTimestamp, anchor: Number(messageId) + 1, knownNames,
             });
             changed ||= result.changed;
             capturedCount += result.added.length;
@@ -7804,7 +7821,7 @@ function reconcileRoleplayPhoneHistory() {
                     userNicknames: legacyThreads.map(thread => thread.userNickname).filter(Boolean),
                 });
                 if (!routed) continue;
-                const thread = legacyThreads.find(thread => sameParticipants(thread.participants ?? [thread.charName], routed.participants));
+                const thread = legacyThreads.find(thread => sameParticipants(thread.participants ?? [thread.charName], routed.participants, knownNames));
                 if (thread) contributions.set(thread, [...(contributions.get(thread) ?? []), ...routed.messages]);
             }
             const sourceId = message.weyphoneCaptureId || createCaptureId();
@@ -8339,6 +8356,11 @@ function initPanel() {
         if (event.target.id !== 'wp-error-search' || !narrativeErrorHelp) return;
         narrativeErrorHelp.query = event.target.value;
         updateErrorHelpSearch(screenBody, narrativeErrorHelp.query);
+    });
+    // New Message search: hides non-matching rows in place (see filterNewMessageContacts), so focus is never lost.
+    screenBody.addEventListener('input', event => {
+        if (event.target.id !== 'wp-newmsg-search') return;
+        filterNewMessageContacts(screenBody, event.target.value);
     });
     screenBody.addEventListener('change', handleScreenBodyChange);
     screenBody.addEventListener('keydown', (event) => {

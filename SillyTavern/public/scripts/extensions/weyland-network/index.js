@@ -20,6 +20,8 @@
 // they can check for themselves, and state plainly what does not change. No em dashes (Lucky's
 // rule for user-facing text).
 
+import { applyHelixMindDefaults } from './helixRequestDefaults.js';
+
 const MODULE = 'weylandNetwork';
 const BUTTON_ID = 'weyland_network_button';
 
@@ -157,4 +159,18 @@ jQuery(() => {
     // Settings load after extensions initialize; refresh the button's on/off look once they have.
     const { eventSource, event_types } = SillyTavern.getContext();
     eventSource.on(event_types.SETTINGS_LOADED, () => { addButton(); updateButton(); });
+    // HelixMind always gets Weyland's tuned penalty defaults and no logprobs; helixRequestDefaults.js has the
+    // full story (a player's garbled GLM-5 and "internal server error" replies, 2026-10-17).
+    // CHAT_COMPLETION_SETTINGS_READY fires once per chat request with the final body (openai.js generate_data),
+    // after presets, Weyland-Router's model pick and every other setting are applied; listeners edit it in place.
+    // Lives in this extension because it already owns "how Weyland talks to HelixMind", and it always loads.
+    // Its own try/catch: a bug here must never stop a message from being sent.
+    eventSource.on(event_types.CHAT_COMPLETION_SETTINGS_READY, data => {
+        try {
+            const changed = applyHelixMindDefaults(data);
+            if (changed.length) console.info(`[Weyland Network] HelixMind request stripped to essentials: ${changed.join(', ')}`);
+        } catch (error) {
+            console.error('[Weyland Network] HelixMind defaults Error:', error);
+        }
+    });
 });

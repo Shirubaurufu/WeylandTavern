@@ -166,3 +166,22 @@ test('wired in: XXX gives Bap her own thoughts block, the picker group exists, O
     assert.match(intro, /Baphomet's vicious commentary is visible\./);
     assert.match(intro, /Baphomet remains, but you won't hear his cries\./);
 });
+
+// Added 2026-10-17 while chasing "Bap writes her own thoughts when Baphomet is Disabled". The test above only greps
+// index.js; this one runs the REAL XXX (promptAssemblyHarness) and reads what it leaves in the chat variables.
+test('XXX for Bap: Disabled sends the thoughts-disabled line, Enabled sends Baphomet\'s block, on every prompt choice', async () => {
+    const { assemble } = await import('./helpers/promptAssemblyHarness.js');
+    const DISABLED_LINE = /^\[CHARACTER THOUGHTS: DISABLED BY DEFAULT\./;
+    for (const PromptChoice of ['Current Prompt', 'Mini Prompt', 'Old Prompt 2025', 'Old Prompt 2026']) {
+        for (const visibility of [undefined, 'enabled']) {
+            const { locals } = await assemble('Bap', { PromptChoice }, visibility ? { BaphometVisibility: visibility } : {});
+            const set = String(locals.get('ThoughtSet'));
+            assert.doesNotMatch(set, DISABLED_LINE, `${PromptChoice}/${visibility ?? 'unset'}: Baphomet is audible by default`);
+            assert.match(set, /Baphomet/, `${PromptChoice}/${visibility ?? 'unset'}: his thoughts block`);
+        }
+        const { locals } = await assemble('Bap', { PromptChoice }, { BaphometVisibility: 'disabled' });
+        assert.match(String(locals.get('ThoughtSet')), DISABLED_LINE, `${PromptChoice}: Disabled must send the thoughts-disabled line`);
+        assert.doesNotMatch(String(locals.get('ThoughtSet')), /Baphomet|brackets/i, `${PromptChoice}: and nothing that asks for thoughts`);
+        assert.ok(String(locals.get('postrav')).includes('{{getvar::ThoughtSet}}'), `${PromptChoice}: the post-history carries the slot`);
+    }
+});

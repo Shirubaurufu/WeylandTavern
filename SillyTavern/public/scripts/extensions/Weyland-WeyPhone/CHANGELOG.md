@@ -207,11 +207,15 @@ does not silently grant that new chat access to an old texting transcript.
 
 ### First-time setup
 
-1. Open **Settings → Roleplay texting**.
-2. Enable **Bidirectional roleplay texting**.
-3. Enable automatic phone-block capture if you want new compatible blocks imported as they appear.
-4. In a DM, choose **Linked** when that character is genuinely participating in the active
-   roleplay. Selecting Linked also enables the required round-trip settings.
+1. Automatic phone-block capture is enabled by default on new phones. In **Settings → Roleplay
+   Text Tethering**, use **Capture generated phone blocks** to turn it off or restore it. Existing
+   phones retain their saved choice.
+2. In a DM, choose **Linked** when that character is participating in the active roleplay.
+   This selects round-trip behavior for that DM; there is no separate global round-trip toggle.
+
+Official short card names and full directory names now identify the same person during capture.
+This includes Serra / Serra Fuyuki and the other official cast aliases, so automatic capture
+reuses the existing Linked thread even when a generated phone screen uses a shortened name.
 
 The manual **Capture last reply** and **Scan current roleplay** buttons can backfill compatible
 blocks after enabling the feature.

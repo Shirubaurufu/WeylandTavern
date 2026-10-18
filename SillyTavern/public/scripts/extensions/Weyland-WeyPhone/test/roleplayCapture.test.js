@@ -6,6 +6,12 @@ import * as capture from '../lib/roleplayCapture.js';
 import * as tether from '../lib/roleplayTether.js';
 import { isConversationLinkedToChat } from '../lib/roleplayMode.js';
 import { appendMessage, createConversation, deleteMessage, setTetheredSettings } from '../lib/storage.js';
+import { getSettings } from '../lib/config.js';
+import { getCastEntries } from '../lib/castDirectory.js';
+import { WEYLAND_ROSTER } from '../lib/weylandRoster.js';
+import { characterNamesEquivalent } from '../lib/characterIdentity.js';
+import { CAST_SNAPSHOT } from '../lib/castSnapshot.js';
+import { getCommunityContacts } from '../lib/communityLorebook.js';
 
 const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
 function sliceFunction(name) {
@@ -424,4 +430,221 @@ test('deleting a branch’s inherited phone thread does not recreate it on reope
     delete h.settings.conversations[h.thread().id];
     h.emit('CHAT_CHANGED');
     assert.equal(h.thread(), undefined);
+});
+
+// Reported fresh-install exchange: character-owned screen, short sender name, saved user
+// nickname, and three real outgoing phone texts echoed before three new character replies.
+const serraUserTexts = [
+    'hey baby butt, i just got back to the apartment',
+    'i brought you chipotle, idk if you ate lunch lol',
+    'things busy? need me to bring it to you? ❤️',
+];
+const serraReplyTexts = [
+    'youre upstairs right now??? (⁄ ⁄•⁄ω⁄•⁄ ⁄)',
+    'um. emergency. a really really bad one',
+    'my heat just started at the counter and im hiding in the storage room with jenn and i think im gonna die (╥﹏╥) can you come down to the back hallway please??',
+];
+const serraReply = [
+    '¦¦ Wednesday, November 4th ~ 2:18 PM ~ Sakurai Cafe - Storage Room ~ (SAPH) ¦¦',
+    'Phone¦Weynet - Serra¦64%¦Mode=Solo¦Members=Serra;Lucky',
+    'Texting¦Lucky ❤️',
+    ...serraUserTexts.map(text => `Incoming¦2:14 PM¦Lucky¦${text}`),
+    ...serraReplyTexts.map((text, index) => `Outgoing¦${index < 2 ? '2:18' : '2:19'} PM¦Serra¦${text}`),
+    '[Embarrassment] [RC] [11]',
+].join('\n');
+
+function officialCaptureHarness(shortName, fullName, { automatic = true, shortThread = false } = {}) {
+    const h = harness();
+    h.context.name1 = 'Lucky';
+    h.context.characters = [{ name: shortName }];
+    h.settings.captureRoleplayTextsEnabled = automatic;
+    // A fresh cache keeps this regression entirely offline and fixes the audited directory.
+    h.settings.castDirectory = { fetchedAt: Date.now(), entries: CAST_SNAPSHOT };
+    // Use the production directory/card/roster combination, rather than a parser-only list
+    // containing just the long name. Both short and full labels exist in a fresh install.
+    Object.assign(h.sandbox, { getCastEntries, getCommunityContacts, WEYLAND_ROSTER, characterNamesEquivalent,
+        contactLorebookState: { registrarContacts: [] } });
+    vm.runInContext(sliceFunction('captureKnownNames'), h.sandbox);
+    const conversation = createConversation(h.settings, shortThread ? shortName : fullName, {
+        roleplayMode: 'linked', roleplayChatId: 'main',
+    });
+    for (const content of serraUserTexts) appendMessage(h.settings, conversation.id, { role: 'user', content });
+    return { ...h, conversation };
+}
+
+const serraHarness = options => officialCaptureHarness('Serra', 'Serra Fuyuki', options);
+
+test('Serra short-name replies enter her existing full-name Linked thread without duplicating Lucky’s echoes', () => {
+    const h = serraHarness();
+    h.respond(serraReply);
+    assert.equal(Object.keys(h.settings.conversations).length, 1, 'no duplicate Serra thread');
+    assert.deepEqual(Array.from(h.conversation.messages, m => m.content), [...serraUserTexts, ...serraReplyTexts]);
+    assert.deepEqual(Array.from(h.conversation.messages, m => m.role), ['user', 'user', 'user', 'assistant', 'assistant', 'assistant']);
+    assert.equal(h.conversation.messages.at(-1).speaker, 'Serra Fuyuki');
+    assert.equal(h.conversation.messages.at(-1).displayTime, '2:19 PM');
+    h.emit('CHARACTER_MESSAGE_RENDERED', 0);
+    assert.equal(h.conversation.messages.length, 6, 'repeated rendering is idempotent');
+});
+
+test('fresh installs automatically import Serra’s replies into the existing Linked thread', () => {
+    const fresh = getSettings({});
+    assert.equal(fresh.captureRoleplayTextsEnabled, true);
+    const h = serraHarness({ automatic: fresh.captureRoleplayTextsEnabled });
+    h.respond(serraReply);
+    assert.equal(Object.keys(h.settings.conversations).length, 1);
+    assert.deepEqual(Array.from(h.conversation.messages, m => m.content), [...serraUserTexts, ...serraReplyTexts]);
+});
+
+test('explicitly disabling automatic capture still allows Capture last reply to import Serra’s replies', () => {
+    const h = serraHarness({ automatic: false });
+    h.respond(serraReply);
+    assert.deepEqual(Array.from(h.conversation.messages, m => m.content), serraUserTexts);
+    assert.equal(h.sandbox.handleRoleplayPhoneCapture(0, { manual: true, silent: true }), 3);
+    assert.equal(Object.keys(h.settings.conversations).length, 1);
+    assert.deepEqual(Array.from(h.conversation.messages, m => m.content), [...serraUserTexts, ...serraReplyTexts]);
+});
+
+// Explicit title/nickname exceptions; ordinary short labels come from the committed directory.
+// Check both saved full-name threads and older short-name threads against real capture events.
+const shortLabel = name => ({
+    'Dakota Ash (Dash)': 'Dash', 'Baphrodel Puddyfoot': 'Bap',
+    'Sayori Akiyama': 'Professor Akiyama', 'Dr Loren Montenegro': 'Loren', 'Mr. Wolfy': 'Mr. Wolfy',
+}[name] ?? name.split(' ')[0]);
+
+for (const entry of CAST_SNAPSHOT) {
+    test(`official capture aliases: ${shortLabel(entry.name)} / ${entry.name}`, () => {
+        for (const shortThread of [false, true]) {
+            const short = shortLabel(entry.name);
+            const h = officialCaptureHarness(short, entry.name, { shortThread });
+            h.respond(`Phone¦Weynet - ${short}¦90%¦Mode=Solo¦Members=${short};Lucky\nTexting¦Lucky ❤️\nIncoming¦2:14 PM¦Lucky¦${serraUserTexts[0]}\nOutgoing¦2:18 PM¦${short}¦New reply`);
+            assert.equal(Object.keys(h.settings.conversations).length, 1, 'capture reuses the Linked thread');
+            assert.deepEqual(Array.from(h.conversation.messages, m => m.content), [...serraUserTexts, 'New reply']);
+            // Full-name output on a later swipe must still replace the same contribution.
+            h.swipe(`Phone¦Weynet - ${entry.name}¦90%¦Mode=Solo¦Members=${entry.name};Lucky\nTexting¦Lucky\nOutgoing¦2:19 PM¦${entry.name}¦Alternate reply`);
+            assert.equal(Object.keys(h.settings.conversations).length, 1);
+            assert.deepEqual(Array.from(h.conversation.messages, m => m.content), [...serraUserTexts, 'Alternate reply']);
+        }
+    });
+}
+
+test('canonical sibling aliases stay separate in a captured group conversation', () => {
+    const h = officialCaptureHarness('Serra', 'Serra Fuyuki');
+    const group = createConversation(h.settings, 'Siblings', {
+        participants: ['Serra Fuyuki', 'Blake Fuyuki'], roleplayMode: 'linked', roleplayChatId: 'main',
+    });
+    h.respond('Phone¦Weynet - Lucky¦90%¦Mode=Group¦Members=Lucky;Serra;Blake\nTexting¦Siblings\nIncoming¦2:18 PM¦Serra¦Hello\nIncoming¦2:18 PM¦Blake¦Hi');
+    assert.equal(Object.keys(h.settings.conversations).length, 2);
+    assert.equal(h.conversation.messages.length, 3, 'the solo thread remains separate');
+    assert.deepEqual(Array.from(group.messages, m => m.speaker), ['Serra Fuyuki', 'Blake Fuyuki']);
+});
+
+function communityCaptureHarness({ secondGeorge = false, shortThread = false, community = false } = {}) {
+    const h = officialCaptureHarness('George', 'George Smith', { shortThread });
+    const contacts = [{ name: 'George Smith', lorebookName: 'Registrar characters' }];
+    if (secondGeorge) contacts.push({ name: 'George Jones', lorebookName: 'Registrar characters' });
+    if (community) h.settings.communityContacts = contacts;
+    else h.sandbox.contactLorebookState.registrarContacts = contacts;
+    return h;
+}
+
+const georgePhone = 'Phone¦Weynet - George¦90%¦Mode=Solo¦Members=George;Lucky\nTexting¦Lucky\nIncoming¦2:14 PM¦Lucky¦hey\nOutgoing¦2:18 PM¦__George:__¦Hello from George';
+
+for (const community of [false, true]) {
+    test(`${community ? 'user-picked community' : 'Registrar'} contact George Smith receives short-name phone captures`, () => {
+        for (const shortThread of [false, true]) {
+            const h = communityCaptureHarness({ community, shortThread });
+            h.respond(`__George:__ *He checks his phone.*\n${georgePhone}`);
+            assert.equal(Object.keys(h.settings.conversations).length, 1);
+            assert.equal(h.conversation.messages.at(-1).content, 'Hello from George');
+            assert.equal(h.conversation.messages.at(-1).speaker, 'George Smith');
+        }
+    });
+}
+
+test('ambiguous George does not modify either thread or create a third one', () => {
+    const h = communityCaptureHarness({ secondGeorge: true });
+    const other = createConversation(h.settings, 'George Jones', { roleplayMode: 'linked', roleplayChatId: 'main' });
+    h.respond(georgePhone);
+    assert.equal(Object.keys(h.settings.conversations).length, 2);
+    assert.equal(h.conversation.messages.length, 3);
+    assert.equal(other.messages.length, 0);
+});
+
+test('a full declared member disambiguates shortened phone owner and sender names', () => {
+    const h = communityCaptureHarness({ secondGeorge: true });
+    h.respond(georgePhone.replace('Members=George;Lucky', 'Members=George Smith;Lucky'));
+    assert.equal(Object.keys(h.settings.conversations).length, 1);
+    assert.equal(h.conversation.messages.at(-1).content, 'Hello from George');
+});
+
+test('a disconnected short-name community thread is not silently reconnected under a full name', () => {
+    const h = communityCaptureHarness({ shortThread: true });
+    h.conversation.roleplayTether = true;
+    h.conversation.roleplayMode = 'unlinked';
+    h.respond(georgePhone);
+    assert.equal(Object.keys(h.settings.conversations).length, 1);
+    assert.equal(h.conversation.messages.length, 3);
+});
+
+test('ordinary George dialogue without a phone block never becomes a text message', () => {
+    const h = communityCaptureHarness();
+    h.respond('__George:__ "Hello from George."');
+    assert.equal(h.conversation.messages.length, 3);
+});
+
+test('replayed community messages stored under a short speaker name do not duplicate after full-name routing', () => {
+    const h = communityCaptureHarness({ shortThread: true });
+    appendMessage(h.settings, h.conversation.id, { role: 'assistant', speaker: 'George', content: 'Older reply' });
+    h.respond('Phone¦Weynet - George¦90%¦Mode=Solo¦Members=George;Lucky\nTexting¦Lucky\nOutgoing¦2:17 PM¦George¦Older reply\nOutgoing¦2:18 PM¦George¦New reply');
+    assert.equal(Object.keys(h.settings.conversations).length, 1);
+    assert.deepEqual(Array.from(h.conversation.messages, m => m.content), [...serraUserTexts, 'Older reply', 'New reply']);
+});
+
+test('loading new Registrar contacts automatically changes short-name routing without a source-code alias', () => {
+    const h = communityCaptureHarness();
+    h.sandbox.contactLorebookState.registrarContacts.push({ name: 'Rowan Vale', lorebookName: 'Registrar characters' });
+    const rowan = createConversation(h.settings, 'Rowan Vale', { roleplayMode: 'linked', roleplayChatId: 'main' });
+    h.respond('Phone¦Weynet - Rowan¦90%¦Mode=Solo¦Members=Rowan;Lucky\nTexting¦Lucky\nOutgoing¦now¦Rowan¦Newly imported');
+    assert.equal(rowan.messages[0].speaker, 'Rowan Vale');
+    assert.equal(Object.keys(h.settings.conversations).length, 2);
+
+    h.sandbox.contactLorebookState.registrarContacts.push({ name: 'George Jones', lorebookName: 'Registrar characters' });
+    h.respond(georgePhone);
+    assert.equal(h.conversation.messages.length, 3, 'a new collision invalidates the earlier unique George alias');
+    h.sandbox.contactLorebookState.registrarContacts.pop();
+    h.respond(georgePhone);
+    assert.equal(h.conversation.messages.at(-1).speaker, 'George Smith', 'unloading the collision restores unique routing');
+    assert.equal(Object.keys(h.settings.conversations).length, 2);
+});
+
+// Codex's reroll repro (2026-10-18): the roleplay reply first has Mika texting; a reroll of that same reply
+// has Summer texting instead; the player sends Mika a new phone text; then rerolls back to the Mika version
+// and on to Summer again. The restored Mika texts used to land BEFORE the new text, read as answered, lock,
+// and survive every later reroll.
+test('a rerolled-back reply lands after a newer phone text and can still be rerolled away', () => {
+    const settings = getSettings({});
+    const mika = createConversation(settings, 'Mika');
+    const opts = { timestamp: () => 1, anchor: 5 };
+    const mikaReply = [{ role: 'assistant', speaker: 'Mika', content: 'is she okay?' }];
+
+    capture.reconcileRoleplayCapture(mika, 'src', mikaReply, opts);   // 1. Mika texts arrive
+    capture.reconcileRoleplayCapture(mika, 'src', [], opts);          // 2. reroll: Summer texts instead
+    assert.equal(mika.messages.length, 0);
+    appendMessage(settings, mika.id, { role: 'user', content: 'she is asleep' }); // 3. new phone text
+    capture.reconcileRoleplayCapture(mika, 'src', mikaReply, opts);   // 4a. back to the Mika version
+    assert.deepEqual(mika.messages.map(m => m.content), ['she is asleep', 'is she okay?']);
+    assert.notEqual(mika.messages[1].roleplayReplyLocked, true);
+    capture.reconcileRoleplayCapture(mika, 'src', [], opts);          // 4b. and the Summer version again
+    assert.deepEqual(mika.messages.map(m => m.content), ['she is asleep']);
+});
+
+test('without a new phone text, a rerolled-back reply still returns to its original slot', () => {
+    const settings = getSettings({});
+    const mika = createConversation(settings, 'Mika');
+    const opts = { timestamp: () => 1, anchor: 5 };
+    capture.reconcileRoleplayCapture(mika, 'old', [{ role: 'assistant', speaker: 'Mika', content: 'first' }], opts);
+    capture.reconcileRoleplayCapture(mika, 'new', [{ role: 'assistant', speaker: 'Mika', content: 'second' }], opts);
+    capture.reconcileRoleplayCapture(mika, 'old', [], opts);
+    capture.reconcileRoleplayCapture(mika, 'old', [{ role: 'assistant', speaker: 'Mika', content: 'first again' }], opts);
+    assert.deepEqual(mika.messages.map(m => m.content), ['first again', 'second']);
 });

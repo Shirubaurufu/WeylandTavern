@@ -76,6 +76,8 @@ import { t } from './i18n.js';
 import { ToolManager } from './tool-calling.js';
 import { accountStorage } from './util/AccountStorage.js';
 import { COMETAPI_IGNORE_PATTERNS, IGNORE_SYMBOL } from './constants.js';
+// Weyland: rewrites the shared community daily-limit error ("rpd limit") into a readable notice.
+import { showChatCompletionError } from './weyland-error-notice.js';
 
 export {
     openai_messages_count,
@@ -1544,12 +1546,12 @@ export function tryParseStreamingError(response, decoded, { quiet = false } = {}
         // if trying to fix "[object Object]" displayed to users, start here
 
         if (data.error) {
-            !quiet && toastr.error(data.error.message || response.statusText, 'Chat Completion API');
+            !quiet && showChatCompletionError(data.error.message || response.statusText);
             throw new Error(data);
         }
 
         if (data.message) {
-            !quiet && toastr.error(data.message, 'Chat Completion API');
+            !quiet && showChatCompletionError(data.message);
             throw new Error(data);
         }
     }
@@ -2448,7 +2450,7 @@ async function sendOpenAIRequest(type, messages, signal, { jsonSchema = null } =
 
         if (data.error) {
             const message = data.error.message || response.statusText || t`Unknown error`;
-            toastr.error(message, t`API returned an error`);
+            showChatCompletionError(message, t`API returned an error`);
             throw new Error(message);
         }
 

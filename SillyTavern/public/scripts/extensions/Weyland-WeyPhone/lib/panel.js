@@ -628,13 +628,47 @@ export function renderContactsScreen(container, characters, portraitMap) {
         container.innerHTML = '<div class="wp-empty-state">No characters available.</div>';
         return;
     }
-    container.innerHTML = characters.map(character => `
+    // The search box is the first child and sticks to the top while the list scrolls (the screen body is the
+    // scroller). Filtering is done by filterNewMessageContacts below, which only toggles `hidden` on the rows, so
+    // nothing re-renders and the input never loses focus.
+    container.innerHTML = `
+<div class="wp-newmsg-searchbar">
+    <div class="wp-contact-search-wrap">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input id="wp-newmsg-search" type="text" autocomplete="off" spellcheck="false" placeholder="Search ${characters.length} contacts" aria-label="Search contacts" />
+        <button type="button" id="wp-newmsg-search-clear" class="wp-newmsg-search-clear" title="Clear search" aria-label="Clear search" hidden><i class="fa-solid fa-xmark"></i></button>
+    </div>
+</div>
+${characters.map(character => `
 <div class="wp-list-item wp-contact-item" data-name="${escapeHtml(character.name)}">
     ${avatarMarkup(portraitMap[character.name])}
     <div class="wp-list-item-main">
         <div class="wp-list-item-title">${escapeHtml(character.name)}</div>
     </div>
-</div>`).join('');
+</div>`).join('')}
+<div class="wp-empty-state wp-newmsg-none" hidden>No contacts match.</div>`;
+}
+
+/**
+ * Live filter for the New Message list. Case- and accent-insensitive, and every word typed has to appear in the
+ * name (so "yue lin" finds "Yue-Lin" and "fuyuki serra" finds "Serra Fuyuki"). Rows are hidden, never removed.
+ * @param {HTMLElement} container #wp-screen-body
+ * @param {string} query
+ */
+export function filterNewMessageContacts(container, query) {
+    const fold = value => String(value ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const words = fold(query).split(' ').filter(Boolean);
+    let shown = 0;
+    for (const row of container.querySelectorAll('.wp-contact-item')) {
+        const name = fold(row.dataset.name);
+        const match = words.every(word => name.includes(word));
+        row.hidden = !match;
+        if (match) shown++;
+    }
+    const none = container.querySelector('.wp-newmsg-none');
+    if (none) none.hidden = shown > 0;
+    const clear = container.querySelector('#wp-newmsg-search-clear');
+    if (clear) clear.hidden = !String(query ?? '').length;
 }
 
 export function renderGroupComposeScreen(container, { contacts, selectedNames = [], title = '' }) {

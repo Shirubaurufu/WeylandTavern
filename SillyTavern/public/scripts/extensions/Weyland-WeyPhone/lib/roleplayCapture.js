@@ -19,6 +19,14 @@ export function protectRepliedCaptures(conversation) {
         const record = conversation.roleplayCaptures?.[message.roleplaySourceId];
         if (record) record.locked = true;
     }
+    // A contribution that is currently swiped away (no messages in the thread) remembers its old slot so
+    // swiping back restores it in place. Once the user sends a new text, that slot is BEFORE the new text,
+    // and restoring there would make the old reply look answered and lock it (Codex's reroll repro,
+    // 2026-10-18: Mika -> Summer, send to Mika, back to Mika -> stale Mika reply locked forever). Forget
+    // the slot so a restored contribution lands after the user's text, still unanswered and swipeable.
+    for (const record of Object.values(conversation.roleplayCaptures ?? {})) {
+        if (!record.locked) delete record.position;
+    }
 }
 
 function protectExistingReplies(conversation) {
@@ -53,7 +61,7 @@ export function adoptLegacyRoleplayCapture(conversation, sourceId, incoming, anc
 
 /** Reconcile one roleplay reply's contribution to one thread. Never use a chat array index as
  * identity: deleting turns reuses indices, and branching copies the message's stable identity. */
-export function reconcileRoleplayCapture(conversation, sourceId, incoming, { timestamp, anchor }) {
+export function reconcileRoleplayCapture(conversation, sourceId, incoming, { timestamp, anchor, knownNames = [] }) {
     conversation.roleplayCaptures ??= {};
     protectExistingReplies(conversation);
     const previous = conversation.roleplayCaptures[sourceId];
@@ -72,7 +80,7 @@ export function reconcileRoleplayCapture(conversation, sourceId, incoming, { tim
 
     const firstIndex = conversation.messages.findIndex(belongs);
     const remaining = conversation.messages.filter(message => !belongs(message));
-    const added = dedupeCapturedMessages(incoming, remaining).map(message => ({
+    const added = dedupeCapturedMessages(incoming, remaining, knownNames).map(message => ({
         ...message, timestamp: timestamp(), mainChatAnchor: anchor,
         capturedFromRoleplay: true, roleplaySourceId: sourceId,
     }));

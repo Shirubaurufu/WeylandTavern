@@ -1,5 +1,5 @@
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './roleplayMode.js';
-import { characterNamesEquivalent } from './characterIdentity.js';
+import { canonicalCharacterName, characterNamesEquivalent } from './characterIdentity.js';
 import { withMessageDate } from './messageTime.js';
 
 const DELIMITER = '[¦|│]';
@@ -8,15 +8,13 @@ const PHONE_HEADER_RE = new RegExp(`^Phone${DELIMITER}`);
 const TEXTING_HEADER_RE = new RegExp(`^Texting${DELIMITER}`);
 
 function normalizeName(value) {
-    return String(value ?? '')
-        .normalize('NFKD')
-        // Character-card display names can be decorated with stacked combining marks (Ṇ̶͘ara),
-        // while generated phone blocks sensibly use the plain name. Treat those as one identity.
-        .replace(/\p{M}/gu, '')
-        .trim()
-        .replace(/^[!@]+/, '')
-        .replace(/\s+/g, ' ')
-        .toLowerCase();
+    // Presentation wrappers belong to generated labels, never to the stored contact identity.
+    // Keep token boundaries: removing punctuation inside a name could join unrelated people.
+    const plain = String(value ?? '').trim()
+        .replace(/^(?:\*\*|__)(.*)(?:\*\*|__)$/, '$1')
+        .replace(/(?:\s*[\p{Extended_Pictographic}\uFE0F\u200D])+$/gu, '')
+        .trim().replace(/:$/, '').replace(/[‘’]/g, "'");
+    return canonicalCharacterName(plain);
 }
 
 function parsePhoneOwner(line) {
@@ -107,26 +105,50 @@ export function locatePhoneScopes(rawText) {
     return scopes.filter(scope => scope.lines.length > 0);
 }
 
-function resolveKnownName(rawName, knownNames) {
+function matchingPhoneNames(rawName, knownNames) {
+    const target = normalizeName(rawName);
+    if (!target) return [];
+    const matches = [];
+    const withoutTitle = name => name.replace(/^(?:doctor|professor|mr\.?|mrs\.?|ms\.?)\s+/, '');
+    for (const name of knownNames) {
+        const candidate = normalizeName(name);
+        const stem = withoutTitle(target);
+        const shortMatch = !stem.includes(' ') && withoutTitle(candidate).startsWith(`${stem} `);
+        const matchesName = candidate === target || characterNamesEquivalent(candidate, target) || shortMatch;
+        if (matchesName && !matches.some(previous => normalizeName(previous) === candidate
+            || characterNamesEquivalent(normalizeName(previous), candidate))) matches.push(name);
+    }
+    return matches;
+}
+
+/** Resolve shortened phone labels only within this capture's known identities. Never teach the
+ * global alias table that every future George is George Smith, or guess from a shared surname. */
+export function resolvePhoneParticipantName(rawName, knownNames) {
     const target = normalizeName(rawName);
     if (!target) return null;
-    const exact = knownNames.find(name => normalizeName(name) === target);
-    if (exact) return exact;
-    const aliases = knownNames.filter(name => characterNamesEquivalent(name, rawName));
-    // More than one visible label can describe the same person (for example the installed
-    // "Professor Akiyama" card and the cast-directory "Sayori Akiyama" contact). The caller
-    // orders its preferred local label first, so equivalent aliases are not an ambiguity.
-    if (aliases.length > 0) return aliases[0];
-    const matches = knownNames.filter(name => {
-        const candidate = normalizeName(name);
-        return candidate.includes(target) || target.includes(candidate);
-    });
+    // A fully specified name/known title wins even when another person shares the first name.
+    if (target.includes(' ')) {
+        const identified = knownNames.find(name => normalizeName(name) === target
+            || characterNamesEquivalent(normalizeName(name), target));
+        // Preserve the caller's preferred directory label when an exact card title is an alias.
+        if (identified) return identified;
+    }
+    const matches = matchingPhoneNames(rawName, knownNames);
     return matches.length === 1 ? matches[0] : null;
 }
 
 /** Route a whole scope atomically. Unknown speakers leave the original roleplay block untouched. */
 export function routePhoneScope(scope, { userName, userNicknames = [], knownNames = [] }) {
-    const userAliases = [userName, ...userNicknames].map(normalizeName).filter(Boolean);
+    // A saved nickname is only ignored on a screen that contradicts it: one whose declared Members list the
+    // user's real name AND a separate member matching the nickname. That member is somebody else, so the
+    // nickname is wrong for this screen (the bug described in the wire branch below). Deliberately narrow:
+    // a real nickname that happens to match some unrelated contact ("Angel") keeps working everywhere else,
+    // and headerless legacy screens behave exactly as before.
+    const userNorm = normalizeName(userName);
+    const memberNorms = (scope.wireMetadata ? scope.members ?? [] : []).map(normalizeName);
+    const contradicted = nickname => memberNorms.includes(userNorm) && memberNorms.includes(normalizeName(nickname))
+        && normalizeName(nickname) !== userNorm;
+    const userAliases = [userName, ...userNicknames.filter(nickname => !contradicted(nickname))].map(normalizeName).filter(Boolean);
     const isUser = name => userAliases.includes(normalizeName(name));
 
     // V2.1's declared mode/member metadata is authoritative. It prevents a character's saved
@@ -143,7 +165,7 @@ export function routePhoneScope(scope, { userName, userNicknames = [], knownName
         const participants = [];
         for (const member of scope.members) {
             if (isUser(member)) continue;
-            const resolved = resolveKnownName(member, knownNames);
+            const resolved = resolvePhoneParticipantName(member, knownNames);
             if (!resolved) return null;
             if (!participants.includes(resolved)) participants.push(resolved);
         }
@@ -158,23 +180,35 @@ export function routePhoneScope(scope, { userName, userNicknames = [], knownName
         if (!expectsUser) return null;
 
         const ownerIsUser = isUser(scope.owner);
-        const owner = ownerIsUser ? userName : resolveKnownName(scope.owner, knownNames);
+        // Fully declared Members can disambiguate an abbreviated owner/sender even when a
+        // second George exists elsewhere in Contacts. Short ambiguous Members cannot.
+        const owner = ownerIsUser ? userName : resolvePhoneParticipantName(scope.owner, participants);
         if (!owner || (!ownerIsUser && !participants.includes(owner))) return null;
 
         const messages = [];
         for (const line of scope.lines) {
             if (!line.text) continue;
             if (isUser(line.sender)) {
+                // A user and a character may share a first name. An abbreviated sender that
+                // could identify either must not silently turn a character reply into a send.
+                if (resolvePhoneParticipantName(line.sender, participants)) return null;
                 messages.push({ role: 'user', content: line.text, displayTime: line.displayTime });
                 continue;
             }
-            const speaker = resolveKnownName(line.sender, knownNames);
+            const speaker = resolvePhoneParticipantName(line.sender, participants);
             if (!speaker || !participants.includes(speaker)) return null;
             messages.push({ role: 'assistant', speaker, content: line.text, displayTime: line.displayTime });
         }
         if (!messages.length) return null;
 
         const direct = scope.mode === 'solo' || (scope.mode === 'nochar' && participants.length === 1);
+        // Models often label a character-owned screen with the character's OWN name ("Phone¦Weynet - Mika"
+        // then "Texting¦Mika"). That title is not a nickname for the user. Saving it as one made every later
+        // block treat Mika as the user, so Mika's next phone screen routed to nothing and stopped being
+        // captured (Sunny's Blake chat, 2026-10-18). A title naming a participant of this very screen is never
+        // a nickname. Only this screen's participants are checked, so a pet name that collides with some
+        // unrelated contact is still learned.
+        const titleIsCharacter = Boolean(scope.title) && Boolean(resolvePhoneParticipantName(scope.title, participants));
         return {
             mode: scope.mode,
             participants,
@@ -182,11 +216,11 @@ export function routePhoneScope(scope, { userName, userNicknames = [], knownName
             // On a character-owned solo screen, Texting is that character's saved name for the
             // user. Locally, the thread must still be titled with the actual character identity.
             title: direct && !ownerIsUser ? participants[0] : (scope.title || participants.join(', ')),
-            userNickname: direct && !ownerIsUser && scope.title && !isUser(scope.title) ? scope.title : null,
+            userNickname: direct && !ownerIsUser && scope.title && !isUser(scope.title) && !titleIsCharacter ? scope.title : null,
         };
     }
 
-    const owner = isUser(scope.owner) ? null : resolveKnownName(scope.owner, knownNames);
+    const owner = isUser(scope.owner) ? null : resolvePhoneParticipantName(scope.owner, knownNames);
     const messages = [];
     const participants = [];
     let inferredUserNickname = null;
@@ -196,7 +230,9 @@ export function routePhoneScope(scope, { userName, userNicknames = [], knownName
             messages.push({ role: 'user', content: line.text, displayTime: line.displayTime });
             continue;
         }
-        let speaker = resolveKnownName(line.sender, knownNames);
+        let speaker = resolvePhoneParticipantName(line.sender, knownNames);
+        // An ambiguous known character is not an unknown nickname for the user or phone owner.
+        if (!speaker && matchingPhoneNames(line.sender, knownNames).length) return null;
         // On a known character's phone, an otherwise-unknown Incoming sender is the user saved
         // under a nickname ("juicebox", etc.). Preserve it for future captures and route it as
         // the user; never make this inference on a user-owned/headerless phone.
@@ -232,9 +268,13 @@ export function canCapturePhoneScopeIntoConversation(conversation, wireMode, cha
         && getRoleplayMode(conversation) === ROLEPLAY_MODES.OBSERVE;
 }
 
-export function sameParticipants(left, right) {
-    const a = [...new Set(left.map(normalizeName))];
-    const b = [...new Set(right.map(normalizeName))];
+export function sameParticipants(left, right, knownNames = []) {
+    const resolve = name => knownNames.length ? resolvePhoneParticipantName(name, knownNames) : name;
+    const resolvedLeft = left.map(resolve);
+    const resolvedRight = right.map(resolve);
+    if (resolvedLeft.some(name => !name) || resolvedRight.some(name => !name)) return false;
+    const a = [...new Set(resolvedLeft.map(normalizeName))];
+    const b = [...new Set(resolvedRight.map(normalizeName))];
     return a.length === b.length
         && a.every(name => b.some(other => characterNamesEquivalent(name, other)));
 }
@@ -252,18 +292,22 @@ function normalizeCapturedContent(value) {
         .toLowerCase();
 }
 
-export function dedupeCapturedMessages(incoming, stored) {
+export function dedupeCapturedMessages(incoming, stored, knownNames = []) {
     // Outgoing phone texts are often redisplayed on the character's screen, interspersed with
     // other lines rather than as a contiguous transcript prefix. Their position and displayed
     // time don't make them new sends. Keep prefix matching below for character transcript echoes.
     const outgoing = new Set(stored.filter(message => message.role === 'user')
         .map(message => normalizeCapturedContent(message.content)));
-    return dedupeCapturedPrefix(incoming, stored)
+    return dedupeCapturedPrefix(incoming, stored, knownNames)
         .filter(message => message.role !== 'user' || !outgoing.has(normalizeCapturedContent(message.content)));
 }
 
-function dedupeCapturedPrefix(incoming, stored) {
-    const same = (a, b) => a.role === b.role && normalizeName(a.speaker) === normalizeName(b.speaker)
+function dedupeCapturedPrefix(incoming, stored, knownNames) {
+    // Older phone logs can store George while new capture resolves George Smith. Compare
+    // speakers through the same scoped identity resolver without rewriting saved history.
+    const sameSpeaker = (a, b) => normalizeName(a.speaker) === normalizeName(b.speaker)
+        || (knownNames.length && a.speaker && b.speaker && sameParticipants([a.speaker], [b.speaker], knownNames));
+    const same = (a, b) => a.role === b.role && sameSpeaker(a, b)
         && normalizeCapturedContent(a.content) === normalizeCapturedContent(b.content);
     const max = Math.min(incoming.length, stored.length);
 

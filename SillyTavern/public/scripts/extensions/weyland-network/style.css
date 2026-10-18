@@ -29,3 +29,9 @@
 .weyland-network-note { opacity: 0.75; font-size: 0.88em; }
 .weyland-network-note summary { cursor: pointer; }
 .weyland-network-note p { margin: 6px 0 0; }
+
+/* "Request token probabilities" (User Settings): nothing in Weyland uses it, many HelixMind providers reject the
+   logprobs it adds, and helixRequestDefaults.js drops it from HelixMind requests anyway. Hidden so nobody turns it on. */
+label.checkbox_label[for="request_token_probabilities"] {
+    display: none !important;
+}

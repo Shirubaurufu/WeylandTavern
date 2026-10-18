@@ -142,13 +142,15 @@ test('typing updates results without replacing the search field', () => {
 test('blank-message advice follows the requested troubleshooting order', () => {
     const card = getErrorHelpCard('interrupted');
     const titles = card.steps.map(step => step.title);
-    assert.match(titles[0], /reroll/i);
-    assert.match(titles[1], /Gemini Bypass/);
-    assert.match(titles[2], /Analysis off/);
+    // Lucky, 2026-10-17: check what the player is on before asking them to change anything.
+    assert.match(titles[0], /mobile data/i);
+    assert.match(titles[1], /reroll/i);
+    assert.match(titles[2], /Gemini Bypass/);
+    assert.match(titles[3], /Analysis off/);
     // No "try a tame chat" step: it burns a message and tells the player nothing new (Lucky).
-    assert.match(titles[3], /different model/);
+    assert.match(titles[4], /different model/);
     assert.doesNotMatch(JSON.stringify(card.steps), /without explicit|tame chat|non-explicit/i);
-    assert.match(titles[4], /connection/);
+    assert.match(titles[5], /connection/);
 });
 
 test('World Info budget wording finds a normal notice, separately from account limits', () => {
@@ -171,7 +173,7 @@ test('article explanations and longer steps render as separate escaped paragraph
     const target = { innerHTML: '' };
     renderErrorHelpScreen(target, { articleId: 'interrupted' });
     const explanation = target.innerHTML.match(/<div class="wp-eh-explanation">([\s\S]*?)<\/div>/)[1];
-    assert.equal((explanation.match(/<p>/g) ?? []).length, 3);
+    assert.equal((explanation.match(/<p>/g) ?? []).length, 4); // 4th: the mobile-data heads-up (2026-10-17)
     assert.match(explanation, /can&#39;t tell which/);
     assert.match(target.innerHTML, /class="wp-eh-step-copy"><p>[^<]+<\/p><p>/);
     assert.doesNotMatch(target.innerHTML, /<small><p>|\[object Object\]/);
