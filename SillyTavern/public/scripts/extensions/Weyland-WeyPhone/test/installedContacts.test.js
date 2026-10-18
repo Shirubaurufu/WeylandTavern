@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mergeInstalledContacts } from '../lib/installedContacts.js';
-import { canonicalCharacterName, characterNamesEquivalent, displayCharacterName, findInstalledCharacterName } from '../lib/characterIdentity.js';
+import { buildFirstNameAliases, canonicalCharacterName, characterNamesEquivalent, displayCharacterName, findInstalledCharacterName } from '../lib/characterIdentity.js';
+import { CAST_SNAPSHOT } from '../lib/castSnapshot.js';
+import { WEYLAND_ROSTER } from '../lib/weylandRoster.js';
 
 const directoryEntry = name => ({
     name, gender: '', age: '', birthday: '', height: '', species: '', summary: '', occupation: '',
@@ -108,4 +110,33 @@ test('combo and system cards are not appended as installed-only contacts', () =>
     const cards = ['Blake & Serra', 'Cerberus Sisters', 'Weybot', 'Mirror Weyland', 'Kinsbane']
         .map(name => ({ name, avatar: `${name}.png` }));
     assert.deepEqual(mergeInstalledContacts([], cards, () => '/thumb', () => null), []);
+});
+
+test('every social roster identity matches exactly one official directory character', () => {
+    for (const member of WEYLAND_ROSTER) {
+        const matches = CAST_SNAPSHOT.filter(entry => characterNamesEquivalent(entry.name, member.name));
+        assert.equal(matches.length, 1, member.name);
+    }
+});
+
+test('official aliases never merge two cast members or invent aliases for community surnames', () => {
+    for (const [index, entry] of CAST_SNAPSHOT.entries()) {
+        for (const other of CAST_SNAPSHOT.slice(index + 1)) {
+            assert.equal(characterNamesEquivalent(entry.name, other.name), false, `${entry.name} / ${other.name}`);
+        }
+    }
+    for (const [official, custom] of [
+        ['Serra', 'Serra Other'], ['Summer', 'Summer Rose'], ['Jenn', 'Jenn Another'],
+        ['Kai', 'Kai Community'], ['Blake', 'Serra Fuyuki'], ['Lyris', 'Vesper Sullivan'],
+    ]) assert.equal(characterNamesEquivalent(official, custom), false, `${official} / ${custom}`);
+});
+
+test('first-name aliases are generated from arbitrary directory data and collisions stay unresolved', () => {
+    const names = Array.from({ length: 300 }, (_, index) => `Guest${index} Family${index}`);
+    const aliases = buildFirstNameAliases([...names, 'George Smith', 'George Jones', 'George Jones', 'Dr. Rowan Vale']);
+    for (const [index, name] of names.entries()) assert.equal(aliases.get(`guest${index}`), name);
+    assert.equal(aliases.get('george'), null);
+    assert.equal(aliases.get('rowan'), 'Dr. Rowan Vale');
+    assert.equal(aliases.has('doctor'), false);
+    assert.equal(characterNamesEquivalent('Guest0', names[0]), false, 'import aliases are never globally registered');
 });

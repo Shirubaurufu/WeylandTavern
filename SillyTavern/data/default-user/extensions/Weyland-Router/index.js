@@ -856,6 +856,10 @@ const API_ERROR_PATTERNS = [
     'rate limit','rate_limit','rate_limit_error','insufficient_quota',
     'overloaded','invalid_request_error','api returned an error',
     'chat completion api',
+    // The shared daily-limit notice (public/scripts/weyland-error-notice.js) replaces both the
+    // "Chat Completion API" title and the raw "rate limit" text, so match its own title, or the
+    // Router would wait out its generation timeout instead of rolling the next model.
+    'community model maxed out',
 ];
 
 function getActiveFailureModel() {

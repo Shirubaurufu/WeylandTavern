@@ -130,3 +130,9 @@ test('the Weyland lorebook has an entry per narrator that injects only through i
         assert.equal(entries[0].constant, false, 'fires on keywords like any lorebook entry, never constantly');
     }
 });
+
+test('the OOC prompt tells the narrator the player knows nothing hidden unless they say so', () => {
+    const prompt = buildOocSystemPrompt('[CRITICAL - NARRATOR - LAUREN]');
+    assert.match(prompt, /Unless \{\{user\}\} tells you otherwise, assume they know nothing about any of it/);
+    assert.match(prompt, /A broad question .* gets only what the chat has already shown them/);
+});

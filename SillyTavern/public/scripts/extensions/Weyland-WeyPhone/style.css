@@ -6441,3 +6441,52 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 .wp-narrative-language-heading > i { font-size: 28px; }
 .wp-narrative-choice-grid.wp-narrative-focus-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .wp-narrative-focus-grid [data-value="Split"] { grid-column: 1 / -1; }
+
+/* New Message page: search box pinned above the contact list. The screen body is the scroller (padding 8px, gap 8px),
+   so the bar sticks at -8px to cover the padding and carries the panel background, otherwise rows show through it. */
+.wp-newmsg-searchbar {
+    position: sticky;
+    top: -8px;
+    z-index: 2;
+    flex: 0 0 auto;
+    margin: -8px -8px 0;
+    padding: 8px 8px 4px;
+    background: var(--wp-bg);
+}
+.wp-newmsg-searchbar .wp-contact-search-wrap {
+    margin: 0;
+    border: 1px solid transparent;
+    transition: border-color 0.15s ease;
+}
+.wp-newmsg-searchbar .wp-contact-search-wrap:focus-within {
+    border-color: color-mix(in srgb, var(--wp-accent) 60%, transparent);
+}
+#wp-newmsg-search {
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    padding: 0;
+    color: var(--wp-text);
+    font-size: 13px;
+    font-family: inherit;
+}
+.wp-newmsg-search-clear {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--wp-text) 14%, transparent);
+    color: var(--wp-text-dim);
+    cursor: pointer;
+}
+.wp-newmsg-search-clear:hover { color: var(--wp-text); }
+.wp-newmsg-search-clear i { font-size: 10px; }
+/* Rows are display:flex, which would otherwise override the hidden attribute. */
+.wp-contact-item[hidden], .wp-newmsg-none[hidden], .wp-newmsg-search-clear[hidden] { display: none !important; }

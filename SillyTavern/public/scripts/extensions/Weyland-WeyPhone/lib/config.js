@@ -110,10 +110,11 @@ export const defaultSettings = Object.freeze({
     // Discorgi channels the user switched off in Discorgi's settings; Sync only rolls from the rest.
     // An exclusion list (not an allowlist) so channels added later join the rotation automatically.
     discorgiExcludedChannels: [],
-    // Experimental round-trip roleplay texting. Both switches default off so updating never
-    // changes an existing user's roleplay transcript or prompt without explicit opt-in.
+    // Legacy round-trip switch; current prompt participation is selected per DM with Linked.
     bidirectionalTetheringEnabled: false,
-    captureRoleplayTextsEnabled: false,
+    // New phones capture compatible roleplay phone blocks automatically. getSettings backfills
+    // missing keys but preserves a saved false when someone has disabled automatic capture.
+    captureRoleplayTextsEnabled: true,
     // How many recent Linked-thread texts ride along as roleplay context. Discrete slider stops:
     // 15 / 30 / 45 / 60, or 0 meaning "all un-summarized messages" (the pre-cap behavior). Bounds
     // the size of a mandatory injection that could otherwise blow the context limit. Default 30.

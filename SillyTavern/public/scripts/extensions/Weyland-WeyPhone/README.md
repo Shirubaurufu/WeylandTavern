@@ -66,6 +66,21 @@ and editing continues to show the original source text.
 
 See the changelog for capture setup, Scrub messages, Kressa's special boundary, and LTM sharing.
 
+Automatic capture is on by default for new phones. Settings → Roleplay Text Tethering →
+**Capture generated phone blocks** can disable it; an existing saved off choice is preserved.
+Official short card names and full directory names share one capture identity, so replies from
+“Serra” enter an existing “Serra Fuyuki” thread instead of creating a duplicate. The same mapping
+covers the rest of the official cast, including group participants and older short-name threads.
+
+Registrar and user-selected community contacts also support unambiguous shortened names:
+`George` can resolve to `George Smith` using the known contact names for the active chat.
+These associations are derived automatically from loaded contacts and active-chat threads;
+new Registrar imports do not need source-code aliases. Ordinary official first names are
+likewise derived from the existing cast directory, with only nickname/title exceptions explicit.
+If multiple Georges are known, the phone block needs a full name in its member list; capture
+does not guess or match arbitrary substrings. Markdown label wrappers and trailing emoji are
+ignored when matching. Ordinary dialogue such as `__George:__` is not itself a phone message.
+
 ### Swiping roleplay replies with texts
 
 Outgoing texts shown again in a roleplay reply won't be added to your phone a second time.

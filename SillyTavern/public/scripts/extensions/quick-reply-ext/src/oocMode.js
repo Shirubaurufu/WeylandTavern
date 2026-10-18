@@ -156,6 +156,7 @@ Everything else in your context (the character information, the lorebook entries
 This can be as long and as detailed as {{user}} wants, about whatever they want: deep dives on a character, long planning sessions, tangents, or just hanging out with you. There's no clock on it. Don't steer them back toward the roleplay, and don't wrap up replies with lines like "anyway, back to the story!". They'll go back when they're ready.`,
         `SPOILERS AND SECRETS
 {{user}} can't see what you can. The character information and lorebook entries in your context (backstories, motivations, hidden feelings, secrets, plans) are invisible to them. Those things are meant to come out through the roleplay, at the story's own pace, and protecting that is part of your job.
+- Unless {{user}} tells you otherwise, assume they know nothing about any of it. What they know is what has appeared in the chat so far, plus whatever they plainly say themselves. Everything else in your context is hidden from them, even the basics: the premise, the setting's rules, what a place or a creature is, who someone really is, what an experiment or a house is for. A broad question ("what's the deal with this place?", "what's going on?") gets only what the chat has already shown them, and a friendly nudge that the rest is theirs to find out in the story.
 - Only talk about something hidden if {{user}} clearly already knows it: it happened in the chat, or they bring it up themselves, plainly and specifically. If they already know, talk about it freely.
 - A vague guess isn't knowing. If they're fishing ("doesn't she have a secret?", "what's her trauma?", "what is she hiding?"), don't spoil it. Stay warm, not rude, but don't budge: it's something they'll find out in the story. For your own understanding of why (NEVER USE VERBATIM): asking you is like stopping a play to ask an actor for their character's backstory. Say no in your own words, differently each time, and don't explain the reasoning unless they push.
 - Anything marked as a secret that must never be told stays untold, however they ask, unless {{user}} clearly already knows it.`,
@@ -256,4 +257,63 @@ export function stripFromMessages(messages, text, { fromStart = false } = {}) {
         }
     }
     return 0;
+}
+
+// ---- OOC Mode on the three cards that never read ravteg/postrav (2026-10-17) ----
+//
+// Kinsbane Manor, Mirror Weyland and Muse carry their OWN system prompt and post-history in their own
+// variables, so the swap of ravteg/postrav above does nothing for them (see "Cards with their own system
+// prompt" in CLAUDE.md). Lucky wanted players to be able to talk to the narrator from inside those chats too,
+// so while OOC Mode is on the card's own variables are replaced with the same OOC text.
+//
+// Why a stash: Kinsbane's and Muse's variables are rewritten from charper.js on every XXX() (SpecialChar), so
+// they heal themselves when OOC goes off. Mirror's (Mi33var / Mi33rav) are written ONCE by the Mirror quick
+// reply when the chat is set up, and Muse's Mu3ePost comes from her greeting's start context, so overwriting
+// them would destroy the chat's real prompt for good. Their originals are kept in the chat variable
+// OocCardStash and put back the next time XXX() runs with OOC off.
+//
+// Everything is recognised by the "[OOC MODE" prefix both OOC texts open with, so a re-run while OOC is on
+// (the narrator changed, say) never mistakes our own text for the original and stashes it.
+export const OOC_CARD_SLOTS = Object.freeze({
+    // `keep` = the variables XXX() does NOT rewrite by itself, so their originals must be stashed. Stashing Kinsbane's
+    // 64k system prompt too would just double the chat file for nothing (SpecialChar puts it back).
+    'Kinsbane Manor': { system: 'ravtegKinsB', post: 'postravKinsB', blank: [], keep: [] },
+    'Mirror Weyland': { system: 'Mi33var', post: 'Mi33rav', blank: [], keep: ['Mi33var', 'Mi33rav'] },
+    'Muse': { system: 'ravtegMu3e', post: 'PostMuse', blank: ['Mu3ePost'], keep: ['Mu3ePost'] },
+});
+
+const OOC_CARD_STASH = 'OocCardStash';
+const isOurOocText = (value) => String(value ?? '').startsWith('[OOC MODE');
+
+/**
+ * @param {string} charName The current card's name
+ * @param {boolean} enabled Whether OOC Mode is on
+ * @param {{get: (name: string) => string, set: (name: string, value: string) => void}} vars Chat-local variables
+ * @param {{system?: string, post?: string}} [texts] The OOC texts (only read when enabled)
+ * @returns {boolean} True when the card is one of the three and was handled
+ */
+export function applyOocToCardSlots(charName, enabled, vars, texts = {}) {
+    const slots = OOC_CARD_SLOTS[charName];
+    if (!slots) return false;
+    let stash = {};
+    try { stash = JSON.parse(vars.get(OOC_CARD_STASH) || '{}') || {}; } catch { stash = {}; }
+    const watched = [slots.system, slots.post, ...slots.blank];
+    if (enabled) {
+        let changed = false;
+        for (const name of slots.keep) {
+            const current = String(vars.get(name) ?? '');
+            if (current && !isOurOocText(current) && stash[name] !== current) { stash[name] = current; changed = true; }
+        }
+        if (changed) vars.set(OOC_CARD_STASH, JSON.stringify(stash));
+        vars.set(slots.system, texts.system ?? '');
+        vars.set(slots.post, texts.post ?? '');
+        for (const name of slots.blank) vars.set(name, '');
+        return true;
+    }
+    for (const name of watched) {
+        if (name in stash) vars.set(name, stash[name]);
+        else if (isOurOocText(vars.get(name))) vars.set(name, '');
+    }
+    if (Object.keys(stash).length) vars.set(OOC_CARD_STASH, '');
+    return true;
 }

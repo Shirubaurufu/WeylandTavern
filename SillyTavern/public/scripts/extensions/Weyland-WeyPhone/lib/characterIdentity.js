@@ -1,3 +1,5 @@
+import { CAST_SNAPSHOT } from './castSnapshot.js';
+
 // Common honorific abbreviations, expanded so "Prof. Akiyama" and "Professor Akiyama" resolve to
 // the same person (Weyland is a university, so titled names are common and users type them both
 // ways). Only a title that's directly followed by a name is expanded, so a character literally
@@ -23,14 +25,35 @@ export function displayCharacterName(value) {
         .replace(/\s+/g, ' ');
 }
 
-// Explicit canon/card aliases that cannot be inferred safely from first names. Keep the returned
-// card's real name untouched; these keys only answer whether two labels identify the same person.
+/** Generate aliases from a supplied directory instead of maintaining first/full-name pairs.
+ * Null marks a collision; callers must use the full name rather than selecting the first hit.
+ * This is a pure, local index: never add imported contacts to a process-wide alias table. */
+export function buildFirstNameAliases(names) {
+    const aliases = new Map();
+    for (const name of names) {
+        const normalized = canonicalCharacterName(name);
+        const withoutTitle = normalized.replace(/^(?:doctor|professor|mr\.?|mrs\.?|ms\.?)\s+/, '');
+        const first = withoutTitle.split(' ')[0];
+        if (!first) continue;
+        if (!aliases.has(first)) aliases.set(first, name);
+        else if (canonicalCharacterName(aliases.get(first)) !== normalized) aliases.set(first, null);
+    }
+    return aliases;
+}
+
+// Only established nickname/title exceptions belong here. Ordinary first-name aliases are
+// derived from the existing cast data below and from loaded Registrar/community names during
+// capture. Entries use canonicalCharacterName's normalized spelling.
 const CHARACTER_ALIAS_GROUPS = [
-    ['dash', 'dakota ash', 'dakota ash (dash)'],
-    ['akiyama', 'professor akiyama', 'sayori akiyama'],
-    ['bap', 'baphrodel puddyfoot'],
+    ['dash', 'dakota', 'dakota ash', 'dakota ash (dash)'],
+    ['akiyama', 'sayori', 'professor akiyama', 'sayori akiyama'],
+    ['bap', 'baphrodel', 'baphrodel puddyfoot'],
     ['blake', 'blake fuyuki'],
+    ['loren', 'doctor loren', 'loren montenegro', 'doctor loren montenegro'],
+    ['mr. wolfy', 'mr wolfy'],
 ];
+
+const OFFICIAL_FIRST_NAME_ALIASES = buildFirstNameAliases(CAST_SNAPSHOT.map(entry => entry.name));
 
 // The single display name a contact-directory entry should collapse to when its sources disagree
 // (e.g. the live cast directory calls her "Baphrodel Puddyfoot" while her subbot/roster entries
@@ -58,8 +81,9 @@ const SHARED_PERSONALITY_CARD_FALLBACKS = new Map([
 
 function characterAliasKeys(value) {
     const key = canonicalCharacterName(value);
-    const group = CHARACTER_ALIAS_GROUPS.find(aliases => aliases.includes(key));
-    return new Set(group ?? [key]);
+    const fullName = canonicalCharacterName(OFFICIAL_FIRST_NAME_ALIASES.get(key) || key);
+    const group = CHARACTER_ALIAS_GROUPS.find(aliases => aliases.includes(key) || aliases.includes(fullName));
+    return new Set(group ?? [fullName]);
 }
 
 export function characterNamesEquivalent(left, right) {

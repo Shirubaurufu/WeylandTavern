@@ -723,8 +723,13 @@ async function setExpressions(){
         console.log(`${LOGGING_PREFIX} Default emotion: ${defaultEmotion}`);
     }
     
+    // Weybot's left slot holds its silhouette until a named character takes it. quick-reply-ext's OpenWorldCostumes does that for the
+    // official cast, but it never sees Registrar-only characters, so they used to land on the right with the generic silhouette still on
+    // the left (a 1-on-1 scene looked like two characters). Designed behaviour is first named character -> left, second -> right.
+    let leftIsSilhouette = left.name === 'weybot';
+
     // If there are any open slots, fill them
-    if ((sideExpressionsEnabled && (!left.path || !right.path))) {
+    if ((sideExpressionsEnabled && (!left.path || !right.path || leftIsSilhouette))) {
 
         // Get the list of speakers in the scene
         const speakers = await getSpeakerNames();
@@ -742,8 +747,8 @@ async function setExpressions(){
         }
 
         let nameIndex = 0;
-        if (!left.path) {
-            // Try names until you find a good one or run out
+        if (!left.path || leftIsSilhouette) {
+            // Try names until you find a good one or run out. If none resolve, the silhouette stays.
             while (speakers[nameIndex]) {
                 const expression = await resolveExpression(speakers[nameIndex]);
                 nameIndex++;

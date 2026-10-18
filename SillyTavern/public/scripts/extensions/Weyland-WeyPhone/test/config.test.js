@@ -6,6 +6,14 @@ test('MODULE_NAME is WeyPhone', () => {
     assert.equal(MODULE_NAME, 'WeyPhone');
 });
 
+test('automatic phone capture defaults on for new and missing-key installs, preserving an explicit off choice', () => {
+    assert.equal(getSettings({}).captureRoleplayTextsEnabled, true);
+    assert.equal(getSettings({ [MODULE_NAME]: { conversations: {} } }).captureRoleplayTextsEnabled, true);
+    const optedOut = { [MODULE_NAME]: { conversations: {}, captureRoleplayTextsEnabled: false } };
+    assert.equal(getSettings(optedOut).captureRoleplayTextsEnabled, false);
+    assert.equal(resetSettings(optedOut).captureRoleplayTextsEnabled, true);
+});
+
 test('getSettings creates the settings object on first call', () => {
     const extensionSettings = {};
     const settings = getSettings(extensionSettings);

@@ -28,7 +28,7 @@ import { describeIntroContext, INTRO_CONTEXT_STATE_VARS, introHadScenario, setIn
 import { activeDoseShift, applyDoseForGeneration, describeDose, endDose, startDose } from "./src/dose.js";
 import { detector } from "./src/similarity.js";
 import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
-import { buildOocPostHistory, buildOocSystemPrompt, cardPostHistoryExtras, cardSystemPromptExtras, isOocModeEnabled, stripFromMessages } from "./src/oocMode.js";
+import { applyOocToCardSlots, buildOocPostHistory, buildOocSystemPrompt, cardPostHistoryExtras, cardSystemPromptExtras, isOocModeEnabled, stripFromMessages } from "./src/oocMode.js";
 import { NARRATOR_SUBBOTS, NARRATOR_SUBBOT_NAMES } from "./src/narratorSubbots.js";
 import { applyGeminiBypassForModel, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
 import { BAPHOMET_VAR, applyBaphometToRequest, baphometHidden, baphometThoughts } from "./src/baphomet.js";
@@ -2791,6 +2791,14 @@ async function XXX(charName) {
             const narrator = getLocalVariable("LocalNarrator");
             setLocalVariable("ravteg", buildOocSystemPrompt(narrator));
             setLocalVariable("postrav", buildOocPostHistory(narrator));
+        }
+        // Kinsbane Manor, Mirror Weyland and Muse never read ravteg/postrav; swap their own variables too (and put the
+        // originals back when OOC is off). src/oocMode.js explains the stash.
+        {
+            const oocOn = isOocModeEnabled(getGlobalVariable("OOCMode"));
+            const narrator = getLocalVariable("LocalNarrator");
+            applyOocToCardSlots(charName, oocOn, { get: getLocalVariable, set: setLocalVariable },
+                oocOn ? { system: buildOocSystemPrompt(narrator), post: buildOocPostHistory(narrator) } : {});
         }
         // Narrator subbots (src/narratorSubbots.js, generated from "Prompt Review/Narrator Subbots -
         // MASTER.txt"): only the narrator selected for THIS chat gets their in-world sheet; the

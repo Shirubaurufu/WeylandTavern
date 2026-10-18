@@ -151,6 +151,30 @@ test('ambiguous unknown speakers fail atomically', () => {
     assert.equal(routePhoneScope(scope, { userName: 'Lucky', knownNames: ['Summer'] }), null);
 });
 
+test('short community names match whole name tokens, not arbitrary substrings or different full names', () => {
+    const route = (sender, knownNames) => routePhoneScope(locatePhoneScopes(`Incoming¦now¦${sender}¦hello`)[0], { userName: 'Lucky', knownNames });
+    assert.deepEqual(route('George', ['George Smith']).participants, ['George Smith']);
+    assert.equal(route('George', ['George Smith', 'George Jones']), null);
+    assert.equal(route('Ann', ['Joanne Smith']), null);
+    assert.equal(route('George Jones', ['George Smith', 'George']), null);
+    assert.equal(route('George', ['George', 'George Smith']), null, 'two directory identities remain ambiguous');
+    assert.deepEqual(route('George', ['George Smith', 'George Smith']).participants, ['George Smith']);
+    assert.deepEqual(route('**George:**', ['George Smith']).participants, ['George Smith']);
+    assert.deepEqual(route('George ❤️', ['George Smith']).participants, ['George Smith']);
+    assert.deepEqual(route('Dr. George', ['Doctor George Smith']).participants, ['Doctor George Smith']);
+    assert.deepEqual(route("Sean O’Connor", ["Sean O'Connor"]).participants, ["Sean O'Connor"]);
+});
+
+test('ambiguous known legacy senders cannot be mistaken for the user nickname', () => {
+    const [scope] = locatePhoneScopes('Phone¦Weynet - Summer¦90%\nIncoming¦now¦George¦hello');
+    assert.equal(routePhoneScope(scope, { userName: 'Lucky', knownNames: ['Summer', 'George Smith', 'George Jones'] }), null);
+});
+
+test('a player and character sharing a first name cannot silently swap sender roles', () => {
+    const [scope] = locatePhoneScopes('Phone¦Weynet - George Smith¦90%¦Mode=Solo¦Members=George Smith;George\nTexting¦George\nOutgoing¦now¦George¦hello');
+    assert.equal(routePhoneScope(scope, { userName: 'George', knownNames: ['George Smith'] }), null);
+});
+
 test('character-owned phone infers an unknown incoming sender as the user nickname', () => {
     const [scope] = locatePhoneScopes('Phone¦Weynet - Summer¦90%\nIncoming¦now¦juicebox¦where are you?\nOutgoing¦now¦Summer¦on my way');
     const routed = routePhoneScope(scope, { userName: 'Lucky', knownNames: ['Summer'] });
@@ -433,4 +457,38 @@ test('user roleplay turns do not consume the ten character-response Linked trans
         chatId: 'chat-a', chatLength: chat.length, chat, userName: 'Lucky', formatClockTime: () => '',
     });
     assert.equal(plan.groups.length, 1);
+});
+
+// Sunny's Blake chat (2026-10-18): Mika's own phone was labelled "Texting¦Mika". That title was saved as the
+// user's nickname, so the next screen ("Mode=NoChar¦Members=Sunny Skies;Mika") treated Mika as the user and
+// was never captured.
+test('a character-owned screen titled with the character\'s own name is not a nickname for the user', () => {
+    const knownNames = ['Mika', 'Blake'];
+    const [own] = locatePhoneScopes('Phone¦Weynet - Mika¦84%¦Mode=Solo¦Members=Mika;Sunny Skies\nTexting¦Mika\nIncoming¦11:52 PM¦Mika¦is she okay? like actually?');
+    const routed = routePhoneScope(own, { userName: 'Sunny Skies', knownNames });
+    assert.deepEqual(routed.participants, ['Mika']);
+    assert.equal(routed.userNickname, null);
+
+    // A thread that already saved the bad nickname still captures Mika's next screen.
+    const [next] = locatePhoneScopes('Phone¦Weynet - Sunny Skies¦83%¦Mode=NoChar¦Members=Sunny Skies;Mika\nTexting¦Mika\nIncoming¦11:54 PM¦Mika¦ok good. seriously thank u for anchoring her');
+    const healed = routePhoneScope(next, { userName: 'Sunny Skies', knownNames, userNicknames: ['Mika'] });
+    assert.deepEqual(healed.participants, ['Mika']);
+    assert.equal(healed.messages[0].role, 'assistant');
+
+    // A real nickname still works.
+    const [nick] = locatePhoneScopes('Phone¦Weynet - Mika¦84%¦Mode=Solo¦Members=Mika;Sunny Skies\nTexting¦pony express\nIncoming¦11:52 PM¦Mika¦hey');
+    assert.equal(routePhoneScope(nick, { userName: 'Sunny Skies', knownNames }).userNickname, 'pony express');
+});
+
+test('the nickname fix only applies where a screen contradicts the nickname', () => {
+    const route = (text, options) => routePhoneScope(locatePhoneScopes(text)[0], { userName: 'Sunny Skies', ...options });
+    // A pet name that matches an unrelated contact is still learned and still recognised as the user.
+    const knownNames = ['Mika', 'Angel Smith'];
+    assert.equal(route('Phone¦Weynet - Mika¦84%¦Mode=Solo¦Members=Mika;Sunny Skies\nTexting¦Angel\nIncoming¦1:00 PM¦Mika¦hey', { knownNames }).userNickname, 'Angel');
+    const outgoing = route('Phone¦Weynet - Mika¦84%¦Mode=Solo¦Members=Mika;Sunny Skies\nTexting¦Angel\nIncoming¦1:00 PM¦Angel¦hi back\nOutgoing¦1:01 PM¦Mika¦hey', { knownNames, userNicknames: ['Angel'] });
+    assert.equal(outgoing.messages[0].role, 'user');
+    // Members written with the nickname instead of the real name: the nickname is still the user.
+    const byNickname = route('Phone¦Weynet - Mika¦84%¦Mode=Solo¦Members=Mika;juicebox\nTexting¦juicebox\nIncoming¦1:00 PM¦juicebox¦yo\nOutgoing¦1:01 PM¦Mika¦hey', { knownNames, userNicknames: ['juicebox'] });
+    assert.deepEqual(byNickname.participants, ['Mika']);
+    assert.equal(byNickname.messages[0].role, 'user');
 });
