@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
     ERROR_HELP_EVENT, COMMUNITY_MODEL_LIMIT_TITLE, COMMUNITY_MODEL_LIMIT_BODY, COMMUNITY_MODEL_LIMIT_ARTICLE,
-    showChatCompletionError,
+    showChatCompletionError, whenErrorGuideReady,
 } from '../../../weyland-error-notice.js';
 import { getErrorHelpCard, searchErrorHelp } from '../lib/errorHelpCatalog.js';
 import { renderErrorHelpScreen } from '../lib/ui/apps/errorHelp.js';
@@ -48,15 +48,18 @@ test('the daily limit toast uses Lucky\'s wording, hides the raw code and opens 
     });
 });
 
-test('every other API error keeps its own words and title', () => {
+test('every other API error keeps its own words and title', async () => {
+    // The guide catalog loads lazily; errors it covers also get a tap-through (see requestRejected.test.js). These are
+    // messages the guide has no card for, so they must stay plain toasts however early or late the catalog loads.
+    await whenErrorGuideReady();
     withStubs(calls => {
-        for (const message of ['rate limit exceeded: rpm limit=20', '429 Too Many Requests', 'insufficient_quota', 'not_rpd limit=2000', 'rpd limitless', 'daily request limit exceeded for your key', null]) {
+        for (const message of ['not_rpd limit=2000', 'rpd limitless', 'daily request limit exceeded for your key', 'The upstream said hmm', null]) {
             showChatCompletionError(message, 'API returned an error');
             assert.equal(calls.at(-1).body, message);
             assert.equal(calls.at(-1).title, 'API returned an error');
             assert.equal(calls.at(-1).options, undefined);
         }
-        showChatCompletionError('Bad Gateway');
+        showChatCompletionError('The upstream said hmm');
         assert.equal(calls.at(-1).title, 'Chat Completion API');
     });
 });

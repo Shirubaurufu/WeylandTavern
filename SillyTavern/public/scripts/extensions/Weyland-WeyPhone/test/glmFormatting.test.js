@@ -141,3 +141,46 @@ test('decorated second sheets hide draft headers inside them and stay private if
         assert.match(result, /She waves/);
     }
 });
+
+// A model wrote extra bars INSIDE the header (2026-10-19). It must render as the same card as the tilde form.
+test('headers with bars between the location and the mode render as a header card', async () => {
+    const tilde = '¦¦ Thursday, Aug 27th ~ 9:14 PM ~ Campus Pathways → Boardwalk Approach ~ (SAPH) ¦¦';
+    for (const line of [
+        '¦¦ Thursday, Aug 27th ~ 9:14 PM ~ Campus Pathways → Boardwalk Approach ¦¦ (SAPH) ¦¦',
+        '¦¦ Thursday, Aug 27th ~ 9:14 PM ~ Campus Pathways → Boardwalk Approach ¦ (SAPH) ¦¦',
+        '¦¦ Thursday, Aug 27th ~ 9:14 PM ~ Campus Pathways → Boardwalk Approach ~ ¦¦ (SAPH) ¦¦',
+    ]) {
+        const formatter = formatterHarness();
+        formatter.chat[1].name = 'Summer';
+        const html = formatter.render(await formatter.format(`${line}
+
+${prose}`));
+        const expected = formatter.render(await formatter.format(`${tilde}
+
+${prose}`));
+        assert.match(html, /class="message-header"/, line);
+        assert.doesNotMatch(html, /darkred/, line);
+        assert.equal(html, expected, line);
+        assert.match(html, /message-location">Campus Pathways → Boardwalk Approach</);
+    }
+});
+
+// Split POV replies carry two headers (the player's side, then the character's). Neither half may be dropped,
+// including when the first header is the odd bar-in-the-middle form.
+test('split POV replies keep both headers and both halves', async () => {
+    const first = ['¦¦ Thursday, Aug 27th ~ 9:14 PM ~ Campus Pathways → Boardwalk Approach ~ (SAPH) ¦¦',
+        '¦¦ Thursday, Aug 27th ~ 9:14 PM ~ Campus Pathways → Boardwalk Approach ¦¦ (SAPH) ¦¦'];
+    const second = '¦¦ Thursday, Aug 27th ~ 9:17 PM ~ Sakurai Cafe ~ ¦¦';
+    for (const head of first) {
+        for (const prefix of ['', '<think>plan</think>\n', 'SCENE SHEET\nnotes\nEND OF SCENE SHEET\n']) {
+            const formatter = formatterHarness();
+            formatter.chat[1].name = 'Summer';
+            const html = formatter.render(await formatter.format(`${prefix}${head}\n\n*Alex thinks on the boardwalk.*\n\n${second}\n\n*Summer wipes the counter.*\n\n[Amusement] [RC]`));
+            assert.equal(html.match(/class="message-header"/g)?.length, 2, head);
+            assert.doesNotMatch(html, /darkred/);
+            assert.match(html, /Alex thinks on the boardwalk/);
+            assert.match(html, /Summer wipes the counter/);
+            assert.match(html, /message-location">Sakurai Cafe</);
+        }
+    }
+});

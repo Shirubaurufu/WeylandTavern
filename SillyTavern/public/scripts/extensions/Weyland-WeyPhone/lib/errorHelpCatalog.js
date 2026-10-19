@@ -18,7 +18,7 @@
 // never shown. Paragraph lists (explanation, step text, note) may include `{ visual: name }`
 // to place a picture there; the names are defined in errorHelp.js. `actions` are buttons: home (PromptOS Home), gemini (the filter guide), dns (the
 // DNS Routing popup), registrar (the Registrar app).
-import { COMMUNITY_MODEL_LIMIT_ARTICLE, COMMUNITY_MODEL_LIMIT_TITLE, COMMUNITY_MODEL_LIMIT_BODY } from '../../../weyland-error-notice.js';
+import { COMMUNITY_MODEL_LIMIT_ARTICLE, COMMUNITY_MODEL_LIMIT_TITLE, COMMUNITY_MODEL_LIMIT_BODY, REQUEST_REJECTED_ARTICLE } from '../../../weyland-error-notice.js';
 
 const step = (title, text) => ({ title, text });
 const warpDocs = ['Cloudflare: the WARP app and its modes', 'https://developers.cloudflare.com/warp-client/warp-modes/'];
@@ -86,6 +86,39 @@ export const ERROR_HELP_CARDS = [
         ],
         note: "DNS Routing and network changes won't help with this one. Your request got there fine. The provider just said no.",
         actions: ['home', 'gemini'], related: ['interrupted', 'gemini-filter', 'distillation'],
+    },
+    {
+        // HelixMind's catch-all rejection (2026-10-18). It covers a provider's filter AND a short provider outage,
+        // and the raw text invited players to contact support with a request id, so the toast is rewritten
+        // (public/scripts/weyland-error-notice.js) and opens this card. Lucky's steps, in his order.
+        id: REQUEST_REJECTED_ARTICLE, group: 'Replies', title: 'Request Rejected',
+        summary: 'A catch-all error. The provider is having a hiccup, or a filter turned your message down.',
+        aliases: ['request rejected', 'provider rejected the request', 'provider rejected', 'rejected', 'request id', 'contact support', 'provider is down', 'filter rejected your content', 'generic error'],
+        match: /request rejected|provider rejected the request/i,
+        // Beats the generic 500 and filter cards when someone pastes the raw text.
+        specificMatch: /provider rejected the request|request rejected/i,
+        example: 'Chat Completion API\nRequest rejected:\nProvider is down or a filter rejected your content.',
+        explanation: [
+            "This is a catch-all. The provider turned the request down, and it can't tell us why, so the message has to cover everything.",
+            "Most of the time it's one of two things. Either the provider is having a short stability hiccup, or a filter on their side didn't like something in the request.",
+            "Neither one is a problem with your key, your account or your computer. If the raw version of this message mentioned a request id, there's nothing you need to do with it.",
+        ],
+        route: { helix: [1, 'sometimes'], model: [3, 'usually here'] },
+        steps: [
+            step('Reroll once', [
+                'A lot of these are one-off blips. Give it one more go.',
+                "If the message goes through, you're good to go. It was most likely a hiccup.",
+                "If the error shows up again, stop there. Rerolling more won't help, and a pile of failed requests just makes things worse.",
+            ]),
+            step('Still rejected? Switch models', "Let a different model write the next reply. Every provider has its own filter and its own bad days, so another one will often answer straight away."),
+            step('Try the original model again in an hour or two', "Providers sometimes drop offline for a short window, usually around 10 to 15 minutes, and then come back. If you switched models, give the first one a little while and then try it again."),
+            step('Think the content itself is tripping a filter? Test it', [
+                "It's possible. The easiest way to find out is to swap chats.",
+                "Open a different chat on the same model and send a message. If that one goes through, the model is fine and something in the first chat is what's being turned down. If it fails the same way, the provider is just having a bad moment.",
+            ]),
+        ],
+        note: "A filter turning something down says nothing bad about you or your roleplay. Weyland's characters carry real weight on purpose, and cautious filters flinch at that. If it's a filter, it's the filter's problem.",
+        related: ['filter', 'interrupted', 'server'],
     },
     {
         id: 'gemini-filter', group: 'Replies', title: 'Gemini: "The Prompt Contains Sensitive Words"',

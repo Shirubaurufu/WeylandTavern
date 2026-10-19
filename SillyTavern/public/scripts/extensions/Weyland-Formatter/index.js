@@ -901,6 +901,11 @@ function headerV2MarkdownExt(){
                     p1 = p1.replace(/<\/?u>/g, ``);
                     p1 = p1.replace(/<\/?em>/g, ``);
                     p1 = p1.replace(/<\/?strong>/g, ``);
+                    // Some models put extra bars INSIDE the header: "¦¦ date ~ time ~ place ¦¦ (SAPH) ¦¦". The lazy
+                    // match above then swallows "place ¦¦ (SAPH)" as one field, the mode check lands on the LOCATION
+                    // field, and the whole header falls back to plain dark-red text (Fox's report, 2026-10-19).
+                    // An inner bar run is just a field separator, so treat it as "~".
+                    p1 = p1.replace(/\s*¦+\s*/g, ` ~ `).replace(/(?:\s*~\s*){2,}/g, ` ~ `).trim();
                     const split = p1.split(`~`);
                     const modeIndex = split.findIndex(x => /saph|onyx|ruby/i.test(x));
                     // Time must contain a digit: 12h (9:28 AM) or 24h (15:09, 3h09, 15h, 15 Uhr, 15時)
