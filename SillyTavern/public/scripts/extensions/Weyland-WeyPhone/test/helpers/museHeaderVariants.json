@@ -1,0 +1,104 @@
+[
+  {
+    "label": "mode on its own line",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ¦¦\n¦¦ (SAPH) ¦¦\n¦¦ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "code before location",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ (CODE: 7717) ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "code then mode",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ¦¦\n¦¦ (CODE: 7717) ¦¦\n¦¦ (SAPH) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "location plus code plus mode",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ~ (CODE: 7717) ~ (SAPH) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "location plus mode plus code",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ~ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "square code",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ¦¦\n¦¦ [CODE: 7717] ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "bare code",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ¦¦\nCODE: 7717\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "underscore wrappers",
+    "text": "__¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦__\n__¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ¦¦__\n¦¦ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "heading wrappers",
+    "text": "### ¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ¦¦\n¦¦ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "24 hour clock",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 14:43 ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ¦¦\n¦¦ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "14:43"
+  },
+  {
+    "label": "plain date time",
+    "text": "Wednesday, October 13, 2025 ~ 2:43 PM\n¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ¦¦\n¦¦ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "double pipe bars",
+    "text": "|| Wednesday, October 13, 2025 ~ 2:43 PM ||\n|| Sterling Hall Dormitory, Room 271 ~ (SAPH) ||\n|| (CODE: 7717) ||\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "thin vertical bars",
+    "text": "││ Wednesday, October 13, 2025 ~ 2:43 PM ││\n││ Sterling Hall Dormitory, Room 271 ~ (SAPH) ││\n││ (CODE: 7717) ││\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "trailing location separator",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ~ ¦¦\n¦¦ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "date words in place",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Sunset Marketplace ~ (SAPH) ¦¦\n¦¦ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sunset Marketplace",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "mode word in place",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦\n¦¦ Ruby Hall ~ (SAPH) ¦¦\n¦¦ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Ruby Hall",
+    "time": "2:43 PM"
+  },
+  {
+    "label": "code in first line",
+    "text": "¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ~ Sterling Hall Dormitory, Room 271 ~ (SAPH) ~ (CODE: 7717) ¦¦\n\n*Prose here.*",
+    "location": "Sterling Hall Dormitory, Room 271",
+    "time": "2:43 PM"
+  }
+]

@@ -574,6 +574,21 @@ async function AutoStart(charName) {
 }
 
 /**
+ * The "Scenario" WI entry is shared by every chat, so its sticky is set per chat, the same way its
+ * keys are. Intros fade 20 messages after their CharKeys stop showing up (the entry's shipped value);
+ * a greeting can ask for longer with a ScenarioSticky field in scenarios.js (Lyris & Vesper's
+ * Halloween intro uses 50). Re-applied on every chat open, or one chat's value would leak into the
+ * next. Skips the world-file save when the value already matches.
+ * @param {number|string} uid
+ */
+async function applyScenarioSticky(uid) {
+    if (uid === "" || uid === undefined) return;
+    const sticky = Number(getLocalVariable("ScenarioSticky")) || 20;
+    if (Number(await getEntryField("Weyland Characters", uid, "sticky")) === sticky) return;
+    await setEntryField({file: "Weyland Characters", uid, field: "sticky"}, sticky);
+}
+
+/**
  * TitleBarColors Script
  * OnChatChanged
  * @returns {Promise<string | undefined>}
@@ -592,6 +607,7 @@ async function TitleBarColors() {
         }
         const scenarioUID = await findLoreBookEntry("Weyland Characters", "automationId", "Scenario");
         await setEntryField({file: "Weyland Characters", uid: scenarioUID, field: "key"}, getLocalVariable("CharKeys"));
+        await applyScenarioSticky(scenarioUID);
         setLocalVariable("JennLucyRoom", getLocalVariable("EarlyStart") === "true" ? strings.LSRoom : strings.JLRoom);
         //Happens if Chat Has already Setup
         if (getLocalVariable("Run") === "true") {
@@ -1022,6 +1038,8 @@ This is our sort of rough approach of forcing down the LLM Niceness barrier with
                                     await setEntryField({file: "Weyland Characters", uid: scenarioID, field: "key"}, greetingObj[key]);
                                 }
                             }
+                            // After the loop: ScenarioSticky may come after CharKeys in the greeting.
+                            await applyScenarioSticky(await findLoreBookEntry("Weyland Characters", "automationId", "Scenario"));
                         }
                     }
                 } catch (error) {

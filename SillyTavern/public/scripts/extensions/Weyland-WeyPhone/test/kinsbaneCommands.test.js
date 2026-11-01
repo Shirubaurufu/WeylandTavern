@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
 
 import { specialChar } from '../../quick-reply-ext/src/charper.js';
 import {
@@ -74,6 +75,9 @@ test('a reroll re-sends the same request, so it gets the same change', () => {
     applyKinsbaneCommand(first, { kinsbane: true });
     applyKinsbaneCommand(second, { kinsbane: true });
     assert.equal(JSON.stringify(first), JSON.stringify(second));
+    const once = JSON.stringify(first);
+    applyKinsbaneCommand(first, { kinsbane: true });
+    assert.equal(JSON.stringify(first), once, 'an existing short Look sheet is not a missing-marker fallback');
 });
 
 test('Aiko (regular sheet): the command note is appended to the end of the request, nothing is replaced', () => {
@@ -99,4 +103,80 @@ test('wired in: OnRequestReady runs it for Kinsbane Manor and Aiko only', async 
     const index = await readFile(new URL('../../quick-reply-ext/index.js', import.meta.url), 'utf8');
     assert.match(index, /applyKinsbaneCommand\(data\.messages/);
     assert.match(index, /name === "Kinsbane Manor" \|\| name === "Aiko"/);
+});
+
+test('journal instructions require a complete uninterrupted document, then reactions, and the normal scene header', () => {
+    for (const instruction of [COMMAND_SHEETS.journal, commandNote('journal')]) {
+        assert.match(instruction, /one uninterrupted block/);
+        assert.match(instruction, /Do not insert.*Aiko.*between/i);
+        assert.match(instruction, /only AFTER the entire document/);
+        assert.match(instruction, /punctuation and paragraph breaks/);
+        assert.match(instruction, /¦¦ DAY, DATE ~ XX:XX PM\/AM ~ Location ~ \(Message mode if applicable\) ¦¦/);
+        assert.doesNotMatch(instruction, /woven into/);
+    }
+});
+
+test('journal reminder comes after the lorebook and character directions without changing either', () => {
+    const messages = kinsbaneRequest('!Ami0601');
+    messages[0].content += '\nLITERAL NOTE PAYLOAD $&: keep the words exactly.';
+    const originalTail = messages[0].content.slice(messages[0].content.indexOf(KINSBANE_SHEET_END) + KINSBANE_SHEET_END.length);
+    applyKinsbaneCommand(messages, { kinsbane: true });
+    assert.ok(messages[0].content.endsWith(originalTail));
+    assert.ok(messages.at(-1).content.endsWith(commandNote('journal')));
+    const once = JSON.stringify(messages);
+    applyKinsbaneCommand(messages, { kinsbane: true });
+    assert.equal(JSON.stringify(messages), once, 'reprocessing one payload must not repeat its reminder');
+});
+
+test('a recognized journal command still gets its reminder if an older prompt lacks sheet markers', () => {
+    const messages = [{ role: 'system', content: 'older unmarked prompt\nVERBATIM LETTER' },
+        { role: 'user', content: '!Kenji0601' }, { role: 'system', content: 'post-history' }];
+    const result = applyKinsbaneCommand(messages, { kinsbane: true });
+    assert.equal(result.kind, 'journal');
+    assert.ok(result.changed > 0);
+    assert.equal(messages[0].content, 'older unmarked prompt\nVERBATIM LETTER');
+    assert.ok(messages.at(-1).content.endsWith(commandNote('journal')));
+});
+
+test('multipart Aiko command reminders preserve media and remain stable on repeated routing', () => {
+    const messages = [{ role: 'user', content: [{ type: 'text', text: '!Ami0601' },
+        { type: 'image_url', image_url: { url: 'test-image' } }] }];
+    const image = messages[0].content[1];
+    applyKinsbaneCommand(messages, { kinsbane: false });
+    assert.equal(messages[0].content[1], image);
+    const once = JSON.stringify(messages);
+    applyKinsbaneCommand(messages, { kinsbane: false });
+    assert.equal(JSON.stringify(messages), once);
+});
+
+test('the actual request hook recognizes every released journal code with Aiko present and skips unrelated/OOC requests', async () => {
+    const index = await readFile(new URL('../../quick-reply-ext/index.js', import.meta.url), 'utf8');
+    const hook = index.slice(index.indexOf('function OnRequestReady(data) {'), index.indexOf('\n/**', index.indexOf('function OnRequestReady(data) {')));
+    let cardName = 'Kinsbane Manor';
+    let ooc = false;
+    const context = vm.createContext({
+        applyKinsbaneCommand, getCurrentCharacterName: () => cardName,
+        getGlobalVariable: () => ooc ? 'Enabled' : 'Disabled', isOocModeEnabled: () => ooc,
+        applyGeminiBypassForModel: () => ({}), stripCardExtrasForOoc: () => 0,
+        SillyTavern: { getContext: () => ({ substituteParams: text => text.replaceAll('{{user}}', 'Jin') }) },
+        DebugLog: () => {}, console: { error: (...args) => assert.fail(args.join(' ')) },
+    });
+    vm.runInContext(hook, context);
+    for (const code of ['!Ami0601', '!Kenji0601', '!Ami0615', '!Kenji0613', '!Ami0617', '!Kenji0617']) {
+        for (const card of ['Kinsbane Manor', 'Aiko']) {
+            cardName = card;
+            const data = { model: 'example-model', messages: kinsbaneRequest(`Aiko is beside me. ${code}`) };
+            context.OnRequestReady(data);
+            assert.match(data.messages.at(-1).content, /one uninterrupted block/);
+            assert.match(data.messages.at(-1).content, /Jin/);
+        }
+    }
+    for (const [card, mode, input] of [['Weybot', false, '!Ami0601'], ['Kinsbane Manor', true, '!Ami0601'],
+        ['Kinsbane Manor', false, 'I read the note'], ['Kinsbane Manor', false, '!Entry']]) {
+        cardName = card; ooc = mode;
+        const data = { messages: kinsbaneRequest(input) };
+        const before = JSON.stringify(data);
+        context.OnRequestReady(data);
+        assert.equal(JSON.stringify(data), before);
+    }
 });

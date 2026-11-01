@@ -18,7 +18,12 @@ const OUTSIDE_MODE_HEADER = /^[ \t]*¦+[ \t]*([^¦\r\n]+?)[ \t]*¦+[ \t]*(\((?:S
 
 function findPlainReplyHeader(text) {
     for (const match of text.matchAll(/^[ \t]*[^\r\n]+/gm)) {
-        const line = match[0].trim().replace(/^(\*{1,3})(.*?)\1$/, '$2');
+        // Kinsbane (and other models) can use a Markdown heading or wrap the whole
+        // header, then omit one/both borders. Strip only presentation at the edges;
+        // the complete date + clock + location checks below still gate any repair.
+        const line = match[0].trim().replace(/^#{1,6}[ \t]+/, '')
+            .replace(/^(\*{1,3}|_{1,2})(.*?)\1$/, '$2')
+            .replace(/^[¦|│]+[ \t]*|[ \t]*[¦|│]+$/g, '').trim();
         if (line.length > 300 || /[¦*"`<>]/.test(line)) continue;
         const parts = line.replace(/~\s*$/, '').split('~').map(part => part.trim());
         if (parts.length < 3 || parts.length > 4 || parts.some(part => !part)) continue;

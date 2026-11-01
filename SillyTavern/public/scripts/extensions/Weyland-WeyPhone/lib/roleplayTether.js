@@ -1,6 +1,7 @@
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './roleplayMode.js';
 import { canonicalCharacterName, characterNamesEquivalent } from './characterIdentity.js';
 import { withMessageDate } from './messageTime.js';
+import { isGeneralMessagingContact } from './contactVisibility.js';
 
 const DELIMITER = '[¦|│]';
 const PHONE_LINE_RE = new RegExp(`^(Incoming|Outgoing)${DELIMITER}([^¦|│]*)${DELIMITER}([^¦|│]*)${DELIMITER}(.*)$`);
@@ -113,7 +114,11 @@ function matchingPhoneNames(rawName, knownNames) {
     for (const name of knownNames) {
         const candidate = normalizeName(name);
         const stem = withoutTitle(target);
-        const shortMatch = !stem.includes(' ') && withoutTitle(candidate).startsWith(`${stem} `);
+        // Installed card titles also reach this index, including cards hidden from Contacts.
+        // 'Blake & Serra' is not a second Blake; allowing that prefix rejects the whole screen
+        // as ambiguous. Keep explicit identities and genuine same-first-name collisions intact.
+        const shortMatch = isGeneralMessagingContact(candidate) && !stem.includes(' ')
+            && withoutTitle(candidate).startsWith(`${stem} `);
         const matchesName = candidate === target || characterNamesEquivalent(candidate, target) || shortMatch;
         if (matchesName && !matches.some(previous => normalizeName(previous) === candidate
             || characterNamesEquivalent(normalizeName(previous), candidate))) matches.push(name);

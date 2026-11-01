@@ -140,3 +140,16 @@ test('first-name aliases are generated from arbitrary directory data and collisi
     assert.equal(aliases.has('doctor'), false);
     assert.equal(characterNamesEquivalent('Guest0', names[0]), false, 'import aliases are never globally registered');
 });
+
+
+test('non-contact combo cards never become first-name personality fallbacks', () => {
+    for (const combo of ['Blake & Serra', 'Blake and Serra']) {
+        const cards = [{ name: combo }, { name: 'Blake Other' }];
+        assert.equal(findInstalledCharacterName(cards, 'Blake Other'), 'Blake Other');
+        assert.equal(findInstalledCharacterName(cards, 'Blake'), 'Blake Other');
+        assert.equal(findInstalledCharacterName([{ name: combo }], 'Blake Fuyuki'), null);
+        assert.equal(findInstalledCharacterName([{ name: combo }], combo), combo, 'explicit card lookup still works');
+        assert.equal(findInstalledCharacterName([...cards, { name: 'Blake' }], 'Blake Fuyuki'), 'Blake');
+    }
+    assert.equal(findInstalledCharacterName([{ name: 'George Smith' }, { name: 'George Jones' }], 'George'), null);
+});

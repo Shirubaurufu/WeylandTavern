@@ -6258,7 +6258,7 @@ async function handleNarrativeAction(button) {
         } else if (action === 'end-dose') {
             if (!globalThis.WeylandDose) return;
             await globalThis.WeylandDose.end();
-            wpToast('success', 'Dose ended. Back to your regular shift.');
+            wpToast('success', 'Dose ended. Course correction set to None.');
         } else if (action.startsWith('custom-')) {
             await handleCustomPresetAction(action, value, { context, global, before, script });
         } else if (action === 'set-intro-context') {

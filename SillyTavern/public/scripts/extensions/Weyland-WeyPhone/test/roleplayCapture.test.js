@@ -648,3 +648,73 @@ test('without a new phone text, a rerolled-back reply still returns to its origi
     capture.reconcileRoleplayCapture(mika, 'old', [{ role: 'assistant', speaker: 'Mika', content: 'first again' }], opts);
     assert.deepEqual(mika.messages.map(m => m.content), ['first again', 'second']);
 });
+
+
+const blakeComboExcerpt = await readFile(new URL('./helpers/blakeComboPhone.txt', import.meta.url), 'utf8');
+
+for (const combo of ['Blake & Serra', 'Blake and Serra']) {
+    for (const shortThread of [false, true]) {
+        test(`Blake captures with ${combo} installed into the existing ${shortThread ? 'short' : 'full'}-name thread`, () => {
+            const h = officialCaptureHarness('Blake', 'Blake Fuyuki', { shortThread });
+            h.context.name1 = 'Sunny Skies';
+            h.conversation.messages = [];
+            h.context.characters.unshift({ name: combo });
+            const lines = tether.locatePhoneScopes(blakeComboExcerpt)[0].lines;
+            h.respond(blakeComboExcerpt);
+            assert.equal(Object.keys(h.settings.conversations).length, 1);
+            assert.deepEqual(Array.from(h.conversation.messages, m => m.content), lines.map(line => line.text));
+            assert.deepEqual(Array.from(h.conversation.messages, m => m.role), [
+                ...Array(5).fill('user'), ...Array(5).fill('assistant'),
+            ]);
+            assert.equal(h.conversation.messages.at(-1).speaker, 'Blake Fuyuki');
+            h.emit('CHARACTER_MESSAGE_RENDERED', 0);
+            assert.equal(h.conversation.messages.length, 10, 'rendering cannot duplicate captures');
+            h.swipe(blakeComboExcerpt.replace('im not dead either', 'still alive'));
+            assert.equal(h.conversation.messages[8].content, 'still alive', 'reroll replaces the captured reply');
+            h.context.characters.shift();
+            h.swipe(blakeComboExcerpt);
+            assert.equal(h.conversation.messages[8].content, 'im not dead either', 'removing combo keeps the same route');
+        });
+    }
+}
+
+test('a combo card does not break legacy Blake screens or Serra and sibling-group captures', () => {
+    for (const [name, fullName] of [['Blake', 'Blake Fuyuki'], ['Serra', 'Serra Fuyuki']]) {
+        const h = officialCaptureHarness(name, fullName);
+        h.context.characters.push({ name: 'Blake & Serra' });
+        h.respond(`Phone¦Weynet - ${name}¦90%\nTexting¦Lucky\nOutgoing¦now¦${name}¦hello`);
+        assert.equal(h.conversation.messages.at(-1).content, 'hello');
+        assert.equal(h.conversation.messages.at(-1).speaker, fullName);
+    }
+    const h = officialCaptureHarness('Serra', 'Serra Fuyuki');
+    h.context.characters.push({ name: 'Blake & Serra' });
+    h.respond('Phone¦Weynet - Lucky¦90%¦Mode=Group¦Members=Lucky;Blake;Serra\nTexting¦Siblings\nIncoming¦now¦Blake¦hello\nIncoming¦now¦Serra¦hi');
+    const group = Object.values(h.settings.conversations).find(c => c.participants.length === 2);
+    assert.ok(group);
+    assert.deepEqual(Array.from(group.messages, m => m.speaker), ['Blake Fuyuki', 'Serra Fuyuki']);
+    assert.equal(h.conversation.messages.length, 3, 'solo Serra history is unchanged');
+});
+
+
+test('separate Alt and Solo screens keep Blake-to-Serra texts out of the player phone with combo installed', () => {
+    const h = officialCaptureHarness('Blake', 'Blake Fuyuki');
+    h.context.name1 = 'Sunny Skies';
+    h.context.characters.push({ name: 'Blake & Serra' });
+    h.conversation.messages = [];
+    h.respond([
+        'Phone¦Weynet - Blake¦28%¦Mode=Alt¦Members=Blake;Serra',
+        'Texting¦Serra',
+        'Outgoing¦10:57 AM¦Blake¦im awake',
+        'Outgoing¦10:57 AM¦Blake¦sorry i didnt text back last night',
+        'Outgoing¦10:57 AM¦Blake¦love you too',
+        '*She swipes back to Sunny Skies’s messages.*',
+        'Phone¦Weynet - Blake¦28%¦Mode=Solo¦Members=Blake;Sunny Skies',
+        'Texting¦Sunny Skies',
+        'Outgoing¦10:58 AM¦Blake¦im not dead either',
+        'Outgoing¦10:58 AM¦Blake¦and its my sister. not a boy toy. i dont have those.',
+    ].join('\n'));
+    assert.deepEqual(Array.from(h.conversation.messages, m => m.content), [
+        'im not dead either', 'and its my sister. not a boy toy. i dont have those.',
+    ]);
+    assert.equal(Object.keys(h.settings.conversations).length, 1, 'no player thread for the private sibling exchange');
+});

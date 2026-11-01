@@ -52,6 +52,11 @@ const FINISH = [
     "The sheet is done. Do not add to it. Send your complete rough draft immediately after it: header, the message, footer. The rough draft IS the final draft: do not revise, restart or second-draft it. The footer is the very last line.",
 ].join("\n");
 
+// "Woven into the moment" could encourage Aiko to interrupt a literal letter.
+// The same rule also goes at the end of the request, after lorebook text that
+// invites integration into the roleplay, so the document stays one complete unit.
+const JOURNAL_RULES = `send the journal entry word for word, unchanged, as one uninterrupted block. Preserve its wording, punctuation and paragraph breaks from the first line through the signature or last line. Do not insert narration, Aiko's dialogue or reactions between any of the document's paragraphs, even if Aiko is present, listening or reading aloud. Do not paraphrase, summarize, omit important details, or wrap individual paragraphs in new emphasis or quotes. Any character reaction may appear only AFTER the entire document has been delivered. A short introduction may precede the document; it must not replace any of it. Keep the normal scene header first, using the current scene's date and time, not the document's date: ¦¦ DAY, DATE ~ XX:XX PM/AM ~ Location ~ (Message mode if applicable) ¦¦. Keep the normal footer last.`;
+
 const LOOK_SHEET = `${KINSBANE_SHEET_START}
 
 COMMAND MESSAGE: {{user}} just used the !Look command, so this is NOT a normal Kinsbane turn. For this one message the command wins over every other rule in this prompt, including the rules against guiding the player, giving hints, directing their eyes and dumping environmental detail. Do what the lorebook's "CRITICAL FUNCTION: !Look" instruction says, in full: a deep survey of the room {{user}} is standing in, every visible exit and door (with its position, and whether it looks locked), the areas of particular interest, any visible commands written out so they can be copied down, and any visible sign of the supernatural. A code on a paper, frame or note (it looks like !Name0000) is written out in full, character for character as the room data has it: copy it, never recall it, and never describe the paper without its code. Use that room's location data and nothing else: invent no objects, clues or rooms that are not in it, and do not move {{user}} or act for them.
@@ -69,7 +74,7 @@ ${KINSBANE_SHEET_END}`;
 
 const JOURNAL_SHEET = `${KINSBANE_SHEET_START}
 
-COMMAND MESSAGE: {{user}} just entered a journal code, so this is NOT a normal Kinsbane turn. For this one message the journal wins over every other rule in this prompt. The lorebook entry ("[CRITICAL - STOP ROLEPLAY!] ... send the journal entry VERBATIM") is the message: send the journal entry word for word, unchanged, woven into what {{user}} is doing so it reads naturally on the page. The text to send is the lorebook entry for the EXACT code {{user}} typed (it begins "If user sends !<code>, send the following EXACTLY as it appears"), whatever the scene has said so far about papers, notes or other codes: the reading itself is the message, not a description of the paper. Do not summarize it, trim it, reorder it, paraphrase it or add to it. Add nothing to the manor: no new events, no new danger, no extra clues.
+COMMAND MESSAGE: {{user}} just entered a journal code, so this is NOT a normal Kinsbane turn. For this one message the journal wins over every other rule in this prompt. The lorebook entry ("[CRITICAL - STOP ROLEPLAY!] ... send the journal entry VERBATIM") is the message: ${JOURNAL_RULES} The text to send is the lorebook entry for the EXACT code {{user}} typed (it begins "If user sends !<code>, send the following EXACTLY as it appears"), whatever the scene has said so far about papers, notes or other codes: the reading itself is the message, not a description of the paper. Add nothing to the manor: no new events, no new danger, no extra clues.
 
 ${SHEET_OPENING}
 Then exactly two short boxes, one paragraph each. No drafting on the sheet.
@@ -86,10 +91,24 @@ export const COMMAND_SHEETS = { look: LOOK_SHEET, journal: JOURNAL_SHEET };
 /** For cards on the regular sheet (Aiko): one note, added to the end of the request. */
 export function commandNote(kind) {
     const what = kind === "journal"
-        ? "a journal code. Follow the lorebook's \"CRITICAL - STOP ROLEPLAY\" instruction exactly: send the journal entry VERBATIM, word for word, woven into the moment. Do not summarize, trim or add to it"
+        ? `a journal code. Follow the lorebook's "CRITICAL - STOP ROLEPLAY" instruction exactly: send the journal entry VERBATIM. Specifically, ${JOURNAL_RULES}`
         : "the !Look command. Follow the lorebook's \"CRITICAL FUNCTION: !Look\" instruction exactly: a deep survey of the room with every visible exit, the areas of particular interest and any visible commands written out so they can be copied down. Any code on a paper, frame or note is written out in full, character for character as the room data has it, never recalled and never left out";
     return `[COMMAND MESSAGE - THIS MESSAGE ONLY]
 {{user}} just used ${what}. For this one message the command wins over every other rule in this prompt, including any rule against guiding the player, giving hints or dumping environmental detail. Keep your scene sheet to a few short lines, invent nothing outside the location data, add no new danger, and do not act for {{user}}. Then send the header, the message and the footer as usual.`;
+}
+
+function appendCommandNote(messages, note) {
+    const last = messages[messages.length - 1];
+    // Router retries can inspect the same payload more than once. Do not stack
+    // reminders, and leave media parts untouched in multipart requests.
+    if (typeof last?.content === "string") {
+        if (last.content.endsWith(note)) return 0;
+        last.content = `${last.content}\n\n${note}`;
+    } else if (Array.isArray(last?.content)) {
+        if (last.content.some(part => part?.type === "text" && typeof part.text === "string" && part.text.endsWith(note))) return 0;
+        last.content.push({ type: "text", text: note });
+    } else return 0;
+    return 1;
 }
 
 function mapTexts(messages, fn) {
@@ -120,18 +139,23 @@ export function applyKinsbaneCommand(messages, { kinsbane, substitute = text => 
     const kind = commandInRequest(messages);
     if (!kind) return { kind: null, changed: 0 };
     if (!kinsbane) {
-        const last = messages[messages.length - 1];
-        const note = substitute(commandNote(kind));
-        if (typeof last?.content === "string") last.content = `${last.content}\n\n${note}`;
-        else if (Array.isArray(last?.content)) last.content.push({ type: "text", text: note });
-        else return { kind, changed: 0 };
-        return { kind, changed: 1 };
+        return { kind, changed: appendCommandNote(messages, substitute(commandNote(kind))) };
     }
     const replacement = substitute(COMMAND_SHEETS[kind]);
     const sheetPattern = new RegExp(`${escapeRegex(KINSBANE_SHEET_START)}[\\s\\S]*?${escapeRegex(KINSBANE_SHEET_END)}`);
-    let changed = mapTexts(messages, text => (sheetPattern.test(text) ? text.replace(sheetPattern, () => replacement) : text));
+    let foundSheet = false;
+    const sheetChanges = mapTexts(messages, text => {
+        if (!sheetPattern.test(text)) return text;
+        foundSheet = true;
+        return text.replace(sheetPattern, () => replacement);
+    });
+    let changed = sheetChanges;
     // The client note in the post-history still describes the long sheet.
     changed += mapTexts(messages, text => text.replace("the fifteen-box scene sheet is filled out first", "the short command sheet is filled out first"));
+    // Journals need the literal-document rule after the general roleplay directions.
+    // Older/custom prompt masters may lack our sheet markers: still apply a command
+    // note rather than silently leaving a recognized command without its override.
+    if (kind === "journal" || !foundSheet) changed += appendCommandNote(messages, substitute(commandNote(kind)));
     return { kind, changed };
 }
 
