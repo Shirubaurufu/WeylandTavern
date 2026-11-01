@@ -341,7 +341,8 @@ test('A dose of... card: arm, pick from dosable shifts, live banner never shows 
     assert.match(target.innerHTML, /Wears off on its own\. You won’t know when\.[\s\S]*\(in 2-10 responses\)/);
     assert.match(target.innerHTML, /data-narrative-action="end-dose"/);
     assert.doesNotMatch(target.innerHTML, /data-narrative-action="arm-dose"/);
-    assert.match(target.innerHTML, /Then back to Slow Burn/);
+    assert.match(target.innerHTML, /Then back to None/);
+    assert.doesNotMatch(target.innerHTML, /Then back to Slow Burn/);
     assert.match(target.innerHTML, /<dt>Dose<\/dt><dd class="is-hot">Toxicity<\/dd>/);
     assert.doesNotMatch(target.innerHTML, /\b\d+ (more )?(replies|messages) (left|remaining)/i);
 

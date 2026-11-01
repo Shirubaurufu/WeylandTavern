@@ -1,5 +1,5 @@
 import { eventSource, event_types, getCurrentChatId, reloadCurrentChat, saveSettingsDebounced, converter, reloadMarkdownProcessor, updateMessageBlock } from '../../../script.js';
-import { headerMuseStripExt } from './muse-header.js';
+import { headerMuseStripExt, repairMuseHeader } from './muse-header.js';
 import { extractPrivatePreparation, recoverReplyFromReasoning, repairReplyHeader, findPreparationReplyHeader, REPLY_HEADER, BAD_REPLY_HEADER, MUSE_REPLY_HEADER } from './private-preparation.js';
 import { power_user } from '../../power-user.js';
 import { getGlobalVariable } from '../../variables.js';
@@ -610,6 +610,7 @@ async function formatMessage(messageId, mes = undefined) {
 
     const formatMessageStartTime = performance.now();
 
+    if (characterName === 'Muse') originalMessage = repairMuseHeader(originalMessage);
     originalMessage = repairReplyHeader(originalMessage);
 
     // WeyGen RP images are appended after the footer, so the paragraph pass would strip them.
@@ -907,7 +908,8 @@ function headerV2MarkdownExt(){
                     // An inner bar run is just a field separator, so treat it as "~".
                     p1 = p1.replace(/\s*¦+\s*/g, ` ~ `).replace(/(?:\s*~\s*){2,}/g, ` ~ `).trim();
                     const split = p1.split(`~`);
-                    const modeIndex = split.findIndex(x => /saph|onyx|ruby/i.test(x));
+                    // Match a mode field, not a location such as Ruby Hall or Onyx Lounge.
+                    let modeIndex = split.findIndex(x => /^\s*(?:\((?:SAPH|ONYX|RUBY)\)|\[(?:SAPH|ONYX|RUBY)\]|(?:SAPH|ONYX|RUBY))\s*$/i.test(x));
                     // Time must contain a digit: 12h (9:28 AM) or 24h (15:09, 3h09, 15h, 15 Uhr, 15時)
                     const timeIndex = split.findIndex((x, index) => index !== modeIndex
                         && /\d\s?[ap]\.?m\b|\d{1,2}\s?[:h]\s?\d{2}|\d\s?(?:h|uhr)\b|\d\s?[時点]/i.test(x));
@@ -921,6 +923,16 @@ function headerV2MarkdownExt(){
                     const locationIndex = split.findIndex((x, index) => index !== dateIndex && index !== timeIndex && index !== modeIndex && x.trim());
                     if (dateIndex < 0 || timeIndex < 0 || locationIndex < 0) {
                         return `<strong style="color: darkred;">${p1}</strong>`
+                    }
+                    // Kinsbane report: "Kitchen / Backyard (SAPH)" omits the ~ before
+                    // the mode. Recognise only an explicit trailing mode marker on the
+                    // location; Ruby Hall and ordinary parentheticals stay locations.
+                    if (modeIndex < 0) {
+                        const suffix = split[locationIndex].trim().match(/^(.+\S)[ \t]+\((SAPH|ONYX|RUBY)\)$/i);
+                        if (suffix) {
+                            split[locationIndex] = suffix[1];
+                            modeIndex = split.push(`(${suffix[2]})`) - 1;
+                        }
                     }
                     const mode = modeIndex > -1 ? split[modeIndex].match(/saph|onyx|ruby/i)[0] : undefined;
                     

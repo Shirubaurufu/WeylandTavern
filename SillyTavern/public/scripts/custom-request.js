@@ -5,6 +5,7 @@ import { extractReasoningFromData } from './reasoning.js';
 import { formatInstructModeChat, formatInstructModePrompt, getInstructStoppingSequences, names_behavior_types } from './instruct-mode.js';
 import { getStreamingReply, tryParseStreamingError } from './openai.js';
 import EventSourceStream from './sse-stream.js';
+import { omitGlmImages } from './glm-image-filter.js';
 
 // #region Type Definitions
 /**
@@ -490,6 +491,8 @@ export class ChatCompletionService {
      * @throws {Error}
      */
     static async sendRequest(data, extractData = true, signal = null) {
+        // Connection profiles (including WeyPhone) bypass the main chat's send hooks.
+        data = omitGlmImages(data);
         const response = await fetch('/api/backends/chat-completions/generate', {
             method: 'POST',
             headers: getRequestHeaders(),
