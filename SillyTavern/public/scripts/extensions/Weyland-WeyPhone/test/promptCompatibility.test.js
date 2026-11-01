@@ -115,7 +115,7 @@ test('HTML can be turned off again, and WeyPhone has the same updated legacy bas
     }
 });
 
-test('doses override and then restore regular shifts, on every prompt', async () => {
+test('a live dose overrides regular shifts on every prompt', async () => {
     for (const name of names) {
         const settings = { PromptChoice: name, RoleplayShift: 'Custom Preset', RoleplayShiftCustom: JSON.stringify({ name: 'MY FEEDBACK', text: 'CUSTOM SENTINEL' }) };
         const normal = await assemble('Rosa', settings);
@@ -123,8 +123,6 @@ test('doses override and then restore regular shifts, on every prompt', async ()
         const dose = await assemble('Rosa', settings, {}, 'Horror');
         assert.doesNotMatch(dose.locals.get('ravteg'), /CUSTOM SENTINEL/);
         assert.match(dose.locals.get('ravteg'), /FEEDBACK \(Horror\)/);
-        const restored = await assemble('Rosa', settings);
-        assert.equal(restored.locals.get('ravteg'), normal.locals.get('ravteg'));
     }
 });
 

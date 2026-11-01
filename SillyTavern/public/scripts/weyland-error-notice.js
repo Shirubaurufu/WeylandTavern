@@ -74,7 +74,16 @@ export function showMessageInterrupted() {
 // is rewritten; every other API error keeps its own words and title. Weyland-Router recognizes the
 // rewritten title too (its API_ERROR_PATTERNS), so Router users still fail over to the next model
 // instantly and never see this toast.
-export function showChatCompletionError(message, title = 'Chat Completion API') {
+// GLM models now and then answer "no provider available for this model" for a few minutes. The raw text reads like the
+// player did something wrong, so on a GLM model it is replaced with what actually helps. The message can come from any
+// model, so other models keep the provider's own words (options.model is the model the failed request went out with).
+const NO_PROVIDER_PATTERN = /no provider available/i;
+const NO_PROVIDER_GLM_BODY = 'No provider available.<br>This happens occasionally - retry in 10 minutes.<br>Swap to another model in the mean time.';
+
+export function showChatCompletionError(message, title = 'Chat Completion API', options = {}) {
+    if (typeof message === 'string' && NO_PROVIDER_PATTERN.test(message) && /glm/i.test(String(options?.model ?? ''))) {
+        return toastr.error(NO_PROVIDER_GLM_BODY, title, { escapeHtml: false });
+    }
     if (typeof message === 'string' && COMMUNITY_MODEL_LIMIT_PATTERN.test(message)) {
         return showHelpNotice('error', COMMUNITY_MODEL_LIMIT_BODY.replaceAll('\n', '<br>'), COMMUNITY_MODEL_LIMIT_TITLE, COMMUNITY_MODEL_LIMIT_ARTICLE);
     }

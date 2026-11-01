@@ -127,7 +127,7 @@ function roleplayShiftCard(snapshot) {
                 <h3><span class="wp-narrative-led${active || dose ? '' : ' is-off'}" aria-hidden="true"></span>Course correction<span class="wp-narrative-slash">/</span><button type="button" class="wp-narrative-cc-help" data-narrative-help="course-correction" title="What is Course Correction?" aria-label="What is Course Correction?"><i class="fa-solid fa-circle-question"></i></button></h3>
                 <p>A nudge in the direction your story needs.</p>
             </div>
-            ${doseControl(snapshot, dose, armed, regularName)}
+            ${doseControl(snapshot, dose, armed)}
         </div>
         <div class="wp-narrative-matrix wp-narrative-shift-readout" aria-live="polite">
             <div class="wp-narrative-lcd">
@@ -193,12 +193,12 @@ function shiftKey(option, snapshot, armed) {
 }
 
 /** Top-right of Course correction: "A dose of..." (arms the grid), or "End it now" while a dose is in. */
-function doseControl(snapshot, dose, armed, regularName) {
+function doseControl(snapshot, dose, armed) {
     if (dose) {
         return `
             <div class="wp-narrative-dose">
                 <button type="button" class="wp-narrative-dose-btn is-live" data-narrative-action="end-dose"><i class="fa-solid fa-syringe" aria-hidden="true"></i> End it now</button>
-                <small>Then back to ${escapeHtml(regularName)}</small>
+                <small>Then back to None</small>
             </div>`;
     }
     const hint = !snapshot.hasChat ? 'Open a roleplay first' : armed ? 'Tap again to cancel' : 'Wears off on its own';

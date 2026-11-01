@@ -14,12 +14,13 @@
 // starting a dose doses the reply in front of you, and that counts as the first one.
 // Quiet generations (WeyPhone texting etc.), impersonation and dry runs never touch it.
 //
-// Everything is chat-local, so a dose stays with the chat it started in. While it's live it takes
-// the place of the global RoleplayShift (and of Hard Mode); afterwards the regular shift is back.
+// The dose and its counter stay with the chat it started in. While live, it replaces the global
+// RoleplayShift (and Hard Mode). Ending it clears the regular correction to None; it never
+// restores the correction that was selected before the dose (Lucky, 2026-10-20).
 // XXX() reads activeDoseShift(); the GENERATION_AFTER_COMMANDS hook in index.js calls
 // applyDoseForGeneration() and rebuilds XXX only when the dose turns on or off.
 import { getLocalVariable } from "../../../variables.js";
-import { deleteLocalVariable, setLocalVariable } from "./variables.js";
+import { deleteLocalVariable, setGlobalVariable, setLocalVariable } from "./variables.js";
 import { nextDoseState, rollDoseLength } from "./doseRules.js";
 
 const SHIFT = "DoseShift";   // which shift is dosed
@@ -49,6 +50,14 @@ export function startDose(shift, random = Math.random) {
 }
 
 export function endDose() {
+    // Both expiry and the manual stop come through here, including doses saved before this
+    // behavior changed. A stale stop with no dose must not clear a newly selected correction.
+    if (getLocalVariable(SHIFT)) {
+        setGlobalVariable("RoleplayShift", "None");
+        setGlobalVariable("HardToggle", "Off");
+        // Older prompts can still read Coach directly; remove any leftover Hard Mode direction.
+        setGlobalVariable("Coach", "");
+    }
     for (const name of DOSE_STATE_VARS) deleteLocalVariable(name);
 }
 

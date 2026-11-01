@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { createRequire } from 'node:module';
-import { headerMuseStripExt } from '../../../Weyland-Formatter/muse-header.js';
+import { headerMuseStripExt, repairMuseHeader } from '../../../Weyland-Formatter/muse-header.js';
 import { isOocModeEnabled } from '../../../quick-reply-ext/src/oocMode.js';
 import { extractPrivatePreparation, recoverReplyFromReasoning, repairReplyHeader, findPreparationReplyHeader, REPLY_HEADER, BAD_REPLY_HEADER, MUSE_REPLY_HEADER } from '../../../Weyland-Formatter/private-preparation.js';
 
@@ -22,7 +22,7 @@ export function formatterHarness() {
     const context = vm.createContext({
         SillyTavern: { getContext: () => ({ extensionSettings, chat }) },
         power_user: { quote_text_color: '#aa3f3f', italics_text_color: '#919191', reasoning: { prefix: '', suffix: '' }, allow_name2_display: true },
-        headerMuseStripExt, isOocModeEnabled, extractPrivatePreparation, recoverReplyFromReasoning, repairReplyHeader, findPreparationReplyHeader, REPLY_HEADER, BAD_REPLY_HEADER, MUSE_REPLY_HEADER,
+        headerMuseStripExt, repairMuseHeader, isOocModeEnabled, extractPrivatePreparation, recoverReplyFromReasoning, repairReplyHeader, findPreparationReplyHeader, REPLY_HEADER, BAD_REPLY_HEADER, MUSE_REPLY_HEADER,
         updateMessageBlock: () => {},
         document: { querySelector: () => ({}) },
         console, performance, structuredClone, window: {},

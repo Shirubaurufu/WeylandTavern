@@ -29,7 +29,7 @@ const KNOWN_CODES = new Set([...EVENING_CODES, ...MORNING_CODES, ...AFTERMATH_CO
 
 const COLLAR_STATES = { active: 'Active', inactive: 'Inactive', 'monitoring only': 'Monitoring Only', malfunctioning: 'Malfunctioning' };
 
-const RE_ANY_MUSE = /MUSE EXPERIMENT|Collar Status|Evening Scene|\(Code:? ?\d{3,5}\)/i;
+const RE_ANY_MUSE = /MUSE EXPERIMENT|Collar Status|Evening Scene|\bCode:?\s*\d{3,5}\b/i;
 const RE_DAY = /^MUSE EXPERIMENT:? ?DAY (\d{1,2}) ?\/ ?(\d{1,2})$/i;
 const RE_COLLAR = /^Collar Status:? ?\[?(Active|Inactive|Monitoring Only|Malfunctioning)\]?(.*)$/i;
 // after the breach the model sometimes still writes the line with nothing in it ("Collar Status: N/A"): it is dropped
@@ -37,14 +37,70 @@ const RE_COLLAR_OFF = /^Collar Status:? ?\[?(?:N\/A|None|Removed|Off|Disabled|Of
 const RE_TIMER = /(\d{1,2}:\d{2})/;
 // 3-5 digit codes: the model has typed "(CODE: 402)"; better to show it than to leave the whole block as raw text
 const RE_EVENING = /^Evening Scene:? ?ACTIVE(?: ?\(Day (\d{1,2})\))?(?: ?\(Code:? ?(\d{3,5})\))?$/i;
-const RE_CODE = /^(?:(.{1,80}?) ?[~-] ?)?\(Code:? ?(\d{3,5})\)(?: ?\([A-Za-z]{2,5}\))*$/i;
-const RE_TIME = /(\d{1,2}):(\d{2}) ?([AP])M/i;
-// the same tests headerV2MarkdownExt uses to find date / time / mode / location in the first line
-const RE_DATE_PART = /mon|tue|thu|wed|fri|sat|sun|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i;
-const RE_TIME_PART = /(?: |\d)[ap]m/i;
-const RE_MODE_PART = /saph|onyx|ruby/i;
+const RE_CODE = /^(?:(.{1,100}?)\s*-\s*)?(?:\(\s*Code:?\s*(\d{3,5})\s*\)|\[\s*Code:?\s*(\d{3,5})\s*\]|Code:\s*(\d{3,5}))$/i;
+const RE_TIME = /\b(\d{1,2}):(\d{2})(?:[ \t]*([AP])M)?\b/i;
+const RE_DATE_PART = /^(?:(?:Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?),?\s+)?(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?$/i;
+const RE_MODE_PART = /^(?:\((SAPH|ONYX|RUBY)\)|\[(SAPH|ONYX|RUBY)\]|(SAPH|ONYX|RUBY))$/i;
 
-const clean = line => line.replace(/[*_¦#]/g, '').replace(/\s+/g, ' ').trim();
+const clean = line => line.replace(/[*_¦|│#]/g, '').replace(/\s+/g, ' ').trim();
+function unwrapped(raw) {
+    let value = raw.trim().replace(/^#{1,6}\s+/, '');
+    for (let i = 0; i < 3; i++) value = value.replace(/^(\*{1,3}|_{1,3})(.*?)\1$/, '$2').trim();
+    return value;
+}
+const isBarLine = raw => /^[¦|│]+[^`<>\r\n]+[¦|│]+$/.test(unwrapped(raw));
+const datePart = part => RE_DATE_PART.test(part) || /^\d{1,4}[/-]\d{1,2}[/-]\d{1,4}$/.test(part);
+const clockPart = part => {
+    const match = part.match(RE_TIME);
+    return match?.[0] === part && +match[2] < 60
+        && (match[3] ? +match[1] >= 1 && +match[1] <= 12 : +match[1] < 24);
+};
+
+// Read explicit tokens, never substrings of a location: Ruby Hall is a place, not RUBY mode.
+// Keep only a single value for each field; conflicting metadata must not be silently corrected.
+function assignField(fields, key, value) {
+    if (value === undefined || value === null || value === '') return;
+    if (fields[key] !== undefined && fields[key] !== value) fields.conflict = true;
+    else fields[key] = value;
+}
+
+function headerFields(line) {
+    const fields = { parts: [] };
+    for (let part of line.split('~').map(part => part.trim()).filter(Boolean)) {
+        const suffix = part.match(/\s+(\((?:SAPH|ONYX|RUBY)\)|\[(?:SAPH|ONYX|RUBY)\])$/i);
+        if (suffix) {
+            assignField(fields, 'mode', suffix[1].match(/SAPH|ONYX|RUBY/i)[0].toUpperCase());
+            part = part.slice(0, suffix.index).trim();
+        }
+        const mode = part.match(RE_MODE_PART);
+        const code = part.match(RE_CODE);
+        if (mode) assignField(fields, 'mode', (mode[1] || mode[2] || mode[3]).toUpperCase());
+        else if (code) {
+            assignField(fields, 'code', code[2] || code[3] || code[4]);
+            if (code[1]) fields.parts.push(code[1].trim());
+        } else if (part) fields.parts.push(part);
+    }
+    return fields;
+}
+
+function firstHeader(raw, line, start) {
+    if (/[`<>"“”]/.test(raw) || line.length > MAX_LINE) return null;
+    const fields = headerFields(line);
+    // Lorebook examples combine date and time in one field. Split only after a complete date.
+    fields.parts = fields.parts.flatMap(part => {
+        const time = part.match(RE_TIME);
+        if (!time || !datePart(part.slice(0, time.index).trim())) return [part];
+        const tail = part.slice(time.index + time[0].length).trim();
+        return [part.slice(0, time.index).trim(), time[0], ...(tail ? [tail] : [])];
+    });
+    const dates = fields.parts.filter(datePart), clocks = fields.parts.filter(clockPart);
+    const locations = fields.parts.filter(part => !datePart(part) && !clockPart(part));
+    if (fields.conflict || dates.length !== 1 || clocks.length !== 1 || locations.length > 3) return null;
+    // Without bars require a full date/time line; arbitrary quoted prose cannot open a header.
+    if (!isBarLine(raw) && /[¦|│]/.test(raw)) return null;
+    return { raw, line, start, parts: fields.parts, date: dates[0], time: clocks[0],
+        location: locations.join(' ~ ') || undefined, code: fields.code, mode: fields.mode };
+}
 
 /**
  * Finds and reads Muse's header block at the top of a message.
@@ -70,9 +126,9 @@ export function parseMuseHeader(text) {
 
         if (!first) {
             if (!line || /^-{3,}$/.test(line)) { pos = next; continue; }   // blank lines and an hr before the header
-            // the standard first line: ¦¦ date ~ time ~ location ¦¦
-            if (!/^\s*\*{0,3}¦+.*¦+\s*\*{0,3}\s*$/.test(raw) || !RE_TIME.test(line) || line.length > MAX_LINE) return null;
-            first = { raw, line, start: pos };
+            first = firstHeader(raw, line, pos);
+            if (!first) return null;
+            for (const key of ['location', 'code', 'mode']) assignField(seen, key, first[key]);
             end = next;
             pos = next;
             continue;
@@ -82,27 +138,32 @@ export function parseMuseHeader(text) {
 
         let m;
         if ((m = line.match(RE_DAY))) {
-            seen.day = +m[1];
-            seen.total = +m[2];
+            assignField(seen, 'day', +m[1]);
+            assignField(seen, 'total', +m[2]);
         } else if (RE_COLLAR_OFF.test(line)) {
             seen.collarOff = true;
         } else if ((m = line.match(RE_COLLAR))) {
-            seen.collar = COLLAR_STATES[m[1].toLowerCase()];
+            assignField(seen, 'collar', COLLAR_STATES[m[1].toLowerCase()]);
             const t = m[2].match(RE_TIMER);
             if (t) seen.timer = t[1];
         } else if ((m = line.match(RE_EVENING))) {
             seen.eveningTag = true;
-            if (m[2]) seen.code = seen.code || m[2];
-        } else if ((m = line.match(RE_CODE))) {
-            seen.code = m[2];
-            if (m[1]) seen.location = m[1].trim();
+            if (m[2]) assignField(seen, 'code', m[2]);
         } else {
-            break;   // first line that is not a header line: prose starts here
+            const fields = headerFields(line);
+            // A location must be bar-wrapped. Standalone code labels are explicit enough
+            // without bars; a bare mode needs parentheses/brackets to avoid eating prose.
+            if (fields.parts.length > 3 || /[<>`]/.test(line)
+                || (fields.parts.length && !isBarLine(raw))
+                || (!fields.parts.length && !fields.code && !(fields.mode && (isBarLine(raw) || /^[([]/.test(line))))) break;
+            if (fields.conflict) seen.conflict = true;
+            for (const key of ['code', 'mode']) assignField(seen, key, fields[key]);
+            assignField(seen, 'location', fields.parts.join(' ~ '));
         }
         end = next;
         pos = next;
     }
-    if (!first) return null;
+    if (!first || seen.conflict) return null;
 
     // Not Muse's unless it has a Muse-only line. A bare code line counts only when it is one of her scripted codes.
     const isMuse = seen.day !== undefined || seen.collar !== undefined || seen.eveningTag || (seen.code && KNOWN_CODES.has(seen.code));
@@ -114,38 +175,40 @@ export function parseMuseHeader(text) {
     else if (seen.code && EVENING_CODES.has(seen.code)) evening = true;
     else if (seen.code && MORNING_CODES.has(seen.code)) evening = false;
     else {
-        const t = first.line.match(RE_TIME);
+        const t = first.time.match(RE_TIME);
         if (t) {
-            const hour = (Number(t[1]) % 12) + (/p/i.test(t[3]) ? 12 : 0);
+            const hour = t[3] ? (Number(t[1]) % 12) + (/p/i.test(t[3]) ? 12 : 0) : Number(t[1]);
             evening = hour >= 16 || hour < 4;
         }
     }
 
     const total = seen.total >= 1 && seen.total <= 30 ? seen.total : 14;
     const day = seen.day === undefined ? null : Math.min(Math.max(seen.day, 1), total);
-    return { first, end, day, total, code: seen.code ?? null, location: seen.location ?? null, collar: seen.collar ?? null, timer: seen.timer ?? null, evening };
+    return { first, end, day, total, code: seen.code ?? null, location: seen.location ?? null, mode: seen.mode ?? null, collar: seen.collar ?? null, timer: seen.timer ?? null, evening };
 }
 
 /**
- * Post-breach headers keep the location on the code line ("Weyland Research Center ~ (Code: 4997)") and leave the
- * first line without one, which headerV2MarkdownExt cannot draw (it needs date, time AND location). Move the
- * location up so the standard header renders normally. First lines that already have a location are left as written.
+ * Muse can put location on the code line or on a separate location/mode line, leaving the first line
+ * without one. headerV2MarkdownExt needs date, time AND location, so assemble those display fields here.
+ * Preserve a mode from the split line too. First lines that already have a location are left as written.
  */
 function firstLineFor(p) {
-    const parts = p.first.line.split('~').map(s => s.trim()).filter(Boolean);
-    // Lorebook examples put date and time in the same segment. The standard header renderer
-    // needs separate segments; split that segment here without changing stored message text.
-    const combined = parts.findIndex(part => RE_DATE_PART.test(part) && RE_TIME.test(part));
-    if (combined >= 0) {
-        const time = parts[combined].match(RE_TIME);
-        const date = parts[combined].slice(0, time.index).trim();
-        const tail = parts[combined].slice(time.index + time[0].length).trim();
-        parts.splice(combined, 1, date, time[0], ...(tail ? [tail] : []));
-    }
-    const hasLocation = parts.some(part => !RE_DATE_PART.test(part) && !RE_TIME_PART.test(part) && !RE_MODE_PART.test(part));
-    if (!hasLocation && p.location) parts.push(p.location);
-    if (combined < 0 && (hasLocation || !p.location)) return p.first.raw;
+    const parts = [p.first.date, p.first.time];
+    if (p.location) parts.push(p.location);
+    if (p.mode) parts.push(`(${p.mode})`);
     return `¦¦ ${parts.join(' ~ ')} ¦¦`;
+}
+
+/** Normalize a validated Muse block before the generic paragraph pass. It can discard an
+ * unbarred date or a code sharing a paragraph with an alternate-bar location. Keep the explicit
+ * field text, with canonical bars and paragraph boundaries; no story values are inferred. */
+export function repairMuseHeader(text) {
+    const p = parseMuseHeader(text);
+    if (!p) return text;
+    const first = firstLineFor(p) + (p.first.code ? `\n\n¦¦ (CODE: ${p.first.code}) ¦¦` : '');
+    const remaining = text.slice(p.first.start + p.first.raw.length, p.end)
+        .split('\n').map(clean).filter(Boolean).map(line => `¦¦ ${line} ¦¦`);
+    return text.slice(0, p.first.start) + [first, ...remaining, text.slice(p.end).trimStart()].join('\n\n');
 }
 
 /**

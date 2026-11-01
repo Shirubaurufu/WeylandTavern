@@ -19,8 +19,10 @@ const ltm = 0.4;
                 requestedStream = !!body.stream;
                 // Model discovery bypasses this hook, so local Ollama must also be allowed
                 // here for generation to work after a successful connection check.
+                // OpenRouter also supports the custom OpenAI-compatible path (/api/v1),
+                // which forwards Additional Parameters such as service_tier unchanged.
                 if (body.chat_completion_source === "custom" && !isLocalOllamaEndpoint(body.custom_url)) {
-                    if (!/https:\/\/(?:helixmind\.online|api\.electronhub\.ai|api\.zukijourney\.com|api\.zanity\.xyz(?:\/rp)?|fresedgpt\.space|ai\.megallm\.io|api\.z\.ai\/api\/coding\/paas(?:\/v4)|.*chutes\.ai|api\.meganova\.ai|api\.nebulablock\.com|api\.synthetic\.new|api\.naga\.ac|.*\.wey\.onl|.*\.ggez\.pro)(?:\/v1|)?/.test(body.custom_url)) {
+                    if (!/^https:\/\/(?:helixmind\.online|openrouter\.ai(?=\/|$)|api\.electronhub\.ai|api\.zukijourney\.com|api\.zanity\.xyz(?:\/rp)?|fresedgpt\.space|ai\.megallm\.io|api\.z\.ai\/api\/coding\/paas(?:\/v4)|.*chutes\.ai|api\.meganova\.ai|api\.nebulablock\.com|api\.synthetic\.new|api\.naga\.ac|.*\.wey\.onl|.*\.ggez\.pro)(?:\/v1|)?/.test(body.custom_url)) {
                         delete request.body;
                         return originalFetch.apply(this, [url, request]);
                     }

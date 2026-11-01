@@ -9,7 +9,7 @@ const shapes = JSON.parse(readFileSync(new URL('./helpers/museHeaderShapes.json'
 const header = (lines, first = '¦¦ Sunday, Oct 10th ~ 9:41 AM ~ Observation Room ¦¦') => `${first}\n${lines}\n\n*Prose here.*`;
 const morning = header('¦¦ MUSE EXPERIMENT: DAY 4/14 ¦¦\n¦¦ (CODE: 5814) ¦¦\n¦¦ Collar Status: [Active] ¦¦');
 
-test('75 modern real header variants render once, preserve prose, and consume all extra header lines', () => {
+test('76 modern real header variants render once, preserve prose, and consume all extra header lines', () => {
     let accepted = 0;
     for (const shape of shapes) {
         const parsed = parseMuseHeader(shape);
@@ -24,8 +24,8 @@ test('75 modern real header variants render once, preserve prose, and consume al
         assert.doesNotMatch(outsideStrip, /MUSE EXPERIMENT|Collar Status|Evening Scene|\(Code:? ?\d{3,5}\)/i);
         assert.ok(result.includes('*Prose here.*'));
     }
-    assert.equal(accepted, 75);
-    assert.equal(shapes.length - accepted, 6);
+    assert.equal(accepted, 76);
+    assert.equal(shapes.length - accepted, 5);
 });
 
 test('real Formatter paragraph pass, converter, and dialogue formatting preserve every accepted header', async () => {
@@ -83,7 +83,7 @@ test('missing day line collapses tracker without guessing the story day or showi
     const result = museHeaderFilter(text);
     assert.match(result, /muse-collapsed/);
     assert.doesNotMatch(result, /muse-day|muse-rail|muse-collar|N\/A/);
-    assert.match(result, /08:17 AM ~ \(SAPH\) ~ Dorm Room \(271\)/);
+    assert.match(result, /08:17 AM ~ Dorm Room \(271\) ~ \(SAPH\)/);
     assert.match(museHeaderFilter(morning.replace('DAY 4/14', 'DAY 7/14')), /muse-rail/, 'a model-written day remains authoritative');
 });
 
@@ -120,4 +120,42 @@ test('bounded parser clamps day numbers and never allocates an unbounded rail', 
     const p = parseMuseHeader(morning.replace('DAY 4/14', 'DAY 99/99'));
     assert.equal(p.total, 14);
     assert.equal(p.day, 14);
+});
+
+
+const splitHeaders = JSON.parse(readFileSync(new URL('./helpers/museSplitHeaders.json', import.meta.url), 'utf8'));
+for (const [index, example] of splitHeaders.entries()) {
+    test(`reported split Muse header ${index + 1} renders one complete header and code strip`, async () => {
+        const raw = example.header + '\n\n*Prose here.*\n\n[Smile] [RC] [1]';
+        const parsed = parseMuseHeader(raw);
+        assert.ok(parsed);
+        assert.equal(parsed.day, null, 'do not infer a story day from the code');
+        assert.equal(parsed.code, example.code);
+        const h = formatterHarness();
+        const formatted = await h.format(raw);
+        for (const html of [h.html(raw), h.render(raw), h.render(formatted)]) {
+            assert.equal((html.match(/class="message-header"/g) || []).length, 1, html);
+            assert.equal((html.match(/class="muse-strip/g) || []).length, 1, html);
+            assert.ok(html.includes(`<div class="message-location">${example.location}</div>`));
+            assert.ok(html.includes(`<span>${example.time}</span>`));
+            assert.match(html, /<span>Wednesday, (?:October|Oct) 13, 2025<\/span>/);
+            assert.ok(html.includes(`<span class="muse-code">${example.code}</span>`));
+            if (example.mode) assert.ok(html.includes(`data-mode="${example.mode}"`));
+            assert.doesNotMatch(html, /darkred|¦|\(CODE:|muse-day|muse-rail/i);
+            assert.match(html, /Prose here/);
+        }
+        assert.doesNotMatch(formatted, /message-header|muse-strip/, 'rendered HTML stays out of stored text');
+        assert.equal(h.render(await h.format(formatted)), h.render(formatted), 'rendered header is stable after reformatting');
+    });
+}
+
+test('split locations without Muse metadata cannot consume ordinary headers, prose, or code examples', () => {
+    const first = '¦¦ Wednesday, October 13, 2025 ~ 2:43 PM ¦¦';
+    const location = '*¦¦ Sterling Hall Dormitory, Room 271 ~ (SAPH) ¦¦*';
+    for (const text of [
+        `${first}\n${location}\n\n*Prose here.*`,
+        `${first}\n${location}\n(CODE: 9999)\n\n*Prose here.*`,
+        `${first}\n*She walks to her room.*\n${location}\n(CODE: 7717)`,
+        `\`\`\`\n${splitHeaders[0].header}\n\`\`\``,
+    ]) assert.equal(museHeaderFilter(text), text);
 });

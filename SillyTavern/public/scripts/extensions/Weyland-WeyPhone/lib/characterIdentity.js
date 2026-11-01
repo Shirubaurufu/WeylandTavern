@@ -1,4 +1,5 @@
 import { CAST_SNAPSHOT } from './castSnapshot.js';
+import { isGeneralMessagingContact } from './contactVisibility.js';
 
 // Common honorific abbreviations, expanded so "Prof. Akiyama" and "Professor Akiyama" resolve to
 // the same person (Weyland is a university, so titled names are common and users type them both
@@ -107,6 +108,9 @@ export function findInstalledCharacterName(characters, requestedName) {
     const sharedPersonalityCard = installed.find(character => isSharedPersonalityCardMatch(requestedName, character?.name));
     if (sharedPersonalityCard) return sharedPersonalityCard.name;
     const first = target.split(/\s+/)[0];
-    const firstMatches = installed.filter(character => canonicalCharacterName(character?.name).split(/\s+/)[0] === first);
+    // Combo/system cards are not people: a title beginning with Blake must not supply
+    // Blake's individual personality. Explicit shared-card providers above remain supported.
+    const firstMatches = installed.filter(character => isGeneralMessagingContact(character?.name)
+        && canonicalCharacterName(character?.name).split(/\s+/)[0] === first);
     return firstMatches.length === 1 ? firstMatches[0].name : null;
 }

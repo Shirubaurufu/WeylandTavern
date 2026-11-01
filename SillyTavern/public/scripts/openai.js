@@ -5,6 +5,7 @@
 */
 import { Fuse, DOMPurify } from '../lib.js';
 import { appendEarlyNarrator } from './extensions/quick-reply-ext/src/narratorStrength.js';
+import { omitGlmImages } from './glm-image-filter.js';
 
 import {
     abortStatusCheck,
@@ -1531,6 +1532,9 @@ export async function prepareOpenAIMessages({
  * @param {object} [options]
  * @param {boolean?} [options.quiet=false] Suppress toast messages
  */
+// The model of the most recent chat completion request, read only by the error notices.
+let lastRequestModel = null;
+
 export function tryParseStreamingError(response, decoded, { quiet = false } = {}) {
     try {
         const data = JSON.parse(decoded);
@@ -1546,12 +1550,12 @@ export function tryParseStreamingError(response, decoded, { quiet = false } = {}
         // if trying to fix "[object Object]" displayed to users, start here
 
         if (data.error) {
-            !quiet && showChatCompletionError(data.error.message || response.statusText);
+            !quiet && showChatCompletionError(data.error.message || response.statusText, undefined, { model: lastRequestModel });
             throw new Error(data);
         }
 
         if (data.message) {
-            !quiet && showChatCompletionError(data.message);
+            !quiet && showChatCompletionError(data.message, undefined, { model: lastRequestModel });
             throw new Error(data);
         }
     }
@@ -2396,11 +2400,16 @@ async function sendOpenAIRequest(type, messages, signal, { jsonSchema = null } =
     }
 
     await eventSource.emit(event_types.CHAT_COMPLETION_SETTINGS_READY, generate_data);
+    // Remember the model this attempt really went out with (Weyland-Router may have rolled it), so an error toast can tailor its advice to it.
+    lastRequestModel = generate_data.model;
 
+    // Routing hooks have selected the actual model. Strip historical/current image parts
+    // before JSON serialization so their base64 never reaches the server or provider.
+    const requestData = omitGlmImages(generate_data);
     const generate_url = '/api/backends/chat-completions/generate';
     const response = await fetch(generate_url, {
         method: 'POST',
-        body: JSON.stringify(generate_data),
+        body: JSON.stringify(requestData),
         headers: getRequestHeaders(),
         signal: signal,
     });
@@ -2450,7 +2459,7 @@ async function sendOpenAIRequest(type, messages, signal, { jsonSchema = null } =
 
         if (data.error) {
             const message = data.error.message || response.statusText || t`Unknown error`;
-            showChatCompletionError(message, t`API returned an error`);
+            showChatCompletionError(message, t`API returned an error`, { model: lastRequestModel });
             throw new Error(message);
         }
 
