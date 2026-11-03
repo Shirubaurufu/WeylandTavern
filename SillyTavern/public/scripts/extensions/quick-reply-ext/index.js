@@ -1849,6 +1849,18 @@ async function BG(charMessage, charName) {
                 if (checkMessage(["Commons", "Common Area"])) return "Common_Room.avif";
                 if (checkMessage("Dorm Room")) return "dorms 2.avif";
 
+                // Soft Pike / Cerberus
+                if (checkMessage([
+                    "Cerberus[^~\n]*Trailer",
+                    "Inside Trailer",
+                    "Trailer[^~\n]*13",
+                    "Trailer[^~\n]*Interior"
+                ])) return "cerberus.avif";
+                if (checkMessage(["Trailer", "Soft Pike"])) {
+                    if (checkMessage("Entrance")) return "Soft-Pike-Entrance.avif";
+                    return isNight ? "Soft Pike Night.avif" : "Soft Pike Day.avif";
+                }
+
                 // Lounge / Forest / Trails
                 if (checkMessage("Lounge")) return "lounge.avif";
 
@@ -1861,18 +1873,6 @@ async function BG(charMessage, charName) {
                 }
                 if (checkMessage(["Forest", "Woods", "Nature"])) {
                     return isNight ? "Forest Night.avif" : "Forest Day.avif";
-                }
-
-                // Soft Pike / Cerberus
-                if (checkMessage([
-                    "Cerberus[^~\n]*Trailer",
-                    "Inside Trailer",
-                    "Trailer[^~\n]*13",
-                    "Trailer[^~\n]*Interior"
-                ])) return "cerberus.avif";
-                if (checkMessage(["Trailer", "Soft Pike"])) {
-                    if (checkMessage("Entrance")) return "Soft-Pike-Entrance.avif";
-                    return isNight ? "Soft Pike Night.avif" : "Soft Pike Day.avif";
                 }
                 
                 // Hot spring / tub
