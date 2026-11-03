@@ -87,7 +87,16 @@ function getRegexedString(rawString, placement, { characterOverride, isMarkdown,
         return finalString;
     }
 
-    const allRegex = [...(extension_settings.regex ?? []), ...(getScopedRegex() ?? [])];
+    let allRegex = [...(extension_settings.regex ?? []), ...(getScopedRegex() ?? [])];
+
+    // Weyland: Weyland-Formatter (legacy-regex.js) installs this hook to skip legacy scripts it
+    // now covers and to add JS replacements that use the same gating as regex scripts below.
+    // Without the Formatter loaded the hook is absent and every script runs as before.
+    const weylandHook = globalThis.weylandRegexHook;
+    if (weylandHook) {
+        allRegex = [...allRegex.filter(script => !weylandHook.isRetired(script)), ...weylandHook.builtins];
+    }
+
     allRegex.forEach((script) => {
         if (
             // Script applies to Markdown and input is Markdown
@@ -116,7 +125,10 @@ function getRegexedString(rawString, placement, { characterOverride, isMarkdown,
             }
 
             if (script.placement.includes(placement)) {
-                finalString = runRegexScript(script, finalString, { characterOverride });
+                // Weyland: hook builtins carry a JS run() instead of a findRegex.
+                finalString = typeof script.run === 'function'
+                    ? script.run(finalString, { characterOverride })
+                    : runRegexScript(script, finalString, { characterOverride });
             }
         }
     });
