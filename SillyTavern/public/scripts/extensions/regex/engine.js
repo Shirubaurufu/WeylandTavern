@@ -92,9 +92,12 @@ function getRegexedString(rawString, placement, { characterOverride, isMarkdown,
     // Weyland: Weyland-Formatter (legacy-regex.js) installs this hook to skip legacy scripts it
     // now covers and to add JS replacements that use the same gating as regex scripts below.
     // Without the Formatter loaded the hook is absent and every script runs as before.
+    // Builtins run FIRST: the scripts they replace sat at the top of the global list, ahead of
+    // personal globals and character scripts. Running them last let the !Command hider wrap the
+    // " !important" inside HTML that Indigo's Whiteboard script had just inserted.
     const weylandHook = globalThis.weylandRegexHook;
     if (weylandHook) {
-        allRegex = [...allRegex.filter(script => !weylandHook.isRetired(script)), ...weylandHook.builtins];
+        allRegex = [...weylandHook.builtins, ...allRegex.filter(script => !weylandHook.isRetired(script))];
     }
 
     allRegex.forEach((script) => {
