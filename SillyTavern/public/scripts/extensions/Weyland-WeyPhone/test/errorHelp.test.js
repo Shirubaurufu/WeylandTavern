@@ -13,7 +13,7 @@ test('search recognises reported errors, full pasted messages and informal spell
         ['ECONN RESET', 'socket'],
         ['write EPROTO F41D0000:error:0A00010B:SSL routines:ssl3_get_record:wrong version number:c:\\ws\\deps\\openssl\\ssl\\record\\ssl3_record.c:355:', 'tls'],
         ['SSL', 'tls'], ['getaddrinfo EAI_AGAIN helixmind.online', 'dns'],
-        ['Error: 429 Too Many Requests', 'rate'], ['LTM generation failed: Got response status 429', 'ltm'], ['LTM model failed - retrying on minimax-m3', 'ltm'], ['blank reply', 'interrupted'],
+        ['Error: 429 Too Many Requests', 'rate'], ['LTM generation failed: Got response status 429', 'ltm'], ['LTM model failed - retrying on gemini-3.8-flash', 'ltm'], ['blank reply', 'interrupted'],
         ['green circle', 'models'], ['Security Shield', 'spectrum'], ['Flare', 'vpn'],
         ['1.1.1.1', 'dns-routing'], ['certificate has expired', 'certificate'],
     ]) assert.ok(searchErrorHelp(query).some(card => card.id === id), query);

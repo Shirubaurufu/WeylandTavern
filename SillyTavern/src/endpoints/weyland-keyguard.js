@@ -318,3 +318,53 @@ router.post('/quota', async (request, response) => {
         return response.status(500).json({ ok: false, error: 'quota_failed' });
     }
 });
+
+/**
+ * POST /api/weyland-keyguard/validate
+ * Body: { key: string }
+ *
+ * Asks the provider whether a key the player is ABOUT to save authenticates, before anything is written or removed.
+ * "Change HelixMind key" uses it so a typo can never replace a working key. Also reports whether any Weyland key is already
+ * stored, because a key that could not be checked (provider unreachable) is fine to save when there is nothing to lose
+ * but must not replace an existing one.
+ */
+router.post('/validate', async (request, response) => {
+    try {
+        const key = typeof request.body?.key === 'string' ? request.body.key.trim() : '';
+        if (!isWeylandKey(key)) {
+            return response.json({ ok: true, status: 'format', hasExisting: false });
+        }
+        const hasExisting = readCustomSecrets(request.user.directories).some(s => isWeylandKey(s.value));
+        const status = await validateKey(key);
+        return response.json({ ok: true, status, hasExisting });
+    } catch (error) {
+        console.error('[Weyland-KeyGuard] validate failed:', error?.message || error);
+        return response.status(500).json({ ok: false, error: 'validate_failed' });
+    }
+});
+
+/**
+ * POST /api/weyland-keyguard/prune-others
+ *
+ * Called right after a NEW, already-validated key was saved (it is the active one then). Removes the player's older
+ * Weyland keys so a replaced key does not linger. Only ever touches keys that start with "helix"; another provider's key
+ * in the shared api_key_custom store is never deleted, and nothing is removed unless the active key is itself a Weyland key.
+ */
+router.post('/prune-others', async (request, response) => {
+    try {
+        const manager = new SecretManager(request.user.directories);
+        const secrets = readCustomSecrets(request.user.directories);
+        const active = secrets.find(s => s.active);
+        if (!active || !isWeylandKey(active.value)) {
+            return response.json({ ok: true, removed: 0, skipped: 'active_not_weyland' });
+        }
+
+        const others = secrets.filter(s => s.id !== active.id && isWeylandKey(s.value));
+        for (const secret of others) manager.deleteSecret(SECRET_KEYS.CUSTOM, secret.id);
+
+        return response.json({ ok: true, removed: others.length });
+    } catch (error) {
+        console.error('[Weyland-KeyGuard] prune-others failed:', error?.message || error);
+        return response.status(500).json({ ok: false, error: 'prune_failed' });
+    }
+});

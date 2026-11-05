@@ -17,14 +17,14 @@ import { catnipRecipes } from '../../copycatInstructions.js';
 import { UNDERSTUDY_SCOPES, UNDERSTUDY_NARRATORS, availableUnderstudyScopes, effectiveUnderstudyScope, understudyScopeHint } from '../../understudy.js';
 import { modelSelect, fallbackModelSelect, modelQuickfills, toggleRowMarkup } from './settings.js';
 
-export const UNDERSTUDY_CAST_MODELS = ['gemini-3.8-flash', 'deepseek-v4-pro-thinking', 'gemma-4-31b-it', 'minimax-m3'];
-// The two standouts, best first. Which one is recommended as the fallback depends on which is
+export const UNDERSTUDY_CAST_MODELS = ['gemini-3.8-flash', 'gemma-4-31b-it'];
+// The standout, best first. Which one is recommended as the fallback depends on which is
 // selected as the primary: recommending the same model as its own backup would not help.
 //
-// deepseek-v4-pro (non-thinking) is deliberately absent from both lists. On this task it returned
-// its input near-verbatim - one measured run came back 99% identical word-for-word - while the
+// DeepSeek and MiniMax are gone from both lists: HelixMind retired them (2026-11). Before that, non-thinking DeepSeek returned
+// its input near-verbatim on this task (one measured run came back 99% identical word-for-word) while the
 // thinking variant performs the rewrite properly. Same family, completely different result.
-export const UNDERSTUDY_TOP_MODELS = ['gemini-3.8-flash', 'deepseek-v4-pro-thinking'];
+export const UNDERSTUDY_TOP_MODELS = ['gemini-3.8-flash'];
 
 // Four distinct cat-inspired moods rather than four shades of one. The stable ids remain in place
 // so an update never resets an existing user's chosen palette.
@@ -292,8 +292,8 @@ export function renderUnderstudySettingsScreen(container, { settings, currentLiv
                 ${modelSelect('wp-understudy-model', settings.modelOverride ?? '')}
                 ${modelQuickfills('wp-understudy-model', UNDERSTUDY_CAST_MODELS)}
                 <span class="wp-settings-sublabel">Backup model</span>
-                ${fallbackModelSelect('wp-understudy-fallback', settings.fallbackModel ?? '', 'deepseek-v4-pro-thinking').replace('No fallback, fail instead of retrying', 'Disabled')}
-                <small class="wp-settings-recommend-disclaimer">Recommended backup: DeepSeek V4 Pro Thinking. Avoid non-thinking DeepSeek for rewrites: it tends to hand back what you gave it.</small>
+                ${fallbackModelSelect('wp-understudy-fallback', settings.fallbackModel ?? '', 'gemma-4-31b-it').replace('No fallback, fail instead of retrying', 'Disabled')}
+                <small class="wp-settings-recommend-disclaimer">A backup model is optional. If the rewrite model fails, Copycat retries once on it instead of giving up.</small>
             </label>
         </section>
 

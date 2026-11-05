@@ -1113,7 +1113,7 @@
             "insert": 3,
             "query": 2,
             "message_chunk_size": 400,
-            "score_threshold": 0.5,
+            "score_threshold": 0.45,
             "enabled_files": false,
             "translate_files": false,
             "size_threshold": 10,

@@ -21,6 +21,8 @@
 // rule for user-facing text).
 
 import { applyHelixMindDefaults } from './helixRequestDefaults.js';
+import { swapRetiredMainModels } from './retiredModels.js';
+import { moveVectorThresholdOnce, VECTOR_THRESHOLD_DEFAULT } from './vectorThreshold.js';
 
 const MODULE = 'weylandNetwork';
 const BUTTON_ID = 'weyland_network_button';
@@ -173,4 +175,46 @@ jQuery(() => {
             console.error('[Weyland Network] HelixMind defaults Error:', error);
         }
     });
+
+    // HelixMind retired DeepSeek and MiniMax (2026-11): move a saved HelixMind connection off them, once (see retiredModels.js).
+    // APP_READY, because both the chat completion settings and the Connection Profiles are loaded by then.
+    const runRetiredModelSwap = () => {
+        try {
+            const context = SillyTavern.getContext();
+            const moved = swapRetiredMainModels(context);
+            if (moved.connection) {
+                // Keep the model box on screen in step with the setting that was just changed
+                const input = document.getElementById('custom_model_id');
+                if (input instanceof HTMLInputElement) input.value = context.chatCompletionSettings.custom_model;
+            }
+            if (moved.connection || moved.profiles) {
+                console.info('[Weyland Network] HelixMind retired DeepSeek and MiniMax; the saved connection model was moved to Gemini 3.8 Flash.');
+                globalThis.toastr?.info('HelixMind retired its DeepSeek and MiniMax models, so your connection was switched to Gemini 3.8 Flash. You can pick another model any time.', 'Model switched', { timeOut: 15000 });
+            }
+        } catch (error) {
+            console.error('[Weyland Network] Retired model swap Error:', error);
+        }
+    };
+    eventSource.on(event_types.APP_READY, runRetiredModelSwap);
+    // Backstop in case APP_READY fired before this listener existed. Safe to run twice: the marker makes the second run a no-op.
+    setTimeout(runRetiredModelSwap, 8000);
+
+    // Vector threshold 0.5 -> 0.45 for installs still on the old shipped value, once (see vectorThreshold.js).
+    const runVectorThresholdMove = () => {
+        try {
+            if (!moveVectorThresholdOnce(SillyTavern.getContext())) return;
+            // Vector Storage keeps its own copy of its settings from page load. Its slider handler copies the slider value
+            // into both that copy and extension_settings, so going through it makes the new value apply without a reload.
+            const slider = document.getElementById('vectors_score_threshold');
+            if (slider instanceof HTMLInputElement) {
+                slider.value = String(VECTOR_THRESHOLD_DEFAULT);
+                slider.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            console.info(`[Weyland Network] Vector Storage score threshold moved from 0.5 to ${VECTOR_THRESHOLD_DEFAULT} (new Weyland default).`);
+        } catch (error) {
+            console.error('[Weyland Network] Vector threshold move Error:', error);
+        }
+    };
+    eventSource.on(event_types.APP_READY, runVectorThresholdMove);
+    setTimeout(runVectorThresholdMove, 8000);
 });

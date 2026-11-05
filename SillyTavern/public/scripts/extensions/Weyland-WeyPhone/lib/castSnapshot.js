@@ -201,7 +201,7 @@ export const CAST_SNAPSHOT = [
   "image": "belle"
  },
  {
-  "name": "Ben Wu",
+  "name": "Ben Miller",
   "gender": "Male",
   "age": 25,
   "birthday": "",

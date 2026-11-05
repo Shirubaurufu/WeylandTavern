@@ -232,7 +232,7 @@ function analysisCard(snapshot) {
                 <ul class="wp-narrative-bullets">
                     <li>Better memory</li>
                     <li>Better output, generally</li>
-                    <li>Sonnet, GLM, Deepseek and Gemini Pro see the biggest boost</li>
+                    <li>Sonnet, GLM and Gemini Pro see the biggest boost</li>
                     <li>Longer response time (~40s more)</li>
                 </ul>
             </div>

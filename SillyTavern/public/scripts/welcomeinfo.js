@@ -1,5 +1,10 @@
 import { converter } from '../script.js';
 import { renderDormDirectory } from './dorm-directory.js';
+import { setHelixKey, unlockDownloaderWithKey } from './weyland-access-keys.js';
+import { describeKeyProblem } from './weyland-key-format.js';
+import { SlashCommandParser } from './slash-commands/SlashCommandParser.js';
+import { SlashCommand } from './slash-commands/SlashCommand.js';
+import { ARGUMENT_TYPE, SlashCommandArgument } from './slash-commands/SlashCommandArgument.js';
 
 let timelineLoaded = false;
 let welcomeTrackerCountdownInterval = null;
@@ -161,29 +166,26 @@ async function refreshWelcomeTrackerUsage(welcomePanel) {
     }
 }
 
-async function clearHelixTrackerKey(welcomePanel) {
-    const ctx = SillyTavern?.getContext?.();
-    if (!ctx) {
-        console.error('SillyTavern context not available');
-        return;
+// "Change key" used to wipe the stored key on the spot, so a misclick left the player with no key and a typo in the
+// replacement left them with a broken one. Now it only swaps the panel to the entry box; the current key keeps working until
+// a new one has been accepted by HelixMind (setHelixKey), and only then are the old ones removed.
+let trackerKeyChangeMode = false;
+
+function beginTrackerKeyChange(welcomePanel) {
+    trackerKeyChangeMode = true;
+    updateTrackerKeyUI(welcomePanel);
+    const keyInput = welcomePanel.querySelector('#tracker-key-input');
+    if (keyInput instanceof HTMLInputElement) {
+        keyInput.focus();
     }
+}
 
-    stopWelcomeTrackerCountdown();
-    await ctx.executeSlashCommandsWithOptions(
-        '/flushglobalvar HMKey | /secret-delete quiet=true key=api_key_custom api_key_custom',
-    );
-
+function cancelTrackerKeyChange(welcomePanel) {
+    trackerKeyChangeMode = false;
     const keyInput = welcomePanel.querySelector('#tracker-key-input');
     if (keyInput instanceof HTMLInputElement) {
         keyInput.value = '';
     }
-
-    const nextMessageContainer = welcomePanel.querySelector('#hm-next-message-container');
-    if (nextMessageContainer instanceof HTMLElement) {
-        nextMessageContainer.style.display = 'inline';
-    }
-
-    toastr.info('HelixMind Key Cleared');
     updateTrackerKeyUI(welcomePanel);
 }
 
@@ -193,8 +195,21 @@ function updateTrackerKeyUI(welcomePanel) {
     const unset = welcomePanel.querySelector('#hm-key-unset');
     const set = welcomePanel.querySelector('#hm-key-set');
     const hasKey = typeof key === 'string' && key.trim().includes('helix');
+    const changing = hasKey && trackerKeyChangeMode;
 
-    if (hasKey) {
+    // Wording and the Cancel button only apply while replacing a key that already works
+    const prompt = welcomePanel.querySelector('#hm-key-prompt');
+    const cancel = welcomePanel.querySelector('#cancel-tracker-key');
+    if (prompt) {
+        prompt.textContent = changing
+            ? 'Paste your new HelixMind key. Your current key stays in use until the new one is accepted.'
+            : 'Provide your API key to enable the message cooldown tracker. Your key begins with "helix-" and that should be included below.';
+    }
+    if (cancel instanceof HTMLElement) {
+        cancel.style.display = changing ? '' : 'none';
+    }
+
+    if (hasKey && !changing) {
         if (unset) {
             unset.style.display = 'none';
         }
@@ -214,41 +229,45 @@ function updateTrackerKeyUI(welcomePanel) {
 }
 
 async function setHelixTrackerKeyFromInput(welcomePanel) {
-    const ctx = SillyTavern?.getContext?.();
-    if (!ctx) {
-        console.error('SillyTavern context not available');
-        return;
-    }
-
     const input = welcomePanel.querySelector('#tracker-key-input');
-    const trimmedKey = input instanceof HTMLInputElement ? input.value.trim() : '';
-
-    if (!trimmedKey) {
+    const typedKey = input instanceof HTMLInputElement ? input.value.trim() : '';
+    if (!typedKey) {
         return;
     }
 
-    if (!trimmedKey.includes('helix')) {
-        toastr.error('Please copy the entire key, including the \'helix-\' part.');
-        return;
+    const setButton = welcomePanel.querySelector('#set-tracker-key');
+    if (setButton instanceof HTMLButtonElement) {
+        setButton.disabled = true;
     }
 
-    await ctx.executeSlashCommandsWithOptions(
-        `/setglobalvar key=HMKey ${trimmedKey} | /secret-write quiet=true label=api_key_custom key=api_key_custom ${trimmedKey}`,
-    );
-
-    if (input instanceof HTMLInputElement) {
-        input.value = '';
+    try {
+        const { status, hadKey } = await setHelixKey(typedKey);
+        if (status === 'ok' || status === 'unchecked') {
+            if (input instanceof HTMLInputElement) {
+                input.value = '';
+            }
+            trackerKeyChangeMode = false;
+            if (status === 'ok') {
+                toastr.success(hadKey ? 'HelixMind key updated' : 'HelixMind key saved');
+            } else {
+                toastr.warning(describeKeyProblem('unchecked'), '', { timeOut: 12000 });
+            }
+            updateTrackerKeyUI(welcomePanel);
+            return;
+        }
+        // Nothing was changed: a rejected or mistyped key never replaces the one that works
+        toastr.error(describeKeyProblem(status, { hadKey: hadKey || trackerKeyChangeMode }), '', { timeOut: 15000 });
+    } finally {
+        if (setButton instanceof HTMLButtonElement) {
+            setButton.disabled = false;
+        }
     }
-
-    updateTrackerKeyUI(welcomePanel);
 }
 
 // Restores side characters that Startup Commands switched off when the monthly enrollment lapsed.
 const SIDE_CHARACTER_RESTORE = '/if left={{getglobalvar::ResetSideCharacters}} right=On rule=eq {:/setglobalvar key=SideCharacters On | /setglobalvar key=ResetSideCharacters Off :}';
 
 const PP_VERIFY_COMMAND = '/if left={{getglobalvar::PP1}} right=true rule=neq {:/if left={{getglobalvar::LuckyAdminKey}} right=true {:/setglobalvar key=PP1 true | /setglobalvar key=PPP1 true | ' + SIDE_CHARACTER_RESTORE + ' :} | /if left={{getvar::answer}} right={{getglobalvar::A7b~3C9$Dq}} rule=eq else={:/if left={{getvar::answer}} right={{getglobalvar::9$DqA7b~3C}} rule=eq else={:/if left={{getvar::answer}} right="" rule=neq {:/if left={{getvar::answer}} right="L^ckyA&minK@yP#w" rule=neq else={:/setglobalvar key=LuckyAdminKey true | /setglobalvar key=PPP1 true | /setglobalvar key=PP1 true | ' + SIDE_CHARACTER_RESTORE + ' :} {:/incglobalvar Incorrect | /if left={{getglobalvar::Incorrect}} right=1000 rule=gte {:/setglobalvar key=69420 true :} :} :} :} {:/setglobalvar key=PP1 true | /setglobalvar key=PPP1 true | ' + SIDE_CHARACTER_RESTORE + ' | /:Weyland.NewEntries :} :} {:/setglobalvar key=PP1 true | ' + SIDE_CHARACTER_RESTORE + ' | /:Weyland.NewEntries :} :}';
-
-const PPP_VERIFY_COMMAND = '/if left={{getglobalvar::PPP1}} right=true rule=neq {:/if left={{getglobalvar::LuckyAdminKey}} right=true {:/setglobalvar key=PP1 true | /setglobalvar key=PPP1 true | ' + SIDE_CHARACTER_RESTORE + ' :} | /if left={{getvar::answer}} right={{getglobalvar::9$DqA7b~3C}} rule=eq else={:/if left={{getvar::answer}} right="" rule=neq {:/if left={{getvar::answer}} right="L^ckyA&minK@yP#w" rule=neq else={:/setglobalvar key=LuckyAdminKey true | /setglobalvar key=PPP1 true | /setglobalvar key=PP1 true | ' + SIDE_CHARACTER_RESTORE + ' :} {:/incglobalvar Incorrect | /if left={{getglobalvar::Incorrect}} right=1000 rule=gte {:/setglobalvar key=69420 true :} :} :} :} {:/setglobalvar key=PP1 true | /setglobalvar key=PPP1 true | ' + SIDE_CHARACTER_RESTORE + ' | /:Weyland.NewEntries :} :}';
 
 function isPawPatrolVarTruthy(value) {
     return value === true || value === 'true';
@@ -260,6 +279,58 @@ function getPawPatrolEnrollmentState(ctx) {
         platinum: isPawPatrolVarTruthy(ctx?.variables?.global?.get('PPP1')),
     };
 }
+
+/**
+ * The one place a monthly Paw Patrol key is checked. The home screen and first-time setup (/wtverifykey) both come through
+ * here; setup used to carry its own copy of the comparison, which is how the copies drifted apart.
+ * A key that unlocks Plus or Platinum is also handed to the Downloader, whose own password box takes the same text, so Alpha
+ * and Beta characters show up without typing it twice.
+ * @param {string} rawKey
+ * @returns {Promise<{ outcome: 'empty' | 'wrong' | 'plus' | 'platinum' | 'admin', downloaderUnlocked: boolean }>}
+ */
+async function verifyPawPatrolKey(rawKey) {
+    const ctx = SillyTavern.getContext();
+    const key = typeof rawKey === 'string' ? rawKey.trim() : '';
+    if (!key) {
+        return { outcome: 'empty', downloaderUnlocked: false };
+    }
+
+    const before = getPawPatrolEnrollmentState(ctx);
+    await ctx.executeSlashCommandsWithOptions('/flushvar answer');
+    ctx.variables.local.set('answer', key);
+    await ctx.executeSlashCommandsWithOptions(PP_VERIFY_COMMAND);
+    const after = getPawPatrolEnrollmentState(ctx);
+
+    let outcome = 'wrong';
+    if (!before.platinum && after.platinum) {
+        outcome = isPawPatrolVarTruthy(ctx.variables.global.get('LuckyAdminKey')) ? 'admin' : 'platinum';
+    } else if (!before.plus && after.plus) {
+        outcome = 'plus';
+    }
+
+    // The admin override is not a monthly password, so the CDN would only answer 404
+    const downloaderUnlocked = (outcome === 'plus' || outcome === 'platinum') && await unlockDownloaderWithKey(key);
+    return { outcome, downloaderUnlocked };
+}
+
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'wtverifykey',
+    returns: 'wt-pass-<result>',
+    unnamedArgumentList: [
+        SlashCommandArgument.fromProps({ description: 'monthly Paw Patrol key', typeList: [ARGUMENT_TYPE.STRING], isRequired: true }),
+    ],
+    helpString: 'Checks a monthly Paw Patrol key and unlocks that tier. Returns wt-pass-plus, wt-pass-platinum, wt-pass-admin, wt-pass-wrong or wt-pass-empty.',
+    callback: async (_args, value) => {
+        const { outcome, downloaderUnlocked } = await verifyPawPatrolKey(String(value ?? ''));
+        // First-time setup only sees the outcome text, so the Downloader result is reported here (the home screen does the same)
+        if (downloaderUnlocked) {
+            toastr.info(`${outcome === 'platinum' ? 'Alpha and Beta' : 'Beta'} characters are unlocked in the Character Downloader.`);
+        } else if (outcome === 'plus' || outcome === 'platinum') {
+            toastr.warning('Your key was accepted here, but the Character Downloader did not take it. Enter the same key in the Downloader\'s key box.', '', { timeOut: 12000 });
+        }
+        return `wt-pass-${outcome}`;
+    },
+}));
 
 function updatePawPatrolLoginUI(welcomePanel) {
     const ctx = SillyTavern?.getContext?.();
@@ -315,7 +386,6 @@ async function applyPawPatrolKeyFromInput(welcomePanel, input, mode) {
         return;
     }
 
-    const before = getPawPatrolEnrollmentState(ctx);
     const applyButton = mode === 'platinum'
         ? welcomePanel.querySelector('#apply-pp-platinum-key')
         : welcomePanel.querySelector('#apply-pp-key');
@@ -325,22 +395,21 @@ async function applyPawPatrolKeyFromInput(welcomePanel, input, mode) {
     }
 
     try {
-        await ctx.executeSlashCommandsWithOptions('/flushvar answer');
-        ctx.variables.local.set('answer', trimmedKey);
-        await ctx.executeSlashCommandsWithOptions(mode === 'platinum' ? PPP_VERIFY_COMMAND : PP_VERIFY_COMMAND);
-
-        const after = getPawPatrolEnrollmentState(ctx);
+        const { outcome, downloaderUnlocked } = await verifyPawPatrolKey(trimmedKey);
 
         if (input instanceof HTMLInputElement) {
             input.value = '';
         }
 
-        if (!before.platinum && after.platinum) {
+        if (outcome === 'platinum' || outcome === 'admin') {
             toastr.success('Paw Patrol Platinum Verified!');
-        } else if (!before.plus && after.plus) {
+        } else if (outcome === 'plus') {
             toastr.success('Paw Patrol Plus Verified!');
         } else {
             toastr.error('Incorrect Paw Patrol Key');
+        }
+        if (downloaderUnlocked) {
+            toastr.info(`${outcome === 'platinum' ? 'Alpha and Beta' : 'Beta'} characters are unlocked in the Character Downloader.`);
         }
 
         updatePawPatrolLoginUI(welcomePanel);
@@ -455,7 +524,15 @@ function setupTrackerKeyButton(welcomePanel) {
     if (clearButton && clearButton.dataset.trackerKeyBound !== 'true') {
         clearButton.dataset.trackerKeyBound = 'true';
         clearButton.addEventListener('click', () => {
-            void clearHelixTrackerKey(welcomePanel);
+            beginTrackerKeyChange(welcomePanel);
+        });
+    }
+
+    const cancelButton = welcomePanel.querySelector('#cancel-tracker-key');
+    if (cancelButton && cancelButton.dataset.trackerKeyBound !== 'true') {
+        cancelButton.dataset.trackerKeyBound = 'true';
+        cancelButton.addEventListener('click', () => {
+            cancelTrackerKeyChange(welcomePanel);
         });
     }
 

@@ -1,6 +1,7 @@
 const { extensionSettings, renderExtensionTemplateAsync, saveSettingsDebounced, eventSource, event_types } = SillyTavern.getContext();
 import { stopGeneration } from '../../../../script.js';
 import { oai_settings } from '../../../openai.js';
+import { RETIRED_MODEL_SWAP_ID, RETIRED_MODEL_REPLACEMENT, isRetiredModelId } from '../../../weyland-retired-models.js';
 export const WT_ROUTER_MODULE_NAME = "Weyland-Router";
 
 // =========================
@@ -216,6 +217,32 @@ function getSettings() {
     // any saved value below the minimum back up to 1 minute.
     if (!(settings.timeoutMs >= MIN_TIMEOUT_MS)) settings.timeoutMs = Math.max(MIN_TIMEOUT_MS, defaultSettings.timeoutMs);
     if (!(settings.cooldownMs >= MIN_COOLDOWN_MS)) settings.cooldownMs = Math.max(MIN_COOLDOWN_MS, defaultSettings.cooldownMs);
+    // HelixMind retired DeepSeek and MiniMax (2026-11). A pool route on either moves to Gemini 3.8 Flash ONCE (marker below), so
+    // picking one again after HelixMind brings them back is left alone. A swapped route starts with a clean cooldown history, since
+    // the failures it piled up belonged to a model that no longer exists. If the pool already routes to Gemini 3.8 Flash through the
+    // same profile the two entries merge (weights add up) instead of leaving a duplicate.
+    if (settings.retiredModelSwap !== RETIRED_MODEL_SWAP_ID) {
+        settings.retiredModelSwap = RETIRED_MODEL_SWAP_ID;
+        let swapped = false;
+        for (const model of settings.pool) {
+            if (!isRetiredModelId(model.id)) continue;
+            model.id = RETIRED_MODEL_REPLACEMENT;
+            model.cooldownUntil = null;
+            model.extendedCooldownUntil = null;
+            model.failureHistory = [];
+            swapped = true;
+        }
+        if (swapped) {
+            const merged = [];
+            for (const model of settings.pool) {
+                const twin = merged.find(m => getRouteKey(m) === getRouteKey(model));
+                if (twin) twin.weight = (twin.weight || 0) + (model.weight || 0);
+                else merged.push(model);
+            }
+            settings.pool.splice(0, settings.pool.length, ...merged);
+        }
+        saveSettingsDebounced();
+    }
     settings.pool.forEach(model => {
         if (model.profileName === undefined) model.profileName = '';
         if (model.timeoutMs === undefined) model.timeoutMs = null;

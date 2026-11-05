@@ -2,7 +2,7 @@ import { buildCatnipFeedback, copycatOptionalDirections } from './lib/copycatIns
 import { showCatnipJar, closeCatnipJar } from './lib/ui/catnipJar.js';
 import { MODULE_NAME, getSettings, resetSettings } from './lib/config.js';
 import { getRequestHeaders, showSwipeButtons } from '../../../script.js';
-import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, applySpecialCase } from './lib/promptResolution.js';
+import { resolveMasterPrompt, resolvePostHistoryInstructions, resolveCharacterPersonalityText, applySpecialCase } from './lib/promptResolution.js';
 import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLorebookContactProfile, resolveWorldInfoTethered, resolveWorldInfoUntethered } from './lib/worldInfo.js';
 import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
 import { narratorSettingsSync } from '../../../script.js';
@@ -779,11 +779,10 @@ async function resolveCharacterPrompt(context, character, { lorebookContact = fa
         }
         personalityText = profile.personalityText;
     } else {
-        const personalityConfig = charPer.get(character.name);
-        if (!personalityConfig) {
-            throw new Error(`No personality data found for "${character.name}" in charper.js`);
+        const basePersonality = resolveCharacterPersonalityText(charPer.get(character.name), character);
+        if (!basePersonality) {
+            throw new Error(`No personality data found for "${character.name}" in charper.js or its installed character card`);
         }
-        const basePersonality = resolvePersonalityText(personalityConfig);
         personalityText = applySpecialCase(character.name, basePersonality, {});
     }
 
@@ -1145,7 +1144,7 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
 
         const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
         const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
-        // Same model precedence as texting: explicit Settings-app model (default minimax-m3)
+        // Same model precedence as texting: explicit Settings-app model (default gemini-3.8-flash)
         // > live main-chat model > the profile's own snapshot.
         const flavorModel = resolveModelOverride({
             settingsModel: settings.modelOverride,
@@ -1752,7 +1751,7 @@ async function generateReply(conversationId, conversation, context, settings) {
         const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
         const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
         // Model precedence (see resolveModelOverride): the user's explicit Settings-app model
-        // (default minimax-m3 — texting is a small generation, don't spend Sonnet on it)
+        // (default gemini-3.8-flash — texting is a small generation, don't spend Sonnet on it)
         // beats the live main-chat model, which beats the profile's stale snapshot. Kressa is
         // the exception: her dedicated assistant app runs on its OWN setting
         // (settings.kressaModel), whose empty default means the live main-chat model.
@@ -8420,9 +8419,12 @@ jQuery(async () => {
     // install out of settings.json on first run. On any failure this returns null (or the legacy
     // copy) and WeyPhone falls back to whatever ST already loaded into extensionSettings, so a
     // storage problem degrades to the old behavior instead of showing an empty phone.
+    /** The data exactly as stored, copied BEFORE getSettings migrates it (see the retired-model note below). */
+    let storedBaseline = null;
     try {
         const stored = await migrateWeyPhoneStore();
         if (stored) {
+            storedBaseline = structuredClone(stored);
             context.extensionSettings[MODULE_NAME] = stored;
         }
     } catch (error) {
@@ -8433,6 +8435,15 @@ jQuery(async () => {
     // up, so they grew with the number of chats a user had ever opened. Both are regenerable caches.
     const prunedBuckets = pruneOrphanedChatBuckets(settings);
     initializeSettingsSync(settings);
+    // The one-time DeepSeek/MiniMax model swap (config.js) runs inside getSettings, which is AFTER the data was read. The sync
+    // baseline above is taken from the already-migrated settings, so without this the swap and its "done" marker never reach the
+    // data file: it would run again on every load and overwrite a model the player picked later, once HelixMind brings them back.
+    // Every other migration is idempotent, which is why nothing needed this until now. Re-baseline on the stored copy so the swap
+    // counts as a local change and gets saved, once.
+    if (storedBaseline && storedBaseline.retiredModelSwap !== settings.retiredModelSwap) {
+        settingsSyncBaseline = storedBaseline;
+        queueWeyPhoneSave(context);
+    }
     if (prunedBuckets) {
         log(`Pruned ${prunedBuckets} stale per-chat cache bucket${prunedBuckets === 1 ? '' : 's'}`);
         queueWeyPhoneSave(context);

@@ -857,7 +857,7 @@ export function renderMemoryScreen(container, memories, editingMemoryId = null, 
         <input type="text" id="wp-memory-primary-model-input" placeholder="gemini-3.8-flash" />
     </label>
     <label class="wp-memory-settings-label">Backup model (used if primary fails)
-        <input type="text" id="wp-memory-backup-model-input" placeholder="minimax-m3" />
+        <input type="text" id="wp-memory-backup-model-input" placeholder="gemini-3.8-flash" />
     </label>
     <div id="wp-memory-actions">
         <button id="wp-memory-generate-now-button" class="menu_button"${generateNowDisabled ? ' disabled' : ''}>${isGenerating ? 'Generating…' : 'Generate memory now'}</button>

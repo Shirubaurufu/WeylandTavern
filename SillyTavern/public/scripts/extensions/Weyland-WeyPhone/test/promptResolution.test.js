@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, applySpecialCase } from '../lib/promptResolution.js';
+import { resolveMasterPrompt, resolvePostHistoryInstructions, resolvePersonalityText, resolveCharacterPersonalityText, applySpecialCase } from '../lib/promptResolution.js';
 
 function fakeRavs() {
     const ravs = new Map();
@@ -58,6 +58,25 @@ test('resolvePersonalityText returns an empty string when config has no vars', (
 test('resolvePersonalityText returns an empty string for a null/undefined config', () => {
     assert.equal(resolvePersonalityText(null), '');
     assert.equal(resolvePersonalityText(undefined), '');
+});
+
+test('resolveCharacterPersonalityText prefers managed charPer data', () => {
+    const config = { vars: { Published: 'managed personality' } };
+    assert.equal(resolveCharacterPersonalityText(config, { personality: 'embedded personality' }), 'managed personality');
+});
+
+test('resolveCharacterPersonalityText falls back to an unreleased card\'s embedded personality', () => {
+    const character = { name: 'Unreleased Card', personality: 'embedded personality' };
+    assert.equal(resolveCharacterPersonalityText(undefined, character), 'embedded personality');
+});
+
+test('resolveCharacterPersonalityText supports the Character Card V2 data shape', () => {
+    const character = { data: { personality: 'nested embedded personality' } };
+    assert.equal(resolveCharacterPersonalityText(null, character), 'nested embedded personality');
+});
+
+test('resolveCharacterPersonalityText returns empty when neither source has personality data', () => {
+    assert.equal(resolveCharacterPersonalityText(undefined, { personality: '   ' }), '');
 });
 
 test('applySpecialCase passes through unchanged for characters with no special case', () => {
