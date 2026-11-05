@@ -2272,6 +2272,14 @@ export function substituteParams(content, _name1, _name2, _original, _group, _re
         return '';
     }
 
+    // Weyland: fast path for text with no macro syntax (every World Info key is checked through here,
+    // ~1,500 calls per scan pass). Building the environment below re-reads every character card field
+    // (~0.4-1.2 ms per call), and evaluateMacros would return such text unchanged anyway: without "{{"
+    // it only tries the legacy <USER>/<BOT>/<CHAR>/<GROUP>/<CHARIFNOTGROUP> tokens, which need a "<".
+    if (!content.includes('{{') && !content.includes('<')) {
+        return content;
+    }
+
     const environment = {};
 
     if (typeof _original === 'string') {

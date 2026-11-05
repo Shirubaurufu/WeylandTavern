@@ -41,6 +41,25 @@ export function resolvePersonalityText(config) {
 }
 
 /**
+ * Uses Weyland's managed charPer personality when one exists, then falls back to personality
+ * embedded in the installed character card. The fallback keeps local/unreleased cards usable
+ * without publishing their personality data in charper.js.
+ * @param {{vars?: Record<string, string>} | null | undefined} config charPer.get(character.name)
+ * @param {{personality?: string, data?: {personality?: string}} | null | undefined} character
+ */
+export function resolveCharacterPersonalityText(config, character) {
+    const candidates = [
+        resolvePersonalityText(config),
+        character?.personality,
+        character?.data?.personality,
+    ];
+    for (const candidate of candidates) {
+        if (typeof candidate === 'string' && candidate.trim()) return candidate;
+    }
+    return '';
+}
+
+/**
  * Replicates the small character-specific extras quick-reply-ext's CharPer() layers on top
  * of the standard charPer Map lookup. WeyPhone has no chat-local state to source the
  * triggering flags from yet (mcyYear, weepingWillow, isRestricted) — callers pass an empty

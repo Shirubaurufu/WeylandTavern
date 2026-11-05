@@ -52,7 +52,7 @@ Auto-trigger only evaluates the **currently active** chat — it runs off `Silly
 
 **Tag the cast cards before release** — untagged multi-char bots will produce first-person entries from an ambiguous "I". This is a card-authoring step on our side; users never see or touch it (cards are locked down, and the settings UI deliberately doesn't mention tags).
 
-**Default model.** Fresh installs default `modelOverride` to `gemini-3.8-flash`. Existing installs that already have saved settings keep whatever they had — the default only applies when `extensionSettings['Weyland-LTM']` doesn't exist yet. The settings panel has one-click quick-fill buttons for the recommended model plus one alternate (`minimax-m3`) — Lucky wants Sonnet reserved for actual roleplay messaging rather than spent on LTM summarization.
+**Default model.** Fresh installs default `modelOverride` to `gemini-3.8-flash`. Existing installs that already have saved settings keep whatever they had — the default only applies when `extensionSettings['Weyland-LTM']` doesn't exist yet. The settings panel has a one-click quick-fill button for the recommended model (`ALTERNATE_LTM_MODELS` is empty now that HelixMind retired `minimax-m3`, 2026-11) — Lucky wants Sonnet reserved for actual roleplay messaging rather than spent on LTM summarization. A saved DeepSeek or MiniMax model (or fallback) is moved to `gemini-3.8-flash` once, by `applyRetiredModelSwapOnce` (`public/scripts/weyland-retired-models.js`, marker `retiredModelSwap` in the extension's settings).
 
 ## Key files / functions map
 

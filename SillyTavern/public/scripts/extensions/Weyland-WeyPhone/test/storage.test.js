@@ -391,13 +391,13 @@ test('migrateStaleModelNames rewrites a renamed model id everywhere it can be st
 
 test('migrateStaleModelNames leaves unrelated model ids untouched and is idempotent', () => {
     const settings = {
-        modelOverride: 'minimax-m3',
-        conversations: { conv_1: { id: 'conv_1', memoryPrimaryModel: 'minimax-m3', memoryBackupModel: 'gemini-3.8-flash' } },
+        modelOverride: 'mimo-v2',
+        conversations: { conv_1: { id: 'conv_1', memoryPrimaryModel: 'mimo-v2', memoryBackupModel: 'gemini-3.8-flash' } },
     };
     migrateStaleModelNames(settings);
     migrateStaleModelNames(settings);
-    assert.equal(settings.modelOverride, 'minimax-m3');
-    assert.equal(settings.conversations.conv_1.memoryPrimaryModel, 'minimax-m3');
+    assert.equal(settings.modelOverride, 'mimo-v2');
+    assert.equal(settings.conversations.conv_1.memoryPrimaryModel, 'mimo-v2');
     assert.equal(settings.conversations.conv_1.memoryBackupModel, 'gemini-3.8-flash');
 });
 

@@ -54,6 +54,15 @@ test('assembled chats: a thoughts card gets the rules on every prompt choice, a 
     }
 });
 
+test('Vera original greeting enables thoughts before its scenario state is applied', async () => {
+    for (const choice of ['Current Prompt', 'Old Prompt 2026', 'Old Prompt 2025', 'Mini Prompt']) {
+        const { locals } = await assemble('Vera', { PromptChoice: choice }, {}, null, 0);
+        const set = String(locals.get('ThoughtSet'));
+        assert.doesNotMatch(set, /DISABLED BY DEFAULT/, `${choice}: Vera original greeting keeps thoughts on`);
+        for (const line of THOUGHT_RULES) assert.ok(set.includes(line), `${choice}: Vera original greeting gets the rules`);
+    }
+});
+
 // Greetings that turn thoughts on themselves (SpecialThoughts + their own ThoughtSet in scenarios.js) used to end up with the
 // "thoughts disabled" line, because XXX swapped in rav.thinkSpec. Drunk Jenn (greeting 2) is the one Lucky caught.
 test('greetings with their own thoughts block keep it, on every prompt choice', async () => {

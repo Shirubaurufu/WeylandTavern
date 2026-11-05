@@ -5,6 +5,8 @@
 
 import { eventSource, event_types, saveSettingsDebounced } from '../../../../script.js';
 import { reconcileTally, bucketByHour, oldestTallyMs, WINDOW_MS } from './usageTally.js';
+import { setHelixKey } from '../../weyland-access-keys.js';
+import { describeKeyProblem } from '../../weyland-key-format.js';
 
 const LOG = '[WT Helix Tracker]';
 const TRACKER_ID = 'hm-api-tracker';
@@ -267,8 +269,19 @@ function updateKeyVisibility() {
     const set = trackerEl.querySelector('#hm-api-key-set');
     const key = getHelixApiKey();
     const hasKey = typeof key === 'string' && key.trim().includes('helix');
+    // While replacing a key that works, the entry box shows but the current key stays in use (see changeKey below)
+    const changing = hasKey && keyChangeMode;
 
-    if (hasKey) {
+    const prompt = trackerEl.querySelector('#hm-api-key-prompt');
+    const cancel = trackerEl.querySelector('#hm-api-cancel-tracker-key');
+    if (prompt) {
+        prompt.textContent = changing
+            ? 'Paste your new HelixMind key. Your current key stays in use until the new one is accepted.'
+            : 'Provide your HelixMind API key to enable the message cooldown tracker. Your key begins with "helix-" and that should be included below.';
+    }
+    if (cancel) cancel.style.display = changing ? '' : 'none';
+
+    if (hasKey && !changing) {
         if (unset) unset.style.display = 'none';
         if (set) set.style.display = '';
     } else {
@@ -277,7 +290,7 @@ function updateKeyVisibility() {
         if (unset) unset.style.display = '';
         if (set) set.style.display = 'none';
     }
-    return hasKey;
+    return hasKey && !changing;
 }
 
 // Visibility + a usage refresh. Use on load / key change / generation-ended — not on every
@@ -286,30 +299,38 @@ function updateKeyUI() {
     if (updateKeyVisibility()) void refreshUsage();
 }
 
+// Same rule as the home screen: the shared setHelixKey checks the key with HelixMind first, and the previous key is removed
+// only once the new one was saved and accepted. A rejected or mistyped key changes nothing.
+let keyChangeMode = false;
+
 async function setKeyFromInput() {
-    const ctx = SillyTavern?.getContext?.();
-    if (!ctx) return;
     const input = trackerEl?.querySelector('#hm-api-tracker-key-input');
-    const trimmed = input instanceof HTMLInputElement ? input.value.trim() : '';
-    if (!trimmed) return;
-    if (!trimmed.includes('helix')) {
-        toastr.error('Please copy the entire key, including the \'helix-\' part.');
+    const typed = input instanceof HTMLInputElement ? input.value.trim() : '';
+    if (!typed) return;
+
+    const { status, hadKey } = await setHelixKey(typed);
+    if (status === 'ok' || status === 'unchecked') {
+        if (input instanceof HTMLInputElement) input.value = '';
+        keyChangeMode = false;
+        if (status === 'ok') toastr.success(hadKey ? 'HelixMind key updated' : 'HelixMind key saved');
+        else toastr.warning(describeKeyProblem('unchecked'), '', { timeOut: 12000 });
+        updateKeyUI();
         return;
     }
-    await ctx.executeSlashCommandsWithOptions(
-        `/setglobalvar key=HMKey ${trimmed} | /secret-write quiet=true label=api_key_custom key=api_key_custom ${trimmed}`,
-    );
-    if (input instanceof HTMLInputElement) input.value = '';
-    updateKeyUI();
+    toastr.error(describeKeyProblem(status, { hadKey: hadKey || keyChangeMode }), '', { timeOut: 15000 });
 }
 
-async function clearKey() {
-    const ctx = SillyTavern?.getContext?.();
-    if (!ctx) return;
-    stopCountdown();
-    await ctx.executeSlashCommandsWithOptions(
-        '/flushglobalvar HMKey | /secret-delete quiet=true key=api_key_custom api_key_custom',
-    );
+/** The old "clear" wiped the key at once. This only opens the entry box; nothing is removed until a new key is accepted. */
+function beginKeyChange() {
+    keyChangeMode = true;
+    updateKeyUI();
+    trackerEl?.querySelector('#hm-api-tracker-key-input')?.focus();
+}
+
+function cancelKeyChange() {
+    keyChangeMode = false;
+    const input = trackerEl?.querySelector('#hm-api-tracker-key-input');
+    if (input instanceof HTMLInputElement) input.value = '';
     updateKeyUI();
 }
 
@@ -318,12 +339,16 @@ function buildTracker() {
     container.id = TRACKER_ID;
     container.innerHTML = `
         <div id="hm-api-key-unset">
-            <p>Provide your HelixMind API key to enable the message cooldown tracker. Your key begins with "helix-" and that should be included below.</p>
+            <p id="hm-api-key-prompt">Provide your HelixMind API key to enable the message cooldown tracker. Your key begins with "helix-" and that should be included below.</p>
             <div class="hm-key-input-row">
                 <input id="hm-api-tracker-key-input" type="text" placeholder="helix-..." autocomplete="off" spellcheck="false">
                 <button id="hm-api-set-tracker-key" class="menu_button">
                     <i class="fa-solid fa-clock"></i>
                     <span>Set Tracker Key</span>
+                </button>
+                <button id="hm-api-cancel-tracker-key" class="menu_button" type="button" style="display: none;" title="Keep my current key">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>Cancel</span>
                 </button>
             </div>
         </div>
@@ -333,8 +358,8 @@ function buildTracker() {
                 (<span class="hm-tracker-label">Next Message: <span id="hm-api-next-message-time-text">Loading...</span></span>)
             </span>
             <button id="hm-api-clear-tracker-key" class="menu_button hm-api-clear-button">
-                <i class="fa-solid fa-xmark"></i>
-                <span>Clear Tracker Key</span>
+                <i class="fa-solid fa-key"></i>
+                <span>Change Tracker Key</span>
             </button>
             <div id="hm-api-breakdown" class="hm-breakdown" style="display: none;">
                 <div class="hm-breakdown-title">Estimated Hour Breakdown</div>
@@ -352,7 +377,8 @@ function wireEvents() {
     const input = trackerEl.querySelector('#hm-api-tracker-key-input');
 
     setBtn?.addEventListener('click', () => { void setKeyFromInput(); });
-    clearBtn?.addEventListener('click', () => { void clearKey(); });
+    clearBtn?.addEventListener('click', () => { beginKeyChange(); });
+    trackerEl.querySelector('#hm-api-cancel-tracker-key')?.addEventListener('click', () => { cancelKeyChange(); });
     input?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();

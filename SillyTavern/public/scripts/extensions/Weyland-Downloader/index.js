@@ -1139,8 +1139,14 @@ function bindWeylandEvents() {
                 // The new key changes which remote manifests are available; it does not
                 // require re-statting users' locally edited character files.
                 await refreshRoster();
+                // Used to be silent: nothing said whether the password had worked
+                toastr.success('Paw Patrol key accepted. Your Alpha and Beta characters are listed now.');
             } else {
                 console.warn("[Weyland-Downloader] Invalid password or fetch failed:", result);
+                // The server answers "Invalid password" for a key the CDN does not know; anything else is a rate limit or a network problem
+                toastr.warning(result === 'Invalid password'
+                    ? "That Paw Patrol key was not recognized. Check that you are using this month's key."
+                    : `Could not check the key: ${result}`);
             }
         }, 800);
     });

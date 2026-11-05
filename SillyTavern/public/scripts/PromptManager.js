@@ -882,6 +882,35 @@ class PromptManager {
     }
 
     /**
+     * Weyland: the dry run behind render(true) is a whole prompt build (World Info scan, macros, token
+     * counts) whose only consumer is this panel's list and token figures. It ran after every reply,
+     * chat switch and settings change and froze the page for ~3 s after each message (latency audit
+     * 2026-11-04), while players never see the panel (only the admin overrides unhide it). So while the
+     * panel is hidden, remember that a refresh is owed and do it the moment the panel becomes visible.
+     * Nothing else uses dry runs: every extension hook returns early on them.
+     *
+     * @returns {boolean} true if the dry run was deferred
+     */
+    #deferDryRunWhileHidden() {
+        const container = this.containerElement;
+        if (!container || typeof IntersectionObserver !== 'function') return false;
+        // getClientRects() is empty when the element or any ancestor is display:none (closed drawer,
+        // streamlined UI); a panel that is open but scrolled out of view still counts as visible.
+        if (container.getClientRects().length > 0) return false;
+
+        this.dryRunPending = true;
+        if (!this.dryRunVisibilityObserver) {
+            this.dryRunVisibilityObserver = new IntersectionObserver((entries) => {
+                if (!this.dryRunPending || !entries.some(entry => entry.isIntersecting)) return;
+                this.dryRunPending = false;
+                this.render(true);
+            });
+            this.dryRunVisibilityObserver.observe(container);
+        }
+        return true;
+    }
+
+    /**
      * Main rendering function
      *
      * @param afterTryGenerate - Whether a dry run should be attempted before rendering
@@ -891,6 +920,8 @@ class PromptManager {
 
         if ('character' === this.configuration.promptOrder.strategy && null === this.activeCharacter) return;
         this.error = null;
+
+        if (true === afterTryGenerate && this.#deferDryRunWhileHidden()) return;
 
         waitUntilCondition(() => !is_send_press && !is_group_generating, 1024 * 1024, 100).then(async () => {
             if (true === afterTryGenerate) {

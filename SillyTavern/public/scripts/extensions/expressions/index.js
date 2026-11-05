@@ -1504,8 +1504,22 @@ function chooseSpriteForExpression(spriteFolderName, expression, { prevExpressio
  * @param {string?} [options.overrideSpriteFile=null] - Set if a specific sprite file should be used. Must be sprite file name.
  * @returns {Promise<void>} A promise that resolves when the expression has been set.
  */
-async function setExpression(spriteFolderName, expression, { force = false, overrideSpriteFile = null } = {}) {
+// Weyland: sprite swaps run one at a time. Stock lets setExpression overlap itself, and two swaps in flight leave
+// 'expression-animating' on an image that is never cleaned up. That flag makes every later swap in the chat a silent
+// no-op, so the portrait froze on an old mood while the saved mood and the header moved on (reported 2026-11-02).
+// A swap requested during a fade used to be dropped as well; queued, it now runs once the fade has finished.
+let expressionSwapQueue = Promise.resolve();
+function setExpression(spriteFolderName, expression, options) {
+    const run = expressionSwapQueue.then(() => setExpressionNow(spriteFolderName, expression, options));
+    expressionSwapQueue = run.catch(() => { });
+    return run;
+}
+
+async function setExpressionNow(spriteFolderName, expression, { force = false, overrideSpriteFile = null } = {}) {
     await validateImages(spriteFolderName);
+    // Nothing of ours is mid-fade here, so anything still marked is a fade a hidden tab never ticked (jQuery animates on
+    // requestAnimationFrame) or a leftover flag. Finish it, then clear the flag so this swap cannot be refused.
+    $('img.expression').stop(true, true).removeClass('expression-animating');
     const img = $('img.expression');
     const prevExpressionSrc = img.attr('src');
     const expressionClone = img.clone();
@@ -1563,26 +1577,27 @@ async function setExpression(spriteFolderName, expression, { force = false, over
             img.css('position', 'absolute').width(imgWidth).height(imgHeight);
             expressionClone.addClass('expression-animating');
             //fade the clone in
-            expressionClone.css({
+            const fadeIn = expressionClone.css({
                 opacity: 0,
             }).animate({
                 opacity: 1,
             }, duration)
-                //when finshed fading in clone, fade out the original
-                .promise().done(function () {
-                    img.animate({
-                        opacity: 0,
-                    }, duration);
-                    //remove old expression
-                    img.remove();
-                    //replace ID so it becomes the new 'original' expression for next change
-                    expressionClone.attr('id', 'expression-image');
-                    expressionClone.removeClass('expression-animating');
+                .promise();
+            //when finshed fading in clone, fade out the original
+            fadeIn.done(function () {
+                img.animate({
+                    opacity: 0,
+                }, duration);
+                //remove old expression
+                img.remove();
+                //replace ID so it becomes the new 'original' expression for next change
+                expressionClone.attr('id', 'expression-image');
+                expressionClone.removeClass('expression-animating');
 
-                    // Reset the expression holder min height and width
-                    expressionHolder.css('min-width', 100);
-                    expressionHolder.css('min-height', 100);
-                });
+                // Reset the expression holder min height and width
+                expressionHolder.css('min-width', 100);
+                expressionHolder.css('min-height', 100);
+            });
 
             expressionClone.removeClass('expression-clone');
 
@@ -1596,6 +1611,9 @@ async function setExpression(spriteFolderName, expression, { force = false, over
                     setDefaultEmojiForImage(img, expression);
                 }
             });
+
+            // Hold the queue until the fade is over; the timeout keeps a hidden tab (no animation frames) from stalling it
+            await Promise.race([fadeIn, new Promise(resolve => setTimeout(resolve, 1000))]);
         }
 
         console.info('Expression set', { expression: spriteFile.expression, file: spriteFile.fileName });

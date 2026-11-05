@@ -21,6 +21,7 @@
 // USER_GUIDE.md for the plain-language version to hand to end users.
 // =====================================================================
 
+import { applyRetiredModelSwapOnce } from '../../weyland-retired-models.js';
 import {
     loadWorldInfo,
     saveWorldInfo,
@@ -57,10 +58,11 @@ const EXT_VERSION = '1.6.0';
 const RECOMMENDED_LTM_MODEL = 'gemini-3.8-flash';
 // NOTE: LTM keeps its own list rather than sharing WeyPhone's ALTERNATE_PHONE_MODELS — the two
 // extensions are independently installable, so a model added to one must be added here too.
-const ALTERNATE_LTM_MODELS = ['minimax-m3'];
-// Second choice when the chosen model errors out. MiniMax M3 is the house fallback
+// (Empty since HelixMind retired MiniMax M3 in 2026-11; add a model here to get a quick-fill button for it.)
+const ALTERNATE_LTM_MODELS = [];
+// Second choice when the chosen model errors out. Gemini 3.8 Flash is the house fallback
 // across WeyPhone/PawXai/Kressa too: cheap, fast, available, and never Sonnet.
-const FALLBACK_LTM_MODEL = 'minimax-m3';
+const FALLBACK_LTM_MODEL = 'gemini-3.8-flash';
 
 // The provider renamed this model in place (same model, new id string). Anyone who used the old
 // quick-fill button has the dead id saved in modelOverride, where every LTM summarization would
@@ -145,6 +147,10 @@ function loadSettings() {
     // who never picked the renamed model).
     const renamed = STALE_MODEL_RENAMES[settings.modelOverride];
     if (renamed) settings.modelOverride = renamed;
+    // HelixMind retired DeepSeek and MiniMax (2026-11). A saved choice of either (model or fallback) moves to Gemini 3.8 Flash
+    // ONCE. Unlike the permanent renames above this never runs again, so picking one later, once HelixMind brings them back,
+    // is left alone. The marker is written even when nothing needed changing.
+    if (applyRetiredModelSwapOnce(settings) > 0) persistSettings();
 }
 
 function persistSettings() {
@@ -1892,7 +1898,7 @@ function buildModalHtml() {
             <button class="wlm-btn-sm wlm-model-quickfill" data-model="${RECOMMENDED_LTM_MODEL}" title="Switch to ${RECOMMENDED_LTM_MODEL}">${RECOMMENDED_LTM_MODEL}</button>
             ${ALTERNATE_LTM_MODELS.map(m => `<button class="wlm-btn-sm wlm-model-quickfill" data-model="${m}" title="Switch to ${m}">${m}</button>`).join('')}
           </div>
-          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use gemini-3.8-flash whenever possible — minimax-m3 is a solid alternative. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
+          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use gemini-3.8-flash whenever possible. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
         </label>
         <label class="wlm-field" title="If the model above fails or is unavailable, LTM retries once with this one instead of giving up. Leave it on ${FALLBACK_LTM_MODEL} unless you have a reason to change it.">
           <span>Fallback model <small>(used only if the model above fails)</small></span>

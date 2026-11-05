@@ -679,6 +679,36 @@ async function resolveExpression(name){
     };
 }
 
+/**
+ * The right slot normally holds an official side character that quick-reply-ext drew with the MAIN character's mood (the
+ * footer tag). Their own last block of text often says something else: Bastet's footer says [Excitement] while Luna is
+ * screaming in anger. So the side character gets the same per-speaker reading Registrar characters get, and the footer mood
+ * stays as the fallback when there is nothing to read, the classifier is unavailable, or the outfit has no sprite for it.
+ * @param {{path: string, name: string, isOfficial: boolean, outfit: string, emotion: string}} side the base right slot
+ */
+async function refineBaseSideExpression(side) {
+    try {
+        const outfitMatch = String(side.path).match(/characters\/[^/]+\/([^/]+)\//i);
+        if (!outfitMatch) return side;
+        const outfit = decodeURIComponent(outfitMatch[1]);
+        const emotion = await getSpeakerEmotion(side.name);
+        if (!emotion || emotion === side.emotion) return side;
+        const canonicalName = getCanonicalCharacterName(side.name);
+        const sprites = await getSpriteList(`${canonicalName}/${outfit}`);
+        const path = chooseVariant(
+            `${canonicalName}/${outfit}|${emotion}`,
+            sprites.filter((sp) => sp?.path && sp.label === emotion).map((sp) => sp.path)
+        );
+        if (!path) return side;
+        return { ...side, path: path, outfit: outfit, emotion: emotion };
+    } catch (e) {
+        if (DEBUG) {
+            console.log(`${LOGGING_PREFIX} per-speaker mood for base side character failed, keeping footer mood:`, e);
+        }
+        return side;
+    }
+}
+
 let activeOutfit = null;
 let defaultEmotion = null;
 async function setExpressions(){
@@ -775,6 +805,11 @@ async function setExpressions(){
                 }
             }
         }
+    }
+
+    // An official side character drawn by quick-reply-ext still holds the main character's mood; read her own block instead
+    if (sideExpressionsEnabled && right.path && right.path === rightBasePath && right.isOfficial && right.name) {
+        right = await refineBaseSideExpression(right);
     }
 
     if (left.path) {
