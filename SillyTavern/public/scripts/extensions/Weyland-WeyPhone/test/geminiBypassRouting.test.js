@@ -15,8 +15,8 @@ test('Claude family is recognised by name across provider id styles', () => {
         'anthropic/claude-3.7-sonnet', 'Sonnet 5', 'OPUS', 'fable']) {
         assert.equal(isClaudeModel(id), true, id);
     }
-    for (const id of ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'google/gemma-3-27b', 'mimo-v2', 'deepseek-chat',
-        'glm-5', 'minimax-m3', '', undefined, null]) {
+    for (const id of ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'google/gemma-3-27b', 'mimo-v2',
+        'glm-5', '', undefined, null]) {
         assert.equal(isClaudeModel(id), false, String(id));
     }
 });

@@ -4,7 +4,7 @@ import { quickReplyApi } from "../quick-reply/index.js";
 import { executeSlashCommandsWithOptions } from "../../slash-commands.js";
 
 import { getGlobalVariable, getLocalVariable } from "../../variables.js";
-import { chat, doNewChat, eventSource, event_types, narratorSettingsSync } from "../../../script.js";
+import { chat, chat_metadata, doNewChat, eventSource, event_types, getCurrentChatId, narratorSettingsSync } from "../../../script.js";
 import { narratorBuildState, narratorSelection } from './src/narratorSelection.js';
 import { selected_world_info, onWorldInfoChange } from "../../world-info.js";
 import { isMobile } from "../../RossAscends-mods.js";
@@ -14,7 +14,7 @@ import { SlashCommandParser } from "../../slash-commands/SlashCommandParser.js";
 import { SlashCommand } from "../../slash-commands/SlashCommand.js";
 import { ARGUMENT_TYPE, SlashCommandArgument } from "../../slash-commands/SlashCommandArgument.js";
 
-import { getRandomInt, getCurrentCharacterName, getCurrentUserName, setLLModel, setBackground, tagExists, tagAdd, tagRemove, getPersonaBook, getCurrentCharacterWorldbook, setCostume, setExpression, setCostumeAndExpression, isOpenWorldCard, getCurrentCardSpriteOverride, getCharacterCostumeFromText, getCurrentCharacterVersion, getCurrentCharacterPersonality, getCurrentCharacterDescription, getCurrentCharacterFirstMes } from "./src/general.js";
+import { getRandomInt, getCurrentCharacterName, getCurrentUserName, setLLModel, setBackground, applyBackgroundFile, tagExists, tagAdd, tagRemove, getPersonaBook, getCurrentCharacterWorldbook, setCostume, setExpression, setCostumeAndExpression, isOpenWorldCard, getCurrentCardSpriteOverride, getCharacterCostumeFromText, getCurrentCharacterVersion, getCurrentCharacterPersonality, getCurrentCharacterDescription, getCurrentCharacterFirstMes } from "./src/general.js";
 import { deleteGlobalVariable, deleteLocalVariable, deleteLocalVariables, flushInject, inject, setGlobalVariable, setLocalVariable } from "./src/variables.js"
 import { findLoreBookEntry, getEntryField, setEntryField } from "./src/lorebook.js";
 import { doButtons, doPopup } from "./src/popups.js";
@@ -36,6 +36,7 @@ import { applyKinsbaneCommand } from "./src/kinsbaneCommands.js";
 import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.js";
 import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
 import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
+import { pickBackgroundForReply } from "./src/autoBackground.js";
 
 const debug = true;
 
@@ -651,17 +652,19 @@ async function TitleBarColors() {
                 const expSave = getLocalVariable("ExpSave");
                 if (!expSave) await Expressions(undefined, undefined, true);
                 await setExpression(getLocalVariable("ExpSave"));
-                await updateSideCharacter({character: costumeSaveSide});
+                // Same mood as the main character; without it she came back neutral on every reload
+                setLocalVariable("SideExpSave", getLocalVariable("ExpSave") || "neutral");
+                await updateSideCharacter({character: costumeSaveSide, expression: getLocalVariable("ExpSave")});
             }
         } else {
             await CostumeChangeBot(undefined, undefined);
         }
-        if (getGlobalVariable("AutoBG") !== "false") {
+        if (getGlobalVariable("AutoBG") !== "false" && !chatHasLockedBackground()) {
             const bg = getLocalVariable("BGFound");
             if (!bg) {
                 await AutoBG();
             } else {
-                setBackground(bg);
+                applyBackgroundFile(bg);
             }
         }
         if (charName === "Kinsbane Manor" && getLocalVariable("KinsbaneFort") === "") {
@@ -790,6 +793,24 @@ async function filterBySpriteFolder(names, getFolder) {
 }
 
 /**
+ * Draws the side character, but only when something about her changed: her folder (a new person or costume) OR the
+ * mood she should show. The folder check on its own left her frozen on the expression she was introduced with: a
+ * second character who stayed in the scene kept message 1's face for the rest of the chat (reported 2026-11-02:
+ * main character annoyed, side character still excited), and a neutral first appearance stuck as neutral.
+ * The mood last drawn is kept in the chat variable SideExpSave.
+ * @param {string} spriteFolder e.g. "Luna/Regular Outfit"
+ * @param {string} [expression] defaults to neutral, like /sidecharacter
+ * @returns {Promise<string> | null} the draw, or null when the side character already shows this
+ */
+function refreshSideCharacter(spriteFolder, expression) {
+    expression = expression || "neutral";
+    if (getLocalVariable("CostmSaveSide") === spriteFolder && getLocalVariable("SideExpSave") === expression) return null;
+    setLocalVariable("CostmSaveSide", spriteFolder);
+    setLocalVariable("SideExpSave", expression);
+    return updateSideCharacter({character: spriteFolder, expression: expression});
+}
+
+/**
  * SideCharacters Script
  * OnChatChanged & OnSwipe
  * @param {string} [charName]
@@ -848,14 +869,11 @@ async function SideCharacters(charName, charMessage) {
 
         DebugLog(`SideCharacters: Picked "${pickedChar}"`);
 
-        if (getLocalVariable("CostmSaveSide") !== spriteFolder) {
-            setLocalVariable("CostmSaveSide", spriteFolder);
-            updateSideCharacter({character: spriteFolder, expression: getLocalVariable("ExpSave")}).then(result => {
+        refreshSideCharacter(spriteFolder, getLocalVariable("ExpSave"))?.then(result => {
             if (result) DebugLog(`SideCharacters: Update:`, result);
-            }).catch(err => {
-                console.error(`[WQR] SideCharacters Error:`, err);
-            });
-        }
+        }).catch(err => {
+            console.error(`[WQR] SideCharacters Error:`, err);
+        });
         DebugLog(`[P] SideCharacters: ${(performance.now() - PerformanceStart).toFixed(4)}ms`)
     } catch (err) {
         console.error(`[WQR] SideCharacters Error:`, err);
@@ -874,14 +892,12 @@ async function AutoBG(charMessage) {
     try {
         if (!charMessage) charMessage = getLastMessage("char");
         if (!charMessage) return "No char message to extract BG from";
-        if (getGlobalVariable("AutoBG") !== "false") {
-            if (getLocalVariable("PhoneBG") !== "true") {
-                BG(charMessage.mes, charMessage.name).then(() => {
-                    DebugLog(`[P] AutoBG: BG: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
-                }).catch(() => {});
-            } else {
-                setLocalVariable("PhoneBG", "false");
-            }
+        // PhoneBG (a one-message skip set by the retired "whose phone" QR flow) was removed
+        // 2026-11-04: nothing sets it anymore.
+        if (getGlobalVariable("AutoBG") !== "false" && !chatHasLockedBackground()) {
+            BG(charMessage.mes, charMessage.name).then(() => {
+                DebugLog(`[P] AutoBG: BG: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+            }).catch(() => {});
         }
     } catch (err) {
         console.error(`[WQR] AutoBG Error:`, err);
@@ -1613,595 +1629,55 @@ async function GetCharacterNamesAndAliases(charName) {
 }
 
 /**
- * BG Script
- * AutoBG
+ * BG Script (AutoBG). Picks the background from the reply header.
+ * Rewritten 2026-11-04: the matching lives in src/autoBackground.js and every background is described in
+ * src/backgroundCatalog.js (looked at one by one). The old 550-line if-ladder that lived here matched
+ * substrings in a fixed order, so "Trail" caught every "Trailer", the player's name caught "Lucky's
+ * Apartment" (Blake's dorm), and 284 of the 372 backgrounds could never come up.
+ * No match now leaves the current background alone (BGFound is no longer wiped first).
  * @param {string} [charMessage]
  * @param {string} [charName]
+ * @param {{ dryRun?: boolean }} [opts] dryRun: work out the pick and explain it, change nothing (/wubgwhy)
  * @returns {Promise<string | undefined>}
  */
-async function BG(charMessage, charName) {
+async function BG(charMessage, charName, opts = {}) {
     try {
-        deleteLocalVariables(["Aiko","BGFound"]);
+        deleteLocalVariable("Aiko"); // the old ladder cleared this each run; nothing sets it now, harmless cleanup for old chats
         if (!charMessage) charMessage = getLastMessage("char")?.mes;
         if (!charMessage) return "No message to compare against";
-        const header = charMessage.match(/¦¦.*(?:\r?\n¦¦.*)*?(?=\r?\n\r?\n|$)/)?.[0] || charMessage.match(/^.+?~.+?~(?=$|\n)/m)?.[0];
-        if (!header) return "No header to compare against";
+        if (!charName) charName = getCurrentCharacterName();
 
-        /**
-         * @param {string | Array<string>} backgroundString
-         * @param {string?} flags
-         */
-        function checkMessage(backgroundString, flags="") {
-            if (!backgroundString || !header) return false;
-            if (Array.isArray(backgroundString)) backgroundString = backgroundString.join("|");
-            const regexp = new RegExp(`~[^~\n]*(?:${backgroundString})[^~\n]*(?:~|¦¦)`, flags || "");
-            return regexp.test(header);
+        const previousFile = getLocalVariable("BGFound");
+        const { scene, pick } = pickBackgroundForReply(charMessage, {
+            userName: getCurrentUserName(),
+            card: charName,
+            chatId: getCurrentChatId(),
+            previousPlace: getLocalVariable("BGPlace"),   // area memory + "hold the alt that's on screen"
+            previousFile,
+        });
+        if (!scene) return "No header to compare against";
+        if (opts.dryRun) return pick ? pick.why : `No match for "${scene.location}": the background stays as it is.`;
+
+        // Fox's own install (WTCreator = FFFox) hands everything except Kinsbane Manor to his "FFFox Greetings"
+        // -> BG quick reply, as the old ladder did (Kinsbane was resolved before his hook). Kept on purpose.
+        if (fCheck() && pick?.area !== "kinsbane") {
+            await quickReplyApi.executeQuickReply("FFFox Greetings", "BG");
+            return;
+        }
+        if (!pick) {
+            DebugLog(`BG: no match for "${scene.location}", keeping the current background`);
+            return;
         }
 
-        const bg = await (async () => {
-            try {
-                // Function returns on first match
-                // Earlier checks = Higher Priority
-
-                const userName = getCurrentUserName();
-                if (!charName) charName = getCurrentCharacterName();
-                if (!charName) {
-                    DebugLog(`BG: No current chatName`);
-                    return;
-                }
-                
-                // djmika cleanup
-                if (getLocalVariable("djmika") === "true" && !checkMessage("Exchange")) {
-                    deleteLocalVariable("djmika");
-                }
-
-                // Aiko
-                // "Aiko" mention forces kb aiko room.avif regardless of other matches.
-                if (checkMessage("Aiko")) return "kb aiko room.avif";
-
-                // Kinsbane Manor
-                // Applies if char is Kinsbane Manor / Aiko, or header mentions Kinsbane/Manor.
-                // Kinsbane-specific BGs override generics
-                if (charName === "Kinsbane Manor"
-                || charName === "Aiko"
-                || checkMessage(["Kinsbane", "Manor"])) 
-                {
-                    // Tree house interior is more specific than tree house — check first.
-                    if (checkMessage([
-                        "Inside[^~\n]*Tree ?[Hh]ouse",
-                        "Tree ?[Hh]ouse[^~\n]*Interior",
-                        "Inside[^~\n]*Fort Aiko",
-                        "Fort Aiko[^~\n]*Interior"
-                    ])) return "kb inside treehouse.avif";
-                    if (checkMessage(["Tree ?[Hh]ouse", "Fort Aiko"])) return "kb treehouse.avif";
-
-                    if (checkMessage(["Garden", "Well"])) return "kb garden.avif";
-                    if (checkMessage([
-                        "Manor[^~\n]*Exterior",
-                        "Outside[^~\n]*Manor",
-                        "Kinsbane[^~\n]*Exterior",
-                        "Outside[^~\n]*Kinsbane",
-                        "Porch"
-                    ])) return "kb front.avif";
-                    if (checkMessage("Driveway")) return "kb driveway.avif";
-
-                    // Note: "Hall" here matches things like "Lecture Hall" or "Sterling Hall" too —
-                    // but we're already inside a Kinsbane context gate, so collisions are unlikely.
-                    if (checkMessage(["Entrance[^~\n]*Hall", "Entry[^~\n]*Hall", "Manor[^~\n]*Entry"])) {
-                        return "kb entry.avif";
-                    }
-                    if (checkMessage(["Hall", "Landing", "Upstairs", "Second Floor", "2nd Floor"])) {
-                        return "kb upstairs.avif";
-                    }
-
-                    if (checkMessage(["Study", "Office"])) return "kb study.avif";
-                    if (checkMessage(["Living", "Sitting"])) return "kb living room.avif";
-                    if (checkMessage("Kitchen")) return "kb kitchen.avif";
-                    if (checkMessage("Greenhouse")) return "kb greenhouse.avif";
-                    if (checkMessage(["Basement", "Cellar"])) return "kb basement.avif";
-                    if (checkMessage(["Bedroom", "Parent", "Master"])) return "kb master bed.avif";
-                    if (checkMessage("Bath")) return "kb master bath.avif";
-                    if (checkMessage("Locked")) return "kb aiko room.avif";
-                    // No Kinsbane-specific match — fall through to general resolution.
-                }
-
-                if (fCheck()) {
-                    await quickReplyApi.executeQuickReply("FFFox Greetings", "BG");
-                    return;
-                }
-
-                // GENERAL RESOLUTION
-
-                // Karaveia
-                if (checkMessage("Karaveia")) {
-                    if (checkMessage("Dining")) return "Karaveia Dun Dining Area.avif";
-                    if (checkMessage("Greenhouse")) return "Karaveia Dun Greenhouse.avif";
-                    if (checkMessage("Entrance")) return "Karaveia Dun Entrance.avif";
-                    if (checkMessage(["Hot Springs", "Onsen"])) return "Karaveia Dun Hot Springs.avif";
-                    if (checkMessage(["Residence", "Bedroom"])) return "Karaveia Dun Residence.avif";
-                    if (checkMessage("Hall")) return "Karaveia Dun Halls.avif";
-                    return "Karaveia Dun Communal Area.avif";
-                }
-                
-                // Brodlak
-                if (checkMessage("Brodlak")) return "Brodlak.avif";
-                
-                // Kyomi
-                if (checkMessage("Kyomi")) return "Kyomi.avif";
-                
-                // Mama's Den
-                if (checkMessage("Mama")) {
-                    if (checkMessage("Den")) return "Mama Den.avif";
-                }
-
-                // Observation Room
-                if (checkMessage("Observation Room")) return "observe.avif";
-
-                // Aquarium
-                if (checkMessage("Aquarium")) return "Aquarium.avif";
-
-                // Boba
-                if (checkMessage("Boba")) return "Boba Shop.avif";
-				
-                // Auto Shop
-                if (checkMessage(["Car Shop", "Auto Shop"])) return "Auto Shop.avif";
-				
-                // Costco
-                if (checkMessage("Costco")) return "Costco.avif";
-                if (checkMessage(["Walmart", "Wal-Mart", "Weymart"])) return "Walmart.avif";
-                if (checkMessage("Warehouse")) return "Warehouse.avif";
-				
-                // Blake / 271 / user's room
-                if (checkMessage(["271", "Blake", userName])) return "blake room 3.avif";
-
-                // Boulevard
-                if (checkMessage("Sen[ea]ka Boulevard")) return "Seneka_Boulevard.avif";
-                if (checkMessage("Side Street")) return "Old Side Street.avif";
-
-                const exterior = checkMessage(["Exterior", "Outside", "Outer"], "i");
-
-                // Night time is from 7pm to 5am
-                const isNight = checkMessage([
-                    "(?:[7-9]|1[01]):\\d\\d PM",
-                    "(?:12|[1-5]):\\d\\d AM",
-                ], "i");
-
-                // Cafes / Bars
-                if (checkMessage("Sakurai")) {
-                    if (exterior) return "sakurai cafe outside.avif";
-                    return isNight ? "Sakurai Cafe Night.avif" : "Sakurai Cafe Day.avif";
-                }
-                if (checkMessage("Rustwood")) return "Rustwood Cafe 2.avif";
-                if (checkMessage("Black Barrel")) {
-                    return checkMessage("Backroom") ? "BBB Backroom.avif" : "BBB.avif";
-                }
-                if (checkMessage("Mama")) return "Mamas Den.avif";
-                if (checkMessage("Barcade")) return "Barcade.avif";
-                if (checkMessage(["Bar", "Dive"])) return "Dive Bar.avif";
-                if (checkMessage("Diner")) return exterior ? "Diner Exterior.avif" : "Diner-Interior.avif";
-                if (checkMessage(["Bakery", "Pastry"])) return "Bakery.avif";
-                if (checkMessage(["Meadery", "Winery"])) return "Meadery.avif";
-                if (checkMessage("Vineyard")) return "Vineyard.avif";
-                if (checkMessage("Restaurant")) {
-					if (checkMessage(["Fancy", "Upscale", "Bellucci"])) return "Fancy Restaurant.avif";
-					return "Restaurant.avif";
-				}
-
-                // Civic / Misc
-                if (checkMessage(["Hospital", "Medical", "Nurse", "Doctor", "Treatment", "Patient"])) {
-                    return "Treatment Facility.avif";
-                }
-                if (checkMessage(["Tetsuya", "Grocery"])) return "Tetsuya_Aisle_FIn-1.avif";
-                if (checkMessage(["Ramen", "Red Lantern"])) return "ramen.avif";
-                if (checkMessage("Sushi")) return "Sushi Bar.avif";
-                if (checkMessage("Wedding Reception")) return "Wedding Reception.avif";
-                if (checkMessage(["Church", "Chapel", "Wedding", "Altar"])) return "Church Wedding.avif";
-                if (checkMessage("Farm")) return "farm.avif";
-                if (checkMessage(["Cell", "Jail", "Prison"])) return "cell.avif";
-
-                // Specific dorm rooms
-                if (checkMessage("Serra")) return "serra room 2.avif";
-				if (checkMessage("Ahset")) return "Ahset_s Room.avif";
-				if (checkMessage("Khepri")) return "Khepri_s Room.avif";
-				if (checkMessage("Miu")) return "Miu_s Room.avif";
-				if (checkMessage("Nefara")) return "Nefara_s Room.avif";
-				if (checkMessage("Shani")) return "Shani_s Room.avif";
-				if (checkMessage("Sobek")) return "Sobek_s Room.avif";
-                if (checkMessage(["292", "Vera", "Fasti"])) return "vera room 1.avif";
-                if (checkMessage(["273", "Kai", "Kiera"])) return "kai room.avif";
-                if (checkMessage(["279", "Summer"])) return "summer room 3.avif";
-                if (checkMessage(["309", "Briar"])) return "briar room.avif";
-                if (checkMessage(["383", "Willow"])) return "willow room.avif";
-                if (checkMessage(["280", "Koshizu"])) return "koshizu room.avif";
-                if (checkMessage(["284", "Indigo"])) return "indigo room 2.avif";
-                if (checkMessage(["281", "Belle"])) return "belle room 2.avif";
-                if (checkMessage(["283", "Nix"])) return "nix room 4.avif";
-                if (checkMessage(["269", "Mika"])) return "mika room.avif";
-                if (checkMessage(["275", "Cairo"])) return "cairo room.avif";
-                if (checkMessage(["290", "Bianca"])) return "bianca room 3.avif";
-                if (checkMessage(["268", "Jenn", "Lucy"])) return "lucy room 3.avif";
-
-                // Specific bedrooms (apartment occupants)
-                if (checkMessage("Bedroom")) {
-                    if (checkMessage("Hannah")) return "Hannah_s Bedroom.avif";
-                    if (checkMessage(["Akiyama", "Sayori"])) return "Akiyama_s Bedroom.avif";
-                    if (checkMessage("Seth")) return "Seth_s Bedroom.avif";
-                    if (checkMessage("Warren")) return "Warren_s Bedroom.avif";
-                    if (checkMessage("Jericho")) return "Jericho Bedroom.avif";
-                    if (checkMessage(["Mark", "Rein"])) return "Rein and Mark Bedroom.avif";
-                    if (checkMessage("Gemini")) return "Gemini_Bedroom.avif";
-                    return "Generic Bedroom.avif";
-                }
-
-                // Apartments
-                if (checkMessage("Hannah")) return "Hannah_s Apartment.avif";
-                if (checkMessage("Warren")) return "Warren_s Apartment.avif";
-                if (checkMessage(["Akiyama", "Sayori"])) return "Akiyama_s Apartment.avif";
-                if (checkMessage("Seth")) return "Seth_s Apartment.avif";
-                if (checkMessage(["Mark", "Rein"])) return "Rein and Mark Apartment.avif";
-                if (checkMessage("Gemini")) return "Gemini_Apartment.avif";
-                if (checkMessage("Jericho")) return "Jericho Apartment.avif";
-                if (checkMessage(["Student Housing", "Apartment", "Residence"])) {
-                    if (exterior || checkMessage("Complex")) return "Apartment Complex.avif";
-                    return "Generic Apartment.avif";
-                }
-
-                if (checkMessage(["Commons", "Common Area"])) return "Common_Room.avif";
-                if (checkMessage("Dorm Room")) return "dorms 2.avif";
-
-                // Soft Pike / Cerberus
-                if (checkMessage([
-                    "Cerberus[^~\n]*Trailer",
-                    "Inside Trailer",
-                    "Trailer[^~\n]*13",
-                    "Trailer[^~\n]*Interior"
-                ])) return "cerberus.avif";
-                if (checkMessage(["Trailer", "Soft Pike"])) {
-                    if (checkMessage("Entrance")) return "Soft-Pike-Entrance.avif";
-                    return isNight ? "Soft Pike Night.avif" : "Soft Pike Day.avif";
-                }
-
-                // Lounge / Forest / Trails
-                if (checkMessage("Lounge")) return "lounge.avif";
-
-                // Forest sub-types first (more specific), then forest fallback
-                if (checkMessage(["Firefly", "Fireflies"])) return "Field-of-Fireflies.avif";
-                if (checkMessage("Clearing")) return "Forest Clearing.avif";
-                if (checkMessage(["Trail", "Trails", "Path", "Pathway"])) {
-                    const num = getRandomInt(1, 4);
-                    return `Forest Trails ${num}.avif`;
-                }
-                if (checkMessage(["Forest", "Woods", "Nature"])) {
-                    return isNight ? "Forest Night.avif" : "Forest Day.avif";
-                }
-                
-                // Hot spring / tub
-                if (checkMessage("Hot Tub")) return "Hot tub.avif";
-                if (checkMessage(["Hot Spring", "Onsen", "Wolf Spring"])) return "onsen 2.avif";
-
-                // Party
-                if (checkMessage("Party")) {
-                    if (checkMessage("Pool")) return "pool party.avif";
-                    if (checkMessage("Kitchen")) return "Kitchen House Party.avif";
-                    if (checkMessage("Bedroom")) return "house party.avif";
-                    if (checkMessage("House")) return "House_Party.avif";
-                }
-
-                // Pool (Must be after Party)
-                if (checkMessage("Pool")) {
-                    return checkMessage("Hall") ? "Pool Hall.avif" : "Swimming Pool.avif";
-                }
-                if (checkMessage("Swimming")) return "Swimming Hole.avif";
-
-                const isRain = /\b(?:rain|raining|rainfall|drizzle|drizzling|downpour|pouring|storm|storming|thunderstorm|monsoon|shower(?:s)?|heavy +rain|light +rain|wet|soaked|drenched|puddles?|raindrops?|rain-soaked|rainy|overcast +and +wet)\b/i.test(charMessage);
-
-                // Car
-                if (checkMessage([" Car ", "Van ", "Minivan", "Truck", "Vehicle"])) {
-                    return isRain ? "car interior.avif" : "Car Interior 2.avif";
-                }
-
-                // Library
-                if (checkMessage("Library Nook")) return "library nook.avif";
-                if (checkMessage(["Library", "Nook"])) return "library.avif";
-
-                // Office / Lab
-                if (checkMessage("Office")) return "Office.avif";
-                if (checkMessage(["Lab", "Laboratory"])) return "Lab.avif";
-
-                // Hotel / Motel
-                if (checkMessage(["Hotel", "Motel"])) {
-                    const isLuxury = checkMessage(["Luxury", "Expensive", "High End", "Five Star", "Five-Star"]);
-                    const isCheap = checkMessage(["Cheap", "Poor", "Dirty", "Rundown", "One-Star", "One Star"]);
-                    const isLove = checkMessage(["Love", "Sex"]);
-                    if (exterior) {
-                        if (isLove) return "Love Hotel Exterior.avif";
-                        if (isLuxury) return "Luxury Hotel Exterior.avif";
-                        if (isCheap) return "Cheap Motel Exterior.avif";
-                        return "Hotel Exterior.avif";
-                    }
-                    if (checkMessage("Pool")) return "Hotel Pool.avif";
-                    if (checkMessage("Hot Tub")) return "Luxury Hot tub.avif";
-                    if (isLove) return "Love Hotel Interior.avif";
-                    if (isLuxury) return "Luxury Hotel Interior.avif";
-                    if (isCheap) return "Cheap Motel Interior.avif";
-                    return "Hotel Interior.avif";
-                }
-
-                // Backyard / Camp / Cabin / Amusement
-                if (checkMessage("Cookout")) return "Backyard Cookout.avif";
-                if (checkMessage("Backyard")) {
-                    return checkMessage("Bonfire") ? "Backyard Bonfire.avif" : "Empty Backyard.avif";
-                }
-                if (checkMessage("Tent")) {
-                    return isNight ? "Solo Campground night.avif" : "Solo Campground day.avif";
-                }
-                if (checkMessage(["Camp ", "Campsite", "Campgrounds"])) return "Campground.avif";
-
-                if (checkMessage("Cabin")) {
-                    if (exterior) return "Cabin in the Woods.avif";
-                    if (checkMessage("Bedroom")) return "Cabin Bedroom Interior.avif";
-                    return "Cabin Interior.avif";
-                }
-
-                if (checkMessage("Arboretum")) {
-                    return isNight ? "Arboretum Night.avif" : "Arboretum Day.avif";
-                }
-                if (checkMessage(["Amusement Park", "Roller Coaster", "Theme Park"])) {
-                    return isNight ? "Amusement Park Night.avif" : "Amusement Park Day.avif";
-                }
-
-                // Boat
-                if (checkMessage(["Yacht", "Boat", "Ship"])) return "Yacht Party.avif";
-
-                // Roof
-                if (checkMessage(["Roof", "Rooftop"])) {
-                    if (checkMessage(["Garden", "Greenhouse", "Sanctuary"])) return "Rooftop Greenhouse.avif";
-                    return "Rooftop.avif";
-                }
-
-                // Misc Stores
-                if (checkMessage(["Icecream", "Ice Cream"])) return "Icecream Shop.avif";
-                if (checkMessage("Record")) return "Record Store.avif";
-                if (checkMessage("Game")) return "Game Store.avif";
-                if (checkMessage("Karaoke")) return "Karaoke Bar.avif";
-                if (checkMessage("Tattoo")) return "Tattoo Parlor.avif";
-                if (checkMessage(["Book", "Bookstore"])) return "Bookstore.avif";
-                if (checkMessage(["Pet", "Animal"])) return "Pet Store.avif";
-                if (checkMessage(["Roller Skate", "Roller Skating", "Roller Rink"])) return "Roller Skating Rink.avif";
-                if (checkMessage(["Skate", "Skatepark"])) return "Empty Skatepark.avif";
-                if (checkMessage(" Ski ")) return "Ski Resort.avif";
-
-                // Park / Outdoor
-                if (checkMessage("Lake")) {
-					if (checkMessage("Mountain")) return "Mountain Lake.avif";
-					return "Lake.avif";
-				}
-                if (checkMessage("Playground")) return "Empty Playground.avif";
-                if (checkMessage("Trampoline")) return "Indoor Trampoline.avif";
-                if (checkMessage(["River", "Riverside"])) return "River Walk.avif";
-                if (checkMessage(["Overlook", "Cliffside", "Outlook"])) return "Cliffside Parking Lot 2.avif";
-                if (checkMessage("Park")) return isNight ? "Parc_8_Night.avif" : "Park.avif";
-
-                // Transit / Stairs / Alley
-                if (checkMessage("Bus")) return checkMessage("Stop") ? "Bus-Stop.avif" : "Bus Interior.avif";
-                if (checkMessage(["Stairwell", "Staircase", "Stairs"])) return "Stairwell.avif";
-                if (checkMessage("Bowling")) return "Bowling Alley.avif";
-                if (checkMessage("Alley")) return "Alley.avif";
-
-                // Sports
-                if (checkMessage("Gym")) return "Gym 2.avif";
-                if (checkMessage("Locker")) return "Locker Room.avif";
-                if (checkMessage("Baseball")) return "Baseball Field.avif";
-                if (checkMessage("Basketball")) return "Basketball Court.avif";
-                if (checkMessage("Volleyball")) return "Volleyball Court.avif";
-                if (checkMessage("Football")) return "Football Field.avif";
-                if (checkMessage("Ice Rink")) return "Ice Rink.avif";
-                if (checkMessage(["Sports", "Tennis"])) return "Sports Complex.avif";
-
-                // Haunted / Construction
-                if (checkMessage("Haunted")) {
-                    return exterior ? "Haunted House.avif" : "Haunted-House-Interior.avif";
-                }
-                if (checkMessage("Observatory")) {
-					if (checkMessage(["Construction", "Jobsite", "Job Site", "Worksite"])) return "construction.avif";
-					return "Observatory.avif";
-				}
-                if (checkMessage(["Construction", "Jobsite", "Job Site", "Worksite"])) return "construction.avif";
-
-                // Classrooms
-                // Art and Workshop are checked before generic Class because they have their
-                // own BGs and would otherwise be shadowed by the lecture-hall fallback.
-                if (checkMessage("Art")) return "Art Class.avif";
-                if (checkMessage(["Workshop", "Crafts"])) return "workshop.avif";
-                if (checkMessage(["Class", "Lecture Hall", "Biology", "Calculus"])) {
-                    return exterior ? "lecture hall.avif" : "Lecture Hall 2.avif";
-                }
-                if (checkMessage(["Cook", "Culinary"])) return "Sterling_Hall_Inside_3.avif";
-
-                // Treehouse / Kinsbane front (general context)
-                if (checkMessage(["Treehouse", "Tree House", "Aiko[^~\n]*Fort", "Aiko[^~\n]*Tree"])) {
-                    return "kb treehouse.avif";
-                }
-                if (checkMessage("Kinsbane")) return "kb front.avif";
-
-                // Campus generic
-                if (checkMessage(["Sterling", "Dorm"])) return "sterling.avif";
-                if (checkMessage(["Quad", "Campus", "Walkway"])) return "Quad.avif";
-                if (checkMessage(["Dormitory Pathway", "Grounds"])) {
-                    return isRain ? "weyland uni rain.avif" : "campus grounds.avif";
-                }
-                if (checkMessage(["Hallway", "Corridor"])) return "hallway.avif";
-                if (checkMessage(["Bathroom", "Restroom", "Toilet", "Washroom"])) return "shared bathroom 2.avif";
-                if (checkMessage("Mall")) {
-					if (checkMessage("Closed")) return "Mall Night.avif";
-					return "Mall Day.avif";
-				}
-
-                // Theater / Tavern / Habitat
-                if (checkMessage(["Movie", "Theatre", "Theater", "Cinema"])) return "Theater.avif";
-                if (checkMessage("Weyland Tavern")) return "weyland tavern.avif";
-                if (checkMessage("Research Center")) return "Weyland Research Center.avif";
-                if (checkMessage(["Habitat", "Research", "Observation"])) return "observe.avif";
-
-                // Exchange
-                if (checkMessage("Exchange")) {
-                    const djmika = getLocalVariable("djmika") === "true";
-                    if (!djmika) {
-                        if (/Mika/.test(charMessage)) {
-                            setLocalVariable("djmika", "true");
-                            return "exchange 2.avif";
-                        }
-                        return "exchange.avif";
-                    }
-                    return;
-                }
-
-                if (checkMessage("Kodo Bowl")) return "Kodo_Bowl.avif";
-
-                const isAlone = /\b(?:alone|empty|deserted|nobody)\b/i.test(charMessage);
-
-                // Beach
-                if (checkMessage("Beach")) {
-                    if (checkMessage("Bonfire")) return "Beach Bonfire.avif";
-                    if (checkMessage(["Cove", "Hidden"])) return "Hidden Beach Cove.avif";
-                    if (isNight) return "Beach_Night.avif";
-                    if (isAlone) return "Beach_Day.avif";
-                    return Math.random() < 0.5 ? "Beach_1.avif" : "Beach_2.avif";
-                }
-
-                if (checkMessage("Boardwalk")) {
-                    return isAlone ? "Boardwalk_Empty.avif" : "Boardwalk_Pop.avif";
-                }
-                if (checkMessage("Pier")) return isNight ? "Pier_Night.avif" : "Pier_Day.avif";
-
-                // Adult / Casino
-                if (checkMessage("Casino")) return "Casino.avif";
-                if (checkMessage("Strip")) return "Strip Club.avif";
-                if (checkMessage("Adult")) return "Adult Store.avif";
-
-                // Japan
-                if (checkMessage(["Japan", "Tokyo"])) {
-                    if (checkMessage(["Countryside", "Rural"])) return "Japanese Countryside.avif";
-                    if (checkMessage(["Town", "Village"])) return "Small Japanese Town.avif";
-                    if (checkMessage("Forest")) return "Japanese Forest.avif";
-                    if (checkMessage(["Mountain", "Mount", "Trail"])) return "Japanese Mountain Trail.avif";
-                    return "Japanese City.avif";
-                }
-
-                // Ellie's Estate (char-gated)
-                if (charName === "Ellie" && checkMessage(["Estate", "Castle", "Ellie", "Tomoryu"])) {
-                    if (checkMessage(["Garden", "Pond"])) return "Japanese Estate Garden.avif";
-                    if (checkMessage(["Shrine", "Grave"])) return "Japanese Estate Exterior Shrines.avif";
-                    if (checkMessage("Engawa")) return "Japanese Estate Engawa.avif";
-                    if (checkMessage(["Dining", "Eating", "Meal", "Food", "Dinner", "Breakfast"])) {
-                        return "Japanese Estate Dining Room.avif";
-                    }
-                    if (checkMessage("Ellie")) return "Japanese Estate Ellie Bedroom.avif";
-                    return "Japanese Estate Bedroom.avif";
-                }
-
-                if (checkMessage("Torii")) return "Mountain Tori Gates.avif";
-
-                if (checkMessage("Europe")) {
-                    return checkMessage("City") ? "Large European City.avif" : "Small European Town.avif";
-                }
-
-                if (checkMessage(["Plane", "Airplane"])) {
-                    return checkMessage("Window") ? "Airplane Interior Window View.avif" : "Airplane Interior.avif";
-                }
-
-                if (checkMessage("Arcade")) return "Arcade.avif";
-
-                // Somnia 
-                if (checkMessage("Somnia")) {
-                    if (exterior) {
-						if (isNight) return "Beach_Night.avif";
-						return "somnia 1.avif";
-					}
-                    if (checkMessage(["Front Desk", "Reception"])) return "somnia 2.avif";
-                    if (checkMessage("Bar")) return "somnia 3.avif";
-                    if (checkMessage("Kiosk")) return "somnia 5.avif";
-                    return "somnia 4.avif";
-                }
-
-                if (checkMessage(["7-Eleven", "Seven-Eleven"])) {
-                    if (exterior) return isNight ? "711 Night.avif" : "711 Day.avif";
-					return "seven eleven.avif";
-                }
-				
-                // Cave
-                if (checkMessage("Cave")) return "Cave.avif";
-                if (checkMessage("Sea Cove")) return "Sea Cove.avif";
-				
-                // Graveyard
-                if (checkMessage("Graveyard")) return "Graveyard.avif";
-				
-                // Farmer Market
-                if (checkMessage(["Farmer Market", "Farmer's Market"])) return "Farmers Market.avif";
-				
-                // Desert
-                if (checkMessage("Desert")) return "Desert.avif";
-				
-                // Egypt
-                if (checkMessage("Egypt")) return "Egyptian City.avif";
-				
-                // Lighthouse
-                if (checkMessage("Lighthouse")) return "Lighthouse.avif";
-                if (checkMessage("Shipyard")) return "Shipyard.avif";
-				
-                // Laundry
-                if (checkMessage("Laundromat")) return "Laundromat.avif";
-                if (checkMessage("Laundry")) return "Laundry.avif";
-				
-                // Massage Parlor
-                if (checkMessage(["Massage", "Masseuse"])) return "Massage Parlor.avif";
-				
-                // Trainyard
-                if (checkMessage(" Train ")) return "Trainyard.avif";
-				
-                // Space
-                if (checkMessage("Outer Space")) return "Space.avif";			
-				
-                // Festivals
-                if (checkMessage("Moonlight")) return "festival.avif";
-                if (checkMessage("Sunrise")) return "sunrise.avif";
-                if (checkMessage(["Harvest", "Autumn", "Fall"])) return "Autumn Festival.avif";
-                if (checkMessage(["Festival", "Lantern"])) return "Lantern Festival.avif";
-                if (checkMessage("Christmas")) return "Christmas Party.avif";
-                if (checkMessage("Halloween")) return "Halloween Party.avif";
-
-                // Caravan
-                if (checkMessage("Caravan")) {
-                    if (checkMessage("Outer")) {
-                        return isNight ? "caravan outer night.avif" : "caravan outer day.avif";
-                    }
-                    return isNight ? "caravan ring night.avif" : "caravan ring day.avif";
-                }
-
-                // Pavilions
-                if (checkMessage("Sunstone")) return "Sunstone Pavilion Throne Room.avif";
-                if (checkMessage("Moonstone")) return "Moonstone Pavilion Sitting Area.avif";
-                if (checkMessage("Anubis")) return "Temple of Anubis.avif";
-                if (checkMessage("Temple of Bast")) return "Temple of Bastet.avif";
-            } catch {}
-        })();
-
-        if (bg) {
-            if (getLocalVariable("BGFound") !== bg) {
-                DebugLog(`New BG Found:`, bg);
-                setLocalVariable("BGFound", bg);
-                setGlobalVariable("BGFoundG", bg);
-                setBackground(bg);
-                return bg;
-            } else {
-                DebugLog(`Same BG Found:`, bg);
-                return bg;
-            }
-        } else {
-            DebugLog(`No BG found.`);
+        DebugLog(`BG: ${pick.why}`);
+        setLocalVariable("BGPlace", pick.placeId);
+        // setBackground() with no argument reports what is on screen, so a manual change gets corrected too
+        if (previousFile !== pick.file || setBackground() !== pick.file) {
+            setLocalVariable("BGFound", pick.file);
+            setGlobalVariable("BGFoundG", pick.file);
+            applyBackgroundFile(pick.file);
         }
-
-        return;
+        return pick.file;
     } catch (err) {
         console.error(`[WQR] BG Error:`, err);
         return `Error`
@@ -2314,11 +1790,11 @@ async function OpenWorldCostumes(charName, charMessage) {
 
         const sideFolder = pickedCharSide ? `${pickedCharSide}/${getCostume(pickedCharSide)}` : "";
         if (lookForSide) {
-            if (sideFolder && getLocalVariable("CostmSaveSide") !== sideFolder) {
-                setLocalVariable("CostmSaveSide", sideFolder);
-                await updateSideCharacter({character: sideFolder, expression: expression});
-                DebugLog(`OpenWorldCostumes: Set right-side to "${sideFolder}"`);
-            } else if (!sideFolder && getLocalVariable("CostmSaveSide") !== "") {
+            if (sideFolder) {
+                if (await refreshSideCharacter(sideFolder, expression)) {
+                    DebugLog(`OpenWorldCostumes: Set right-side to "${sideFolder}" (${expression || "neutral"})`);
+                }
+            } else if (getLocalVariable("CostmSaveSide") !== "") {
                 setLocalVariable("CostmSaveSide", "");
                 updateSideCharacter({clear: "true"});
                 DebugLog(`OpenWorldCostumes: Cleared right-side.`);
@@ -2743,7 +2219,7 @@ async function XXX(charName) {
                 : baphometThoughts(rav.thinkYes));
         } else if (["Summer","Loona","Belle","Hannah","Seth","Lentyl","Briar","Willow","Dash"].includes(charName) && rav.thinkYes) {
             setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
-        } else if (charName === "Vera" && (getLocalVariable("Scenario") || introHadScenario()) && rav.thinkYes) {
+        } else if (charName === "Vera" && (Number(getFirstMessage("char")?.swipe_id) === 0 || getLocalVariable("Scenario") || introHadScenario()) && rav.thinkYes) {
             setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
         } else if (charName === "Cerberus Sisters" && getLocalVariable("CerberusSister") === "Fawne" && rav.thinkYes) {
             setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
@@ -2869,6 +2345,19 @@ async function Clear(charMessage) {
 function fCheck() {
     return getGlobalVariable("WTCreator") === "FFFox";
 }
+
+/**
+ * True when the player locked a background to this chat (ST's lock button, saved as
+ * chat_metadata.custom_background by backgrounds.js). AutoBG has to stay out of those chats:
+ * it applies a background by clicking it in the BG menu, and ST's click handler re-locks the
+ * chat to whatever was clicked while a lock exists, so every reply (and reopening the chat)
+ * silently replaced the player's pick. Unlocking hands the chat back to AutoBG.
+ * /wubg is a manual command and is not gated.
+ * @returns {boolean}
+ */
+function chatHasLockedBackground() {
+    return Boolean(chat_metadata?.custom_background);
+}
 //#endregion
 
 // SETUP
@@ -2894,6 +2383,12 @@ function registerSlashCommands() {
         SlashCommandParser.addCommandObject(SlashCommand.fromProps({
             name: 'wubg',
             callback: async () => {await BG();return '';}
+        }));
+        // Debug: which background the last reply would get, and why (catalog place, matched words, variant).
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wubgwhy',
+            callback: async () => { const why = await BG(undefined, undefined, { dryRun: true }); toastr.info(String(why), 'Auto-background', { timeOut: 12000 }); return String(why ?? ''); },
+            helpString: 'Explains which background the last reply would get, without changing it',
         }));
         SlashCommandParser.addCommandObject(SlashCommand.fromProps({
             name: 'wuautocostumes',

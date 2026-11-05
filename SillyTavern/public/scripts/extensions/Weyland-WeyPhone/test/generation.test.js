@@ -339,7 +339,7 @@ test('buildMessages + applyMacroSubstitution resolves real macros in both the sy
 
 test('resolveModelOverride: explicit setting wins, then live model, then empty', async () => {
     const { resolveModelOverride } = await import('../lib/generation.js');
-    assert.equal(resolveModelOverride({ settingsModel: 'deepseek-v4-pro', liveModel: 'sonnet' }), 'deepseek-v4-pro');
+    assert.equal(resolveModelOverride({ settingsModel: 'mimo-v2', liveModel: 'sonnet' }), 'mimo-v2');
     assert.equal(resolveModelOverride({ settingsModel: '  ', liveModel: 'sonnet' }), 'sonnet');
     assert.equal(resolveModelOverride({ settingsModel: '', liveModel: '' }), '');
     assert.equal(resolveModelOverride({}), '');

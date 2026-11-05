@@ -181,7 +181,11 @@ export async function setEntryField(args, value) {
             entry.characterFilter.isExclude = typeof value === "boolean" ? value : isTrueBoolean(value);;
             setWIOriginalDataValue(data, uid, 'character_filter', entry.characterFilter);
             break;
-        default:
+        default: {
+            // Weyland: TitleBarColors rewrites the shared "Scenario" entry's keys on every chat open, and
+            // each write re-uploads the whole world file (~200 KB for Weyland Characters) even when the
+            // value is the same. Compare first and skip the save when nothing changed.
+            const before = JSON.stringify(entry[field]);
             if (Array.isArray(entry[field])) {
                 entry[field] = (Array.isArray(value) ? value : parseStringArray(value)).filter(arrayFilter);
             } else if (typeof entry[field] === 'boolean') {
@@ -192,11 +196,14 @@ export async function setEntryField(args, value) {
                 entry[field] = value;
             }
 
+            if (JSON.stringify(entry[field]) === before) return 'Finished';
+
             // @ts-ignore
             if (originalWIDataKeyMap[field]) {
                 // @ts-ignore
                 setWIOriginalDataValue(data, uid, originalWIDataKeyMap[field], entry[field]);
             }
+        }
     }
 
     await saveWorldInfo(file, data);

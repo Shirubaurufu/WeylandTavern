@@ -27,17 +27,17 @@ function tetherContextSliderMarkup(settings) {
 }
 
 // Same UI format as Weyland-LTM's model selection (input + "Use current" + quickfill preset
-// buttons + disclaimer), with WeyPhone's own values. gemini-3.8-flash is the default per Lucky;
-// minimax-m3 and deepseek-v4-pro are his other tested favorites. All keep Sonnet supply for
+// buttons + disclaimer), with WeyPhone's own values. gemini-3.8-flash is the default per Lucky.
+// (HelixMind retired DeepSeek and MiniMax in 2026-11.) Everything here keeps Sonnet supply for
 // actual messaging.
 export const RECOMMENDED_PHONE_MODEL = 'gemini-3.8-flash';
-// Second choice, tried once when the chosen model errors out. MiniMax M3 across the board:
+// Second choice, tried once when the chosen model errors out. Gemini 3.8 Flash across the board:
 // cheap, fast, reliably available, and never Sonnet.
-export const FALLBACK_PHONE_MODEL = 'minimax-m3';
+export const FALLBACK_PHONE_MODEL = 'gemini-3.8-flash';
 // This one list feeds the quickfill buttons on WeyPhone's own model fields, Kressa's model field,
 // and PawXai's — all three import it from here, so a model added below shows up in all of them.
 // (Weyland-LTM keeps a separate list of its own; new models need adding there too.)
-export const ALTERNATE_PHONE_MODELS = ['minimax-m3', 'deepseek-v4-pro', 'gemma-4-31b-it'];
+export const ALTERNATE_PHONE_MODELS = ['gemma-4-31b-it'];
 
 /**
  * Fallback-model dropdown. Same option list as the primary picker plus an explicit
@@ -464,7 +464,7 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
     <label class="wp-settings-field wp-settings-field-column wp-settings-field-captioned" title="Which saved connection WeyPhone sends through. Leave this on your current chat connection unless you run more than one provider.">
         <span>Connection for WeyPhone <small>Almost everyone should leave this alone.</small></span>
         ${connectionProfileSelect('wp-settings-profile', settings.connectionProfileId)}
-        <small class="wp-settings-recommend-disclaimer"><strong>Lucky strongly recommends Gemini 3.8 Flash, Minimax M3 or DeepSeek V4</strong> for WeyPhone generation. He asks that users avoid Sonnet here so Sonnet capacity stays available to the wider community.</small>
+        <small class="wp-settings-recommend-disclaimer"><strong>Lucky strongly recommends Gemini 3.8 Flash</strong> for WeyPhone generation. He asks that users avoid Sonnet here so Sonnet capacity stays available to the wider community.</small>
     </label>
 </div>`;
 

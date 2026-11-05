@@ -220,7 +220,7 @@ test('Narrative renders a phone-native control surface without embedding prompt 
     // Analysis card wording (2026-10-13): ~40s either side, and the models that gain most.
     assert.match(target.innerHTML, /Longer response time \(~40s more\)/);
     assert.match(target.innerHTML, /Faster response time \(~40s saved\)/);
-    assert.match(target.innerHTML, /Sonnet, GLM, Deepseek and Gemini Pro see the biggest boost/);
+    assert.match(target.innerHTML, /Sonnet, GLM and Gemini Pro see the biggest boost/);
     assert.doesNotMatch(target.innerHTML, /~20s/);
     assert.match(target.innerHTML, /wp-narrative-bay-help[\s\S]*foundational instruction set/, 'the explanation sits behind the ?');
     assert.match(target.innerHTML, /Gemini Bypass \(Beta\)/);

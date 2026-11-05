@@ -1,3 +1,4 @@
+import { applyRetiredModelSwapOnce } from '../../../weyland-retired-models.js';
 import { migrateLegacyConversations, migrateMemoryFields, migrateTetheredFields, migrateContactHistoryFields, migrateStaleModelNames } from './storage.js';
 
 export const MODULE_NAME = 'WeyPhone';
@@ -30,8 +31,8 @@ export const defaultSettings = Object.freeze({
     // User-authored relationship/background notes keyed by stable contact identity. These are
     // injected into texting prompts but never written into the main roleplay or lorebooks.
     contactContexts: {},
-    // Model every WeyPhone generation runs on (texting + sync). Deliberately defaults to
-    // minimax-m3 — Lucky discourages spending Sonnet on what amounts to a small text.
+    // Model every WeyPhone generation runs on (texting + sync). Deliberately defaults to Gemini 3.8 Flash:
+    // Lucky discourages spending Sonnet on what amounts to a small text.
     // Empty string = follow the live main-chat model. Kressa has her own setting (kressaModel).
     modelOverride: 'gemini-3.8-flash',
     // Texting is deliberately independent from the social-app Sync model. Existing installs are
@@ -39,9 +40,9 @@ export const defaultSettings = Object.freeze({
     textingModelOverride: 'gemini-3.8-flash',
     kressaModel: '', // '' = live main-chat model (default per Lucky)
     // Second choice, tried once when the model above errors out. Blank = no retry.
-    fallbackModelOverride: 'minimax-m3',
-    textingFallbackModel: 'minimax-m3',
-    kressaFallbackModel: 'minimax-m3',
+    fallbackModelOverride: 'gemini-3.8-flash',
+    textingFallbackModel: 'gemini-3.8-flash',
+    kressaFallbackModel: 'gemini-3.8-flash',
     // Weyland's global Hard Mode is deliberately isolated from WeyPhone. These independent
     // opt-ins only take effect while the global HardToggle is actually On.
     phoneHardModeEnabled: false,
@@ -49,13 +50,13 @@ export const defaultSettings = Object.freeze({
     kressaPalette: 'twilight',
     calculatorPalette: 'graphite',
     // Understudy: second-model rewrite pass over the last reply. gemini-3.8-flash is the default
-    // on measured results - it rewrites properly where others polish. deepseek-v4-pro-thinking is
-    // the recommended optional backup; its NON-thinking sibling returned near-identical text and is not offered.
+    // on measured results - it rewrites properly where others polish.
+    // (HelixMind retired its DeepSeek and MiniMax models in 2026-11; see weyland-retired-models.js.)
     understudy: {
         // Visible Copycat theme. The internal object name is retained for saved-setting compatibility.
         palette: 'opening-night',
         modelOverride: 'gemini-3.8-flash',
-        // Backup retries are opt-in; recommend DeepSeek V4 Pro Thinking in the picker.
+        // Backup retries are opt-in.
         fallbackModel: '',
         scope: 'full',
         contextMessages: 5,
@@ -90,7 +91,7 @@ export const defaultSettings = Object.freeze({
     pawxai: {
         promptCount: 5,
         modelOverride: 'gemini-3.8-flash',
-        fallbackModel: 'minimax-m3',
+        fallbackModel: 'gemini-3.8-flash',
         palette: 'orchid-night',
         focus: 'balanced',
         framing: 'auto',
@@ -256,6 +257,9 @@ export function getSettings(extensionSettings) {
     migrateTetheredFields(settings);
     migrateContactHistoryFields(settings);
     migrateStaleModelNames(settings);
+    // HelixMind retired DeepSeek and MiniMax (2026-11). A saved choice of either moves to Gemini 3.8 Flash ONCE; unlike the
+    // permanent renames above, it never runs again, so picking one after HelixMind brings them back is respected.
+    applyRetiredModelSwapOnce(settings);
     migrateRemoveAethel(settings);
     migratePhoneAppKeys(settings);
     reconcileClockSource(settings.ui);

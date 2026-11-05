@@ -1,3 +1,4 @@
+import { RETIRED_MODEL_SWAP_ID } from '../../../weyland-retired-models.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MODULE_NAME, defaultSettings, getSettings, resetSettings } from '../lib/config.js';
@@ -22,6 +23,8 @@ test('getSettings creates the settings object on first call', () => {
     assert.deepEqual(settings, {
         ...defaultSettings,
         ui: { ...defaultSettings.ui, rpClockEnabled: true, clockDefaultTimeMode: 'rp' },
+        // written on first load so the one-time DeepSeek/MiniMax swap never runs again (weyland-retired-models.js)
+        retiredModelSwap: RETIRED_MODEL_SWAP_ID,
     });
     assert.equal(extensionSettings[MODULE_NAME], settings);
     assert.equal(settings.contactRenames.Loona, '[REDACTED]');
@@ -47,14 +50,14 @@ test('getSettings backfills newly-added default keys without clobbering existing
     assert.equal(settings.kressaHardModeEnabled, false);
     assert.equal(settings.pawxai.promptCount, 5);
     assert.equal(settings.pawxai.modelOverride, 'gemini-3.8-flash');
-    assert.equal(settings.pawxai.fallbackModel, 'minimax-m3');
+    assert.equal(settings.pawxai.fallbackModel, 'gemini-3.8-flash');
     assert.equal(settings.pawxai.palette, 'orchid-night');
-    // Primary defaults moved to 3.8-flash; MiniMax M3 is now the retry-once fallback.
+    // Primary defaults moved to 3.8-flash; HelixMind retired MiniMax M3 (2026-11), so the retry-once fallback is 3.8-flash too.
     assert.equal(settings.modelOverride, 'gemini-3.8-flash');
     assert.equal(settings.textingModelOverride, 'gemini-3.8-flash');
-    assert.equal(settings.fallbackModelOverride, 'minimax-m3');
-    assert.equal(settings.textingFallbackModel, 'minimax-m3');
-    assert.equal(settings.kressaFallbackModel, 'minimax-m3');
+    assert.equal(settings.fallbackModelOverride, 'gemini-3.8-flash');
+    assert.equal(settings.textingFallbackModel, 'gemini-3.8-flash');
+    assert.equal(settings.kressaFallbackModel, 'gemini-3.8-flash');
 });
 
 test('getSettings migrates PawXai original defaults to five prompts without clobbering later choices', () => {
@@ -199,7 +202,7 @@ test('an upgrading install backfills tetherContextMessages to the safe 30 defaul
     // Settings saved before the Linked-context slider existed have no tetherContextMessages key.
     // 0 means "no cap" in the slider, so an un-backfilled/undefined value must never be read as 0 —
     // that would silently restore the unbounded injection the cap exists to prevent.
-    const extensionSettings = { WeyPhone: { conversations: {}, modelOverride: 'minimax-m3' } };
+    const extensionSettings = { WeyPhone: { conversations: {}, modelOverride: 'mimo-v2' } };
     const settings = getSettings(extensionSettings);
     assert.equal(settings.tetherContextMessages, 30);
 });

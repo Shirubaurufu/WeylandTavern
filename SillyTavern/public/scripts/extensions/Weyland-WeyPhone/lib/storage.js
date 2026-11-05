@@ -10,11 +10,11 @@ import { protectRepliedCaptures } from './roleplayCapture.js';
  * @property {number} lastActive
  */
 
-// Defaults chosen by the operator: Gemini 3.8 Flash as primary, MiniMax M3 (the house fallback) as the
+// Defaults chosen by the operator: Gemini 3.8 Flash as primary and, since HelixMind retired MiniMax M3 (2026-11), as the
 // fallback if the primary model call fails. (GLM 4.7 was the original primary; retired below once Helix
 // lost access to it.)
 export const DEFAULT_MEMORY_PRIMARY_MODEL = 'gemini-3.8-flash';
-export const DEFAULT_MEMORY_BACKUP_MODEL = 'minimax-m3';
+export const DEFAULT_MEMORY_BACKUP_MODEL = 'gemini-3.8-flash';
 
 // HelixMind renamed this exact model id (2026-07-30) with no change to the underlying model.
 // Existing settings/conversations already hold a real STRING value for these fields, so the

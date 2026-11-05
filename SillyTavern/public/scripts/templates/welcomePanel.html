@@ -122,12 +122,16 @@
 
     <div id="hm-tracker">
         <div id="hm-key-unset">
-            <p>Provide your API key to enable the message cooldown tracker. Your key begins with "helix-" and that should be included below.</p>
+            <p id="hm-key-prompt">Provide your API key to enable the message cooldown tracker. Your key begins with "helix-" and that should be included below.</p>
             <div class="hm-key-input-row">
                 <input id="tracker-key-input" type="text" placeholder="helix-..." autocomplete="off" spellcheck="false">
                 <button id="set-tracker-key" class="info_button">
                     <i class="fa-solid fa-clock"></i>
                     <span>Set Tracker Key</span>
+                </button>
+                <button id="cancel-tracker-key" class="info_button" type="button" style="display: none;" title="Keep my current key">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>Cancel</span>
                 </button>
             </div>
         </div>

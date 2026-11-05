@@ -521,6 +521,42 @@ export function setBackground(bg) {
 }
 
 /**
+ * Exact-file version of setBackground, for the auto-background picker (2026-11-04).
+ * setBackground fuzzy-searches the menu (a name could land on a look-alike file; it rebuilt a Fuse index
+ * over ~370 entries on every call) and then CLICKS the menu entry. That click runs ST's whole menu handler,
+ * which re-highlights every entry and forces a style recalculation: ~5 ms on a fast desktop, measured,
+ * so tens of ms on a low-end phone. This does only what that handler ends up doing for an ordinary,
+ * unlocked chat (backgrounds.js: onSelectBackgroundClick -> setBackground): preload the file, then set
+ * #bg1, background_settings and save. It mirrors ST's private setBackground(bg, url); if ST changes how
+ * that works, change this too.
+ * Falls back to the real click when a background is LOCKED to the chat (the lock rules stay ST's), and
+ * to setBackground when the menu doesn't list the file. Chat-uploaded backgrounds are never picked,
+ * because selecting one of those locks it to the chat.
+ * @param {string} file
+ */
+export function applyBackgroundFile(file) {
+    if (!file) return setBackground();
+    const element = Array.from(document.querySelectorAll('.bg_example'))
+        .find(x => x.getAttribute('bgfile') === file && x.getAttribute('custom') !== 'true');
+    if (!(element instanceof HTMLElement)) return setBackground(file);
+
+    const customLayer = document.getElementById('bg_custom')?.style.backgroundImage;
+    const url = $(element).data('url');
+    if ((customLayer && customLayer !== 'none') || !url) {
+        element.click();
+        return 'Finished';
+    }
+    // Same preload-then-swap as ST's click handler, so the old picture stays until the new one is ready
+    fetch(`backgrounds/${encodeURIComponent(file)}`).then(() => {
+        $('#bg1').css('background-image', url);
+        background_settings.name = file;
+        background_settings.url = url;
+        saveSettingsDebounced();
+    }).catch(() => console.log(`[WQR] Background could not be set: ${file}`));
+    return 'Finished';
+}
+
+/**
  * @param {string} [characterName]
  * @param {string} [costume]
  * @returns 

@@ -82,7 +82,7 @@ export function normalizePawXaiSettings(value = {}) {
         : null;
     return {
         promptCount: clampCount(value.promptCount),
-        modelOverride: typeof value.modelOverride === 'string' ? value.modelOverride : 'minimax-m3',
+        modelOverride: typeof value.modelOverride === 'string' ? value.modelOverride : 'gemini-3.8-flash',
         focus: ['balanced', 'character', 'environment', 'action', 'cinematic'].includes(value.focus) ? value.focus : 'balanced',
         framing: ['auto', 'portrait', 'medium shot', 'full body', 'wide shot', 'dynamic angle'].includes(value.framing) ? value.framing : 'auto',
         variation: ['close', 'balanced', 'wild'].includes(value.variation) ? value.variation : 'balanced',
@@ -264,7 +264,7 @@ export function parsePawXaiResponse(rawText, requestedCount = 5) {
     const raw = clean(rawText);
     if (!raw) return [];
     // Tagged blocks only. The old fallbacks (split on numbered lines, then on blank lines) turned a
-    // model that reasoned out loud and never reached its answer - seen with minimax-m3 spending the
+    // model that reasoned out loud and never reached its answer - seen with one reasoning model spending the
     // whole token budget on "Let me analyze this scene..." - into eight saved "prompts" of reasoning.
     // The prompt demands the <PROMPT> structure, so anything untagged is treated as unusable: the
     // caller then retries on the fallback model or reports a clean failure.
