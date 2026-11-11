@@ -1,0 +1,1210 @@
+/* WeyStore. Linked by lib/ui/apps/weystore.js the first time the store opens.
+   Its own file (like customShift.css and errorHelp.css) so the storefront can change without
+   touching the phone's main stylesheet.
+
+   The look: a small shop after closing time. Warm near-black, cream ink, the banner art doing the
+   colour work. One cream button per app; everything else stays quiet so the art and the facts read.
+   Fonts are ones the phone already ships (WP Archivo Black for display, JetBrains Mono / Share
+   Tech Mono for the small technical labels), so nothing new downloads. */
+
+#wp-panel[data-app="weystore"] #wp-screen-body {
+    padding: 0;
+    gap: 0;
+    background: #14100f;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(243, 230, 208, 0.18) transparent;
+}
+
+.wp-ws {
+    --ws-bg: #14100f;
+    --ws-card: #1d1816;
+    --ws-card-2: #272019;
+    --ws-line: rgba(255, 236, 214, 0.09);
+    --ws-ink: #f4ece2;
+    --ws-dim: #a99d90;
+    --ws-cream: #f3e6d0;
+    --ws-amber: #e2a23b;
+    --ws-red: #c8463f;
+    --ws-mono: 'JetBrains Mono', 'WP Share Tech Mono', ui-monospace, monospace;
+    --ws-display: 'WP Archivo Black', 'Arial Black', system-ui, sans-serif;
+    position: relative;
+    /* style.css keeps .wp-ws hidden until this file has loaded (it is linked on first open), so a
+       slow connection shows an empty screen for a moment instead of unstyled markup. */
+    visibility: visible;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    color: var(--ws-ink);
+    font-size: 13px;
+    line-height: 1.45;
+    color-scheme: dark;
+    /* A faint warm glow behind the masthead, like the one lamp left on. */
+    background:
+        radial-gradient(120% 220px at 50% -60px, rgba(226, 162, 59, 0.13), transparent 70%),
+        var(--ws-bg);
+}
+.wp-ws *, .wp-ws *::before, .wp-ws *::after { box-sizing: border-box; }
+.wp-ws button, .wp-ws input { font: inherit; color: inherit; text-shadow: none; }
+.wp-ws button { cursor: pointer; appearance: none; -webkit-appearance: none; }
+.wp-ws button:focus-visible {
+    outline: 2px solid var(--ws-cream);
+    outline-offset: 2px;
+}
+.wp-ws h2, .wp-ws h3, .wp-ws p, .wp-ws ul { margin: 0; padding: 0; }
+.wp-ws ul { list-style: none; }
+
+/* ---------------------------------------------------------------- masthead */
+.wp-ws-top {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    padding: 12px 14px 10px;
+    background: linear-gradient(to bottom, rgba(20, 16, 15, 0.97) 70%, rgba(20, 16, 15, 0));
+    backdrop-filter: blur(6px);
+}
+.wp-ws-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.wp-ws-mark { margin-right: auto; }
+/* The store hides the phone's own header: on the tabs it would only repeat "WeyStore" above the
+   masthead, and on an app page the banner looks better running to the top. Its "?" moves into the
+   masthead (index.js forwards the tap to the real help button) and an app page gets a back pill. */
+#wp-panel[data-app="weystore"] #wp-panel-header { display: none; }
+.wp-ws-help {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(243, 230, 208, 0.22);
+    background: transparent;
+    font-size: 10px;
+    color: var(--ws-dim) !important;
+}
+.wp-ws-help:hover { border-color: rgba(243, 230, 208, 0.55); color: var(--ws-cream) !important; }
+.wp-ws-mark {
+    font-family: var(--ws-display);
+    font-size: 23px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ws-ink);
+}
+.wp-ws-mark b { font-weight: inherit; color: var(--ws-amber); }
+.wp-ws-count {
+    font-family: var(--ws-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--ws-dim);
+    white-space: nowrap;
+}
+.wp-ws-count b { color: var(--ws-cream); font-weight: 600; }
+.wp-ws-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-top: 11px;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgba(255, 236, 214, 0.06);
+    border: 1px solid var(--ws-line);
+}
+.wp-ws-tabs button {
+    min-height: 30px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ws-dim);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    text-shadow: none;
+    transition: background 140ms ease, color 140ms ease;
+}
+.wp-ws-tabs button[aria-selected="true"] {
+    background: var(--ws-cream);
+    color: #1b1512;
+}
+.wp-ws-body { padding: 4px 14px 28px; flex: 1; }
+.wp-ws[data-ws-screen="detail"] .wp-ws-body { padding: 0 0 28px; }
+
+/* ---------------------------------------------------------------- icons */
+.wp-ws-icon {
+    position: relative;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    overflow: hidden;
+    background: #2a2421;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.wp-ws-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wp-ws-icon i { font-size: 20px; color: var(--ws-accent, var(--ws-dim)); }
+.wp-ws-icon-lg { width: 68px; height: 68px; border-radius: 19px; }
+.wp-ws-icon-lg i { font-size: 30px; }
+
+/* ---------------------------------------------------------------- the one button */
+.wp-ws-cta {
+    position: relative;
+    flex: 0 0 auto;
+    min-width: 62px;
+    height: 30px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 12px;
+    font-family: var(--ws-display);
+    font-weight: 400;
+    letter-spacing: 0.035em;
+    text-shadow: none;
+    overflow: hidden;
+    transition: transform 120ms ease, background 140ms ease, border-color 140ms ease;
+}
+.wp-ws-cta span { position: relative; z-index: 1; }
+.wp-ws-cta:active { transform: scale(0.95); }
+.wp-ws-cta-get { background: var(--ws-cream); color: #1b1512; }
+.wp-ws-cta-get:hover { background: #fff6e6; }
+/* SillyTavern themes often apply white text and a glow directly to every button child. The store
+   deliberately uses a light Get pill, so both the button AND its inner label need an explicit,
+   high-specificity ink colour. Keep the other store actions free of inherited glows too. */
+#wp-panel[data-app="weystore"] .wp-ws button.wp-ws-cta,
+#wp-panel[data-app="weystore"] .wp-ws button.wp-ws-cta > span,
+#wp-panel[data-app="weystore"] .wp-ws button.wp-ws-remove {
+    text-shadow: none !important;
+    filter: none !important;
+}
+#wp-panel[data-app="weystore"] .wp-ws button.wp-ws-cta,
+#wp-panel[data-app="weystore"] .wp-ws button.wp-ws-cta > span {
+    font-family: var(--ws-display) !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.035em !important;
+}
+#wp-panel[data-app="weystore"] .wp-ws button.wp-ws-cta-get {
+    background: var(--ws-cream) !important;
+    color: #1b1512 !important;
+}
+#wp-panel[data-app="weystore"] .wp-ws button.wp-ws-cta-get > span {
+    color: #1b1512 !important;
+    -webkit-text-fill-color: #1b1512 !important;
+}
+.wp-ws-cta-open {
+    background: transparent;
+    border-color: rgba(243, 230, 208, 0.3);
+    color: var(--ws-cream);
+}
+.wp-ws-cta-open:hover { border-color: rgba(243, 230, 208, 0.65); background: rgba(243, 230, 208, 0.06); }
+/* A membership app that is not on the phone cannot be added without Plus or Platinum, so it
+   never shows Get. index.js refuses the add too — the dimmed crown pill is honest, not decorative. */
+.wp-ws-cta-membership {
+    background: rgba(214, 168, 74, 0.14);
+    border-color: rgba(214, 168, 74, 0.5);
+    color: #e3b45f;
+    cursor: not-allowed;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+.wp-ws-cta-membership i { position: relative; z-index: 1; font-size: 10px; }
+/* Mid-install: the cream fills the pill left to right. index.js commits the install when the
+   same 620ms is up (WEYSTORE_INSTALL_MS), so the fill and the result land together. */
+.wp-ws-cta-busy {
+    background: rgba(243, 230, 208, 0.12);
+    color: var(--ws-cream);
+    cursor: default;
+}
+.wp-ws-cta-busy::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ws-cream);
+    transform-origin: left center;
+    animation: wp-ws-fill 620ms cubic-bezier(0.3, 0.7, 0.2, 1) forwards;
+}
+.wp-ws-cta-busy span { mix-blend-mode: difference; }
+.wp-ws-cta-wide { flex: 1 1 auto; height: 40px; font-size: 14px; }
+@keyframes wp-ws-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------------------------------------------------------------- banner art */
+.wp-ws-hero {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    overflow: hidden;
+    background: var(--ws-accent, #3a2f2a);
+}
+.wp-ws-hero-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.wp-ws-hero-plain { display: none; }
+.wp-ws-hero.is-plain {
+    background:
+        radial-gradient(90% 130% at 82% 40%, color-mix(in srgb, var(--ws-accent) 70%, #fff 8%), transparent 62%),
+        linear-gradient(120deg, #16110f 20%, color-mix(in srgb, var(--ws-accent) 55%, #16110f));
+}
+.wp-ws-hero.is-plain .wp-ws-hero-plain {
+    position: absolute;
+    right: 9%;
+    top: 50%;
+    display: block;
+    transform: translateY(-50%) rotate(-6deg);
+}
+.wp-ws-icon-ghost {
+    width: 86px;
+    height: 86px;
+    border-radius: 24px;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5);
+}
+.wp-ws-icon-ghost i { font-size: 38px; }
+.wp-ws-hero-shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.wp-ws-detail-top { position: relative; }
+.wp-ws-back {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 13px 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(12, 9, 8, 0.62);
+    backdrop-filter: blur(6px);
+    color: #fff !important;
+    font-size: 12px;
+    font-weight: 600;
+}
+.wp-ws-back i { font-size: 10px; }
+.wp-ws-back:hover { background: rgba(12, 9, 8, 0.82); }
+.wp-ws-hero-flag {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--ws-red);
+    color: #fff;
+    font-family: var(--ws-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------- spotlight */
+.wp-ws-spot .wp-ws-kicker { text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9); }
+.wp-ws-kicker {
+    font-family: var(--ws-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ws-amber);
+}
+.wp-ws-spot {
+    position: relative;
+    margin: 6px 0 4px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.wp-ws-spot-open {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+}
+.wp-ws-spot .wp-ws-hero { aspect-ratio: 16 / 9; }
+.wp-ws-spot .wp-ws-hero-art { transition: transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.wp-ws-spot-open:hover .wp-ws-hero-art { transform: scale(1.04); }
+/* The banners were drawn with their left third left calm, so the title sits there over a soft
+   fade and the art keeps the right. A dark banner (Last Smoke) only needs the bottom fade. */
+.wp-ws-spot .wp-ws-hero-shade {
+    background:
+        linear-gradient(to right, rgba(12, 9, 8, 0.86) 0%, rgba(12, 9, 8, 0.55) 36%, transparent 68%),
+        linear-gradient(to top, rgba(12, 9, 8, 0.7), transparent 55%);
+}
+.wp-ws-spot .wp-ws-hero.is-dark .wp-ws-hero-shade {
+    background: linear-gradient(to top, rgba(8, 6, 6, 0.92) 8%, rgba(8, 6, 6, 0.35) 46%, transparent 70%);
+}
+.wp-ws-spot-copy {
+    position: absolute;
+    left: 16px;
+    right: 96px;
+    bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.wp-ws-spot-name {
+    font-size: 22px;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+.wp-ws-spot-tagline {
+    font-size: 12.5px;
+    color: rgba(255, 246, 232, 0.86);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+.wp-ws-spot-cta { position: absolute; right: 14px; bottom: 14px; }
+.wp-ws-spot-cta .wp-ws-cta-open { background: rgba(12, 9, 8, 0.55); backdrop-filter: blur(4px); }
+
+/* ---------------------------------------------------------------- shelves */
+.wp-ws-shelf { margin-top: 22px; }
+/* The blurb sits BESIDE the title on one line (a wrapped second line read as a mistake on
+   the long shelf names); it truncates rather than wraps if a future title runs long. */
+.wp-ws-shelf-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: nowrap;
+    gap: 0 8px;
+    padding: 0 2px 8px;
+    min-width: 0;
+}
+.wp-ws-shelf-head h3 {
+    font-family: var(--ws-display);
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: var(--ws-ink);
+    white-space: nowrap;
+}
+.wp-ws-shelf-head p {
+    font-size: 11.5px;
+    color: var(--ws-dim);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* ---------------------------------------------------------------- posters
+   Each app on the shelf is a small poster for itself (the idea comes from the feature tiles in
+   the Play menu of the Aethel preview): the banner art fills the tile, a dark wash of the app's
+   own colour covers the left so the text reads, and the name is set in that app's own lettering.
+
+   Two variables carry the per-app look:
+     --p-ink   the dark wash (defaults to a dark mix of the app's accent, so an app nobody themed
+               still gets a poster in its own colour)
+     --p-edge  the border
+   plus one .wp-ws-wordmark rule per app further down. Fonts are only ones the phone already ships. */
+.wp-ws-posters { display: grid; gap: 10px; }
+.wp-ws-poster {
+    --p-ink: color-mix(in srgb, var(--ws-accent, #8a8a8a) 34%, #0c0908);
+    --p-edge: color-mix(in srgb, var(--ws-accent, #8a8a8a) 72%, #ffffff 12%);
+    --p-radius: 16px;
+    position: relative;
+    display: flex;
+    min-height: 116px;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: var(--p-radius);
+    border: 2px solid var(--p-edge);
+    background: var(--p-ink);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    color: #fffaf0;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.wp-ws-poster:hover { transform: translateY(-1px); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
+.wp-ws-poster.is-slim { min-height: 80px; }
+.wp-ws-poster-art {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    aspect-ratio: auto;
+    background: var(--p-ink);
+}
+.wp-ws-poster-art .wp-ws-hero-art { transition: transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.wp-ws-poster:hover .wp-ws-hero-art { transform: scale(1.04); }
+/* The wash: solid on the left where the words are, gone by three quarters across so the art is clean. */
+.wp-ws-poster-art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(96deg,
+        var(--p-ink) 0%,
+        color-mix(in srgb, var(--p-ink) 86%, transparent) 34%,
+        color-mix(in srgb, var(--p-ink) 30%, transparent) 56%,
+        transparent 74%);
+}
+.wp-ws-poster-art.is-plain {
+    background:
+        radial-gradient(70% 140% at 88% 50%, color-mix(in srgb, var(--ws-accent) 78%, #fff 10%), transparent 64%),
+        var(--p-ink);
+}
+.wp-ws-poster-art.is-plain .wp-ws-hero-plain { right: 26px; }
+.wp-ws-poster-art .wp-ws-icon-ghost { width: 74px; height: 74px; border-radius: 21px; }
+.wp-ws-poster.is-slim .wp-ws-icon-ghost { width: 52px; height: 52px; border-radius: 15px; }
+/* Off the phone: the art goes quiet and the border turns dashed, so one look down the shelf shows what you have. */
+.wp-ws-poster.is-off .wp-ws-hero-art,
+.wp-ws-poster.is-off .wp-ws-hero-plain { filter: saturate(0.3) brightness(0.62); }
+.wp-ws-poster.is-off { border-style: dashed; }
+.wp-ws-poster-open {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    /* The right side belongs to the art and the button. */
+    padding: 12px 38% 12px 14px;
+    border: 0;
+    background: none;
+    text-align: left;
+}
+.wp-ws-poster.is-slim .wp-ws-poster-open { padding-top: 9px; padding-bottom: 9px; gap: 2px; }
+.wp-ws-poster-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+.wp-ws-poster-tagline {
+    font-size: 12px;
+    line-height: 1.32;
+    color: rgba(255, 250, 240, 0.92);
+    text-shadow: 0 1px 4px color-mix(in srgb, var(--p-ink) 80%, #000);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+.wp-ws-poster.is-slim .wp-ws-poster-tagline { -webkit-line-clamp: 1; line-clamp: 1; }
+.wp-ws-poster .wp-ws-chip { color: rgba(255, 250, 240, 0.74); font-weight: 600; }
+.wp-ws-poster .wp-ws-chip-needs i { color: rgba(255, 250, 240, 0.74); }
+.wp-ws-poster .wp-ws-tag-builtin { background: rgba(0, 0, 0, 0.35); color: rgba(255, 250, 240, 0.8); }
+.wp-ws-poster > .wp-ws-cta {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+}
+.wp-ws-poster.is-slim > .wp-ws-cta { bottom: 50%; transform: translateY(50%); }
+.wp-ws-poster.is-slim > .wp-ws-cta:active { transform: translateY(50%) scale(0.95); }
+.wp-ws-poster > .wp-ws-cta-open {
+    background: rgba(12, 9, 8, 0.6);
+    border-color: rgba(255, 255, 255, 0.34);
+    color: #fff;
+    backdrop-filter: blur(5px);
+}
+.wp-ws-poster > .wp-ws-cta-open:hover { background: rgba(12, 9, 8, 0.82); border-color: rgba(255, 255, 255, 0.7); }
+.wp-ws-poster > .wp-ws-cta-get { box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4); }
+
+/* ---- wordmarks: the app's name in the app's own lettering.
+   A rule on .wp-ws-p-<app> .wp-ws-wordmark is the lettering; it also styles the name on the app
+   page and in the spotlight. A rule that starts .wp-ws-poster adds the size and colour that suit
+   that app's poster. */
+.wp-ws-wordmark {
+    font-family: var(--ws-display);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+}
+.wp-ws-poster .wp-ws-wordmark {
+    font-size: 21px;
+    color: #fff;
+    text-shadow: 0 2px 0 color-mix(in srgb, var(--p-ink) 70%, #000);
+}
+.wp-ws-poster.is-slim .wp-ws-wordmark { font-size: 17px; }
+
+/* The Chronicle: a masthead. Serif small caps, a double rule under the name, squared like a front page. */
+.wp-ws-p-chronicle { --p-ink: #4a2404; --p-edge: #f0c98a; --p-radius: 5px; }
+.wp-ws-p-chronicle .wp-ws-wordmark { font-family: Georgia, 'Times New Roman', serif; font-weight: 700; font-variant: small-caps; letter-spacing: 0.02em; }
+.wp-ws-poster.wp-ws-p-chronicle .wp-ws-wordmark { font-size: 23px; color: #fff1d6; padding-bottom: 3px; border-bottom: 3px double rgba(255, 241, 214, 0.75); }
+
+/* Chitter: soft, round, lowercase. */
+.wp-ws-p-feed { --p-ink: #0e3552; --p-edge: #8fd0f5; --p-radius: 22px; }
+.wp-ws-p-feed .wp-ws-wordmark { font-family: ui-rounded, 'Nunito', 'Varela Round', 'Segoe UI', system-ui, sans-serif; font-weight: 900; text-transform: lowercase; letter-spacing: -0.02em; }
+.wp-ws-poster.wp-ws-p-feed .wp-ws-wordmark { font-size: 26px; }
+
+/* Discorgi: a channel name. */
+.wp-ws-p-chat { --p-ink: #25265a; --p-edge: #a6abff; --p-radius: 14px; }
+.wp-ws-p-chat .wp-ws-wordmark { font-family: 'WP Archivo Black', 'Arial Black', sans-serif; text-transform: lowercase; }
+.wp-ws-p-chat .wp-ws-wordmark::before { content: '#'; margin-right: 3px; color: #b9bdff; opacity: 0.9; }
+
+/* Yip Yap: a shout on a fence. Tall caps, tilted, sticky-note green. */
+.wp-ws-p-board { --p-ink: #0b1d18; --p-edge: #6fbf7a; }
+.wp-ws-p-board .wp-ws-wordmark { font-family: 'WP Anton', Impact, 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: 0.035em; }
+.wp-ws-poster.wp-ws-p-board .wp-ws-wordmark { font-size: 28px; color: #c5f59a; transform: rotate(-2.5deg); transform-origin: 0 100%; text-shadow: 0 3px 0 #04100c; }
+
+/* PromptOS: a control panel label, with hazard tape along the bottom edge. */
+.wp-ws-p-narrative { --p-ink: #2b0d1d; --p-edge: #d24b4b; --p-radius: 7px; }
+.wp-ws-p-narrative .wp-ws-wordmark { font-family: 'WP Share Tech Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.1em; }
+.wp-ws-poster.wp-ws-p-narrative .wp-ws-wordmark { font-size: 22px; color: #ffd369; text-shadow: 0 0 10px rgba(255, 211, 105, 0.45); }
+.wp-ws-poster.wp-ws-p-narrative::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 5px;
+    background: repeating-linear-gradient(-45deg, #f2c230 0 8px, #17100f 8px 16px);
+    pointer-events: none;
+}
+
+/* Copycat: its own neon sign (the app's Bungee). */
+.wp-ws-p-understudy { --p-ink: #45012c; --p-edge: #ff8a92; }
+.wp-ws-p-understudy .wp-ws-wordmark { font-family: 'Copycat Bungee', 'WP Archivo Black', sans-serif; letter-spacing: -0.02em; }
+.wp-ws-poster.wp-ws-p-understudy .wp-ws-wordmark { font-size: 22px; color: #ffd0d3; text-shadow: 0 0 9px #ff747c, 0 0 22px rgba(255, 116, 124, 0.7); }
+
+/* PawXai: a gradient, like the pictures it describes. */
+.wp-ws-p-pawxai { --p-ink: #230a23; --p-edge: #c58af0; }
+.wp-ws-p-pawxai .wp-ws-wordmark { font-family: 'Copycat Righteous', 'WP Archivo Black', sans-serif; }
+.wp-ws-poster.wp-ws-p-pawxai .wp-ws-wordmark {
+    font-size: 26px;
+    color: #e9c8ff;
+    background: linear-gradient(92deg, #ffd9f3, #c9a0ff 55%, #8fe9ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.5));
+}
+
+/* Mien: a hand mirror. Italic serif, soft corners. */
+.wp-ws-p-mien { --p-ink: #6b1f3d; --p-edge: #f8bfd1; --p-radius: 24px; }
+.wp-ws-p-mien .wp-ws-wordmark { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 700; }
+.wp-ws-poster.wp-ws-p-mien .wp-ws-wordmark { font-size: 29px; }
+
+/* Messages: a speech bubble, down to the squared corner. */
+.wp-ws-p-messages { --p-ink: #5a1b29; --p-edge: #f3aab2; --p-radius: 22px; }
+.wp-ws-poster.wp-ws-p-messages { border-bottom-left-radius: 5px; }
+.wp-ws-p-messages .wp-ws-wordmark { font-family: ui-rounded, 'Nunito', 'Segoe UI', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.015em; }
+.wp-ws-poster.wp-ws-p-messages .wp-ws-wordmark { font-size: 24px; }
+
+/* Kressa: her twilight violet, with a glow. */
+.wp-ws-p-kressa { --p-ink: #2d1f4f; --p-edge: #cdb0f2; --p-radius: 18px; }
+.wp-ws-p-kressa .wp-ws-wordmark { font-family: 'Copycat Righteous', 'WP Archivo Black', sans-serif; letter-spacing: 0.01em; }
+.wp-ws-poster.wp-ws-p-kressa .wp-ws-wordmark { font-size: 27px; color: #f6ecff; text-shadow: 0 0 12px #b58ae8, 0 2px 0 #1c1235; }
+
+/* Housing: a brass door plate. */
+.wp-ws-p-housing { --p-ink: #3a142a; --p-edge: #dba862; --p-radius: 8px; }
+.wp-ws-p-housing .wp-ws-wordmark { font-family: Georgia, 'Times New Roman', serif; font-weight: 700; font-variant: small-caps; letter-spacing: 0.07em; }
+.wp-ws-poster.wp-ws-p-housing .wp-ws-wordmark { font-size: 23px; color: #ffe6c0; }
+
+/* Registrar: typed on the office typewriter. */
+.wp-ws-p-registrar { --p-ink: #4a1412; --p-edge: #cfae72; --p-radius: 6px; }
+.wp-ws-p-registrar .wp-ws-wordmark { font-family: 'WP Special Elite', 'Courier New', monospace; letter-spacing: 0.01em; }
+.wp-ws-poster.wp-ws-p-registrar .wp-ws-wordmark { font-size: 24px; color: #f6ead2; }
+
+/* Weybooru: gallery gold. */
+.wp-ws-p-weybooru { --p-ink: #553408; --p-edge: #f5cd7a; }
+.wp-ws-poster.wp-ws-p-weybooru .wp-ws-wordmark { font-size: 22px; color: #ffe7ad; }
+
+/* Last Smoke: the bar sign from its own Play tile. Black, cream, one red, and no round corners. */
+.wp-ws-p-last-smoke-demo { --p-ink: #111014; --p-edge: #efeadf; --p-radius: 0px; }
+.wp-ws-p-last-smoke-demo .wp-ws-wordmark { font-family: 'Courier New', ui-monospace, monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; }
+.wp-ws-poster.wp-ws-p-last-smoke-demo .wp-ws-wordmark { font-size: 20px; color: #efeadf; text-shadow: 2px 2px 0 #d1263a; }
+.wp-ws-last-smoke-logo { display: inline-block; width: min(100%, 184px); line-height: 0; }
+.wp-ws-last-smoke-logo svg { display: block; width: 100%; height: auto; overflow: visible; }
+.wp-ws-last-smoke-shadow { fill: none; stroke: #6e1420; stroke-width: 1; }
+.wp-ws-spot .wp-ws-last-smoke-logo { width: min(100%, 210px); }
+/* The feature label used to share the logo's flex row and visually became a stray line of the
+   wordmark. Give it an unmistakable little placard above the title instead. */
+.wp-ws-p-last-smoke-demo.wp-ws-spot .wp-ws-kicker {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 9px);
+    width: max-content;
+    padding: 4px 7px 3px;
+    border: 1px solid rgba(239, 234, 223, 0.72);
+    background: rgba(10, 9, 12, 0.9);
+    color: #efeadf;
+    line-height: 1;
+    text-shadow: none;
+    box-shadow: 2px 2px 0 rgba(209, 38, 58, 0.82);
+}
+/* A small, deliberately uneven ink cloud gives the red logo a quiet patch without putting a
+   rectangular banner across Eve, Belle and Astrid. */
+.wp-ws-p-last-smoke-demo.wp-ws-spot .wp-ws-spot-name {
+    position: relative;
+    z-index: 0;
+    width: max-content;
+    max-width: 100%;
+}
+.wp-ws-p-last-smoke-demo.wp-ws-spot .wp-ws-spot-name::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -8px -13px -7px -12px;
+    background:
+        radial-gradient(ellipse at 17% 55%, rgba(4, 4, 6, 0.96) 0 31%, transparent 63%),
+        radial-gradient(ellipse at 50% 43%, rgba(4, 4, 6, 0.96) 0 39%, transparent 70%),
+        radial-gradient(ellipse at 84% 56%, rgba(4, 4, 6, 0.94) 0 34%, transparent 65%);
+    filter: blur(3px);
+    pointer-events: none;
+}
+.wp-ws-p-last-smoke-demo.wp-ws-spot .wp-ws-last-smoke-logo { position: relative; z-index: 1; }
+.wp-ws-poster.wp-ws-p-last-smoke-demo .wp-ws-poster-tagline { font-family: 'Courier New', ui-monospace, monospace; font-weight: 700; font-size: 11px; }
+.wp-ws-poster.wp-ws-p-last-smoke-demo > .wp-ws-cta { border-radius: 0; border: 2px solid #efeadf; background: #d1263a; color: #efeadf; box-shadow: 3px 3px 0 #efeadf; backdrop-filter: none; }
+.wp-ws-poster.wp-ws-p-last-smoke-demo > .wp-ws-cta-get { background: #efeadf; color: #111014; box-shadow: 3px 3px 0 #d1263a; }
+/* Its title art has a face in every third, so the wash stays solid further across than the others. */
+.wp-ws-poster.wp-ws-p-last-smoke-demo .wp-ws-poster-art::after {
+    background: linear-gradient(96deg, #111014 0%, rgba(17, 16, 20, 0.94) 44%, rgba(17, 16, 20, 0.5) 62%, transparent 80%);
+}
+.wp-ws-p-last-smoke-demo .wp-ws-tag-new { border-radius: 0; background: #d1263a; }
+
+/* The small factory apps: plain and legible, each with one small tell. */
+.wp-ws-p-contacts { --p-ink: #2a292c; --p-edge: #b9b6ba; --p-radius: 12px; }
+.wp-ws-p-contacts .wp-ws-wordmark { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.01em; }
+.wp-ws-p-clock { --p-ink: #262c3b; --p-edge: #cfd5e3; --p-radius: 12px; }
+.wp-ws-p-clock .wp-ws-wordmark { font-family: 'WP Share Tech Mono', ui-monospace, monospace; letter-spacing: 0.08em; }
+.wp-ws-p-notes { --p-ink: #553605; --p-edge: #f0c45f; --p-radius: 4px; }
+.wp-ws-p-notes .wp-ws-wordmark { font-family: 'WP Special Elite', 'Courier New', monospace; }
+.wp-ws-poster.wp-ws-p-notes .wp-ws-wordmark { color: #fff1c9; }
+.wp-ws-p-calculator { --p-ink: #281126; --p-edge: #7fd9c4; --p-radius: 10px; }
+.wp-ws-p-calculator .wp-ws-wordmark { font-family: 'WP Share Tech Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.1em; }
+.wp-ws-poster.wp-ws-p-calculator .wp-ws-wordmark { color: #a8f3df; }
+.wp-ws-p-settings { --p-ink: #31233a; --p-edge: #c4aacb; --p-radius: 12px; }
+.wp-ws-p-settings .wp-ws-wordmark { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.01em; }
+
+.wp-ws-tag {
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-family: var(--ws-mono);
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.6;
+}
+.wp-ws-tag-new { background: var(--ws-red); color: #fff; }
+.wp-ws-tag-builtin { background: rgba(255, 236, 214, 0.09); color: var(--ws-dim); }
+.wp-ws-chips { display: flex; flex-wrap: nowrap; align-items: center; gap: 9px; margin-top: 4px; }
+/* Read by screen readers, invisible on screen (the glyph-only "needs" chip). */
+.wp-ws-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.wp-ws-chip-needs i { color: #b9ad9f; }
+.wp-ws-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--ws-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+    color: #8f8478;
+    white-space: nowrap;
+}
+.wp-ws-chip i { font-size: 8.5px; }
+.wp-ws-chip-free i { color: #7fb685; }
+.wp-ws-chip-message i, .wp-ws-chip-sync i { color: var(--ws-amber); }
+.wp-ws-chip-member i { color: #c9a7ee; }
+.wp-ws-chip-demo {
+    padding: 2px 7px;
+    border: 1px solid #efeadf;
+    color: #efeadf !important;
+    background: #b62035;
+    font-weight: 700 !important;
+    font-size: 10.5px;
+    line-height: 1.15;
+    letter-spacing: 0.1em;
+    box-shadow: 2px 2px 0 rgba(17, 16, 20, 0.88);
+}
+.wp-ws-colophon {
+    margin-top: 26px !important;
+    text-align: center;
+    font-size: 11.5px;
+    color: #7d7267;
+    line-height: 1.6;
+}
+
+/* ---------------------------------------------------------------- my phone */
+.wp-ws-lead { padding: 6px 2px 12px !important; font-size: 12.5px; color: var(--ws-dim); }
+.wp-ws-mine-tools { display: flex; justify-content: flex-start; margin: 0 0 10px; }
+.wp-ws-new-folder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 0 13px;
+    border: 1px solid rgba(243, 230, 208, 0.24);
+    border-radius: 999px;
+    background: #2b231e !important;
+    color: var(--ws-cream) !important;
+    font: 650 12px/1 'Segoe UI', system-ui, sans-serif !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+.wp-ws-new-folder:hover { border-color: rgba(243, 230, 208, 0.5); background: #382d26 !important; }
+.wp-ws-new-folder:disabled { opacity: .42; cursor: not-allowed; }
+/* A miniature of the home screen: same four columns, same order, so adding an app here looks like
+   what will happen out there. */
+.wp-ws-mini {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px 4px;
+    padding: 18px 10px 16px;
+    border-radius: 26px;
+    border: 1px solid rgba(255, 236, 214, 0.12);
+    background:
+        radial-gradient(120% 80% at 20% 0%, rgba(200, 70, 63, 0.22), transparent 60%),
+        radial-gradient(100% 70% at 90% 100%, rgba(226, 162, 59, 0.16), transparent 60%),
+        #1a1513;
+    box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.25), 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+.wp-ws-mini-app {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    user-select: none;
+    touch-action: pan-y;
+}
+.wp-ws-mini-app[data-ws-drag-key], .wp-ws-mini-app[data-ws-drag-folder] { cursor: grab; }
+.wp-ws-mini-app.is-dragging { opacity: 0.45; cursor: grabbing; }
+.wp-ws-mini-app.is-drop-before::before,
+.wp-ws-mini-app.is-drop-after::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    bottom: 18px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--ws-amber);
+    box-shadow: 0 0 10px rgba(226, 162, 59, 0.65);
+}
+.wp-ws-mini-app.is-drop-before::before { left: -2px; }
+.wp-ws-mini-app.is-drop-after::after { right: -2px; }
+.wp-ws-mini-app.is-drop-folder .wp-ws-icon,
+.wp-ws-mini-folder.is-drop-folder .wp-ws-folder-preview {
+    outline: 3px solid var(--ws-amber);
+    outline-offset: 3px;
+    transform: scale(1.05);
+}
+.wp-ws-mini-app .wp-ws-icon {
+    transition: transform 180ms cubic-bezier(0.3, 1.5, 0.5, 1), filter 180ms ease, opacity 180ms ease;
+}
+.wp-ws-mini-app:not(.is-system):hover .wp-ws-icon { transform: scale(1.06); }
+.wp-ws-mini-app:not(.is-system):active .wp-ws-icon { transform: scale(0.92); }
+.wp-ws-mini-app.is-off .wp-ws-icon {
+    filter: grayscale(1) brightness(0.6);
+    opacity: 0.55;
+    box-shadow: none;
+    outline: 1.5px dashed rgba(243, 230, 208, 0.4);
+    outline-offset: 2px;
+    transform: scale(0.9);
+}
+/* Native image dragging is refused on the store (the arrange drag is pointer-based), so the
+   browser never gets to ghost-drag an icon into SillyTavern's file-drop handler. */
+.wp-ws img { -webkit-user-drag: none; }
+.wp-ws-mini-app.ws-drag-src { opacity: .3; outline: 1.5px dashed rgba(243, 230, 208, 0.55); outline-offset: 2px; }
+/* The copy of a tile that follows the pointer while it is being arranged (index.js liftWsDrag).
+   It never takes pointer events, so the drop is always read from what is underneath it. */
+.wp-ws-mini-app.ws-drag-ghost {
+    position: fixed;
+    z-index: 40;
+    margin: 0;
+    pointer-events: none;
+    cursor: grabbing;
+    transform: scale(1.12);
+    filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.55));
+}
+.wp-ws-mini-app.ws-drag-ghost .wp-ws-mini-mark,
+.wp-ws-mini-app.ws-drag-ghost .wp-ws-mini-pin { display: none; }
+/* Dropping on the middle of an app trades places with it. */
+.wp-ws-mini-app.is-drop-swap .wp-ws-icon {
+    outline: 3px dashed var(--ws-amber);
+    outline-offset: 3px;
+    transform: scale(0.94);
+}
+/* Dropping on the empty part of the grid sends the app to the end of the home screen. */
+.wp-ws-mini.is-drop-home { border-color: var(--ws-amber); }
+/* No long-press image menu or text callout while a finger is holding a tile. */
+.wp-ws-mini-app, .wp-ws-mini-app img { -webkit-touch-callout: none; -webkit-user-select: none; }
+.wp-ws-mini-label {
+    max-width: 100%;
+    padding: 0 2px;
+    font-size: 10px;
+    color: var(--ws-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.wp-ws-mini-app.is-off .wp-ws-mini-label { color: #7d7267; }
+.wp-ws-mini-mark, .wp-ws-mini-pin {
+    position: absolute;
+    top: -3px;
+    left: calc(50% + 12px);
+    display: grid;
+    place-items: center;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    font-size: 8px;
+    border: 2px solid #1a1513;
+}
+.wp-ws-mini-mark { padding: 0; background: #6fae76; color: #0f1a10; cursor: pointer; }
+/* A locked app in the Available row: the crown replaces the +. Same shape as the pin. */
+.wp-ws-mini-mark-member { background: rgba(214, 168, 74, 0.18); color: #e3b45f; cursor: default; }
+.wp-ws-mini-app.is-off .wp-ws-mini-mark { background: var(--ws-cream); color: #1b1512; }
+.wp-ws-mini-app.is-off .wp-ws-mini-mark-member { background: rgba(214, 168, 74, 0.18); color: #e3b45f; }
+.wp-ws-mini-pin { background: #3a322d; color: var(--ws-dim); }
+.wp-ws-mini-folder { border: 0; background: none; }
+.wp-ws-mini-folder-open {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+}
+.wp-ws-folder-preview {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+    width: 46px;
+    height: 46px;
+    padding: 5px;
+    border-radius: 13px;
+    background: rgba(243, 230, 208, 0.11);
+    border: 1px solid rgba(243, 230, 208, 0.2);
+    transition: transform 160ms ease, outline-color 160ms ease;
+}
+.wp-ws-folder-preview-icon {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #2a2421;
+}
+.wp-ws-folder-preview-icon img { width: 100%; height: 100%; object-fit: cover; }
+.wp-ws-folder-preview-icon i { font-size: 8px; color: var(--ws-accent); }
+.wp-ws-mini-folder.is-open .wp-ws-folder-preview { outline: 2px solid var(--ws-cream); outline-offset: 2px; }
+/* The dock under the miniature: the same bar as the real home screen, and just as fixed. */
+.wp-ws-mini-dock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin: 8px 18px 0;
+    padding: 10px 14px 8px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.07);
+}
+.wp-ws-mini-dock .wp-ws-mini-app { width: 64px; cursor: default; }
+.wp-ws-mini-dock > p { margin: 0 0 0 4px; font-size: 11px; color: var(--ws-dim); }
+.wp-ws-mini-available { margin-top: 0; background: #171311; box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.2); }
+.wp-ws-folder-editor {
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 18px;
+    border: 1px solid rgba(226, 162, 59, 0.28);
+    background: #211a16;
+}
+.wp-ws-folder-editor header { display: grid; grid-template-columns: 1fr auto auto; gap: 7px; }
+.wp-ws-folder-name {
+    min-width: 0;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid var(--ws-line);
+    background: #14100f;
+    color: var(--ws-ink);
+    font: 600 12px/1 'Segoe UI', system-ui, sans-serif;
+}
+.wp-ws-folder-editor header button {
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid var(--ws-line);
+    background: #302720;
+    font: 600 11px/1 'Segoe UI', system-ui, sans-serif;
+}
+.wp-ws-folder-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 4px; margin-top: 14px; }
+.wp-ws-folder-editor > p { margin-top: 10px; color: var(--ws-dim); font-size: 11.5px; }
+.wp-ws[data-ws-screen="phone"],
+.wp-ws[data-ws-screen="phone"] * { text-shadow: none; }
+.wp-ws-mine .wp-ws-shelf-head { margin-top: 22px; }
+.wp-ws-loadouts { display: grid; gap: 8px; }
+.wp-ws-loadout {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 11px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--ws-line);
+    background: var(--ws-card);
+    text-align: left;
+    transition: border-color 140ms ease, background 140ms ease;
+}
+.wp-ws-loadout:hover { border-color: rgba(243, 230, 208, 0.3); }
+.wp-ws-loadout-name { font-size: 13.5px; font-weight: 650; }
+.wp-ws-loadout-blurb { font-size: 12px; color: var(--ws-dim); }
+.wp-ws-loadout[aria-pressed="true"] {
+    border-color: var(--ws-amber);
+    background: linear-gradient(120deg, rgba(226, 162, 59, 0.14), var(--ws-card) 70%);
+}
+.wp-ws-loadout[aria-pressed="true"] .wp-ws-loadout-name::after {
+    content: 'Current';
+    margin-left: 8px;
+    font-family: var(--ws-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ws-amber);
+}
+
+/* ---------------------------------------------------------------- app page */
+.wp-ws-detail .wp-ws-hero-shade {
+    background: linear-gradient(to top, var(--ws-bg) 2%, rgba(20, 16, 15, 0.35) 38%, transparent 62%);
+}
+.wp-ws-id {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 13px;
+    margin-top: -30px;
+    padding: 0 16px;
+}
+.wp-ws-id .wp-ws-icon-lg { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55), 0 0 0 3px var(--ws-bg); }
+.wp-ws-id-text { min-width: 0; padding-bottom: 2px; }
+/* The name keeps the app's own lettering here too (.wp-ws-wordmark), at one size, in plain ink. */
+.wp-ws-id-text h2 { font-size: 24px; color: var(--ws-ink); }
+.wp-ws-id-text p { margin-top: 4px; font-size: 12.5px; color: var(--ws-dim); }
+.wp-ws-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 16px 0;
+}
+.wp-ws-action-primary {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+}
+.wp-ws-action-primary .wp-ws-cta-wide { flex: 0 0 auto; width: 100%; }
+.wp-ws-action-note {
+    align-self: center;
+    min-width: 112px;
+    padding: 5px 12px 4px;
+    border: 1px solid #efeadf;
+    background: #b62035;
+    color: #efeadf;
+    font-family: var(--ws-display);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.1em;
+    text-align: center;
+    text-shadow: none;
+    box-shadow: 3px 3px 0 #efeadf;
+}
+.wp-ws-remove {
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ws-dim);
+    font-size: 13px;
+    font-weight: 600;
+    transition: color 140ms ease, border-color 140ms ease;
+}
+.wp-ws-remove:hover { color: #f0a59f; border-color: rgba(200, 70, 63, 0.5); }
+.wp-ws-builtin-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 6px;
+    font-family: var(--ws-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ws-dim);
+    white-space: nowrap;
+}
+.wp-ws-locked {
+    display: flex;
+    gap: 9px;
+    margin: 12px 16px 0 !important;
+    padding: 10px 12px !important;
+    border-radius: 12px;
+    background: rgba(201, 167, 238, 0.09);
+    border: 1px solid rgba(201, 167, 238, 0.22);
+    font-size: 12px;
+    color: #dccbf0;
+}
+.wp-ws-locked i { margin-top: 3px; font-size: 11px; }
+.wp-ws-about { padding: 16px 16px 0 !important; font-size: 14px; line-height: 1.55; color: #e9dfd3; }
+.wp-ws-about + .wp-ws-about { padding-top: 6px !important; }
+.wp-ws-facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin: 16px 16px 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--ws-line);
+    border: 1px solid var(--ws-line);
+}
+.wp-ws-fact {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 8px;
+    align-items: center;
+    padding: 11px 12px;
+    background: var(--ws-card);
+}
+.wp-ws-fact i { grid-row: span 2; align-self: start; margin-top: 2px; width: 14px; font-size: 12px; color: var(--ws-amber); text-align: center; }
+.wp-ws-fact-label {
+    font-family: var(--ws-mono);
+    font-size: 9px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: #8f8478;
+}
+.wp-ws-fact-value { font-size: 12.5px; font-weight: 600; line-height: 1.3; color: var(--ws-ink); }
+.wp-ws-points { display: grid; gap: 9px; padding: 18px 16px 0 !important; }
+.wp-ws-points li {
+    position: relative;
+    padding-left: 18px;
+    font-size: 13px;
+    color: #ddd2c5;
+}
+.wp-ws-points li::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0.55em;
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    background: var(--ws-accent, var(--ws-amber));
+    transform: rotate(45deg);
+}
+.wp-ws-note {
+    margin: 16px 16px 0;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(120deg, rgba(226, 162, 59, 0.1), rgba(226, 162, 59, 0.03));
+    border: 1px solid rgba(226, 162, 59, 0.2);
+}
+.wp-ws-note p { margin-top: 4px; font-size: 12.5px; color: #e3d8c8; }
+.wp-ws-note-quiet { background: none; border-color: var(--ws-line); }
+.wp-ws-note-quiet .wp-ws-kicker { color: #8f8478; }
+.wp-ws-note-quiet p { color: var(--ws-dim); }
+.wp-ws-pairs { padding: 20px 16px 0; }
+.wp-ws-pair-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.wp-ws-pair {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 13px 5px 5px;
+    border-radius: 999px;
+    border: 1px solid var(--ws-line);
+    background: var(--ws-card);
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: border-color 140ms ease;
+}
+.wp-ws-pair:hover { border-color: rgba(243, 230, 208, 0.3); }
+.wp-ws-pair .wp-ws-icon { width: 26px; height: 26px; border-radius: 8px; box-shadow: none; }
+.wp-ws-pair .wp-ws-icon i { font-size: 12px; }
+
+/* ---------------------------------------------------------------- undo bar */
+.wp-ws-snack {
+    position: sticky;
+    bottom: 10px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 12px 10px;
+    padding: 10px 8px 10px 16px;
+    border-radius: 14px;
+    background: var(--ws-cream);
+    color: #1b1512;
+    font-size: 12.5px;
+    font-weight: 600;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+    animation: wp-ws-rise 220ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.wp-ws .wp-ws-snack button {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: #1b1512;
+    color: var(--ws-cream);
+    font-size: 12px;
+    font-weight: 700;
+}
+@keyframes wp-ws-rise { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Things settle in one after another, but only on real navigation (data-ws-enter, set by the
+   renderer when index.js says so). An in-place redraw, like an install or an undo, stays still. */
+.wp-ws[data-ws-enter] .wp-ws-spot,
+.wp-ws[data-ws-enter] .wp-ws-shelf,
+.wp-ws[data-ws-enter] .wp-ws-mine > *,
+.wp-ws[data-ws-enter] .wp-ws-detail > * {
+    animation: wp-ws-settle 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.wp-ws[data-ws-enter] .wp-ws-shelf:nth-of-type(2),
+.wp-ws[data-ws-enter] .wp-ws-detail > :nth-child(3) { animation-delay: 40ms; }
+.wp-ws[data-ws-enter] .wp-ws-shelf:nth-of-type(3),
+.wp-ws[data-ws-enter] .wp-ws-detail > :nth-child(4) { animation-delay: 80ms; }
+.wp-ws[data-ws-enter] .wp-ws-shelf:nth-of-type(n+4),
+.wp-ws[data-ws-enter] .wp-ws-detail > :nth-child(n+5) { animation-delay: 120ms; }
+.wp-ws[data-ws-enter] .wp-ws-detail > .wp-ws-hero { animation-name: wp-ws-fade; }
+@keyframes wp-ws-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wp-ws-settle { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .wp-ws *, .wp-ws *::before { animation: none !important; transition: none !important; }
+    .wp-ws-cta-busy::before { transform: scaleX(1); }
+}
+
+/* Mobile: the phone fills the screen, so the store gets a little more air and bigger tap targets.
+   The nav bar floats over the bottom of the screen there, and the base padding that normally
+   keeps content clear of it was zeroed above; put it back (same fix as registrar.css), and lift
+   the undo bar above the nav bar too. */
+@media (max-width: 768px), (max-height: 520px) {
+    #wp-panel[data-app="weystore"] #wp-screen-body { padding-bottom: calc(58px + var(--wp-safe-bottom)); }
+    .wp-ws-snack { bottom: calc(68px + var(--wp-safe-bottom)); }
+    .wp-ws { font-size: 14px; }
+    .wp-ws-cta { height: 34px; min-width: 68px; }
+    .wp-ws-cta-wide { height: 44px; }
+    .wp-ws-remove { height: 44px; }
+    .wp-ws-tabs button { min-height: 36px; }
+    .wp-ws-mini { gap: 18px 4px; }
+    .wp-ws-mini-app .wp-ws-icon { width: 52px; height: 52px; border-radius: 15px; }
+    .wp-ws-mini-mark, .wp-ws-mini-pin { left: calc(50% + 15px); }
+}
