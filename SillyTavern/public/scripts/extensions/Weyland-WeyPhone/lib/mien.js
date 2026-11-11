@@ -329,22 +329,36 @@ export async function applyMienExpression(selection, characterName, { documentRe
     image.closest('#expression-holder, .expression-holder')?.style.setProperty('display', '');
 }
 
+// Where locks are saved. NOT "mienLocks": the 2026-11-10 release wrote a lock there every time a
+// player pressed "Set in chat", lock button or not, so faces stuck for players who never asked
+// for a lock. Nothing reads that old key any more, which frees every one of those players without
+// them doing anything. A lock set on purpose in that one day has to be set again.
+const LOCKS = 'mienExpressionLocks';
+
 /** The face locked for this character (Mien's lock button), or null. The snapshot carries every
  *  field applyMienExpression needs, so a lock keeps working after the gallery is reloaded. */
 export function lockedMienExpression(settings, characterName) {
-    const lock = settings?.mienLocks?.[characterName];
+    const lock = settings?.[LOCKS]?.[characterName];
     return lock?.label ? lock : null;
+}
+
+/** "Set in chat" while a lock is holding: the lock follows to the new face. With no lock this does
+ *  nothing, so a plain "Set in chat" lasts until the next character message, as it always has.
+ *  @returns {boolean} whether a lock moved. */
+export function moveLockedMienExpression(settings, characterName, selection) {
+    if (!selection || !lockedMienExpression(settings, characterName)) return false;
+    return setLockedMienExpression(settings, characterName, selection);
 }
 
 /** Sets (selection given) or clears (null) the lock. @returns {boolean} whether anything changed. */
 export function setLockedMienExpression(settings, characterName, selection) {
     if (!settings || !characterName) return false;
-    if (!settings.mienLocks || typeof settings.mienLocks !== 'object' || Array.isArray(settings.mienLocks)) {
-        settings.mienLocks = {};
+    if (!settings[LOCKS] || typeof settings[LOCKS] !== 'object' || Array.isArray(settings[LOCKS])) {
+        settings[LOCKS] = {};
     }
     if (!selection) {
-        if (!settings.mienLocks[characterName]) return false;
-        delete settings.mienLocks[characterName];
+        if (!settings[LOCKS][characterName]) return false;
+        delete settings[LOCKS][characterName];
         return true;
     }
     const snapshot = {
@@ -354,8 +368,8 @@ export function setLockedMienExpression(settings, characterName, selection) {
         folderName: selection.folderName,
         source: selection.source,
     };
-    const current = settings.mienLocks[characterName];
+    const current = settings[LOCKS][characterName];
     if (current && ['label', 'path', 'fileName', 'folderName', 'source'].every(field => current[field] === snapshot[field])) return false;
-    settings.mienLocks[characterName] = snapshot;
+    settings[LOCKS][characterName] = snapshot;
     return true;
 }

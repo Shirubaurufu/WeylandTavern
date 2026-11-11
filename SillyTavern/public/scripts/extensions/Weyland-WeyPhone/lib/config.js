@@ -140,7 +140,7 @@ export const defaultSettings = Object.freeze({
     // Mien's lock: characterName -> the expression snapshot holding that character's face
     // (label/path/fileName/folderName/source). A locked face is re-applied after every character
     // message; keyed by name so it survives chats and syncs per character.
-    mienLocks: {},
+    mienExpressionLocks: {},
     // PromptOS Roleplay Shift -> Custom Preset: the player's saved feedback presets,
     // { id, name, text, updatedAt }[]. The one in use is copied into the RoleplayShiftCustom
     // global (that is what quick-reply-ext reads), so it survives even if this list is reset.
