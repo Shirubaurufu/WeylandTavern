@@ -116,14 +116,30 @@ const getSideCharacterWidth = () => {
     return null; // Fall back to default
 };
 
+/** Whether a side character is drawn right now. The page is the truth here: a chat's saved
+ *  variables can say "none" while one is still showing (another chat's, or a late draw). */
+export const isSideCharacterShown = () => Boolean(document.getElementById(STYLE_ID));
+
+// Only the LATEST call may draw. A draw waits for the main portrait to load (up to 5 seconds) and
+// for the sprite list, and it used to add its picture whenever that finished. A "clear" that
+// arrived in the meantime (the player swiped on to a greeting without that character) removed
+// nothing, because nothing was drawn yet, and then the old draw landed on top: the side character
+// from the previous greeting stayed for the rest of the chat. Found 2026-11-11.
+let latestCall = 0;
+
 export const updateSideCharacter = async (/** @type {{ clear?: string; character?: string; expression?: string; bottom?: string; right?: string; width?: string; height?: string; }} */ args) => {
+    const thisCall = ++latestCall;
+    const superseded = () => thisCall !== latestCall;
+
     // Parse clear parameter
     const shouldClear = args.clear === 'true';
     
     // Remove old style
     const oldStyle = document.getElementById(STYLE_ID);
     const currentPath = oldStyle?.textContent?.match(/background-image:\s*url\(\s*["']?([^"')]+)["']?\s*\)/i)?.[1] ?? null;
-    if (oldStyle) oldStyle.remove();
+    // Every one of them: two overlapping draws used to add two, and removing only the first left
+    // the other on screen (and first in line for registrar-expressions) for the rest of the session.
+    document.querySelectorAll(`style#${STYLE_ID}`).forEach(style => style.remove());
     
     // If clearing, just remove and return
     if (shouldClear) {
@@ -161,6 +177,7 @@ export const updateSideCharacter = async (/** @type {{ clear?: string; character
             imgHeight = expressionImg.height();
         }
     }
+    if (superseded()) return 'Side character: superseded by a newer call';
     
     // Only use expression image dimensions if height is at least 150px
     const autoWidth = getSideCharacterWidth();
@@ -177,6 +194,7 @@ export const updateSideCharacter = async (/** @type {{ clear?: string; character
 
     // Find the image
     const imagePath = await findImage(character, expression, currentPath);
+    if (superseded()) return 'Side character: superseded by a newer call';
     
     // If no image found, don't inject CSS
     if (!imagePath) {
@@ -184,6 +202,7 @@ export const updateSideCharacter = async (/** @type {{ clear?: string; character
     }
     
     // Inject new CSS
+    document.getElementById(STYLE_ID)?.remove(); // never two at once
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `

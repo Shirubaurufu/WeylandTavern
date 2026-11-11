@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { loadMienGallery, lockedMienExpression, mienFolderCandidates, normalizeLocalSprites, normalizeRegistrarSprites, resolveMienCharacter, selectMienOutfit, setLockedMienExpression } from '../lib/mien.js';
+import { loadMienGallery, lockedMienExpression, mienFolderCandidates, moveLockedMienExpression, normalizeLocalSprites, normalizeRegistrarSprites, resolveMienCharacter, selectMienOutfit, setLockedMienExpression } from '../lib/mien.js';
 import { renderMienScreen } from '../lib/ui/apps/mien.js';
 
 function target() { return { innerHTML: '' }; }
@@ -295,8 +295,28 @@ test('Mien locks hold a face per character until cleared', () => {
     assert.equal(setLockedMienExpression(settings, 'Vera', null), false);
     assert.equal(lockedMienExpression(settings, 'Vera'), null);
     // A hand-edited or partial save entry (no label) reads as unlocked rather than crashing.
-    settings.mienLocks.Vera = { path: '/x.png' };
+    settings.mienExpressionLocks.Vera = { path: '/x.png' };
     assert.equal(lockedMienExpression(settings, 'Vera'), null);
+});
+
+// The 2026-11-10 release locked a face on every "Set in chat" (players: "expressions are getting
+// stuck"). Set in chat only moves a lock that already exists, and the locks that build saved are
+// never read again.
+test('Set in chat never creates a Mien lock, it only moves one that is holding', () => {
+    const settings = {};
+    const joy = { label: 'joy', path: '/s/joy.png', fileName: 'joy.png', folderName: 'Vera', source: 'local' };
+    const anger = { ...joy, label: 'anger', path: '/s/anger.png', fileName: 'anger.png' };
+    assert.equal(moveLockedMienExpression(settings, 'Vera', joy), false);
+    assert.equal(lockedMienExpression(settings, 'Vera'), null, 'no lock appears from Set in chat alone');
+    setLockedMienExpression(settings, 'Vera', joy);
+    assert.equal(moveLockedMienExpression(settings, 'Vera', anger), true);
+    assert.equal(lockedMienExpression(settings, 'Vera').label, 'anger');
+    assert.equal(moveLockedMienExpression(settings, 'Belle', joy), false, 'another character stays unlocked');
+});
+
+test('locks saved by the 2026-11-10 release are ignored', () => {
+    const stuck = { mienLocks: { Vera: { label: 'joy', path: '/s/joy.png', fileName: 'joy.png', folderName: 'Vera', source: 'local' } } };
+    assert.equal(lockedMienExpression(stuck, 'Vera'), null);
 });
 
 test('Mien renders the lock beside Set in chat, and states the held face when locked', () => {

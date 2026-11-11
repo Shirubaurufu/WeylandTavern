@@ -449,7 +449,12 @@ async function fetchRegistrarManifest(name, outfit) {
         registrarManifestCache.set(url, (async () => {
             try {
                 const res = await fetch(url, { method: 'GET', credentials: 'omit' });
-                if (!res.ok) return null;
+                if (!res.ok) {
+                    // "Busy" (429) and server errors are not an answer either. Remembering them as "no such
+                    // character" left a Registrar character without a portrait until the page was reloaded.
+                    if (res.status === 429 || res.status >= 500) registrarManifestCache.delete(url);
+                    return null;
+                }
                 return JSON.parse(await res.text());
             } catch (e) {
                 if (DEBUG) {
@@ -711,7 +716,12 @@ async function refineBaseSideExpression(side) {
 
 let activeOutfit = null;
 let defaultEmotion = null;
+// Only the latest refresh may paint. A refresh waits on sprite lists, manifests and the mood
+// classifier, so an older one (started for the previous swipe or message) could finish last and
+// paint the previous portraits back over the current ones, where they stayed until the next reply.
+let latestExpressionsRun = 0;
 async function setExpressions(){
+    const thisRun = ++latestExpressionsRun;
     // Overlay elements may not be mounted yet (late-mount path re-schedules a refresh after insertion)
     if (!leftExpression || !rightExpression) {
         if (DEBUG) {
@@ -810,6 +820,13 @@ async function setExpressions(){
     // An official side character drawn by quick-reply-ext still holds the main character's mood; read her own block instead
     if (sideExpressionsEnabled && right.path && right.path === rightBasePath && right.isOfficial && right.name) {
         right = await refineBaseSideExpression(right);
+    }
+
+    if (thisRun !== latestExpressionsRun) {
+        if (DEBUG) {
+            console.log(`${LOGGING_PREFIX} A newer refresh started, dropping this one.`);
+        }
+        return;
     }
 
     if (left.path) {
