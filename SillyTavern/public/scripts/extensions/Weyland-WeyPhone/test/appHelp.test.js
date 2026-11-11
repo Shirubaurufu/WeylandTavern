@@ -7,7 +7,7 @@ import { createPanelMarkup } from '../lib/panel.js';
 
 // Non-generating apps omit the generic rule. Copycat instead explains its cost in its own
 // rewrite-specific bullet; keeping that exception explicit still checks every other app.
-const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien', 'registrar', 'understudy', 'narrative']);
+const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien', 'registrar', 'understudy', 'narrative', 'weystore']);
 
 test('every WeyPhone app has contextual help with concise structured copy', () => {
     for (const app of APP_REGISTRY) {

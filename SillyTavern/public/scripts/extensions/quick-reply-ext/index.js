@@ -37,6 +37,8 @@ import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.j
 import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
 import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
 import { pickBackgroundForReply } from "./src/autoBackground.js";
+import { CHARACTER_THOUGHTS_VARIABLE, characterThoughtsEnabled, supportsCharacterThoughtsToggle } from "./src/characterThoughts.js";
+import { isLoonaDrunkStart, loonaGreetingRecord, stripDrunkThoughtsFromRequest } from "./src/loonaGreetings.js";
 
 const debug = true;
 
@@ -130,6 +132,16 @@ function OnRequestReady(data) {
         }
     } catch (error) {
         console.error(`[WQR] Baphomet cut Error:`, error);
+    }
+    // Loona with Character Thoughts off (PromptOS): her drunk start context has its own section on how her drunk
+    // thoughts sound, which would keep them coming. Cut it from this request only. See src/loonaGreetings.js.
+    try {
+        if (data && getCurrentCharacterName() === "Loona" && !characterThoughtsEnabled("Loona", getLocalVariable(CHARACTER_THOUGHTS_VARIABLE))) {
+            const cut = stripDrunkThoughtsFromRequest(data.messages);
+            if (cut) DebugLog(`Loona: drunk thoughts section left out, Character Thoughts is off (${cut})`);
+        }
+    } catch (error) {
+        console.error(`[WQR] Loona thoughts cut Error:`, error);
     }
     // !Look and journal codes in Kinsbane Manor / Aiko chats: the command changes the prompt for this one message
     // (and its rerolls). See src/kinsbaneCommands.js. Skipped in OOC Mode, where the scene sheet isn't sent anyway.
@@ -984,7 +996,8 @@ async function Scenarios(userMessage) {
             const SpecialSetupTime = performance.now();
             switch (charName) {
                 case "Loona": {
-                    if (greetingSwipe === 0) {
+                    // The drunk greeting, wherever it sits on the card (see src/loonaGreetings.js).
+                    if (isLoonaDrunkStart(greetingText)) {
                         const result = await doButtons({labels: `["Dismissed Him - Kinda Drunk","Nearly Hooked Up - Kinda Drunk","Dismissed Him - Turbo Drunk","Nearly Hooked Up - Turbo Drunk"]`}, strings.redC);
                         const choice = result ? result : "Dismissed Him - Turbo Drunk";
                         const dismissed = choice.includes("Dismissed");
@@ -1042,7 +1055,11 @@ This is our sort of rough approach of forcing down the LLM Niceness barrier with
 
             if (charScenarios.greetings !== undefined && charScenarios.greetings.length) {
                 try {
-                    const greetingObj = charScenarios.greetings[greetingSwipe];
+                    // Loona's record is matched to the greeting itself, so the card's greeting order and this
+                    // list's order no longer have to agree (see src/loonaGreetings.js).
+                    const greetingObj = charName === "Loona"
+                        ? loonaGreetingRecord(charScenarios.greetings, greetingText, greetingSwipe)
+                        : charScenarios.greetings[greetingSwipe];
                     if (greetingObj !== undefined) {
                         const keys = Object.keys(greetingObj);
                         if (keys.length) {
@@ -2217,6 +2234,8 @@ async function XXX(charName) {
             setLocalVariable("ThoughtSet", baphometHidden(getLocalVariable(BAPHOMET_VAR))
                 ? "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]"
                 : baphometThoughts(rav.thinkYes));
+        } else if (supportsCharacterThoughtsToggle(charName) && !characterThoughtsEnabled(charName, getLocalVariable(CHARACTER_THOUGHTS_VARIABLE))) {
+            setLocalVariable("ThoughtSet", "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]");
         } else if (["Summer","Loona","Belle","Hannah","Seth","Lentyl","Briar","Willow","Dash"].includes(charName) && rav.thinkYes) {
             setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
         } else if (charName === "Vera" && (Number(getFirstMessage("char")?.swipe_id) === 0 || getLocalVariable("Scenario") || introHadScenario()) && rav.thinkYes) {
@@ -2272,11 +2291,17 @@ async function XXX(charName) {
         setLocalVariable("ravteg", assembled.teg);
         // Built-in prompts and OOC bring their own voice; do not inject an extra roleplay narrator.
         setLocalVariable("NarratorEarly", specialBoxes || isOocModeEnabled(getGlobalVariable("OOCMode")) ? "" : assembled.narratorEarly.replaceAll("{{getvar::LocalNarrator}}", getLocalVariable("LocalNarrator")));
-        setLocalVariable("postrav", resolvePromptPost({ ...base, post: assembled.post }, {
+        let resolvedPost = resolvePromptPost({ ...base, post: assembled.post }, {
             focus: getLocalVariable("ExpAltShow") === "true" ? base.expaltshow : "{{getglobalvar::RPFocus}}",
             htmlEnabled: getGlobalVariable("HTML!") === "Enabled",
             htmlInstructions: strings.whtml,
-        }));
+        });
+        // A greeting may need a last-word reminder that belongs to its intro context. PromptOS's
+        // intro On/Off control owns this variable alongside ConstantScenario, so disabling that
+        // context removes the reminder too. Appending here keeps it at the very end of postrav.
+        const introPostHistory = String(getLocalVariable("IntroPostHistory") ?? "").trim();
+        if (introPostHistory) resolvedPost = `${resolvedPost.trimEnd()}\n\n${introPostHistory}`;
+        setLocalVariable("postrav", resolvedPost);
         // OOC Mode (PromptOS -> Modes -> Experimental) replaces the whole Weyland base prompt for
         // every prompt choice, so it runs after shared assembly: the card, lorebooks and chat stay, the
         // narrator comes along inside the OOC prompt (src/oocMode.js explains the wording). No

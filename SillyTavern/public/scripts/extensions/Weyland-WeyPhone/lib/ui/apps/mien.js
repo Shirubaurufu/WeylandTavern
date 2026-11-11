@@ -42,6 +42,7 @@ export function renderMienScreen(container, {
     error = '',
     appliedLabel = '',
     fullscreen = false,
+    lockedLabel = '',
 } = {}) {
     const characterName = gallery?.character?.name ?? '';
     const header = headerMarkup(characterName, Boolean(gallery?.expressions?.length));
@@ -107,11 +108,21 @@ export function renderMienScreen(container, {
         </figure>
         <button type="button" class="wp-mien-step" id="wp-mien-next" aria-label="Next expression"${gallery.expressions.length < 2 ? ' disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>
     </div>
-    <button type="button" id="wp-mien-apply" class="wp-mien-apply"${applying ? ' disabled' : ''}>
-        <i class="fa-solid ${applying ? 'fa-circle-notch fa-spin' : 'fa-wand-magic-sparkles'}"></i>
-        ${applying ? 'Setting expression…' : 'Set in chat'}
-    </button>
-    ${appliedLabel ? `<div class="wp-mien-applied"><i class="fa-solid fa-check"></i> ${escapeHtml(appliedLabel)} is set until the next character message.</div>` : '<div class="wp-mien-hint">Browsing here will not change the chat. Only “Set in chat” applies an expression.</div>'}
+    <div class="wp-mien-apply-row">
+        <button type="button" id="wp-mien-apply" class="wp-mien-apply"${applying ? ' disabled' : ''}>
+            <i class="fa-solid ${applying ? 'fa-circle-notch fa-spin' : 'fa-wand-magic-sparkles'}"></i>
+            ${applying ? 'Setting expression…' : 'Set in chat'}
+        </button>
+        <button type="button" id="wp-mien-lock" class="wp-mien-lock${lockedLabel ? ' is-locked' : ''}" aria-pressed="${Boolean(lockedLabel)}"
+            title="${lockedLabel ? `Unlock ${lockedLabel}` : 'Lock the selected expression so character messages cannot change it'}"
+            aria-label="${lockedLabel ? `Unlock ${lockedLabel}` : 'Lock the selected expression'}">
+            <i class="fa-solid ${lockedLabel ? 'fa-lock' : 'fa-lock-open'}" aria-hidden="true"></i>
+            <span>${lockedLabel ? `Locked: ${escapeHtml(lockedLabel)}` : 'Lock'}</span>
+        </button>
+    </div>
+    ${appliedLabel ? `<div class="wp-mien-applied"><i class="fa-solid fa-check"></i> ${escapeHtml(appliedLabel)} is set until the next character message.</div>`
+        : lockedLabel ? `<div class="wp-mien-applied"><i class="fa-solid fa-lock"></i> ${escapeHtml(lockedLabel)} is locked. Character messages will not change it.</div>`
+        : '<div class="wp-mien-hint">Browsing here will not change the chat. Only “Set in chat” applies an expression.</div>'}
     <div class="wp-mien-strip" role="list" aria-label="Expressions">
         ${gallery.expressions.map((expression, expressionIndex) => `
         <button type="button" class="wp-mien-thumb${expressionIndex === index ? ' wp-selected' : ''}" data-mien-index="${expressionIndex}" role="listitem" title="${escapeHtml(labels[expressionIndex])}" aria-label="${escapeHtml(labels[expressionIndex])}">

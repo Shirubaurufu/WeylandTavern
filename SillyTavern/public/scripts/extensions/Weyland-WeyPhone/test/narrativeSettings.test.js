@@ -18,6 +18,8 @@ import {
 } from '../lib/narrativeSettings.js';
 import { renderNarrativeSettingsScreen } from '../lib/ui/apps/narrativeSettings.js';
 import { applyGeminiBypass, GEMINI_BOX6_EXPLICIT, GEMINI_BYPASS_PROMPT, stripGeminiExplicitBox } from '../../quick-reply-ext/src/promptModifiers.js';
+import { CHARACTER_THOUGHTS_VARIABLE, characterThoughtsEnabled } from '../../quick-reply-ext/src/characterThoughts.js';
+import { scenarios } from '../../quick-reply-ext/src/scenarios.js';
 
 function canonicalNarrativeScript() {
     const path = fileURLToPath(new URL('../../../../../data/default-user/QuickReplies/Weyland.json', import.meta.url));
@@ -94,6 +96,52 @@ test('analysis defaults to on when the toggle has never been set', () => {
     assert.equal(snapshot.analysisEnabled, true);
 });
 
+test('Summer, Belle and Loona get a per-chat thoughts toggle that defaults on', () => {
+    const locals = new Map();
+    for (const characterName of ['Summer', 'Belle', 'Loona']) {
+        const snapshot = readNarrativeSnapshot({
+            getGlobal: () => undefined,
+            getLocal: key => locals.get(key),
+            hasChat: true,
+            characterName,
+        });
+        assert.deepEqual(snapshot.characterThoughts, { characterName, enabled: true });
+        assert.equal(characterThoughtsEnabled(characterName, undefined), true);
+
+        locals.set(CHARACTER_THOUGHTS_VARIABLE, 'Disabled');
+        const disabled = readNarrativeSnapshot({
+            getGlobal: () => undefined,
+            getLocal: key => locals.get(key),
+            hasChat: true,
+            characterName,
+        });
+        assert.equal(disabled.characterThoughts.enabled, false);
+        locals.clear();
+    }
+
+    const other = readNarrativeSnapshot({ getGlobal: () => undefined, getLocal: () => undefined, hasChat: true, characterName: 'Hannah' });
+    const noChat = readNarrativeSnapshot({ getGlobal: () => undefined, getLocal: () => undefined, hasChat: false, characterName: 'Summer' });
+    assert.equal(other.characterThoughts, null);
+    assert.equal(noChat.characterThoughts, null);
+});
+
+test('Character Thoughts control renders only for supported open chats and is wired to the prompt rebuild', () => {
+    const target = { innerHTML: '' };
+    const base = { hasChat: true, modes: {}, mental: {}, commandsHidden: false, language: 'English' };
+    renderNarrativeSettingsScreen(target, { snapshot: { ...base, characterThoughts: { characterName: 'Summer', enabled: true } }, tab: 'modes' });
+    assert.match(target.innerHTML, /<h3>Character Thoughts<\/h3>/);
+    assert.match(target.innerHTML, /data-narrative-action="toggle-character-thoughts" aria-pressed="true"/);
+    assert.match(target.innerHTML, /Thoughts: Enabled/);
+
+    renderNarrativeSettingsScreen(target, { snapshot: { ...base, characterThoughts: null }, tab: 'modes' });
+    assert.doesNotMatch(target.innerHTML, /toggle-character-thoughts|<h3>Character Thoughts<\/h3>/);
+
+    const phoneSource = readFileSync(fileURLToPath(new URL('../index.js', import.meta.url)), 'utf8');
+    const promptSource = readFileSync(fileURLToPath(new URL('../../quick-reply-ext/index.js', import.meta.url)), 'utf8');
+    assert.match(phoneSource, /action === 'toggle-character-thoughts'[\s\S]*local\.set\(CHARACTER_THOUGHTS_VARIABLE,[\s\S]*rebuildNarrativePrompts\('XXX'\)/);
+    assert.match(promptSource, /supportsCharacterThoughtsToggle\(charName\)[\s\S]*characterThoughtsEnabled\(charName, getLocalVariable\(CHARACTER_THOUGHTS_VARIABLE\)\)/);
+});
+
 test('Roleplay Shift: HardToggle always wins, and a stale or unknown value reads as None', () => {
     assert.equal(resolveShift(undefined, undefined), 'None');
     assert.equal(resolveShift('Horror', 'Off'), 'Horror');
@@ -159,6 +207,59 @@ test('Roleplay intro context card: fading toggle, always-on toggle, variant pick
     html = render({ available: false, reason: 'Mirror World manages its own starting context.', context: null, variants: [] });
     assert.match(html, /Mirror World manages its own starting context\./);
     assert.doesNotMatch(html, /set-intro-/);
+});
+
+test('Summer selfie greeting keeps the new strict context in PromptOS as a constant intro', () => {
+    const greeting = scenarios.get('Summer')?.greetings?.[0];
+    assert.equal(greeting?.StartingYear, 'Freshman');
+    assert.match(greeting?.ConstantScenario ?? '', /^\[ROLEPLAY START CONTEXT - THE SELFIE, BIO 101\]/);
+    assert.match(greeting.ConstantScenario, /If you are beyond this date, this likely no longer is relevant\./);
+    assert.match(greeting.ConstantScenario, /dont bring the selfie up unless you GENUINELY need to,only if its ENTIRELY UNAVOIDABLE/);
+    assert.match(greeting.ConstantScenario, /everything between the two of them is happening in whispers until someone leaves the room\./);
+    assert.match(greeting.ConstantScenario, /\[END ROLEPLAY START CONTEXT\]$/);
+    assert.doesNotMatch(greeting.ConstantScenario, /WHEN SHE FINDS OUT/);
+});
+
+test("Belle's missing-night greeting knows the location without a keyword-gated reveal", () => {
+    const belleGreetings = scenarios.get('Belle')?.greetings ?? [];
+    assert.equal(belleGreetings.length, 5, 'shipped PromptOS order omits the local pre-alpha Halloween start');
+    const doorway = belleGreetings[2];
+    const greeting = belleGreetings[3];
+    assert.deepEqual(Object.keys(greeting ?? {}), ['ConstantScenario', 'StartingYear', 'CharacterThoughtsToggle', 'IntroPostHistory']);
+    assert.equal(greeting?.StartingYear, 'Sophomore');
+    assert.match(greeting?.ConstantScenario ?? '', /^\[ROLEPLAY INTRO CONTEXT: SHE'S GONE - FIVE WEEKS IN\]/);
+    for (const sharedFact of [
+        'Belle is two days into her pre-heat (as of the 14th)',
+        'Trent, flirted with her. Nothing happened. She shut it down and walked away.',
+        'Not wanting anyone else means she is already in too deep',
+        'she exploded, screamed at them in tears and ran out',
+        "I'm scared. My head hurts so bad. I cant think.",
+        'Nothing happened with him and she did not cheat.',
+        'Going to explain more about her family, her dad or the pre-heat clearly tonight',
+    ]) {
+        assert.match(doorway?.ConstantScenario ?? '', new RegExp(sharedFact.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+        assert.match(greeting.ConstantScenario, new RegExp(sharedFact.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    }
+    assert.match(greeting.ConstantScenario, /WHERE BELLE ACTUALLY IS - INTERNAL CONTINUITY, DO NOT DISCLOSE/);
+    assert.match(greeting.ConstantScenario, /Belle is at Rivera's finals bash/);
+    assert.match(greeting.ConstantScenario, /Do NOT fire this information because \{\{user\}\} merely says "Rivera," "party," or another keyword/);
+    assert.match(greeting.ConstantScenario, /Let a reasonable search or a sensible question find her; do not pad the scene into an extended scavenger hunt\./);
+    assert.match(greeting.ConstantScenario, /Starting at 9:19 AM onward[^\n]+she can return on her own/);
+    assert.doesNotMatch(greeting.ConstantScenario, /If \{\{user\}\} has not found Belle by 9:19 AM/);
+    assert.match(greeting.ConstantScenario, /Belle's phone should be pretty silent, and wont unlock for the user\. She isnt getting continuous texts, she only gets a handful a day\./);
+    assert.match(greeting.ConstantScenario, /\[TEMPORARY POV AND THOUGHT OVERRIDE\][\s\S]*Thoughts are DISABLED until Belle is back in the scene![\s\S]*The camera follows the USER/);
+    assert.equal(greeting.CharacterThoughtsToggle, 'Disabled');
+    assert.equal(greeting.IntroPostHistory, "REMINDER: In the missing Belle intro, ***character POV is temporarily overridden to follow the user***, even if other instructions say otherwise. This prevents her location from being spoiled or narrated until she is found.");
+    assert.doesNotMatch(greeting.ConstantScenario, /Dash has returned to Rivera's party and is not coming back tonight|Clinging to \{\{user\}\}/);
+    assert.doesNotMatch(greeting.ConstantScenario, /WHERE BELLE IS: deliberately NOT written here/);
+});
+
+test("Belle's intro-only post-history reminder follows the PromptOS context toggle", () => {
+    const introSource = readFileSync(fileURLToPath(new URL('../../quick-reply-ext/src/introContext.js', import.meta.url)), 'utf8');
+    const promptSource = readFileSync(fileURLToPath(new URL('../../quick-reply-ext/index.js', import.meta.url)), 'utf8');
+    assert.match(introSource, /CONTEXT_VARS = \[[^\]]*"IntroPostHistory"/);
+    assert.match(introSource, /\["Scenario", "ConstantScenario", "ConstantContext", "IntroPostHistory"\]/);
+    assert.match(promptSource, /getLocalVariable\("IntroPostHistory"\)[\s\S]*resolvedPost = `\$\{resolvedPost\.trimEnd\(\)\}\\n\\n\$\{introPostHistory\}`/);
 });
 
 test('Mental Health Directives are individual choices with the updated explanation', () => {

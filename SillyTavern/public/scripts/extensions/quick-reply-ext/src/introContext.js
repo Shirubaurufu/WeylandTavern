@@ -23,13 +23,16 @@ import { getLocalVariable } from "../../../variables.js";
 import { deleteLocalVariable, setLocalVariable } from "./variables.js";
 import { findLoreBookEntry, setEntryField } from "./lorebook.js";
 import { getFirstMessage } from "./chat.js";
+import { isLoonaDrunkStart } from "./loonaGreetings.js";
 import { getCurrentCharacterName } from "./general.js";
 import strings from "./strings.js";
 import { BAPHOMET_VAR, baphometHidden } from "./baphomet.js";
 
 const STASH = "IntroCtxStash";
 const MODE = "IntroCtxMode";
-const CONTEXT_VARS = ["Scenario", "CharKeys", "ConstantScenario", "ConstantContext", "ContextTimer"];
+// IntroPostHistory is greeting-owned just like the WI context. It is appended to postrav only
+// while present, so turning an intro Off also removes its final post-history reminder.
+const CONTEXT_VARS = ["Scenario", "CharKeys", "ConstantScenario", "ConstantContext", "ContextTimer", "IntroPostHistory"];
 // A WI key that matches any text, so the Scenario entry fires on every scan while "On".
 const ALWAYS_KEY = "/[\\s\\S]/";
 
@@ -94,7 +97,8 @@ const VARIANT_GROUPS = [
         // Loona's whole intro context IS this choice (ConstantScenario + DrunkCoach), so the group
         // carries its own Off option and replaces the generic Auto/On/Off toggle.
         ownsContext: true,
-        applies: (charName, greetingSwipe) => charName === "Loona" && greetingSwipe === 0,
+        // By what the greeting is, not its position on the card (see src/loonaGreetings.js).
+        applies: (charName, greetingSwipe, greetingText) => charName === "Loona" && isLoonaDrunkStart(greetingText),
         options: [
             { id: "kinda-dismissed", label: "Kinda drunk, turned him down" },
             { id: "kinda-hooked", label: "Kinda drunk, almost hooked up" },
@@ -174,8 +178,8 @@ const VARIANT_GROUPS = [
 ];
 
 function activeGroups(charName) {
-    const greetingSwipe = getFirstMessage("char")?.swipe_id;
-    return VARIANT_GROUPS.filter(group => group.applies(charName, greetingSwipe));
+    const greeting = getFirstMessage("char");
+    return VARIANT_GROUPS.filter(group => group.applies(charName, greeting?.swipe_id, greeting?.mes));
 }
 
 /**
@@ -208,11 +212,11 @@ export async function setIntroContextMode(mode) {
     if (!["auto", "on", "off"].includes(mode)) throw new Error(`Unknown intro context mode "${mode}".`);
     const original = ensureStash();
     if (mode === "off") {
-        for (const name of ["Scenario", "ConstantScenario", "ConstantContext"]) if (original[name]) setOrClear(name, "");
+        for (const name of ["Scenario", "ConstantScenario", "ConstantContext", "IntroPostHistory"]) if (original[name]) setOrClear(name, "");
         setOrClear("ContextTimer", "");
         setOrClear("CharKeys", original.CharKeys);
     } else {
-        for (const name of ["Scenario", "ConstantScenario", "ConstantContext"]) if (original[name]) setOrClear(name, original[name]);
+        for (const name of ["Scenario", "ConstantScenario", "ConstantContext", "IntroPostHistory"]) if (original[name]) setOrClear(name, original[name]);
         // "On" means always on: the match-everything key keeps Scenario firing, and Belle's
         // ContextTimer is dropped so it can't clear her ConstantContext. "Auto" puts both back.
         setOrClear("CharKeys", mode === "on" && original.Scenario ? ALWAYS_KEY : original.CharKeys);

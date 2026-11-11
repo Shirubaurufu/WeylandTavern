@@ -9,6 +9,7 @@ import { specialSheetBoxes } from '../../quick-reply-ext/src/specialSheets.js';
 import { resolveNarratorStrength } from '../../quick-reply-ext/src/narratorStrength.js';
 import { narratorSelection } from '../../quick-reply-ext/src/narratorSelection.js';
 import { scenarios } from '../../quick-reply-ext/src/scenarios.js';
+import { characterThoughtsEnabled, supportsCharacterThoughtsToggle, CHARACTER_THOUGHTS_VARIABLE } from '../../quick-reply-ext/src/characterThoughts.js';
 
 export const NARRATIVE_TABS = Object.freeze(['essentials', 'style', 'modes', 'perspective']);
 
@@ -325,6 +326,12 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
         // analysis has always run unconditionally until this toggle existed, so "never set" must
         // read the same as "explicitly on" rather than silently going quiet for existing users.
         analysisEnabled,
+        // Summer and Belle have always shipped with thoughts enabled. Their per-chat control is
+        // only exposed for those two cards, and an unset value preserves the historical default.
+        characterThoughts: hasChat && supportsCharacterThoughtsToggle(characterName) ? {
+            characterName,
+            enabled: characterThoughtsEnabled(characterName, getLocal(CHARACTER_THOUGHTS_VARIABLE)),
+        } : null,
         thinking,
         globalNarrator,
         narratorStrength: resolveNarratorStrength(getGlobal('NarratorStrength')),

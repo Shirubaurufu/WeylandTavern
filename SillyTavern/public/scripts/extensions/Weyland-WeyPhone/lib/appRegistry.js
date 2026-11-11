@@ -188,6 +188,18 @@ export const APP_REGISTRY = [
         inGrid: true,
     },
     {
+        // The app store: where every other app is added to or taken off the home screen. A
+        // "system" app (lib/weystore.js SYSTEM_APP_KEYS), so it can never remove itself.
+        key: 'weystore',
+        requiresRoleplay: false,
+        label: 'WeyStore',
+        icon: `${ASSET_BASE_URL}/weyphone_weystore.webp`,
+        accent: '#E2A23B',
+        syncSection: null,
+        screenView: 'weystore',
+        inGrid: true,
+    },
+    {
         key: 'settings',
         requiresRoleplay: false,
         label: 'Settings',

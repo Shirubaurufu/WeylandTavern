@@ -328,3 +328,34 @@ export async function applyMienExpression(selection, characterName, { documentRe
     image.setAttribute('title', selection.label);
     image.closest('#expression-holder, .expression-holder')?.style.setProperty('display', '');
 }
+
+/** The face locked for this character (Mien's lock button), or null. The snapshot carries every
+ *  field applyMienExpression needs, so a lock keeps working after the gallery is reloaded. */
+export function lockedMienExpression(settings, characterName) {
+    const lock = settings?.mienLocks?.[characterName];
+    return lock?.label ? lock : null;
+}
+
+/** Sets (selection given) or clears (null) the lock. @returns {boolean} whether anything changed. */
+export function setLockedMienExpression(settings, characterName, selection) {
+    if (!settings || !characterName) return false;
+    if (!settings.mienLocks || typeof settings.mienLocks !== 'object' || Array.isArray(settings.mienLocks)) {
+        settings.mienLocks = {};
+    }
+    if (!selection) {
+        if (!settings.mienLocks[characterName]) return false;
+        delete settings.mienLocks[characterName];
+        return true;
+    }
+    const snapshot = {
+        label: selection.label,
+        path: selection.path,
+        fileName: selection.fileName,
+        folderName: selection.folderName,
+        source: selection.source,
+    };
+    const current = settings.mienLocks[characterName];
+    if (current && ['label', 'path', 'fileName', 'folderName', 'source'].every(field => current[field] === snapshot[field])) return false;
+    settings.mienLocks[characterName] = snapshot;
+    return true;
+}

@@ -38,7 +38,9 @@ import { PHONE_REQUEST_MAX_INPUT_TOKENS, PHONE_THREAD_MAX_TOKENS, limitPhoneRequ
 import { renderStatusBar } from './lib/ui/statusBar.js';
 import { renderLockScreen } from './lib/ui/lockScreen.js';
 import { renderShade } from './lib/ui/shade.js';
-import { renderHomeScreen } from './lib/ui/homeScreen.js';
+import { renderHomeScreen, setHomeFolderOpen } from './lib/ui/homeScreen.js';
+import { renderWeyStoreScreen } from './lib/ui/apps/weystore.js';
+import { applyLoadout, buildStoreModel, createHomeFolder, homeLayout, isAppInstalled, markAppSeen, moveHomeApp, moveHomeFolder, removeEmptyHomeFolder, renameHomeFolder, setAppInstalled } from './lib/weystore.js';
 import { getCastEntries, searchCast } from './lib/castDirectory.js';
 import { renderContactsAppScreen, renderContactDetailScreen } from './lib/ui/apps/contacts.js';
 import { initialState as calcInitialState, reduceKeypress } from './lib/calculatorEngine.js';
@@ -86,7 +88,7 @@ import { renderAppHelpDialog, renderNoticeDialog } from './lib/ui/appHelp.js';
 import { createAppTutorial, shouldShowAppTutorial } from './lib/ui/appTutorials.js';
 import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster, syncRegistrarAutoContacts } from './lib/registrarLorebook.js';
 import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
-import { applyMienExpression, loadMienGallery, resolveMienCharacter, selectMienOutfit } from './lib/mien.js';
+import { applyMienExpression, loadMienGallery, lockedMienExpression, resolveMienCharacter, selectMienOutfit, setLockedMienExpression } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
 import { NARRATIVE_HELP, renderNarrativeSettingsScreen } from './lib/ui/apps/narrativeSettings.js';
 import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
@@ -98,9 +100,11 @@ import { ERROR_HELP_EVENT } from '../../weyland-error-notice.js';
 import { installGeminiBlockNotice } from './lib/ui/geminiBlockNotice.js';
 // Only for Custom Preset's starting example (Slow Burn's player quote); quick-reply-ext owns the text.
 import { SHIFT_BODIES } from '../quick-reply-ext/src/roleplayShifts.js';
+import { CHARACTER_THOUGHTS_VARIABLE } from '../quick-reply-ext/src/characterThoughts.js';
 import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, resolvePhoneParticipantName, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
 import { adoptLegacyRoleplayCapture, createCaptureId, ensureCaptureSource, inheritRoleplayThreads, installRoleplayCaptureEvents, pruneMissingRoleplayCaptures, reconcileRoleplayCapture } from './lib/roleplayCapture.js';
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './lib/roleplayMode.js';
+import { unlinkOtherThreadsWithSamePeople } from './lib/singleLinkedThread.js';
 import { buildContactContextBlock, buildGroupContactContextBlock, buildPersonaContextBlock, resolveContactContext } from './lib/contactContext.js';
 import { applySettingsPatch, createSettingsPatch, mergeWeyPhoneSettings, replaceSettingsInPlace, settingsChangedDuringRefresh } from './lib/settingsSync.js';
 import { ravs } from '../quick-reply-ext/src/promptRegistry.js';
@@ -110,12 +114,26 @@ import { applyPhoneCourseCorrection, phoneCourseCorrection, stripAnalysisProcedu
 import { isGeneralMessagingContact } from './lib/contactVisibility.js';
 import { formatGenerationCooldown, generationAllowance, generationRateTier, recordGenerationRequest } from './lib/generationRateLimit.js';
 
-// One of the 10 data-view values showScreen() sets on #wp-panel:
+// One of the data-view values showScreen() sets on #wp-panel:
 // 'home' | 'contacts' | 'conversation' | 'memory' | 'messages' | 'threads' | 'phone-app' |
-// 'twitter-feed' | 'twitter-following' | 'twitter-profile'
+// 'twitter-feed' | 'twitter-following' | 'twitter-profile' | 'external-app'
 let currentView = 'home';
 let currentConversationId = null;
 let currentPhoneApp = null; // 'chronicle' | 'chat' | 'board' | null
+let currentExternalAppKey = null; // key supplied through window.weyPhoneExternalApps
+// WeyStore view state. `detailKey` is the app page that is open (null = one of the two tabs),
+// `busyKey` the app whose Get button is mid-fill, `snack` the undo bar. The remembered scroll
+// offsets put the player back where they were when they return from an app page.
+let weystoreView = { tab: 'browse', detailKey: null, folderId: null, busyKey: null, snack: null, entering: false };
+const weystoreScroll = { browse: 0, phone: 0 };
+let weystoreInstallTimer = null;
+let weystoreSnackTimer = null;
+// Must match the fill animation on .wp-ws-cta-busy in lib/ui/apps/weystore.css.
+const WEYSTORE_INSTALL_MS = 620;
+const WEYSTORE_SNACK_MS = 6000;
+// Set when a held home tile opened its store page: the click that follows the release would
+// otherwise land on whatever the store drew under the finger.
+let swallowNextScreenClick = false;
 let currentSavedAppKey = null; // which app's saved-posts screen is open: 'feed' | 'chronicle' | 'chat' | 'board'
 let currentTwitterProfileCharacter = null;
 let currentThreadsFilter = null; // charName string — set when entering the 'threads' view
@@ -1222,7 +1240,10 @@ function runUnifiedRefresh() {
                     chatMessageCountAtGeneration: context.chat.length,
                 });
             }
-            const appDefs = getSyncApps().map(app => ({ key: app.key, label: resolveAppLabel(settings, app.key) }));
+            // The request always writes all four feeds (the prompt is one piece), but a feed the
+            // player removed in the WeyStore should not buzz them about posts they cannot open.
+            const appDefs = getSyncApps().filter(app => isAppInstalled(settings, app.key))
+                .map(app => ({ key: app.key, label: resolveAppLabel(settings, app.key) }));
             recordSyncNotifications(settings, context.chatId, apps, appDefs);
             if (failures.length > 0) {
                 const failedLabels = failures.map(key => resolveAppLabel(settings, key)).join(', ');
@@ -2138,6 +2159,413 @@ function openKressaConversation() {
     queueWeyPhoneSave(context);
     currentConversationId = conversation.id;
     showScreen('conversation');
+}
+
+// Home tiles added by OTHER extensions.
+// WeyPhone ships no knowledge of those apps. An extension pushes
+//   { key, label, icon | iconFa, accent, open() }
+// for a standalone overlay, or
+//   { key, label, icon | iconFa, accent, mount(container, controls), unmount?() }
+// for a real in-phone screen. `controls.close()` returns to WeyPhone Home. The latter keeps
+// WeyPhone's status/navigation chrome and lets the phone own sizing on both desktop and mobile.
+// onto window.weyPhoneExternalApps (create the array if it is missing, since load order between
+// extensions is not fixed) and dispatches 'weyphone:apps-changed' on document. Keys that collide
+// with a real app are ignored.
+// An optional `store` object describes the tile's WeyStore page: { tagline, about, points[],
+// cost: { kind: 'free' | 'message', label }, note, hero (full image URL), shelf }. Without it the
+// app still gets a page, built from its label, icon and accent (lib/weystoreCatalog.js).
+function externalApps() {
+    const list = Array.isArray(window.weyPhoneExternalApps) ? window.weyPhoneExternalApps : [];
+    return list.filter(app => app && typeof app.key === 'string' && app.key
+        && (typeof app.open === 'function' || typeof app.mount === 'function')
+        && typeof app.label === 'string' && !getApp(app.key));
+}
+
+function externalApp(key) {
+    return externalApps().find(app => app.key === key) ?? null;
+}
+
+// ---------------------------------------------------------------- WeyStore
+//
+// The store decides which apps have a home-screen tile. Removing one deletes nothing (see the
+// header of lib/weystore.js), which is why every action here is instant and undoable instead of
+// asking "are you sure?".
+
+function weystoreModel(context = SillyTavern.getContext(), settings = getSettings(context.extensionSettings)) {
+    const tier = getTier(context);
+    return buildStoreModel({
+        registry: APP_REGISTRY,
+        externalApps: externalApps(),
+        settings,
+        labelFor: key => resolveAppLabel(settings, key),
+        isLocked: app => !appVisibleForTier(app, tier),
+    });
+}
+
+/** Redraws the store in place. `scrollTo` null keeps the current scroll position. */
+function renderWeyStoreNow({ scrollTo = null, entering = false } = {}) {
+    if (currentView !== 'weystore') return;
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const body = document.getElementById('wp-screen-body');
+    const keep = body.scrollTop;
+    const model = weystoreModel(context, settings);
+    // The page that was open can vanish under us (its extension was disabled mid-session).
+    if (weystoreView.detailKey && !model.byKey.has(weystoreView.detailKey)) weystoreView.detailKey = null;
+    // Moving an app out can dissolve a two-item folder. Do not leave its now-missing editor open.
+    if (weystoreView.folderId && !model.layout.folders[weystoreView.folderId]) weystoreView.folderId = null;
+    // A folder name being typed survives the redraw (an install finishing, an extension tile
+    // arriving), as long as that folder's editor is still the one open.
+    const nameBox = body.querySelector('.wp-ws-folder-name');
+    const draft = nameBox && document.activeElement === nameBox
+        ? { folderId: weystoreView.folderId, value: nameBox.value, start: nameBox.selectionStart, end: nameBox.selectionEnd }
+        : null;
+    renderWeyStoreScreen(body, model, { ...weystoreView, entering });
+    body.scrollTop = scrollTo ?? keep;
+    if (draft && draft.folderId === weystoreView.folderId) {
+        const box = body.querySelector('.wp-ws-folder-name');
+        if (box) {
+            box.value = draft.value;
+            box.focus({ preventScroll: true });
+            try { box.setSelectionRange(draft.start, draft.end); } catch { /* not a text box any more; fine */ }
+        }
+    }
+}
+
+/**
+ * Redraws My phone after the layout changed and slides every tile from where it was to where it
+ * landed, so a move reads as the other apps making room instead of the grid blinking. (FLIP:
+ * measure, redraw, then animate from the old spot.) Tiles are matched by app key or folder id.
+ */
+function renderWeyStoreArranged() {
+    const body = document.getElementById('wp-screen-body');
+    const selector = '.wp-ws-mini [data-ws-drop-key], .wp-ws-mini [data-ws-drag-folder], .wp-ws-folder-grid [data-ws-drop-key]';
+    const idOf = el => (el.dataset.wsDragFolder ? `folder:${el.dataset.wsDragFolder}` : `app:${el.dataset.wsDropKey}`);
+    const before = new Map([...body.querySelectorAll(selector)].map(el => [idOf(el), el.getBoundingClientRect()]));
+    renderWeyStoreNow();
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    for (const el of body.querySelectorAll(selector)) {
+        const from = before.get(idOf(el));
+        if (!from || typeof el.animate !== 'function') continue;
+        const to = el.getBoundingClientRect();
+        const dx = from.left - to.left;
+        const dy = from.top - to.top;
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
+        el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }],
+            { duration: 260, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' });
+    }
+}
+
+function showWeyStoreSnack(text, undo = null) {
+    clearTimeout(weystoreSnackTimer);
+    weystoreView.snack = { text, undo };
+    weystoreSnackTimer = setTimeout(() => {
+        weystoreView.snack = null;
+        // Take the bar away without a redraw. A redraw rebuilds the whole screen, which wiped the
+        // folder-name box mid-typing and would cut off a drag in progress.
+        document.querySelector('#wp-screen-body .wp-ws-snack')?.remove();
+    }, WEYSTORE_SNACK_MS);
+}
+
+/** Opens an app's store page from anywhere on the phone (the home screen's hold gesture). */
+function openWeyStorePage(key) {
+    weystoreView = { tab: 'browse', detailKey: key, folderId: null, busyKey: null, snack: null, entering: false };
+    weystoreScroll.browse = 0;
+    showScreen('weystore');
+}
+
+function openWeyStoreDetail(key) {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const body = document.getElementById('wp-screen-body');
+    // Only remember the offset when leaving a tab; hopping between app pages ("Goes well with")
+    // must not overwrite it with the app page's own scroll position.
+    if (!weystoreView.detailKey) weystoreScroll[weystoreView.tab] = body.scrollTop;
+    weystoreView.detailKey = key;
+    if (markAppSeen(settings, key)) queueWeyPhoneSave(context);
+    renderWeyStoreNow({ scrollTo: 0, entering: true });
+}
+
+/** Back from an app page to the tab it was opened from, at the same scroll offset. */
+function closeWeyStoreDetail() {
+    weystoreView.detailKey = null;
+    renderWeyStoreNow({ scrollTo: weystoreScroll[weystoreView.tab] ?? 0, entering: true });
+}
+
+/**
+ * The one place an app is installed or uninstalled. Besides the tile, a few apps do work in the
+ * background, and "off the phone" has to mean off:
+ *  - Clock: alarms and timers stay silent while it is uninstalled (see clockInstalled()). On
+ *    reinstall the real-time alarm schedule is rebuilt from now, so an alarm whose time passed
+ *    while Clock was away does not go off the moment it returns.
+ *  - Copycat: automatic rewrites stop (maybeAutoUnderstudy checks the same flag).
+ *  - The four feeds: Sync skips their notifications; with all four gone the Sync button goes too.
+ * @returns {boolean} whether anything changed
+ */
+function setWeyStoreInstalled(key, installed) {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    if (!setAppInstalled(settings, key, installed)) return false;
+    if (key === 'clock') {
+        alarmNextFire.clear();
+        syncAlarmTick(settings);
+        syncClockTick(settings);
+    }
+    queueWeyPhoneSave(context);
+    return true;
+}
+
+function clockInstalled(settings) {
+    return isAppInstalled(settings, 'clock');
+}
+
+/** "Open" in the store obeys the same two gates as a home tile: membership, then an open roleplay. */
+function launchAppFromStore(key) {
+    const context = SillyTavern.getContext();
+    const app = weystoreModel(context).byKey.get(key);
+    if (!app || !app.installed) return;
+    if (app.locked) {
+        showTierLockedNotice();
+        return;
+    }
+    if (app.needsRoleplay && !isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId })) {
+        wpToast('info', 'This app is only available when there\'s an active roleplay chat open.');
+        return;
+    }
+    openHomeApp(key);
+}
+
+function moveWeyStoreHomeApp(draggedKey, target, mode) {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const externalKeys = externalApps().map(app => app.key);
+    const appKeys = [...APP_REGISTRY.map(app => app.key), ...externalKeys];
+    const layoutBefore = JSON.stringify(settings.weystore?.layout ?? null);
+    const changed = moveHomeApp(settings, {
+        appKeys,
+        externalKeys,
+        draggedKey,
+        targetKey: target.dataset.wsDropKey ?? '',
+        targetFolderId: target.dataset.wsFolderId ?? '',
+        mode,
+    });
+    if (!changed) return false;
+    queueWeyPhoneSave(context);
+    // A drop that landed in the wrong place is one tap to take back.
+    showWeyStoreSnack('Home screen updated.', { layout: layoutBefore });
+    renderWeyStoreArranged();
+    return true;
+}
+
+function moveWeyStoreHomeFolder(draggedFolderId, target, mode) {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const externalKeys = externalApps().map(app => app.key);
+    const appKeys = [...APP_REGISTRY.map(app => app.key), ...externalKeys];
+    const layoutBefore = JSON.stringify(settings.weystore?.layout ?? null);
+    const changed = moveHomeFolder(settings, {
+        appKeys,
+        externalKeys,
+        draggedFolderId,
+        targetKey: target?.dataset.wsDropKey ?? '',
+        targetFolderId: target?.dataset.wsFolderId ?? '',
+        mode,
+    });
+    if (!changed) return false;
+    queueWeyPhoneSave(context);
+    // A drop that landed in the wrong place is one tap to take back.
+    showWeyStoreSnack('Home screen updated.', { layout: layoutBefore });
+    renderWeyStoreArranged();
+    return true;
+}
+
+/** True when the player's membership cannot have this app, so the store must not add it.
+ *  Covers registry apps and extension tiles; unknown keys are never blocked. */
+function weystoreAddBlocked(key, context = SillyTavern.getContext()) {
+    if (!key) return false;
+    const def = APP_REGISTRY.find(app => app.key === key) || externalApps().find(app => app.key === key);
+    return def ? !appVisibleForTier(def, getTier(context)) : false;
+}
+
+/** A loadout (or a loadout undo) can turn a membership app on in one stroke; turn it back off.
+ *  The store's own buttons never offer the add in the first place (wp-ws-cta-membership). */
+function enforceMembershipApps(context = SillyTavern.getContext()) {
+    for (const app of APP_REGISTRY) {
+        if (app.tierGated && !appVisibleForTier(app, getTier(context))) setWeyStoreInstalled(app.key, false);
+    }
+}
+
+function handleWeyStoreAction(control) {
+    const action = control.dataset.wsAction;
+    const key = control.dataset.key;
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const labelOf = appKey => weystoreModel(context, settings).byKey.get(appKey)?.label ?? 'App';
+    const blockedFromAdd = appKey => {
+        if (!weystoreAddBlocked(appKey, context)) return false;
+        showWeyStoreSnack(`${labelOf(appKey)} opens with a Paw Patrol Plus or Platinum membership.`);
+        return true;
+    };
+
+    if (action === 'tab') {
+        const tab = control.dataset.tab === 'phone' ? 'phone' : 'browse';
+        if (tab === weystoreView.tab) return;
+        weystoreView.tab = tab;
+        weystoreView.folderId = null;
+        renderWeyStoreNow({ scrollTo: 0, entering: true });
+        return;
+    }
+    if (action === 'detail') {
+        openWeyStoreDetail(key);
+        return;
+    }
+    if (action === 'back') {
+        closeWeyStoreDetail();
+        return;
+    }
+    if (action === 'help') {
+        // The masthead's "?" stands in for the header's, which is hidden on the two tabs.
+        document.getElementById('wp-help-button')?.click();
+        return;
+    }
+    if (action === 'folder') {
+        weystoreView.folderId = weystoreView.folderId === control.dataset.folderId ? null : control.dataset.folderId;
+        renderWeyStoreNow();
+        return;
+    }
+    if (action === 'close-folder') {
+        // Done also keeps a name that was typed but never saved; losing it silently read as a bug.
+        const typed = control.closest('.wp-ws-folder-editor')?.querySelector('.wp-ws-folder-name')?.value;
+        if (typed !== undefined && control.dataset.folderId) {
+            const externalKeys = externalApps().map(app => app.key);
+            const appKeys = [...APP_REGISTRY.map(app => app.key), ...externalKeys];
+            if (renameHomeFolder(settings, { appKeys, externalKeys, folderId: control.dataset.folderId, name: typed })) queueWeyPhoneSave(context);
+        }
+        weystoreView.folderId = null;
+        renderWeyStoreNow();
+        return;
+    }
+    if (action === 'new-folder') {
+        const externalKeys = externalApps().map(app => app.key);
+        const appKeys = [...APP_REGISTRY.map(app => app.key), ...externalKeys];
+        const folderId = createHomeFolder(settings, { appKeys, externalKeys });
+        if (folderId) {
+            weystoreView.folderId = folderId;
+            queueWeyPhoneSave(context);
+            showWeyStoreSnack('New folder added. Drag apps into it.');
+        } else {
+            showWeyStoreSnack('Your home screen can hold up to four folders.');
+        }
+        renderWeyStoreNow();
+        return;
+    }
+    if (action === 'remove-folder') {
+        const externalKeys = externalApps().map(app => app.key);
+        const appKeys = [...APP_REGISTRY.map(app => app.key), ...externalKeys];
+        const folderId = control.dataset.folderId;
+        if (removeEmptyHomeFolder(settings, { appKeys, externalKeys, folderId })) {
+            if (weystoreView.folderId === folderId) weystoreView.folderId = null;
+            queueWeyPhoneSave(context);
+            showWeyStoreSnack('Empty folder removed.');
+        } else {
+            showWeyStoreSnack('Move every app out before removing this folder.');
+        }
+        renderWeyStoreNow();
+        return;
+    }
+    if (action === 'rename-folder') {
+        const name = control.closest('.wp-ws-folder-editor')?.querySelector('.wp-ws-folder-name')?.value;
+        const externalKeys = externalApps().map(app => app.key);
+        const appKeys = [...APP_REGISTRY.map(app => app.key), ...externalKeys];
+        if (renameHomeFolder(settings, { appKeys, externalKeys, folderId: control.dataset.folderId, name })) {
+            queueWeyPhoneSave(context);
+            showWeyStoreSnack('Folder renamed.');
+        }
+        renderWeyStoreNow();
+        return;
+    }
+    if (action === 'launch') {
+        launchAppFromStore(key);
+        return;
+    }
+    if (action === 'get') {
+        if (weystoreView.busyKey || blockedFromAdd(key)) return;
+        // The button fills for a beat before the app lands. It is short, it is the only "loading"
+        // in the store, and it makes the tap feel like it did something.
+        weystoreView.busyKey = key;
+        renderWeyStoreNow();
+        clearTimeout(weystoreInstallTimer);
+        weystoreInstallTimer = setTimeout(() => {
+            weystoreView.busyKey = null;
+            if (setWeyStoreInstalled(key, true)) showWeyStoreSnack(`${labelOf(key)} is on your home screen.`);
+            renderWeyStoreNow();
+        }, WEYSTORE_INSTALL_MS);
+        return;
+    }
+    if (action === 'remove') {
+        if (setWeyStoreInstalled(key, false)) {
+            showWeyStoreSnack(`${labelOf(key)} removed. Your data is kept.`, { keys: [key], installed: true });
+        }
+        renderWeyStoreNow();
+        return;
+    }
+    if (action === 'toggle') {
+        // My phone: tap to flip. Adding needs no undo (tap again); removing offers one anyway.
+        const installing = !isAppInstalled(settings, key);
+        if (installing && blockedFromAdd(key)) return;
+        if (setWeyStoreInstalled(key, installing)) {
+            if (installing) showWeyStoreSnack(`${labelOf(key)} added.`);
+            else showWeyStoreSnack(`${labelOf(key)} removed. Your data is kept.`, { keys: [key], installed: true });
+        }
+        renderWeyStoreNow();
+        return;
+    }
+    if (action === 'loadout') {
+        // Undo restores the exact mix the player had, not just "everything on".
+        const before = { ...(settings.weystore?.off ?? {}) };
+        const builtIn = APP_REGISTRY.map(app => app.key);
+        const external = externalApps().map(app => app.key);
+        if (applyLoadout(settings, control.dataset.loadout, builtIn, external)) {
+            // "The works"/"Just texting" would add a membership app the player cannot open;
+            // the store's buttons never offer that add, so a loadout must not either.
+            enforceMembershipApps(context);
+            alarmNextFire.clear();
+            syncAlarmTick(settings);
+            syncClockTick(settings);
+            queueWeyPhoneSave(context);
+            const name = control.querySelector('.wp-ws-loadout-name')?.textContent ?? 'Loadout';
+            showWeyStoreSnack(`${name} applied.`, { off: before });
+        }
+        renderWeyStoreNow();
+        return;
+    }
+    if (action === 'undo') {
+        const undo = weystoreView.snack?.undo;
+        clearTimeout(weystoreSnackTimer);
+        weystoreView.snack = null;
+        if (typeof undo?.layout === 'string') {
+            // Put the arrangement back exactly as it was before the drop (null = never arranged).
+            const saved = JSON.parse(undo.layout);
+            if (saved) settings.weystore.layout = saved;
+            else delete settings.weystore.layout;
+            queueWeyPhoneSave(context);
+            renderWeyStoreArranged();
+            return;
+        }
+        if (undo?.off) {
+            settings.weystore.off = { ...undo.off };
+            // Undo restores a mix from BEFORE the loadout, but a membership app the player
+            // cannot open still must not come back on with it.
+            enforceMembershipApps(context);
+            alarmNextFire.clear();
+            syncAlarmTick(settings);
+            syncClockTick(settings);
+            queueWeyPhoneSave(context);
+        } else if (undo?.keys) {
+            for (const undoKey of undo.keys) setWeyStoreInstalled(undoKey, undo.installed);
+        }
+        renderWeyStoreNow();
+    }
 }
 
 // The Weybooru app tile: not an in-phone screen at all — it just launches the same standalone
@@ -3257,6 +3685,8 @@ async function maybeAutoUnderstudy() {
     const settings = getSettings(context.extensionSettings);
     const config = settings.understudy;
     if (!config || config.autoMode === 'off') return;
+    // Uninstalled in the WeyStore = off. An app that is not on the phone must not spend messages.
+    if (!isAppInstalled(settings, 'understudy')) return;
     if (understudyGenerating) return;
     if (phoneState.airplane) return;
     if (!isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId })) return;
@@ -3355,6 +3785,7 @@ function clearCopycatWorkingToast() {
 function renderMienScreenNow() {
     const panel = document.getElementById('wp-panel');
     if (panel) panel.dataset.mienFullscreen = String(mienFullscreen);
+    const settings = getSettings(SillyTavern.getContext().extensionSettings);
     renderMienScreen(document.getElementById('wp-screen-body'), {
         gallery: currentMienGallery,
         selectedIndex: currentMienIndex,
@@ -3363,6 +3794,7 @@ function renderMienScreenNow() {
         error: mienError,
         appliedLabel: mienAppliedLabel,
         fullscreen: mienFullscreen,
+        lockedLabel: lockedMienExpression(settings, currentMienGallery?.character?.name)?.label ?? '',
     });
 }
 
@@ -3455,6 +3887,11 @@ async function applyCurrentMienExpression() {
     try {
         await applyMienExpression(selection, characterName);
         mienAppliedLabel = selection.label;
+        // Applying a different face while locked moves the lock with it; that is the natural read
+        // of "set in chat" when a lock is holding.
+        const context = SillyTavern.getContext();
+        const settings = getSettings(context.extensionSettings);
+        if (setLockedMienExpression(settings, characterName, selection)) queueWeyPhoneSave(context);
         wpToast('success', `${selection.label} is now active until the next character message.`, 'Mien');
     } catch (error) {
         console.error('[WeyPhone] Mien expression apply failed', error);
@@ -3463,6 +3900,44 @@ async function applyCurrentMienExpression() {
         mienApplying = false;
         if (currentView === 'mien') renderMienScreenNow();
     }
+}
+
+/** Mien's lock button: lock the selected expression (and apply it now), or unlock. */
+function toggleMienLock() {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const characterName = currentMienGallery?.character?.name;
+    if (!characterName) return;
+    if (lockedMienExpression(settings, characterName)) {
+        setLockedMienExpression(settings, characterName, null);
+        queueWeyPhoneSave(context);
+        wpToast('info', 'Expression unlocked. Character messages pick their own faces again.', 'Mien');
+    } else {
+        const selection = currentMienGallery?.expressions?.[currentMienIndex];
+        if (!selection) return;
+        setLockedMienExpression(settings, characterName, selection);
+        queueWeyPhoneSave(context);
+        wpToast('success', `${selection.label} is locked and will hold through character messages.`, 'Mien');
+        void applyCurrentMienExpression();
+    }
+    if (currentView === 'mien') renderMienScreenNow();
+}
+
+// After a character message (or a swipe) the expressions extension classifies and sets its own
+// pick; a beat later the lock, if any, puts the chosen face back. Debounced so a burst of
+// messages re-applies once. A lock with no matching character (or no expression display in this
+// chat) simply does nothing.
+let mienLockTimer = null;
+function reapplyMienLockSoon() {
+    clearTimeout(mienLockTimer);
+    mienLockTimer = setTimeout(() => {
+        const context = SillyTavern.getContext();
+        const character = resolveMienCharacter(context);
+        if (!character?.name) return;
+        const lock = lockedMienExpression(getSettings(context.extensionSettings), character.name);
+        if (!lock) return;
+        applyMienExpression(lock, character.name).catch(() => { /* display not present; the lock waits */ });
+    }, 350);
 }
 
 function isWeyPhoneGenerationBusy() {
@@ -3570,7 +4045,85 @@ function handleFormatWeyPhone() {
     wpToast('success', 'WeyPhone formatted. First-time setup is ready.');
 }
 
+function showTierLockedNotice() {
+    renderNoticeDialog(document.getElementById('wp-app-help'), {
+        kicker: 'Kressa',
+        title: 'Wolfgirl Assistant locked',
+        body: 'This app is a Paw Patrol Plus and Platinum feature!',
+        bullets: ['Upgrade your membership to unlock your own wolfgirl assistant~'],
+    });
+}
+
+/**
+ * Opens an app the way its home tile does. Shared by the home screen and the WeyStore's "Open"
+ * button; the callers have already checked membership and "needs a roleplay open".
+ */
+function openHomeApp(appKey) {
+    const app = getApp(appKey);
+    const external = app ? null : externalApp(appKey);
+    if (external) {
+        if (typeof external.mount === 'function') {
+            currentExternalAppKey = appKey;
+            showScreen('external-app');
+            return;
+        }
+        // Legacy external apps own an overlay, so put the phone away first.
+        document.dispatchEvent(new CustomEvent('weyphone:put-away'));
+        try {
+            Promise.resolve(external.open()).catch(error => {
+                console.warn(`[WeyPhone] ${external.label} could not open:`, error);
+                wpToast('error', `${external.label} could not open.`);
+            });
+        } catch (error) {
+            console.warn(`[WeyPhone] ${external.label} could not open:`, error);
+            wpToast('error', `${external.label} could not open.`);
+        }
+        return;
+    }
+    if (appKey === 'narrative') {
+        narrativeCustom = null;
+        narrativeGuide = false;
+        narrativeErrorHelp = null;
+    }
+    if (appKey === 'weystore') {
+        weystoreView = { tab: 'browse', detailKey: null, folderId: null, busyKey: null, snack: null, entering: false };
+        weystoreScroll.browse = 0;
+        weystoreScroll.phone = 0;
+    }
+    // Mirrors openNotificationTarget's shade-entry behavior — any app tile opened directly
+    // from the home screen should clear its own badge too, not just Messages. Guarded on a
+    // truthy appKey because markAppNotificationsRead treats a missing key as "mark ALL apps
+    // read"; a tile without data-app must never silently wipe every badge.
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    if (appKey) {
+        markAppNotificationsRead(settings, context.chatId, appKey);
+        queueWeyPhoneSave(context);
+        renderShadeNow();
+        renderLockScreenNow();
+    }
+    if (appKey === 'kressa') {
+        openKressaConversation();
+    } else if (appKey === 'weybooru') {
+        void openWeybooruViewer();
+    } else if (app?.screenView === 'phone-app') {
+        currentPhoneApp = appKey;
+        showScreen('phone-app');
+    } else if (app) {
+        showScreen(app.screenView);
+    }
+}
+
 function handleScreenBodyClick(event) {
+    if (swallowNextScreenClick) {
+        swallowNextScreenClick = false;
+        return;
+    }
+    const storeControl = event.target.closest('[data-ws-action]');
+    if (storeControl) {
+        handleWeyStoreAction(storeControl);
+        return;
+    }
     const errorCard = event.target.closest('[data-error-help-card]');
     if (errorCard && getErrorHelpCard(errorCard.dataset.errorHelpCard)) {
         narrativeErrorHelp = { query: narrativeErrorHelp?.query ?? '', articleId: errorCard.dataset.errorHelpCard };
@@ -3778,6 +4331,10 @@ function handleScreenBodyClick(event) {
     }
     if (event.target.closest('#wp-mien-apply')) {
         applyCurrentMienExpression();
+        return;
+    }
+    if (event.target.closest('#wp-mien-lock')) {
+        toggleMienLock();
         return;
     }
     const noteRow = event.target.closest('.wp-note-row');
@@ -4418,6 +4975,15 @@ function handleScreenBodyClick(event) {
         }
         return;
     }
+    if (event.target.closest('[data-folder-close]')) {
+        setHomeFolderOpen(document.getElementById('wp-screen-body'), null, false);
+        return;
+    }
+    const folderTile = event.target.closest('.wp-folder-tile');
+    if (folderTile) {
+        setHomeFolderOpen(document.getElementById('wp-screen-body'), folderTile.dataset.folder, true);
+        return;
+    }
     const appTile = event.target.closest('.wp-app-tile');
     if (appTile) {
         if (appTile.dataset.action === 'unified-sync') {
@@ -4425,12 +4991,7 @@ function handleScreenBodyClick(event) {
             return;
         }
         if (appTile.classList.contains('wp-app-tile-tier-locked')) {
-            renderNoticeDialog(document.getElementById('wp-app-help'), {
-                kicker: 'Kressa',
-                title: 'Wolfgirl Assistant locked',
-                body: 'This app is a Paw Patrol Plus and Platinum feature!',
-                bullets: ['Upgrade your membership to unlock your own wolfgirl assistant~'],
-            });
+            showTierLockedNotice();
             return;
         }
         if (appTile.classList.contains('wp-app-tile-disabled')) {
@@ -4439,6 +5000,26 @@ function handleScreenBodyClick(event) {
         }
         const appKey = appTile.dataset.app;
         const app = getApp(appKey);
+        const external = app ? null : externalApp(appKey);
+        if (external) {
+            if (typeof external.mount === 'function') {
+                currentExternalAppKey = appKey;
+                showScreen('external-app');
+                return;
+            }
+            // Legacy external apps own an overlay, so put the phone away first.
+            document.dispatchEvent(new CustomEvent('weyphone:put-away'));
+            try {
+                Promise.resolve(external.open()).catch(error => {
+                    console.warn(`[WeyPhone] ${external.label} could not open:`, error);
+                    wpToast('error', `${external.label} could not open.`);
+                });
+            } catch (error) {
+                console.warn(`[WeyPhone] ${external.label} could not open:`, error);
+                wpToast('error', `${external.label} could not open.`);
+            }
+            return;
+        }
         if (appKey === 'narrative') {
             narrativeCustom = null;
             narrativeGuide = false;
@@ -4466,6 +5047,10 @@ function handleScreenBodyClick(event) {
         } else if (app) {
             showScreen(app.screenView);
         }
+        return;
+    }
+    if (event.target.closest('[data-external-app-retry]')) {
+        showScreen('external-app');
         return;
     }
 
@@ -4712,6 +5297,7 @@ function handleScreenBodyClick(event) {
             ? context.chatId
             : (conversation.roleplayTether ? conversation.roleplayChatId : null);
         setTetheredSettings(settings, conversation.id, { roleplayMode: mode, roleplayChatId });
+        if (mode === ROLEPLAY_MODES.LINKED) unlinkOtherThreadsWithSamePeople(settings, conversation.id);
         queueWeyPhoneSave(context);
         updateRoleplayModeAvailability();
         updateRegenerateEnabled(conversation);
@@ -5276,6 +5862,7 @@ function helpAppKeyForView(view, settings) {
     if (view === 'kressa-settings') return 'kressa';
     if (view === 'discorgi-settings') return 'chat';
     if (view === 'registrar') return 'registrar';
+    if (view === 'weystore') return 'weystore';
     return null;
 }
 
@@ -5407,6 +5994,7 @@ function addMinuteTimer(timer) {
 function refreshRpTimersOnMessage() {
     const context = SillyTavern.getContext();
     const settings = getSettings(context.extensionSettings);
+    if (!clockInstalled(settings)) return; // Clock is off the phone: nothing counts down
     const rpMoment = currentRpMoment(context.chat);
     let changed = false;
     const completed = [];
@@ -5554,6 +6142,8 @@ function fireTimerAlert(timer) {
 }
 
 function enqueueAlert(alert) {
+    // Last line of defence for "Clock is uninstalled": whatever path produced this, nothing rings.
+    if (!clockInstalled(getSettings(SillyTavern.getContext().extensionSettings))) return;
     // Skip a duplicate for something already going off or already queued.
     if (currentAlert?.id === alert.id || alertQueue.some(a => a.id === alert.id)) return;
     alertQueue.push(alert);
@@ -5664,6 +6254,7 @@ function alarmTickFrame() {
     const settings = getSettings(context.extensionSettings);
     const now = Date.now();
     let anyReal = false;
+    if (!clockInstalled(settings)) { stopAlarmTick(); return; }
     for (const alarm of getVisibleAlarms(settings, context.chatId)) {
         if (!alarm.enabled || effectiveTimeMode(settings, alarm) === 'rp') continue;
         anyReal = true;
@@ -5689,7 +6280,8 @@ function stopAlarmTick() {
 /** Keep the alarm checker alive while any enabled REAL alarm exists (global, any screen). */
 function syncAlarmTick(settings) {
     const chatId = SillyTavern.getContext().chatId;
-    const anyReal = getVisibleAlarms(settings, chatId).some(a => a.enabled && effectiveTimeMode(settings, a) !== 'rp');
+    const anyReal = clockInstalled(settings)
+        && getVisibleAlarms(settings, chatId).some(a => a.enabled && effectiveTimeMode(settings, a) !== 'rp');
     if (anyReal) startAlarmTick(); else stopAlarmTick();
 }
 
@@ -5746,6 +6338,8 @@ function earlyAlarmInjectionText(alarm, userName) {
  * forward "ring when reached" note. Returns { id, text } or null.
  */
 function computeEarlyAlarmInjection(context, settings) {
+    // No "an alarm is about to ring" note in the roleplay prompt while Clock is uninstalled.
+    if (!clockInstalled(settings)) return null;
     const moment = currentRpMoment(context.chat);
     if (!moment) return null;
     let closest = null;
@@ -5767,6 +6361,7 @@ function computeEarlyAlarmInjection(context, settings) {
 function refreshRpAlarmsOnMessage() {
     const context = SillyTavern.getContext();
     const settings = getSettings(context.extensionSettings);
+    if (!clockInstalled(settings)) return;
     const moment = currentRpMoment(context.chat);
     if (!moment) return;
     let changed = false;
@@ -6273,6 +6868,10 @@ async function handleNarrativeAction(button) {
             if (before.builtInPrompt) return;   // locked in Kinsbane / Mirror / Muse chats (their sheet always runs)
             global.set('AnalysisToggle', before.analysisEnabled ? 'Disabled' : 'Enabled');
             await rebuildNarrativePrompts('XXX');
+        } else if (action === 'toggle-character-thoughts') {
+            if (!before.hasChat || !before.characterThoughts) return;
+            local.set(CHARACTER_THOUGHTS_VARIABLE, before.characterThoughts.enabled ? 'Disabled' : 'Enabled');
+            await rebuildNarrativePrompts('XXX');
         } else if (action === 'toggle-gemini-bypass') {
             global.set('GeminiBypassToggle', before.geminiBypass ? 'Disabled' : 'Enabled');
             await rebuildNarrativePrompts('XXX');
@@ -6425,6 +7024,7 @@ function describeNarrativeChange(action, value, variable, before) {
         case 'set-intro-context': return `intro context set to ${value}`;
         case 'set-intro-variant': return `intro variant set to ${value.replace('|', ': ')}`;
         case 'toggle-analysis': return `Analysis ${onOff(before.analysisEnabled)}`;
+        case 'toggle-character-thoughts': return `Character Thoughts ${onOff(before.characterThoughts?.enabled)}`;
         case 'toggle-gemini-bypass': return `Gemini Bypass ${onOff(before.geminiBypass)}`;
         case 'toggle-add-year': return `Add Year to RP ${onOff(before.addYear)}`;
         case 'set-narrator-strength': return `narrator strength set to ${value}`;
@@ -6449,6 +7049,11 @@ function showScreen(view) {
     closeCatnipJar(document.getElementById('wp-panel'));
     closeMessageTimeEditor(document.getElementById('wp-panel'));
     appTutorial?.navigate(view);
+    if (currentView === 'external-app' && view !== 'external-app') {
+        try { externalApp(currentExternalAppKey)?.unmount?.(); }
+        catch (error) { console.warn('[WeyPhone] External app could not unmount cleanly:', error); }
+        currentExternalAppKey = null;
+    }
     currentView = view;
     if (view === 'narrative') void refreshNarratorScreen();
     if (view !== 'mien') mienFullscreen = false;
@@ -6463,7 +7068,17 @@ function showScreen(view) {
     const screenBody = document.getElementById('wp-screen-body');
     // Mark real navigation for the CSS entrance; the mark is dropped right after the animation so
     // in-place re-renders (which replace the children) stay still.
-    const screenKey = `${view}|${view === 'phone-app' ? currentPhoneApp : ''}|${view === 'conversation' ? currentConversationId : ''}`;
+    const screenKey = `${view}|${view === 'phone-app' ? currentPhoneApp : ''}|${view === 'conversation' ? currentConversationId : ''}|${view === 'external-app' ? currentExternalAppKey : ''}`;
+    // Only the thread you are in can stay Linked. Every Linked thread is injected into the roleplay prompt,
+    // so a thread left behind kept feeding it (Kressa saw both of two threads). Real navigation only, not
+    // in-place re-renders, and never when the panel is merely closed. See lib/singleLinkedThread.js.
+    if (view === 'conversation' && currentConversationId && screenKey !== lastScreenKey) {
+        const unlinked = unlinkOtherThreadsWithSamePeople(settings, currentConversationId);
+        if (unlinked.length) {
+            queueWeyPhoneSave(context);
+            wpToast('info', 'Your other thread with this contact was switched to Unlinked. Only the thread you have open can be Linked; reopen the old one and pick Linked to use it again.');
+        }
+    }
     if (screenKey !== lastScreenKey) {
         screenBody.dataset.enter = 'true';
         clearTimeout(screenEnterTimer);
@@ -6491,6 +7106,7 @@ function showScreen(view) {
 
     // Per-app accent theming: the visible app's registry accent drives --wp-app-accent for the
     // whole screen (section titles, pills, links). Falls back to the Weyland red.
+    const visibleExternalApp = view === 'external-app' ? externalApp(currentExternalAppKey) : null;
     const accentApp = view === 'phone-app' ? currentPhoneApp
         : view === 'saved-posts' ? currentSavedAppKey
         : view.startsWith('twitter-') ? 'feed'
@@ -6505,14 +7121,15 @@ function showScreen(view) {
         : view === 'mien' ? 'mien'
         : view === 'registrar' ? 'registrar'
         : view === 'narrative' ? 'narrative'
+        : view === 'weystore' ? 'weystore'
         : view === 'housing' ? 'housing'
         : view === 'discorgi-settings' ? 'chat'
         : null;
-    panel.style.setProperty('--wp-app-accent', getApp(accentApp)?.accent ?? '#AA3F3F');
+    panel.style.setProperty('--wp-app-accent', visibleExternalApp?.accent ?? getApp(accentApp)?.accent ?? '#AA3F3F');
     // Per-app visual identity hook — CSS scopes fonts/palettes on [data-app] (see style.css's
     // APP IDENTITIES section). currentPhoneApp distinguishes chronicle/chat/board within the
     // shared 'phone-app' view.
-    panel.dataset.app = accentApp ?? '';
+    panel.dataset.app = visibleExternalApp?.key ?? accentApp ?? '';
     delete panel.dataset.kressaPalette;
     delete panel.dataset.pawxaiPalette;
     delete panel.dataset.calculatorPalette;
@@ -6526,19 +7143,52 @@ function showScreen(view) {
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
         const flavorAppsEnabled = isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId });
         const tier = getTier(context);
+        const homeExternalApps = externalApps();
+        const externalKeys = homeExternalApps.map(app => app.key);
         renderHomeScreen(screenBody, {
+            // Only what the player has installed (WeyStore). Folders, the dock and the Sync button
+            // all follow from this list inside renderHomeScreen.
             apps: APP_REGISTRY
+                .filter(app => isAppInstalled(settings, app.key))
                 .map(app => ({
                     ...app,
                     label: resolveAppLabel(settings, app.key),
                     tierLocked: !appVisibleForTier(app, tier),
                 })),
+            extraApps: homeExternalApps.filter(app => isAppInstalled(settings, app.key))
+                .map(({ key, label, icon, iconFa, accent }) => ({ key, label, icon, iconFa, accent: accent || '#8A8A8A' })),
+            layout: homeLayout(settings, [...APP_REGISTRY.map(app => app.key), ...externalKeys], externalKeys),
+            syncAvailable: getSyncApps().some(app => isAppInstalled(settings, app.key)),
             badges: getUnreadCounts(settings, context.chatId),
             flavorAppsEnabled,
             syncing: isSyncInFlight(),
             airplane: phoneState.airplane,
             generationAllowance: currentGenerationAllowance(context, settings),
             formatCooldown: formatGenerationCooldown,
+        });
+        return;
+    }
+
+    if (view === 'external-app') {
+        const external = visibleExternalApp;
+        if (!external || typeof external.mount !== 'function') {
+            currentExternalAppKey = null;
+            showScreen('home');
+            return;
+        }
+        title.textContent = external.label;
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        screenBody.innerHTML = '<div class="wp-external-app-loading"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span>Opening app…</span></div>';
+        const expectedKey = currentExternalAppKey;
+        const controls = {
+            close() {
+                if (currentView === 'external-app' && currentExternalAppKey === expectedKey) showScreen('home');
+            },
+        };
+        Promise.resolve(external.mount(screenBody, controls)).catch(error => {
+            if (currentView !== 'external-app' || currentExternalAppKey !== expectedKey) return;
+            console.warn(`[WeyPhone] ${external.label} could not mount:`, error);
+            screenBody.innerHTML = `<div class="wp-empty-state"><i class="fa-solid fa-triangle-exclamation"></i><div>${external.label} could not open.</div><button type="button" class="menu_button" data-external-app-retry>Retry</button></div>`;
         });
         return;
     }
@@ -6718,6 +7368,17 @@ function showScreen(view) {
         title.textContent = resolveAppLabel(settings, 'calculator');
         renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
         renderCalculatorScreen(screenBody, calcState);
+        return;
+    }
+
+    if (view === 'weystore') {
+        title.textContent = resolveAppLabel(settings, 'weystore');
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        // data-enter is only set on real navigation, so a settings refresh redraws without the
+        // entrance animation and without losing the player's place.
+        const arriving = screenBody.dataset.enter === 'true';
+        if (weystoreView.detailKey && arriving && markAppSeen(settings, weystoreView.detailKey)) queueWeyPhoneSave(context);
+        renderWeyStoreNow({ scrollTo: arriving ? 0 : null, entering: arriving });
         return;
     }
 
@@ -7958,6 +8619,9 @@ function initPanel() {
                 renderShadeNow();
                 showScreen(currentView);
             });
+        } else if (currentView === 'external-app') {
+            try { externalApp(currentExternalAppKey)?.unmount?.(); }
+            catch (error) { console.warn('[WeyPhone] External app could not pause cleanly:', error); }
         }
     }
 
@@ -7965,6 +8629,15 @@ function initPanel() {
     // full overlay and the player is done with the phone. Event comes from weybooru-viewer's openOverlay().
     document.addEventListener('wbv:opened', () => {
         if (panel.classList.contains('wp-open')) setPanelOpen(false);
+    });
+    // Same for a tile another extension added (externalApps): its app opens over the page.
+    document.addEventListener('weyphone:put-away', () => {
+        if (panel.classList.contains('wp-open')) setPanelOpen(false);
+    });
+    // An extension added or removed a home tile: redraw the home screen if it is showing.
+    document.addEventListener('weyphone:apps-changed', () => {
+        if (currentView === 'home') showScreen('home');
+        if (currentView === 'weystore') renderWeyStoreNow();
     });
 
     // Error notices can take the player straight to help, even with the phone closed or locked.
@@ -8050,6 +8723,11 @@ function initPanel() {
         if (currentView === 'narrative' && narrativeErrorHelp) {
             if (narrativeGuide) { narrativeGuide = false; renderNarrativeScreenNow(); focusErrorHelpHeading(); }
             else void handleErrorHelpAction(narrativeErrorHelp.articleId ? 'list' : 'home');
+            return;
+        }
+        // An app page in the WeyStore goes back to the shelf (or My phone), not all the way home.
+        if (currentView === 'weystore' && weystoreView.detailKey) {
+            closeWeyStoreDetail();
             return;
         }
         if (currentView === 'registrar' && registrarApp.back()) {
@@ -8246,6 +8924,12 @@ function initPanel() {
     // their tick. Real-time timers are unaffected (they run off the wall-clock interval).
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpTimersOnMessage);
     context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED, refreshRpAlarmsOnMessage);
+    // Mien's lock re-asserts itself after the expressions extension has classified the new
+    // message (or a swipe, or a chat switch re-render) — hence the short delay inside.
+    for (const eventName of ['MESSAGE_RECEIVED', 'MESSAGE_SWIPED', 'CHAT_CHANGED']) {
+        const eventType = context.eventTypes[eventName];
+        if (eventType) context.eventSource.on(eventType, reapplyMienLockSoon);
+    }
     installYearNudge({
         getContext: () => SillyTavern.getContext(),
         isEnabled: () => narrativeSnapshot().addYear,
@@ -8351,6 +9035,220 @@ function initPanel() {
     const screenBody = document.getElementById('wp-screen-body');
     initMessageTimeGestures(screenBody, handleChangeMessageTime);
     screenBody.addEventListener('click', handleScreenBodyClick);
+
+    // Hold a home tile (or right-click it) to open that app's WeyStore page: the quick way to
+    // remove an app or read what it costs. A plain tap is untouched. The hold is cancelled by
+    // lifting, by leaving the tile, or by moving far enough to be a scroll.
+    const HOME_HOLD_MS = 550;
+    let homeHold = null;
+    const cancelHomeHold = () => {
+        if (homeHold) clearTimeout(homeHold.timer);
+        homeHold = null;
+    };
+    const holdTileKey = target => (currentView === 'home' ? target.closest?.('.wp-home .wp-app-tile[data-app]')?.dataset.app : null);
+    screenBody.addEventListener('pointerdown', event => {
+        swallowNextScreenClick = false; // a stale flag must never eat an unrelated tap
+        cancelHomeHold();
+        if (event.button !== 0) return;
+        const key = holdTileKey(event.target);
+        if (!key) return;
+        homeHold = {
+            x: event.clientX,
+            y: event.clientY,
+            timer: setTimeout(() => {
+                homeHold = null;
+                swallowNextScreenClick = true;
+                navigator.vibrate?.(12);
+                openWeyStorePage(key);
+            }, HOME_HOLD_MS),
+        };
+    });
+    screenBody.addEventListener('pointermove', event => {
+        if (homeHold && Math.hypot(event.clientX - homeHold.x, event.clientY - homeHold.y) > 10) cancelHomeHold();
+    });
+    for (const eventName of ['pointerup', 'pointercancel', 'pointerleave']) screenBody.addEventListener(eventName, cancelHomeHold);
+    screenBody.addEventListener('contextmenu', event => {
+        const key = holdTileKey(event.target);
+        if (!key) return;
+        event.preventDefault();
+        cancelHomeHold();
+        swallowNextScreenClick = false;
+        openWeyStorePage(key);
+    });
+    // WeyStore's "My phone": drag to arrange. Pointer-based on purpose: the mini tiles hold
+    // <img> icons, and a native HTML5 ghost-drag of one lands in SillyTavern's file-drop
+    // handler ("Unsupported file type: weyphone_discord.webp"), so native dragging is refused
+    // on the store screen and the arrange gesture belongs to this code alone.
+    //
+    // Mouse: press and move. Touch: HOLD a tile for a moment, then move. A finger that moves
+    // straight away is scrolling the page, and the browser owns that gesture; once it starts
+    // scrolling it cancels our pointer, so before the hold the tile could only ever be dragged
+    // sideways along its own row. After the hold the touchmove listener below refuses the scroll.
+    const WS_TOUCH_HOLD_MS = 240;
+    const WS_DROP_CLASSES = ['is-drop-before', 'is-drop-after', 'is-drop-swap', 'is-drop-folder'];
+    let wsArrangeDrag = null;
+    const clearWsDropHint = () => {
+        for (const el of document.querySelectorAll(WS_DROP_CLASSES.map(name => `.${name}`).join(','))) el.classList.remove(...WS_DROP_CLASSES);
+        screenBody.querySelector('.wp-ws-mini.is-drop-home')?.classList.remove('is-drop-home');
+    };
+    const endWsDrag = () => {
+        if (wsArrangeDrag) clearTimeout(wsArrangeDrag.holdTimer);
+        wsArrangeDrag?.ghost?.remove();
+        wsArrangeDrag = null;
+        clearWsDropHint();
+        document.querySelectorAll('.ws-drag-src').forEach(el => el.classList.remove('ws-drag-src'));
+    };
+    /** Where a release at (x, y) would land: the drop target and how (before / after / swap / into a folder). */
+    const wsDropAt = (x, y, drag) => {
+        const dropped = document.elementFromPoint(x, y)?.closest('[data-ws-drop-kind]');
+        if (!dropped || (drag.kind === 'app' && dropped.dataset.wsDropKey === drag.key)
+            || (drag.kind === 'folder' && dropped.dataset.wsFolderId === drag.key)) return null;
+        const rect = dropped.getBoundingClientRect();
+        const across = rect.width ? (x - rect.left) / rect.width : .5;
+        let mode = 'after';
+        if (dropped.dataset.wsDropKind === 'app') {
+            // Folders live after every loose app, so a loose app is not somewhere a folder can go.
+            // An app inside an open folder's editor stands for that folder.
+            if (drag.kind === 'folder') {
+                if (!dropped.closest('.wp-ws-folder-grid')) return null;
+                mode = across < .5 ? 'before' : 'after';
+            }
+            // Left/right thirds place around the target. App-on-app in the middle swaps them.
+            else mode = across < 1 / 3 ? 'before' : across < 2 / 3 ? 'swap' : 'after';
+        } else if (dropped.dataset.wsDropKind === 'folder') {
+            mode = drag.kind === 'app' && across >= 1 / 3 && across < 2 / 3
+                ? 'folder'
+                : across < .5 ? 'before' : 'after';
+        }
+        return { dropped, mode };
+    };
+    /** Lifts the tile: dims the original and puts a copy of it under the pointer. */
+    const liftWsDrag = (drag, x, y) => {
+        drag.moved = true;
+        const sourceSelector = drag.kind === 'folder'
+            ? `[data-ws-drag-folder="${drag.key}"]`
+            : `[data-ws-drop-key="${drag.key}"]`;
+        const source = screenBody.querySelector(sourceSelector);
+        if (!source) return;
+        const rect = source.getBoundingClientRect();
+        const ghost = source.cloneNode(true);
+        ghost.classList.add('ws-drag-ghost');
+        ghost.removeAttribute('data-ws-drop-kind'); // the copy must never be its own drop target
+        ghost.querySelectorAll('[data-ws-action]').forEach(el => el.removeAttribute('data-ws-action'));
+        ghost.style.width = `${rect.width}px`;
+        // Inside .wp-ws so the store's colours apply to the copy. It is position: fixed and
+        // placed with left/top, which stay viewport-relative here.
+        (screenBody.querySelector('.wp-ws') ?? screenBody).appendChild(ghost);
+        drag.ghost = ghost;
+        drag.offsetX = x - rect.left;
+        drag.offsetY = y - rect.top;
+        // position: fixed is measured from a transformed ancestor when there is one (the phone
+        // panel animates with transforms), so find out where the copy's origin really is.
+        ghost.style.left = '0px';
+        ghost.style.top = '0px';
+        const origin = ghost.getBoundingClientRect();
+        drag.originX = origin.left;
+        drag.originY = origin.top;
+        source.classList.add('ws-drag-src');
+        // Keep getting the pointer if it strays off the phone, so a release out there still ends the drag.
+        try { screenBody.setPointerCapture(drag.pointerId); } catch { /* pointer already gone; fine */ }
+    };
+    const moveWsGhost = (drag, x, y) => {
+        if (!drag.ghost) return;
+        drag.ghost.style.left = `${x - drag.offsetX - drag.originX}px`;
+        drag.ghost.style.top = `${y - drag.offsetY - drag.originY}px`;
+    };
+    screenBody.addEventListener('dragstart', event => {
+        if (currentView === 'weystore') event.preventDefault();
+    });
+    screenBody.addEventListener('pointerdown', event => {
+        endWsDrag();
+        if (currentView !== 'weystore' || weystoreView.tab !== 'phone' || weystoreView.detailKey || event.button !== 0) return;
+        if (event.target.closest('[data-ws-no-drag]')) return;
+        const folderTile = event.target.closest('[data-ws-drag-folder]');
+        if (event.target.closest('button') && !folderTile) return;
+        const tile = folderTile ?? event.target.closest('[data-ws-drag-key]');
+        if (!tile) return;
+        // Touch pointers keep implicit capture on the tile they started from; releasing it lets
+        // the drop be resolved from what is actually under the finger.
+        try { event.target.releasePointerCapture?.(event.pointerId); } catch { /* not captured; fine */ }
+        const touch = event.pointerType === 'touch';
+        const drag = {
+            kind: folderTile ? 'folder' : 'app',
+            key: folderTile?.dataset.wsDragFolder ?? tile.dataset.wsDragKey,
+            x: event.clientX,
+            y: event.clientY,
+            pointerId: event.pointerId,
+            touch,
+            armed: !touch, // a mouse drag starts as soon as it moves; a finger has to hold first
+            moved: false,
+            ghost: null,
+            holdTimer: null,
+        };
+        if (touch) {
+            drag.holdTimer = setTimeout(() => {
+                if (wsArrangeDrag !== drag) return;
+                drag.armed = true;
+                navigator.vibrate?.(10);
+                liftWsDrag(drag, drag.x, drag.y);
+            }, WS_TOUCH_HOLD_MS);
+        }
+        wsArrangeDrag = drag;
+    });
+    screenBody.addEventListener('pointermove', event => {
+        const drag = wsArrangeDrag;
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        const far = Math.hypot(event.clientX - drag.x, event.clientY - drag.y) > 8;
+        if (!drag.armed) {
+            // Moved before the hold finished: this finger is scrolling, leave it alone.
+            if (far) endWsDrag();
+            return;
+        }
+        if (!drag.moved) {
+            if (!far) return;
+            liftWsDrag(drag, event.clientX, event.clientY);
+        }
+        moveWsGhost(drag, event.clientX, event.clientY);
+        // Show where a release would land before it happens. The thirds rule is invisible otherwise.
+        clearWsDropHint();
+        const hit = wsDropAt(event.clientX, event.clientY, drag);
+        if (!hit) return;
+        if (hit.dropped.dataset.wsDropKind === 'home') hit.dropped.classList.add('is-drop-home');
+        else hit.dropped.classList.add(`is-drop-${hit.mode}`);
+    });
+    // Once a held tile is lifted, the page must not scroll under the finger. Only a non-passive
+    // touchmove can refuse that, and only if it does so before the browser starts scrolling,
+    // which is why the hold has to finish with the finger still in place.
+    screenBody.addEventListener('touchmove', event => {
+        if (wsArrangeDrag?.touch && wsArrangeDrag.armed && event.cancelable) event.preventDefault();
+    }, { passive: false });
+    // A long press on an icon opens the browser's image menu on Android; not while arranging.
+    screenBody.addEventListener('contextmenu', event => {
+        if (currentView === 'weystore' && weystoreView.tab === 'phone' && event.target.closest('[data-ws-drag-key], [data-ws-drag-folder]')) event.preventDefault();
+    });
+    screenBody.addEventListener('pointerup', event => {
+        const drag = wsArrangeDrag;
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        endWsDrag();
+        if (!drag.moved) return;
+        // Any real drag swallows the click that follows it, changed or not. A folder tile is one
+        // big button, so a drag that ended back on itself used to open the folder.
+        // The flag clears itself shortly after: when no click follows the release (the pointer
+        // came up somewhere else), it must not eat a later keyboard press on Undo.
+        swallowNextScreenClick = true;
+        setTimeout(() => { swallowNextScreenClick = false; }, 350);
+        const hit = wsDropAt(event.clientX, event.clientY, drag);
+        if (!hit) return;
+        if (drag.kind === 'folder') moveWeyStoreHomeFolder(drag.key, hit.dropped, hit.mode);
+        else moveWeyStoreHomeApp(drag.key, hit.dropped, hit.mode);
+    });
+    screenBody.addEventListener('pointercancel', endWsDrag);
+    // Enter in the folder-name box saves it, the same as pressing "Save name".
+    screenBody.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' || !event.target.classList?.contains('wp-ws-folder-name')) return;
+        event.preventDefault();
+        event.target.closest('.wp-ws-folder-editor')?.querySelector('[data-ws-action="rename-folder"]')?.click();
+    });
     screenBody.addEventListener('input', event => {
         if (event.target.id !== 'wp-error-search' || !narrativeErrorHelp) return;
         narrativeErrorHelp.query = event.target.value;
