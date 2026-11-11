@@ -342,7 +342,9 @@ function detailMarkup(app, model, view) {
         <header class="wp-ws-id">
             ${iconMarkup(app, 'wp-ws-icon wp-ws-icon-lg')}
             <div class="wp-ws-id-text">
-                <h2 class="wp-ws-wordmark">${escapeHtml(app.label)}</h2>
+                ${app.key === 'last-smoke-demo'
+                    ? `<h2 class="wp-ws-detail-logo">${lastSmokeLogoMarkup()}</h2>`
+                    : `<h2 class="wp-ws-wordmark">${escapeHtml(app.label)}</h2>`}
                 <p>${escapeHtml(listing.tagline)}</p>
             </div>
         </header>
