@@ -9,7 +9,8 @@ import { narratorBuildState, narratorSelection } from './src/narratorSelection.j
 import { selected_world_info, onWorldInfoChange } from "../../world-info.js";
 import { isMobile } from "../../RossAscends-mods.js";
 import { setPersonaLockState } from "../../personas.js";
-import { updateSideCharacter } from "../Side-Character-Loader/index.js";
+import { isSideCharacterShown, updateSideCharacter } from "../Side-Character-Loader/index.js";
+import { isReplyPlaceholder, portraitSignature, saysNothingAboutCostume } from "./src/portraitSignature.js";
 import { SlashCommandParser } from "../../slash-commands/SlashCommandParser.js";
 import { SlashCommand } from "../../slash-commands/SlashCommand.js";
 import { ARGUMENT_TYPE, SlashCommandArgument } from "../../slash-commands/SlashCommandArgument.js";
@@ -307,6 +308,16 @@ async function OnAi(messageID) {
         const charName = chatMessage?.name;
 
         if (!charText || !charName) return; // Empty message or invalid sender, scripts below this require those
+
+        // With streaming on, a reroll is announced TWICE: once when the stream opens, as the placeholder "...", and
+        // once with the finished reply. Both carry the same message number and swipe number. Reading the placeholder
+        // made the finished reply look like one we had already handled, so a streamed reroll kept the previous
+        // swipe's face (and, having no costume tag, put her back in the regular outfit). Found 2026-11-11 with real
+        // Sonnet replies. The placeholder says nothing, so it is skipped and the real text is the first look.
+        if (isReplyPlaceholder(charText)) return;
+
+        // Other MESSAGE_RECEIVED listeners run after this one and may still change the text (see OnReplyRendered).
+        recheckAfterRender = messageID;
  
         const charSwipeID = chatMessage?.swipe_id;
 
@@ -414,9 +425,59 @@ async function OnAi(messageID) {
             await Clear();
 
             setLocalVariable("lastMessID", currentMessID); // Update lastMessID to check if message has changed next call
+        } else if (portraitSignature(charText) !== lastPortraitSignature) {
+            // Same message and swipe, but it now says something else about the portraits. That is a reply that was
+            // cut off and then finished with Continue: its footer was not there the first time we looked, so the face
+            // stayed on the previous reply's mood (and the costume fell back). Only the portraits and the background
+            // are redone; the once-per-message rolls above stay as they were.
+            DebugLog(`OnAi: same reply, new footer; redrawing portraits.`);
+            CostumeChangeBot(chatMessage, charName);
+            AutoBG(chatMessage);
         }
     } catch (error) {
         console.error(`[WQR] OnAI Error:`, error);
+    }
+}
+
+/**
+ * The portrait signature (see src/portraitSignature.js) of the reply the portraits were last drawn from.
+ * Kept in memory only: after a reload the chat-open code redraws from the saved variables anyway.
+ */
+let lastPortraitSignature = "";
+
+/** The message OnAi just handled; OnReplyRendered looks at it once more. -1 = nothing pending. */
+let recheckAfterRender = -1;
+
+/**
+ * CHARACTER_MESSAGE_RENDERED, which SillyTavern fires once every MESSAGE_RECEIVED listener is done.
+ * OnAi is one of those listeners and not the last: a later one (reply cleanup) can still cut the reply down.
+ * Seen 2026-11-11 with a real Continue on a reply that was already complete: the model appended a whole second
+ * reply ending "[Nervousness]", OnAi drew Nervousness, then the extra reply was cut away again, leaving a reply
+ * whose footer says "[Caring]" under a nervous face. So the reply is compared once more when it is final.
+ * Only for the message OnAi just handled: this event also fires for every message while a chat loads, and those
+ * must not redraw anything (chat open restores the saved costume, which may be one the player picked by hand).
+ * @param {number} messageID
+ */
+async function OnReplyRendered(messageID) {
+    if (messageID !== recheckAfterRender) return;
+    recheckAfterRender = -1;
+    await OnReplyChanged();
+}
+
+/**
+ * A reply was edited, or a message was deleted: if the last character reply now says something different about
+ * the portraits than what is on screen, draw from it. Before this the portrait kept showing a reply that had been
+ * deleted, or the mood from before an edit, until the next reply arrived.
+ */
+async function OnReplyChanged() {
+    try {
+        const charMessage = getLastMessage("char");
+        if (!charMessage?.mes || !charMessage.name) return;
+        if (portraitSignature(charMessage.mes) === lastPortraitSignature) return;
+        DebugLog(`OnReplyChanged: last reply reads differently; redrawing portraits.`);
+        await CostumeChangeBot(charMessage, charMessage.name);
+    } catch (error) {
+        console.error(`[WQR] OnReplyChanged Error:`, error);
     }
 }
 
@@ -667,6 +728,8 @@ async function TitleBarColors() {
                 // Same mood as the main character; without it she came back neutral on every reload
                 setLocalVariable("SideExpSave", getLocalVariable("ExpSave") || "neutral");
                 await updateSideCharacter({character: costumeSaveSide, expression: getLocalVariable("ExpSave")});
+            } else {
+                clearSideCharacter();
             }
         } else {
             await CostumeChangeBot(undefined, undefined);
@@ -816,10 +879,26 @@ async function filterBySpriteFolder(names, getFolder) {
  */
 function refreshSideCharacter(spriteFolder, expression) {
     expression = expression || "neutral";
-    if (getLocalVariable("CostmSaveSide") === spriteFolder && getLocalVariable("SideExpSave") === expression) return null;
+    // "Already showing this" also needs her to actually be on screen: the variables are the chat's, the picture is the page's.
+    if (getLocalVariable("CostmSaveSide") === spriteFolder && getLocalVariable("SideExpSave") === expression && isSideCharacterShown()) return null;
     setLocalVariable("CostmSaveSide", spriteFolder);
     setLocalVariable("SideExpSave", expression);
     return updateSideCharacter({character: spriteFolder, expression: expression});
+}
+
+/**
+ * Takes the side character off the screen and forgets her for this chat.
+ * It checks the PAGE as well as the chat variable. The variable alone missed two cases where a side character stayed
+ * for good (2026-11-11: Dash, naked, stuck on the right for a whole Belle chat after a greeting swipe): a draw that
+ * finished after the clear, and a side character left over from the chat that was open before. In both the variable
+ * was already empty, so every later message skipped the clear.
+ * @returns {boolean} whether there was anything to clear
+ */
+function clearSideCharacter() {
+    if (getLocalVariable("CostmSaveSide") === "" && !isSideCharacterShown()) return false;
+    setLocalVariable("CostmSaveSide", "");
+    updateSideCharacter({clear: 'true'});
+    return true;
 }
 
 /**
@@ -831,9 +910,7 @@ function refreshSideCharacter(spriteFolder, expression) {
 async function SideCharacters(charName, charMessage) {
     const PerformanceStart = performance.now();
     try {
-        if (isMobile() && getLocalVariable("CostmSaveSide") !== "") {
-            setLocalVariable("CostmSaveSide", "");
-            updateSideCharacter({clear: 'true'});
+        if (isMobile() && clearSideCharacter()) {
             DebugLog(`SideCharacters: Cleared side-character from mobile browser.`);
         }
         if (isMobile() || getGlobalVariable("AutoCostume") === "No") return "Aborted";
@@ -865,9 +942,7 @@ async function SideCharacters(charName, charMessage) {
 
         if (!availableCharacters.length) {
             DebugLog(`SideCharacters: No valid side-character found.`);
-            if (getLocalVariable("CostmSaveSide") !== "") {
-                setLocalVariable("CostmSaveSide", "");
-                updateSideCharacter({clear: 'true'});
+            if (clearSideCharacter()) {
                 DebugLog(`SideCharacters: Cleared side-character.`);
             }
             return;
@@ -1494,6 +1569,7 @@ async function CostumeChangeBot(charMessage, charName) {
         const charText = charMessage.mes;
         charName = charName || charMessage.name || getCurrentCharacterName();
         if (!charName) return "{{char}} undefined";
+        lastPortraitSignature = portraitSignature(charText);
         await Expressions(charName, charMessage, true);
         let openWorld = false;
         if (/Phone Status/.test(charText)) {
@@ -1823,9 +1899,7 @@ async function OpenWorldCostumes(charName, charMessage) {
                 if (await refreshSideCharacter(sideFolder, expression)) {
                     DebugLog(`OpenWorldCostumes: Set right-side to "${sideFolder}" (${expression || "neutral"})`);
                 }
-            } else if (getLocalVariable("CostmSaveSide") !== "") {
-                setLocalVariable("CostmSaveSide", "");
-                updateSideCharacter({clear: "true"});
+            } else if (clearSideCharacter()) {
                 DebugLog(`OpenWorldCostumes: Cleared right-side.`);
             }
         }
@@ -1943,8 +2017,15 @@ async function AutoCostumes(charName, charMessage) {
             } else {
                 const costume = getCharacterCostumeFromText(charMessage.mes, charName);
                 const charCostume = `${charName}/${costume}`;
+                // A reply with no costume tag at all says nothing about clothes, so she keeps what she has on. It used
+                // to count as "Regular Outfit": a reply cut off before its footer (about one real reply in four has no
+                // footer) redressed her mid-scene. The same goes for [XX], the code the clothing list tells the model
+                // to use "ONLY IF NONE apply": it names no outfit we have art for (seen live: Loona in a towel after a
+                // shower came out in her crop top). Only when this character already has a costume showing; a first
+                // reply, or one right after the Phone portrait, still gets the regular outfit.
+                const keepsCostume = saysNothingAboutCostume(charMessage.mes) && getLocalVariable("CostmSave").startsWith(`${charName}/`);
                 // Keep the current sprite rather than switching to a missing folder
-                if (costume && getLocalVariable("CostmSave") !== charCostume && await spriteFolderExists(charCostume)) {
+                if (costume && !keepsCostume && getLocalVariable("CostmSave") !== charCostume && await spriteFolderExists(charCostume)) {
                     setLocalVariable("CostmSave", charCostume);
                     setCostume(charCostume);
                     DebugLog(`Set new costume: ${charCostume}`);
@@ -2475,6 +2556,9 @@ function registerSlashCommands() {
     eventSource.on(event_types.CHAT_CHANGED, OnChatChanged);
     eventSource.on(event_types.CHAT_CREATED, OnNewChat);
     eventSource.on(event_types.MESSAGE_SWIPED, OnSwipe);
+    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, OnReplyRendered);
+    eventSource.on(event_types.MESSAGE_EDITED, OnReplyChanged);
+    eventSource.on(event_types.MESSAGE_DELETED, OnReplyChanged);
     // Doses count replies, so this has to run before EVERY generation's prompt is built (XXX
     // otherwise only runs on setup and settings changes). AFTER_COMMANDS rather than STARTED so a
     // slash-command-only send doesn't use up a dose. Only rebuilds when the dose turns on or off.

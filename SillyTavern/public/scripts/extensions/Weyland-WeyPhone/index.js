@@ -88,7 +88,7 @@ import { renderAppHelpDialog, renderNoticeDialog } from './lib/ui/appHelp.js';
 import { createAppTutorial, shouldShowAppTutorial } from './lib/ui/appTutorials.js';
 import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster, syncRegistrarAutoContacts } from './lib/registrarLorebook.js';
 import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
-import { applyMienExpression, loadMienGallery, lockedMienExpression, resolveMienCharacter, selectMienOutfit, setLockedMienExpression } from './lib/mien.js';
+import { applyMienExpression, loadMienGallery, lockedMienExpression, moveLockedMienExpression, resolveMienCharacter, selectMienOutfit, setLockedMienExpression } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
 import { NARRATIVE_HELP, renderNarrativeSettingsScreen } from './lib/ui/apps/narrativeSettings.js';
 import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
@@ -3888,11 +3888,14 @@ async function applyCurrentMienExpression() {
         await applyMienExpression(selection, characterName);
         mienAppliedLabel = selection.label;
         // Applying a different face while locked moves the lock with it; that is the natural read
-        // of "set in chat" when a lock is holding.
+        // of "set in chat" when a lock is holding. With NO lock this must not create one: the
+        // 2026-11-10 release did, and every "Set in chat" left that face stuck from then on.
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
-        if (setLockedMienExpression(settings, characterName, selection)) queueWeyPhoneSave(context);
-        wpToast('success', `${selection.label} is now active until the next character message.`, 'Mien');
+        if (moveLockedMienExpression(settings, characterName, selection)) queueWeyPhoneSave(context);
+        wpToast('success', lockedMienExpression(settings, characterName)
+            ? `${selection.label} is locked and will hold through character messages.`
+            : `${selection.label} is now active until the next character message.`, 'Mien');
     } catch (error) {
         console.error('[WeyPhone] Mien expression apply failed', error);
         wpToast('error', error?.message || 'Could not set that expression.', 'Mien');
@@ -3917,7 +3920,7 @@ function toggleMienLock() {
         if (!selection) return;
         setLockedMienExpression(settings, characterName, selection);
         queueWeyPhoneSave(context);
-        wpToast('success', `${selection.label} is locked and will hold through character messages.`, 'Mien');
+        // applyCurrentMienExpression shows the "locked" toast once the face is actually on screen.
         void applyCurrentMienExpression();
     }
     if (currentView === 'mien') renderMienScreenNow();

@@ -164,7 +164,9 @@ const weylandRegex = {
     goodStart: /^(?:[\[*'"`>]|__)/,
     goodEnd: /(?:[*'"`\]]|__)$/,
 
-    actionBetweenDialogue: /(?<=[\["_`][\s—]|[\["_`][.,?!][\s—])(?:\*|(?<!["'_`\]]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?=[\s—]["_`\]])/g,
+    // The right-hand boundary includes "[": an action followed by a [thought] (`"Hi," she says. [Ugh.] "So..."`)
+    // was never wrapped, which made the quote fallback below turn all of that paragraph's speech into '...'.
+    actionBetweenDialogue: /(?<=[\["_`][\s—]|[\["_`][.,?!][\s—])(?:\*|(?<!["'_`\]]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?=[\s—]["_`\[\]])/g,
     actionBetweenDialogueReplace: "*$1*",
     actionAfterDialogue: /(?<=[\["_`][ —]|[\["_`][.,?!][ —])(?:\*|(?!["_`\[]))([^\[\]"_`\r\n]+?)(?:\*|(?<!["'_`\]]))(?:(?=\n)|$)/g,
     actionAfterDialogueReplace: "*$1*",
@@ -174,10 +176,16 @@ const weylandRegex = {
     mergedActionsReplace: "*$1* *$2*",
 
     singleQuoteBetweenActionSpeechGuardrail: /["'_\[`][^*"'\[\]_`]+\*[^*]+(?<!\*)\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*(?!\*)[^\*]+\*[^"'_\[\]`]+["'_\]`]/g,
-    singleQuoteBetweenAction: /(?<!\*)\*[ —]([^\[\]"'_`\r\n]+?)[ —]\*(?!\*)/g,
-    singleQuoteBetweenActionReplace: "—'$1'—",
+    // The "speech" between two actions may not contain asterisks: "*She nods.* *She smiles.* *She leaves.*" is
+    // three actions, not speech, and used to become "*She nods.—'***She smiles.***'—She leaves.*".
+    singleQuoteBetweenAction: /(?<!\*)\*[ —]([^\[\]"'_`*\r\n]+?)[ —]\*(?!\*)/g,
+    // Speech keeps double quotes and sits outside the action, as everywhere else:
+    // "*She shrugs,* maybe, or *she trails off.*" -> "*She shrugs,*—"maybe, or"—*she trails off.*"
+    singleQuoteBetweenActionReplace: '*—"$1"—*',
 
-    actionEmphasisFix: /(?<=[\s—]|^)(?<=\*+[^\n"]+?)\*+([^*\n]+)\*+(?=.+\*+)/g,
+    // (?!\*): the closing run must end where the asterisks end. Without it "***x***" at the end of a line
+    // matched as "***x*" (its own last two asterisks satisfying the lookahead) and grew to "***x*****".
+    actionEmphasisFix: /(?<=[\s—]|^)(?<=\*+[^\n"]+?)\*+([^*\n]+)\*+(?!\*)(?=.+\*+)/g,
     actionEmphasisFixReplace: "***$1***",
 
     dialogueEmphasisOne: /(?<=[\s—]|^)["_\[](?![\s—])([^"_`]*\*[^"_`]*)["_\]](?<![\s—])(?=[\s—]|$)/g,
@@ -424,7 +432,10 @@ async function formatParagraphs(message) {
             }
 
             try {
-                paragraph = replaceText(paragraph, weylandRegex.actionEmphasisFix, weylandRegex.actionEmphasisFixReplace);
+                // Only inside an open action: "*She nods.* *She smiles.* *She leaves.*" are three actions,
+                // and the middle one used to come out as ***She smiles.***
+                paragraph = paragraph.replace(weylandRegex.actionEmphasisFix, (match, inner, offset, whole) =>
+                    insideOpenAction(whole, offset, match.length) ? weylandRegex.actionEmphasisFixReplace.replace('$1', inner) : match);
             } catch (e) {
                 weylandDebug(`#${index} - ActionEmphasisFix error: ${e}`);
             }
@@ -441,7 +452,10 @@ async function formatParagraphs(message) {
                     if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionAfterDialogue, weylandRegex.actionAfterDialogueReplace);
                     if (!actionParagraph) paragraph = replaceText(paragraph, weylandRegex.actionBeforeDialogue, weylandRegex.actionBeforeDialogueReplace);
 
-                    if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph) && !weylandRegex.detectHTMLParagraph.test(paragraph)) {
+                    if (isPlainNarration(paragraph)) {
+                        weylandDebug(`#${index} - Wrapping narration paragraph`);
+                        paragraph = wrapNarration(paragraph);
+                    } else if (!weylandRegex.goodStart.test(paragraph) && !weylandRegex.goodEnd.test(paragraph) && !weylandRegex.detectHTMLParagraph.test(paragraph)) {
                         weylandDebug(`#${index} - Adding asterisks to blank paragraph`);
                         paragraph = `*${paragraph}*`; //Entirely blank, add asterisks to both ends
                     }
@@ -489,7 +503,12 @@ async function formatParagraphs(message) {
                 } catch (e) {
                     weylandDebug(`#${index} - DialogueEmphasis error: ${e}`);
                 }
-                
+
+                try {
+                    paragraph = emphasizeNestedActions(paragraph);
+                } catch (e) {
+                    weylandDebug(`#${index} - NestedActionEmphasis error: ${e}`);
+                }
             }
 
             paragraphs[index] = paragraph; //Default loop end
@@ -510,6 +529,69 @@ function replaceText(text, regex, replace) {
         return newText;
     }
     return text;
+}
+
+/**
+ * A paragraph of plain narration: the model writes these with no asterisks around them and the
+ * Formatter wraps them. Anything holding speech, a [thought], code or HTML is left to the other steps.
+ * @param {string} paragraph
+ */
+function isPlainNarration(paragraph) {
+    return !weylandRegex.goodStart.test(paragraph)
+        && !weylandRegex.detectHTMLParagraph.test(paragraph)
+        && !/["\[\]_`]/.test(paragraph);
+}
+
+/**
+ * Wraps a plain narration paragraph as an action. Any *italics* inside it are emphasis (a thought, a
+ * title, a stressed word), so they become ***bold italics*** first; wrapping them as-is made the
+ * dash-quote rule read the words between two italics as speech, and a paragraph ending on an italic
+ * looked already formatted and was never wrapped. A trailing emphasis closes the action before it
+ * ("*Her first thought is* ***does he think I work here?***") rather than leaving "****" at the end,
+ * which the too-many-asterisks cleanup would break on the next pass.
+ * @param {string} paragraph
+ */
+function wrapNarration(paragraph) {
+    const body = paragraph.replace(/(?<=[\s—(]|^)(?<!\*)\*(?![\s*])([^*\n]+?)(?<![\s*])\*(?!\*)/g, '***$1***');
+    const tail = body.match(/\s+(\*\*\*[^*\n]+\*\*\*)$/);
+    if (tail) return `*${body.slice(0, tail.index)}* ${tail[1]}`;
+    return `*${body}*`;
+}
+
+/** Experimental-mode warning. Skipped on FFFox's own install (WTCreator = FFFox), which runs it on purpose. */
+function showExperimentalWarning() {
+    if (getGlobalVariable('WTCreator') === 'FFFox') return;
+    toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
+}
+
+/**
+ * Emphasis inside an action ("*She wonders *why* he left.*") has to become "***why***", or Markdown shows
+ * the asterisks literally. actionEmphasisFix does this earlier in the loop, but it skips any paragraph
+ * holding a double quote, and later steps rewrite those quotes, so some nested pairs were never fixed.
+ * This last pass converts a single-asterisk pair only when it sits INSIDE an open action on its line (an
+ * odd number of asterisks before and after it), so separate actions like "*a* *b* *c*" are left alone.
+ * @param {string} paragraph
+ */
+function emphasizeNestedActions(paragraph) {
+    if (!paragraph.includes('*')) return paragraph;
+    const pair = /(?<=[\s—]|^)(?<!\*)\*(?![\s*])([^*\n]+?)(?<![\s*])\*(?!\*)/g;
+    return paragraph.replace(pair, (match, inner, offset, whole) =>
+        insideOpenAction(whole, offset, match.length) ? `***${inner}***` : match);
+}
+
+/**
+ * True when text[offset, offset+length) sits inside an action that is open on its line: an odd number
+ * of asterisks before it and after it on that line. ("***b***" counts 3, so earlier emphasis is fine.)
+ * @param {string} text
+ * @param {number} offset
+ * @param {number} length
+ */
+function insideOpenAction(text, offset, length) {
+    const lineStart = text.lastIndexOf('\n', offset - 1) + 1;
+    const lineEndIndex = text.indexOf('\n', offset + length);
+    const lineEnd = lineEndIndex === -1 ? text.length : lineEndIndex;
+    const count = (s) => (s.match(/\*/g) || []).length;
+    return count(text.slice(lineStart, offset)) % 2 === 1 && count(text.slice(offset + length, lineEnd)) % 2 === 1;
 }
 
 async function formatNewMessage(messageId, type) {
@@ -750,7 +832,7 @@ async function formatOutgoingMessages(data) {
             settings.experimental = !!$(this).prop('checked');
             weylandDebug(`Setting Experimental: ${settings.experimental}`);
             if (settings.experimental) {
-                toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
+                showExperimentalWarning();
             } else {
                 oai_settings.stream_openai = false;
                 $('#stream_toggle').prop('checked', false);
@@ -819,7 +901,7 @@ async function formatOutgoingMessages(data) {
     eventSource.on(event_types.MESSAGE_EDITED, formatMessage);
     eventSource.on(event_types.CHAT_CHANGED, () => {
         if (settings.experimental)
-            toastr.warning('WARNING: Weyland-Formatter Experimental mode enabled. Experience may be negatively impacted. It is recommended to disable experimental mode.');
+            showExperimentalWarning();
     });
 })();
 
