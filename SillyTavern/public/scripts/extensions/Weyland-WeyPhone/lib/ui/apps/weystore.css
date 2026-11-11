@@ -658,7 +658,20 @@
     pointer-events: none;
 }
 .wp-ws-p-last-smoke-demo.wp-ws-spot .wp-ws-last-smoke-logo { position: relative; z-index: 1; }
-.wp-ws-poster.wp-ws-p-last-smoke-demo .wp-ws-poster-tagline { font-family: 'Courier New', ui-monospace, monospace; font-weight: 700; font-size: 11px; }
+/* The tagline must fit its two lines without spilling into the art (Belle's face sits just right of
+   the text column). The poster is a size container, so the font follows the tile's width: the text
+   column is 62% of the tile minus 14px of padding, and ~30 bold Courier characters (about 0.6em
+   each) have to fit on one line. */
+.wp-ws-poster.wp-ws-p-last-smoke-demo { container-type: inline-size; }
+.wp-ws-poster.wp-ws-p-last-smoke-demo .wp-ws-poster-tagline {
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 11px;
+    font-size: clamp(8px, calc((62cqi - 14px) / 19), 11px);
+}
+/* The app page shows the same ember logo as the shelf instead of plain lettering. */
+.wp-ws-detail-logo { margin: 0; line-height: 0; }
+.wp-ws-detail-logo .wp-ws-last-smoke-logo { width: min(100%, 230px); }
 .wp-ws-poster.wp-ws-p-last-smoke-demo > .wp-ws-cta { border-radius: 0; border: 2px solid #efeadf; background: #d1263a; color: #efeadf; box-shadow: 3px 3px 0 #efeadf; backdrop-filter: none; }
 .wp-ws-poster.wp-ws-p-last-smoke-demo > .wp-ws-cta-get { background: #efeadf; color: #111014; box-shadow: 3px 3px 0 #d1263a; }
 /* Its title art has a face in every third, so the wash stays solid further across than the others. */
