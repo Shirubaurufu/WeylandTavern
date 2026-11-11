@@ -8159,7 +8159,9 @@ function onCharacterUpdates(list) {
     if (fresh.length) {
         characterUpdatesSeenAt = Date.now();
         changed = markUpdatesAnnounced(settings, fresh) || changed;
-        if (!phoneState.dnd) {
+        // No pop-up on FFFox's own install (WTCreator = FFFox); the notification still waits in the phone.
+        const isCreatorInstall = context.extensionSettings?.variables?.global?.WTCreator === 'FFFox';
+        if (!phoneState.dnd && !isCreatorInstall) {
             toastr.info(`${updateSentence(fresh)} Click here to open it.`, 'WeyPhone', {
                 timeOut: 12000,
                 extendedTimeOut: 4000,
