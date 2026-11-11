@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import { ravs } from '../../quick-reply-ext/src/promptRegistry.js';
 import { THOUGHT_RULES, withThoughtRules } from '../../quick-reply-ext/src/promptModifiers.js';
+import { CHARACTER_THOUGHTS_VARIABLE } from '../../quick-reply-ext/src/characterThoughts.js';
 import { assemble } from './helpers/promptAssemblyHarness.js';
 
 // Rules that ride inside every thoughts-ON block: secrets may appear in thoughts (narration still hides them),
@@ -51,6 +52,22 @@ test('assembled chats: a thoughts card gets the rules on every prompt choice, a 
         for (const line of THOUGHT_RULES) assert.ok(summer.get('ThoughtSet').includes(line), `${choice}: Summer`);
         const { locals: rosa } = await assemble('Rosa', { PromptChoice: choice });
         for (const line of THOUGHT_RULES) assert.ok(!rosa.get('ThoughtSet').includes(line), `${choice}: Rosa has thoughts off`);
+    }
+});
+
+test('Summer, Belle and Loona can disable thoughts per chat without affecting any other thoughts character', async () => {
+    const disabledLine = /CHARACTER THOUGHTS: DISABLED BY DEFAULT/;
+    for (const choice of ['Current Prompt', 'Old Prompt 2026', 'Old Prompt 2025', 'Mini Prompt']) {
+        for (const characterName of ['Summer', 'Belle', 'Loona']) {
+            const { locals } = await assemble(characterName, { PromptChoice: choice }, { [CHARACTER_THOUGHTS_VARIABLE]: 'Disabled' });
+            assert.match(locals.get('ThoughtSet'), disabledLine, `${choice}: ${characterName} thoughts are off`);
+            for (const line of THOUGHT_RULES) assert.ok(!locals.get('ThoughtSet').includes(line), `${choice}: ${characterName} gets no thought rules`);
+        }
+
+        // The saved variable is deliberately ignored for cards that do not expose this control.
+        const { locals: hannah } = await assemble('Hannah', { PromptChoice: choice }, { [CHARACTER_THOUGHTS_VARIABLE]: 'Disabled' });
+        assert.doesNotMatch(hannah.get('ThoughtSet'), disabledLine, `${choice}: Hannah is unaffected`);
+        for (const line of THOUGHT_RULES) assert.ok(hannah.get('ThoughtSet').includes(line), `${choice}: Hannah keeps thought rules`);
     }
 });
 

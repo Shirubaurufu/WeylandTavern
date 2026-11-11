@@ -66,6 +66,13 @@ test('buildPortraitMap uses only the first word of a multi-word name for the wey
     assert.equal(map['Mirror Weyland'].primaryUrl, 'https://cast.weybooru.com/images/portraits/mirror.jpg');
 });
 
+test('buildPortraitMap resolves Dakota Ash (Dash) to Dash portrait and installed-card fallback', () => {
+    const characters = [{ name: 'Dash', avatar: 'dash.png' }];
+    const map = buildPortraitMap(characters, ['Dakota Ash (Dash)'], fakeGetThumbnailUrl);
+    assert.equal(map['Dakota Ash (Dash)'].primaryUrl, 'https://cast.weybooru.com/images/portraits/dash.jpg');
+    assert.equal(map['Dakota Ash (Dash)'].fallbackUrl, '/thumbnail?type=avatar&file=dash.png');
+});
+
 test('buildPortraitMap resolves multiple char names independently', () => {
     const characters = [{ name: 'Rosa', avatar: 'rosa.png' }, { name: 'Ava', avatar: 'ava.png' }];
     const map = buildPortraitMap(characters, ['Rosa', 'Ava'], fakeGetThumbnailUrl);

@@ -129,17 +129,7 @@
         },
         "2": {
             "uid": 2,
-            "key": [
-                "Halloween",
-                "costume",
-                "party",
-                "bar",
-                "Black Barrel",
-                "drink",
-                "drunk",
-                "prophecy",
-                "oracle"
-            ],
+            "key": [],
             "keysecondary": [],
             "comment": "Scenario",
             "content": "{{getvar::Scenario}}",
@@ -561,7 +551,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Blake Outfit Codes",
-            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black crop top, black shorts, and jacket)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - A dress and jacket\n• [O2] - Yukata/Kimono festival outfit\n• [XX] - No other code matches",
+            "content": "CLOTHING CODES (CC):\nChoose ONE of the following codes that reflects {{char}}'s FINAL clothing state at the end of your response. Use [XX] ONLY IF NONE apply.\n• [RC] - {{char}}'s MAIN OUTFIT (black crop top, black shorts, and jacket)\n• [LG] - ONLY wearing undergarments (bra/panties/lingerie)\n• [NK] - Whenever NAKED (no clothing remaining)\n• [O1] - A dress and jacket\n• [O2] - Yukata/Kimono festival outfit\n• [O3] - casual coding outfit with glasses\n• [XX] - No other code matches",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -2496,118 +2486,6 @@
                 "tags": []
             }
         },
-        "51": {
-            "uid": 51,
-            "key": [
-                "purebred",
-                "Vindica",
-                "Jericho",
-                "half-breed",
-                "failure"
-            ],
-            "keysecondary": [],
-            "comment": "Summer History 1",
-            "content": "[SUMMER HISTORY]\nSummer's History: Summer was born and raised to a strong and protective vampire father, Jericho, and a verbally abusive okamimimi (wolf-demihuman) mother, Vindica. \n\nVindica, a purebred okamimimi female, came from a lineage of purebreds. \n\nShe was expected to have purebred offspring, but she was rebellious against her family.\n\nHer little rebellious streak ended when she got pregnant from Jericho, Summer's father, a vampire, at 16.\n\nWhen she turned to her family for support, she was excommunicated immediately. She blamed Jericho and unborn Summer for this, refusing to accept the blame herself.\n\nHaving no where else to go, she moved in with and married Jericho, who stayed around to provide Summer with a loving father figure despite frequent arguments and constant antagonizing from her mother.\n\nFrom an early age, Summer felt like an abomination, often goaded by her own mother's coarse remarks about her mixed lineage. Classmates at school did little to help this, often insulting her for her myriad of traits. Being a mix of okamimimi and vampire is entirely unusual, and was treated as such.\n\nSummer grew up being constantly reminded by her mother about how she was a vile half-breed and failure from the womb, which fortunately was at least tempered by her father, who did his best to provide her with ongoing emotional support despite working a full time job. \n\nBoth Vindica and Summer's most intense childhood bully, Rivera, consistently called Summer a freak, causing Summer to fixate on the word, often referring to herself as one. Summer has genuinely taken the words of her childhood bullies to heart, believing she is hideous and grotesque.\n\nSummer has never tasted fresh blood and has never bit anyone, as it's considered very taboo. Instead, she has only consumed prepackaged blood products - basically juiceboxes for vampires.\n\nSummer's father, Jericho, is the vampire that both owns and runs the Rustwood Cafe, a grunge coffee shop on Weyland campus.\n\nDespite her own self esteem issues, Summer is quite popular and is aware of this. She used to enjoy being popular, but now has difficulty trusting her friends.\n[END SUMMER HISTORY]\n=====================",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 1,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "Summer",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 74,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Summer"
-                ],
-                "tags": [
-                    "34ab59bc-a5a8-4123-8982-1718074b6372"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "52": {
-            "uid": 52,
-            "key": [
-                "Rivera",
-                "cheerleader",
-                "boyfriend"
-            ],
-            "keysecondary": [],
-            "comment": "Summer History 2",
-            "content": "[RIVERA HISTORY WITH SUMMER]\nRivera was Summer's friend until they got competitive over a boy in middle school.\n\nRivera, knowing Summer's poor self esteem, exploited her weakness and drilled down where it hurt.\n\nUltimately, Rivera ended up with the boy they were competing over and I guess the power trip she fell into felt good, because she never stopped attacking Summer.\n[END RIVERA HISTORY WITH SUMMER]\n==========",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 2,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 3,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 75,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Summer"
-                ],
-                "tags": [
-                    "34ab59bc-a5a8-4123-8982-1718074b6372"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
         "53": {
             "uid": 53,
             "key": [
@@ -2702,63 +2580,6 @@
             "cooldown": 0,
             "delay": 0,
             "displayIndex": 77,
-            "characterFilter": {
-                "isExclude": false,
-                "names": [
-                    "Summer"
-                ],
-                "tags": [
-                    "34ab59bc-a5a8-4123-8982-1718074b6372"
-                ]
-            },
-            "matchPersonaDescription": false,
-            "matchCharacterDescription": false,
-            "matchCharacterPersonality": false,
-            "matchCharacterDepthPrompt": false,
-            "matchScenario": false,
-            "matchCreatorNotes": false,
-            "ignoreBudget": false,
-            "triggers": []
-        },
-        "55": {
-            "uid": 55,
-            "key": [
-                "hybrid",
-                "dual nature",
-                "Vindica",
-                "Rivera",
-                "abomination"
-            ],
-            "keysecondary": [],
-            "comment": "Summer Context 2",
-            "content": "[HYBRID NATURE]\nMost people (in Weyland) don't care that Summer is an okamimimi/vampire hybrid. Vindica, more than anything, hates her daughter that represents her failure to keep a pure bloodline. She is the driving force behind Summer feeling like her mixed race is some kind of major issue, even if it really isn't if she chilled out and really looked around. Summer has been told from infancy that she is an abomination and she has fallen victim to that.\n\nRivera likely doesn't have racist views on vampires, but Rivera ***knows*** it's Summer's sore spot and Rivera pokes Summer directly where it hurts. Rivera wouldn't be racist toward another random vampire. But Rivera attacks the vampire and mixed species traits Summer has because Rivera knows that will upset Summer.\n[END HYBRID NATURE]\n==========",
-            "constant": false,
-            "vectorized": true,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 7,
-            "position": 1,
-            "disable": false,
-            "excludeRecursion": false,
-            "preventRecursion": true,
-            "delayUntilRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "depth": 4,
-            "group": "",
-            "groupOverride": false,
-            "groupWeight": 100,
-            "scanDepth": 2,
-            "caseSensitive": null,
-            "matchWholeWords": null,
-            "useGroupScoring": false,
-            "automationId": "",
-            "role": null,
-            "sticky": 5,
-            "cooldown": 0,
-            "delay": 0,
-            "displayIndex": 78,
             "characterFilter": {
                 "isExclude": false,
                 "names": [

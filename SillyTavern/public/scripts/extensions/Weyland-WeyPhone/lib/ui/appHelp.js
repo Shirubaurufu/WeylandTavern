@@ -119,6 +119,10 @@ const APP_HELP = {
         intro: 'PromptOS is an easy access panel for Weyland Tavern’s existing Storytelling Settings.',
         bullets: ['Changes the same global and current-chat variables used by the classic menu.', 'Prompt text remains in the existing Weyland Quick Replies and prompt entries; this app does not keep a second copy.', 'School Year and character scenarios open the original character-aware picker.', 'Nothing here calls a model or spends a message.'],
     },
+    weystore: {
+        intro: 'Choose which apps live on your WeyPhone.',
+        bullets: ['Get adds an app to your home screen. Remove takes it off.', 'Removing an app never deletes anything. Threads, notes, saved posts and settings are kept, and the app comes back exactly as you left it.', 'My phone shows your whole home screen at once: drag apps and folders to arrange them, tap + or - to add or remove one, or pick a loadout.', 'Hold any app on the home screen (or right-click it) to jump straight to its page.', 'Messages, Contacts, Settings, PromptOS and the WeyStore are built in and always stay. Messages and Contacts keep their place in the dock.', 'Nothing here calls a model or spends a message.'],
+    },
     settings: {
         intro: 'Controls for this WeyPhone.',
         bullets: ['Change wallpapers, models, app names, and device preferences.', 'Export or import the full phone when moving between installs.', 'Format WeyPhone erases its stored data and returns to first-time setup.'],
@@ -131,7 +135,7 @@ const MESSAGE_BUDGET_BULLET = 'Budget rule: one generation request = one message
 // The generic budget rule is noise on these help screens —
 // either it restates a bullet they already carry ("Nothing here calls a model or spends a
 // message") or it implies a cost that app simply cannot incur. Keyed by app key.
-const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien', 'registrar', 'understudy', 'narrative']);
+const NO_BUDGET_RULE_APPS = new Set(['contacts', 'notes', 'calculator', 'clock', 'housing', 'mien', 'registrar', 'understudy', 'narrative', 'weystore']);
 
 function escapeHtml(value) {
     return String(value)

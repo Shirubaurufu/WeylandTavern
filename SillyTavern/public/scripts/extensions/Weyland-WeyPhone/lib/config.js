@@ -132,6 +132,15 @@ export const defaultSettings = Object.freeze({
     // "name|lorebook" keys (lib/registrarLorebook.js syncRegistrarAutoContacts). Remembering
     // them is what keeps a contact the user deleted from coming back on the next sync.
     registrarAutoContacts: [],
+    // WeyStore: which apps are off the home screen (`off`) and which new arrivals the player has
+    // already looked at (`seen`). Maps keyed by app, not lists, so two devices merge per app. An
+    // exclusion map on purpose: an app added later is installed by default. `layout` is the user's
+    // launcher order and folders; an empty order means the factory layout. See lib/weystore.js.
+    weystore: { off: {}, seen: {}, layout: { order: [], folders: {} } },
+    // Mien's lock: characterName -> the expression snapshot holding that character's face
+    // (label/path/fileName/folderName/source). A locked face is re-applied after every character
+    // message; keyed by name so it survives chats and syncs per character.
+    mienLocks: {},
     // PromptOS Roleplay Shift -> Custom Preset: the player's saved feedback presets,
     // { id, name, text, updatedAt }[]. The one in use is copied into the RoleplayShiftCustom
     // global (that is what quick-reply-ext reads), so it survives even if this list is reset.

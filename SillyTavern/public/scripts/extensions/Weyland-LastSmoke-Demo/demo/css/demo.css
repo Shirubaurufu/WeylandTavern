@@ -1,0 +1,6 @@
+
+html, body { margin: 0; height: 100%; background: #111014; overflow: hidden; }
+
+html { -webkit-text-size-adjust: 100%; -moz-text-size-adjust: 100%; text-size-adjust: 100%; }
+#demo-root { position: fixed; inset: 0; background: #111014; }
+.game-energy { display: none; } 

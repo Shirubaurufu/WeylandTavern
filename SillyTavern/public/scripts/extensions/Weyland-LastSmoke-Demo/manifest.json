@@ -1,0 +1,11 @@
+{
+  "display_name": "Last Smoke Demo",
+  "loading_order": 191,
+  "requires": [],
+  "optional": [],
+  "dependencies": ["Weyland-WeyPhone"],
+  "js": "index.js",
+  "author": "Weyland Tavern",
+  "version": "0.1.0",
+  "auto_update": false
+}

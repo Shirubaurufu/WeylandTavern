@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { loadMienGallery, mienFolderCandidates, normalizeLocalSprites, normalizeRegistrarSprites, resolveMienCharacter, selectMienOutfit } from '../lib/mien.js';
+import { loadMienGallery, lockedMienExpression, mienFolderCandidates, normalizeLocalSprites, normalizeRegistrarSprites, resolveMienCharacter, selectMienOutfit, setLockedMienExpression } from '../lib/mien.js';
 import { renderMienScreen } from '../lib/ui/apps/mien.js';
 
 function target() { return { innerHTML: '' }; }
@@ -280,4 +280,36 @@ test('Mien: the preview image opens full screen, and only the inline preview (no
     assert.doesNotMatch(full.innerHTML, /wp-mien-preview/, 'the full-screen picture is not a second tap target');
     const index = readFileSync(new URL('../index.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
     assert.match(index, /event\.target\.closest\('#wp-mien-fullscreen'\) \|\| event\.target\.closest\('\.wp-mien-preview img'\)\) \{\s*mienFullscreen = true;/);
+});
+
+// ------------------------------------------------------------ expression lock
+
+test('Mien locks hold a face per character until cleared', () => {
+    const settings = {};
+    const joy = { label: 'joy', path: '/s/joy.png', fileName: 'joy.png', folderName: 'Vera', source: 'local' };
+    assert.equal(setLockedMienExpression(settings, 'Vera', joy), true);
+    assert.equal(setLockedMienExpression(settings, 'Vera', joy), false, 'setting the same face twice is a no-op');
+    assert.deepEqual(lockedMienExpression(settings, 'Vera'), joy);
+    assert.equal(lockedMienExpression(settings, 'Belle'), null, 'other characters are unaffected');
+    assert.equal(setLockedMienExpression(settings, 'Vera', null), true);
+    assert.equal(setLockedMienExpression(settings, 'Vera', null), false);
+    assert.equal(lockedMienExpression(settings, 'Vera'), null);
+    // A hand-edited or partial save entry (no label) reads as unlocked rather than crashing.
+    settings.mienLocks.Vera = { path: '/x.png' };
+    assert.equal(lockedMienExpression(settings, 'Vera'), null);
+});
+
+test('Mien renders the lock beside Set in chat, and states the held face when locked', () => {
+    const el = target();
+    const gallery = { character: { name: 'Vera' }, source: 'local', folderName: 'Vera', expressions: [
+        { label: 'joy', path: '/s/joy.png', fileName: 'joy.png', folderName: 'Vera', source: 'local' },
+    ] };
+    renderMienScreen(el, { gallery, selectedIndex: 0 });
+    assert.match(el.innerHTML, /id="wp-mien-lock"/);
+    assert.match(el.innerHTML, /aria-pressed="false"/);
+    assert.doesNotMatch(el.innerHTML, /is locked\./);
+    renderMienScreen(el, { gallery, selectedIndex: 0, lockedLabel: 'joy' });
+    assert.match(el.innerHTML, /aria-pressed="true"/);
+    assert.match(el.innerHTML, /Locked: joy/);
+    assert.match(el.innerHTML, /joy is locked\. Character messages will not change it\./);
 });

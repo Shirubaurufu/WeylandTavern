@@ -1737,6 +1737,64 @@
     white-space: nowrap;
 }
 .wp-home .wp-app-tile-disabled { opacity: 0.4; }
+
+/* Home folders (lib/ui/homeScreen.js HOME_FOLDERS): a 2x2 preview tile, opened as a sheet over the grid. */
+.wp-home { position: relative; }
+.wp-home .wp-folder-icon {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+    padding: 7px;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(6px);
+}
+.wp-home .wp-folder-mini {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: var(--wp-surface-2);
+    overflow: hidden;
+}
+.wp-home .wp-folder-mini img { border-radius: 4px; }
+.wp-home .wp-folder-icon .wp-folder-mini i { font-size: 10px; }
+.wp-folder-sheet {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    box-sizing: border-box;
+}
+.wp-folder-sheet[hidden] { display: none; }
+.wp-folder-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+}
+.wp-folder-panel {
+    position: relative;
+    width: min(100%, 280px);
+    padding: 14px 10px 12px;
+    border-radius: 22px;
+    background: rgba(40, 40, 46, 0.82);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+}
+.wp-folder-title {
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--wp-text);
+}
+.wp-folder-panel .wp-app-grid { grid-template-columns: repeat(3, 1fr); }
 .wp-home .wp-app-tile-tier-locked { opacity: 0.62; }
 
 /* Static "coming soon" placeholder screen (see lib/ui/apps/comingSoon.js) — a maroon CRT-ish
@@ -1823,6 +1881,7 @@
     padding: 10px 6px 6px;
     backdrop-filter: blur(6px);
 }
+.wp-sync-tray { justify-content: center; }
 .wp-dock .wp-app-label { font-size: 10px; }
 .wp-dock-sync .wp-sync-icon { background: var(--wp-accent); }
 .wp-dock-sync .wp-sync-icon i { color: #fff; font-size: 22px; }
@@ -3012,6 +3071,13 @@
 .wp-mien-step:disabled { opacity: .25; }
 .wp-mien-apply { width: 100%; min-height: 42px; margin-top: 9px; border: 0; border-radius: 13px; background: linear-gradient(135deg,#cc6f9a,#9e66c1); color: #fff; font-family: inherit; font-size: 13px; font-weight: 750; cursor: pointer; box-shadow: 0 5px 16px rgba(126,65,142,.3); }
 .wp-mien-apply i { margin-right: 6px; }
+/* Set in chat and the expression lock share one row: apply fills it, lock takes its tail. */
+.wp-mien-apply-row { display: flex; gap: 7px; margin-top: 9px; }
+.wp-mien-apply-row .wp-mien-apply { width: auto; flex: 1 1 auto; margin-top: 0; }
+.wp-mien-lock { flex: 0 1 auto; min-height: 42px; padding: 0 13px; border: 2px solid rgba(226,139,168,.45); border-radius: 13px; background: rgba(226,139,168,.1); color: #f0c4d6; font: 750 11.5px inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; }
+.wp-mien-lock i { font-size: 10px; }
+.wp-mien-lock:hover { background: rgba(226,139,168,.2); }
+.wp-mien-lock.is-locked { border-color: #f0b7cc; background: rgba(226,139,168,.24); color: #fff; }
 .wp-mien-apply:hover:not(:disabled) { filter: brightness(1.08); }
 .wp-mien-apply:disabled { opacity: .65; }
 .wp-mien-hint,.wp-mien-applied { min-height: 28px; padding: 7px 5px 4px; box-sizing: border-box; text-align: center; color: var(--wp-mien-dim); font-size: 10px; line-height: 1.35; }
@@ -6490,3 +6556,45 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 .wp-newmsg-search-clear i { font-size: 10px; }
 /* Rows are display:flex, which would otherwise override the hidden attribute. */
 .wp-contact-item[hidden], .wp-newmsg-none[hidden], .wp-newmsg-search-clear[hidden] { display: none !important; }
+
+/* External extensions can opt into a real WeyPhone screen instead of launching a second overlay.
+   WeyPhone keeps its status/navigation bars and owns the viewport; the app owns everything between. */
+#wp-panel[data-view="external-app"] #wp-panel-header { display: none; }
+#wp-panel[data-view="external-app"] #wp-screen-body {
+    overflow: hidden;
+    padding: 0;
+    gap: 0;
+    background: #1b1626;
+}
+.wp-external-app-loading {
+    flex: 1;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 10px;
+    color: var(--wp-text-dim, #c8bfce);
+}
+.wp-external-app-frame {
+    display: block;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    background: #1b1626;
+}
+@media (max-width: 768px), (max-height: 520px) {
+    #wp-panel[data-view="external-app"] #wp-screen-body {
+        padding-bottom: calc(58px + var(--wp-safe-bottom));
+    }
+}
+
+/* Holding a home tile opens its WeyStore page (index.js, HOME_HOLD_MS). Stop the browser's own
+   long-press behaviours (iOS image callout, text selection, dragging the icon out) from firing
+   first, or the hold never completes on a phone. */
+.wp-home .wp-app-tile { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.wp-home .wp-app-tile img { -webkit-user-drag: none; pointer-events: none; }
+/* WeyStore's stylesheet (lib/ui/apps/weystore.css) is linked the first time the store opens. Until
+   it arrives, keep the store's markup out of sight; that file switches it back on. */
+.wp-ws { visibility: hidden; }

@@ -27,6 +27,7 @@ experimental phone-block work provided the foundation for this rebuild. Thank yo
 | **Housing** | Contained zoom/pan campus housing map |
 | **Notes** | Persistent personal notes |
 | **Calculator** | A working themed calculator |
+| **WeyStore** | Choose which apps live on the home screen. Removing an app never deletes its data |
 | **Settings** | Models, roleplay texting, appearance, backup/restore, and reset |
 
 ## Opening WeyPhone
@@ -118,6 +119,9 @@ Export a backup before moving servers or making a major installation change.
 
 - Install directly at `public/scripts/extensions/Weyland-WeyPhone/`, not under `third-party/`.
 - App definitions live in `lib/appRegistry.js`.
+- The WeyStore: install state and the store model in `lib/weystore.js`, listing copy in
+  `lib/weystoreCatalog.js`, screens in `lib/ui/apps/weystore.js` + `weystore.css`, banner art in
+  `assets/weystore/`. A new app needs a registry entry AND a catalog listing (a test enforces it).
 - The unified social prompt/parser live in `lib/unifiedPrompt.js` and `lib/unifiedParsing.js`.
 - Roleplay parsing/injection lives in `lib/roleplayTether.js` and `lib/roleplayMode.js`;
   source tracking, reply protection and swipe events live in `lib/roleplayCapture.js`.
@@ -126,7 +130,7 @@ Export a backup before moving servers or making a major installation change.
 - Cross-tab/device merge helpers live in `lib/settingsSync.js`.
 - The cast directory caches for 24 hours and falls back to `lib/castSnapshot.js`.
 - Test command: `node --test "test/*.test.js"` from the extension directory.
-- Current release result: **522 tests passing** with no package install required.
+- Current result: **1474 tests passing** (2026-11-10) with no package install required.
 
 The installation overlay also includes `public/scripts/world-info.js`. Its one compatibility hook
 lets synthetic WeyPhone scans suppress only the World Info overflow toast; normal roleplay scans,

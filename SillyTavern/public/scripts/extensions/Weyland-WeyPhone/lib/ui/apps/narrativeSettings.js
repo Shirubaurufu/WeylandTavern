@@ -453,10 +453,26 @@ function modeStrip(items, values) {
     }).join('')}</div>`;
 }
 
+function characterThoughtsCard(snapshot) {
+    const control = snapshot.characterThoughts;
+    if (!snapshot.hasChat || !control) return '';
+    const on = Boolean(control.enabled);
+    return `
+    <section class="wp-narrative-card wp-narrative-character-thoughts${on ? ' is-on' : ''}">
+        <div class="wp-narrative-card-heading"><div><span>This chat only</span><h3>Character Thoughts</h3></div><i class="fa-solid fa-brain"></i></div>
+        <p>${escapeHtml(control.characterName)} can include short, bracketed inner thoughts that contrast with what she says aloud. Turn them off here if you prefer dialogue and narration only.</p>
+        <button type="button" class="wp-narrative-gemini-toggle" data-narrative-action="toggle-character-thoughts" aria-pressed="${on}">
+            <span><strong>Thoughts: ${on ? 'Enabled' : 'Disabled'}</strong><small>${on ? 'Bracketed inner thoughts may appear' : 'Bracketed inner thoughts are suppressed'}</small></span>
+            <span class="wp-narrative-switch${on ? ' is-on' : ''}" aria-hidden="true"><i></i></span>
+        </button>
+    </section>`;
+}
+
 function modes(snapshot) {
     const mainModes = MODE_TOGGLES.filter(item => !EXPERIMENTAL_MODE_VARIABLES.includes(item.variable));
     const experimentalModes = MODE_TOGGLES.filter(item => EXPERIMENTAL_MODE_VARIABLES.includes(item.variable));
     return `
+    ${characterThoughtsCard(snapshot)}
     <section class="wp-narrative-card">
         <div class="wp-narrative-card-heading"><div><h3>Message Modes</h3></div><i class="fa-solid fa-sliders"></i></div>
         <p>These tell the model how to handle intimacy and trauma when a scene calls for it — tap <i class="fa-solid fa-circle-info"></i> on any of them for the full explanation. Sapphire remains automatic and has no instruction payload to disable.</p>

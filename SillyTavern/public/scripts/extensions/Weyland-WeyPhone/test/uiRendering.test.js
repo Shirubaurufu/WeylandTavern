@@ -8,7 +8,7 @@ import { KRESSA_PALETTES, renderKressaSettingsScreen } from '../lib/ui/apps/kres
 import { renderPawXaiScreen } from '../lib/ui/apps/pawxai.js';
 import { normalizePawXaiSettings } from '../lib/pawxai.js';
 import { APP_REGISTRY } from '../lib/appRegistry.js';
-import { HOME_GRID_ORDER, renderHomeScreen } from '../lib/ui/homeScreen.js';
+import { HOME_FOLDERS, HOME_GRID_ORDER, renderHomeScreen } from '../lib/ui/homeScreen.js';
 import { DISCORGI_CHANNELS } from '../lib/discorgiChannels.js';
 
 function container() {
@@ -58,16 +58,55 @@ test('group conversations use first-name speaker labels and a default group avat
     assert.match(avatar.innerHTML, /fa-user-group/);
 });
 
-test('home launcher uses the requested Mien/Notes and Calculator/PawXai swaps', () => {
+test('home launcher follows HOME_GRID_ORDER, with the factory apps in a Utilities folder', () => {
     const target = container();
     renderHomeScreen(target, {
         apps: APP_REGISTRY,
         badges: {}, flavorAppsEnabled: true, syncing: false, airplane: false,
     });
-    const rendered = [...target.innerHTML.matchAll(/data-app="([^"]+)"/g)].map(match => match[1]);
-    assert.deepEqual(rendered.slice(0, HOME_GRID_ORDER.length), HOME_GRID_ORDER);
-    assert.ok(rendered.indexOf('pawxai') < rendered.indexOf('calculator'));
-    assert.ok(rendered.indexOf('mien') < rendered.indexOf('notes'));
+    const grid = target.innerHTML.split('<div class="wp-dock')[0];
+    const rendered = [...grid.matchAll(/data-(app|folder)="([^"]+)"/g)].map(m => (m[1] === 'folder' ? `folder:${m[2]}` : m[2]));
+    assert.deepEqual(rendered, HOME_GRID_ORDER);
+    assert.deepEqual(HOME_FOLDERS.utilities.apps, ['calculator', 'clock', 'notes', 'aethel-companion']);
+    // The folder's apps are real tiles inside its (closed) sheet, after the dock.
+    const sheet = target.innerHTML.split('data-folder-sheet="utilities"')[1];
+    assert.match(target.innerHTML, /data-folder-sheet="utilities"[^>]*hidden/);
+    assert.deepEqual([...sheet.matchAll(/data-app="([^"]+)"/g)].map(m => m[1]), ['calculator', 'clock', 'notes']);
+});
+
+test('a folder tile sums its apps\' badges', () => {
+    const target = container();
+    renderHomeScreen(target, {
+        apps: APP_REGISTRY,
+        badges: { notes: 2, clock: 1 }, flavorAppsEnabled: true, syncing: false, airplane: false,
+    });
+    assert.match(target.innerHTML, /data-folder="utilities"[\s\S]*?<span class="wp-app-badge">3<\/span>/);
+});
+
+test('Aethel joins Utilities while other extension tiles stay ahead of the folder', () => {
+    const target = container();
+    renderHomeScreen(target, {
+        apps: APP_REGISTRY,
+        extraApps: [
+            { key: 'aethel-companion', label: 'Aethel', icon: '/a.png', accent: '#a98bc4' },
+            { key: 'last-smoke-demo', label: 'Last Smoke', icon: '/ls.png', accent: '#d1263a' },
+            { key: 'notes', label: 'Fake', accent: '#000' },
+        ],
+        badges: {}, flavorAppsEnabled: false, syncing: false, airplane: false,
+    });
+    const grid = target.innerHTML.split('<div class="wp-dock')[0];
+    const rendered = [...grid.matchAll(/data-(app|folder)="([^"]+)"/g)].map(m => m[2]);
+    assert.ok(rendered.indexOf('weystore') < rendered.indexOf('settings'));
+    // Messages and Contacts are in the dock, not the grid.
+    assert.equal(rendered.includes('messages'), false);
+    assert.equal(rendered.includes('contacts'), false);
+    assert.match(target.innerHTML.split('<div class="wp-dock')[1], /data-app="messages"[\s\S]*data-app="contacts"/);
+    assert.equal(rendered.at(-1), 'utilities');
+    assert.doesNotMatch(target.innerHTML, /Fake/);
+    const sheet = target.innerHTML.split('data-folder-sheet="utilities"')[1];
+    assert.deepEqual([...sheet.matchAll(/data-app="([^"]+)"/g)].map(m => m[1]), ['calculator', 'clock', 'notes', 'aethel-companion']);
+    // Extension tiles never need a roleplay chat.
+    assert.doesNotMatch(target.innerHTML, /wp-app-tile-disabled" data-app="aethel-companion"/);
 });
 
 test('Kressa conversation gets a dedicated assistant-workspace masthead', () => {

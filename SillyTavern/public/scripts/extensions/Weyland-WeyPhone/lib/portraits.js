@@ -1,13 +1,19 @@
 import { ASSET_BASE_URL } from './assetPaths.js';
 import { placeholderPortraitUrl } from './placeholderPortraits.js';
+import { canonicalCharacterName, findInstalledCharacterName } from './characterIdentity.js';
 
 const WEYBOORU_PORTRAIT_BASE_URL = 'https://cast.weybooru.com/images/portraits';
+const WEYBOORU_PORTRAIT_SLUG_ALIASES = Object.freeze({
+    'dakota': 'dash',
+    'dakota ash': 'dash',
+    'dakota ash (dash)': 'dash',
+});
 
 /**
  * Resolves a weybooru-CDN primary portrait URL plus a local SillyTavern-avatar fallback URL (or
  * a fallback initial, if the given name is empty) for each of the given character names.
  *
- * The weybooru URL is built from just the first word of `charName` (weybooru portrait filenames
+ * The weybooru URL is built from a small explicit alias table, then the first word of `charName` (weybooru portrait filenames
  * are lowercase first names only, e.g. a multi-word character like "Kinsbane Manor" has its
  * portrait filed under "kinsbane.jpg") and attempted for EVERY name, regardless of
  * whether a matching local SillyTavern character card is actually installed — weybooru's own
@@ -39,8 +45,11 @@ export function buildPortraitMap(characters, charNames, getThumbnailUrl, primary
             map[charName] = { primaryUrl: null, fallbackUrl: null, placeholderUrl: null, initial: '' };
             continue;
         }
-        const character = characters.find(c => c.name === charName);
-        const firstName = charName.trim().split(/\s+/)[0].toLowerCase();
+        const installedName = findInstalledCharacterName(characters, charName);
+        const character = installedName ? characters.find(c => c.name === installedName) : null;
+        const normalized = canonicalCharacterName(charName);
+        const firstName = WEYBOORU_PORTRAIT_SLUG_ALIASES[normalized]
+            || normalized.split(/\s+/)[0];
         map[charName] = {
             primaryUrl: primaryOverrides[charName] || `${WEYBOORU_PORTRAIT_BASE_URL}/${firstName}.jpg`,
             fallbackUrl: character ? getThumbnailUrl('avatar', character.avatar) : null,
