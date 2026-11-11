@@ -11,6 +11,9 @@ import { getAllUserHandles, getUserDirectories } from '../users.js';
 import { getFileNameValidationFunction } from '../middleware/validateFileName.js';
 import { mergeNarratorSettings, narratorSettingsValues } from '../../public/scripts/narrator-settings-sync.js';
 
+/** File errors that mean settings.json was briefly locked, not that saving is broken. */
+const TRANSIENT_SAVE_ERRORS = new Set(['EPERM', 'EBUSY', 'EACCES']);
+
 const ENABLE_EXTENSIONS = !!getConfigValue('extensions.enabled', true, 'boolean');
 const ENABLE_EXTENSIONS_AUTO_UPDATE = !!getConfigValue('extensions.autoUpdate', true, 'boolean');
 const ENABLE_ACCOUNTS = !!getConfigValue('enableUserAccounts', false, 'boolean');
@@ -209,8 +212,15 @@ router.post('/save', function (request, response) {
         triggerAutoSave(request.user.profile.handle);
         response.send({ result: 'ok', narrator: narratorSettingsValues(request.body.extension_settings?.variables?.global), narratorRevision: request.body.weylandNarratorRevision });
     } catch (err) {
-        
-        response.send(err);
+        // On Windows another process (antivirus, cloud sync, indexer) can briefly hold
+        // settings.json open, which makes the atomic rename fail. Nothing was written, and the
+        // same save will usually succeed a moment later, so tell the client to retry it.
+        if (TRANSIENT_SAVE_ERRORS.has(err?.code)) {
+            console.warn(`Settings save hit a temporary file lock (${err.code}); asking the client to retry.`);
+            return response.status(503).send({ result: 'retry', code: err.code });
+        }
+        console.error('Settings save failed:', err);
+        response.status(500).send({ result: 'error', code: err?.code ?? null, message: String(err?.message ?? err) });
     }
 });
 
