@@ -505,6 +505,21 @@ async function OnSwipe(messageID) {
 }
 
 /**
+ * Runs the card check (the "Descr" quick reply: is this one of Weyland's cards, by a phrase in its description).
+ *
+ * The check's verdict lives in the CHAT variable KickOut. On a fail the script sets it to true, shows the "not one of
+ * Lucky's creations" popup, sets it back to false and reloads the page one second later, which is usually before that
+ * last change has been saved. So the chat file kept KickOut = true, and nothing in the script clears it on a pass: every
+ * later open of that chat passed the check and was kicked anyway, even after the card and Weyland Tavern were both fixed
+ * (a player, 2026-11-11: Summer, right after the update; reinstalling the card could not help, only a new chat did).
+ * A verdict belongs to one run, so each run starts clean.
+ */
+async function runCardCheck() {
+    if (getLocalVariable("KickOut") === "true") setLocalVariable("KickOut", "false");
+    await quickReplyApi.executeQuickReply("Weyland", "Descr");
+}
+
+/**
  * @param {string} chatbookName 
  */
 async function OnChatChanged(chatbookName) {
@@ -519,7 +534,7 @@ async function OnChatChanged(chatbookName) {
         await quickReplyApi.executeQuickReply("Weyland","~");
         await quickReplyApi.executeQuickReply("Weyland","ExtCheck");
         if (checks.lastChatID !== chatbookName) {
-            await quickReplyApi.executeQuickReply("Weyland", "Descr");
+            await runCardCheck();
             await quickReplyApi.executeQuickReply("Weyland", "PP&PPPLimiters");
             if (chat.length === 1) {
                 if (!chat[0]?.swipe_id) {
@@ -623,7 +638,7 @@ async function AutoStart(charName) {
             setLocalVariable("AddChar", charName);
             setLocalVariable("GroupWarning", "0");
             setLocalVariable("Warning", strings.warning);
-            await quickReplyApi.executeQuickReply("Weyland", "Descr");
+            await runCardCheck();
             await XXX();
             setLocalVariable("PostRavMem", getLocalVariable("postrav"));
             setLocalVariable("PostRavCount", "0");

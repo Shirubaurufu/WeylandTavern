@@ -1985,6 +1985,26 @@
 .wp-shade-notification.wp-read { opacity: 0.55; }
 .wp-shade-notification-icon { width: 26px; height: 26px; border-radius: 7px; object-fit: cover; flex: 0 0 auto; }
 .wp-shade-notification-body { min-width: 0; flex: 1; }
+/* A notification with no app behind it (character updates) shows a glyph where the app icon goes. */
+.wp-notification-fa {
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    color: var(--wp-text);
+    background: var(--wp-surface-2);
+}
+.wp-shade-notification-dismiss {
+    flex: 0 0 auto;
+    align-self: center;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--wp-text-dim);
+    cursor: pointer;
+}
+.wp-shade-notification-dismiss:hover { background: var(--wp-surface-2); color: var(--wp-text); }
 .wp-shade-notification-top { display: flex; justify-content: space-between; gap: 8px; }
 .wp-shade-notification-title {
     font-size: 11px;
