@@ -1675,11 +1675,23 @@ async function BG(charMessage, charName, opts = {}) {
         if (!scene) return "No header to compare against";
         if (opts.dryRun) return pick ? pick.why : `No match for "${scene.location}": the background stays as it is.`;
 
-        // Fox's own install (WTCreator = FFFox) hands everything except Kinsbane Manor to his "FFFox Greetings"
-        // -> BG quick reply, as the old ladder did (Kinsbane was resolved before his hook). Kept on purpose.
+        // Fox's own install (WTCreator = FFFox) asks his "FFFox Greetings" -> BG quick reply first (except in
+        // Kinsbane Manor). That QR only knows his own home's rooms and signals a match by setting BGFound, so
+        // BGFound is cleared before it runs: still empty afterwards means no match, and the normal pick below
+        // is used. Previously the QR had the final say, and every other place kept the old background.
         if (fCheck() && pick?.area !== "kinsbane") {
+            setLocalVariable("BGFound", "");
             await quickReplyApi.executeQuickReply("FFFox Greetings", "BG");
-            return;
+            const ownRoom = getLocalVariable("BGFound");
+            if (ownRoom) {
+                DebugLog(`BG: FFFox Greetings matched "${scene.location}" -> ${ownRoom}`);
+                setLocalVariable("BGPlace", ""); // not a catalog place, so no area memory
+                setGlobalVariable("BGFoundG", ownRoom);
+                // The QR may already have applied it with /bg; only apply when it isn't on screen yet
+                if (setBackground() !== ownRoom) applyBackgroundFile(ownRoom);
+                return ownRoom;
+            }
+            setLocalVariable("BGFound", previousFile);
         }
         if (!pick) {
             DebugLog(`BG: no match for "${scene.location}", keeping the current background`);
