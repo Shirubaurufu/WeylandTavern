@@ -52,6 +52,7 @@ export function renderShade({ notifications, formatRelativeTime, syncing, airpla
             : notifications.map(item => `
 <div class="wp-shade-notification${item.read ? ' wp-read' : ''}" data-notification-id="${escapeHtml(item.id)}" data-app="${escapeHtml(item.appKey)}">
     ${item.appIcon ? `<img class="wp-shade-notification-icon" src="${escapeHtml(item.appIcon)}" alt="" />` : ''}
+    ${!item.appIcon && item.faIcon ? `<i class="wp-shade-notification-icon wp-notification-fa ${escapeHtml(item.faIcon)}" aria-hidden="true"></i>` : ''}
     <div class="wp-shade-notification-body">
         <div class="wp-shade-notification-top">
             <span class="wp-shade-notification-title">${escapeHtml(item.title)}</span>
@@ -59,6 +60,7 @@ export function renderShade({ notifications, formatRelativeTime, syncing, airpla
         </div>
         <div class="wp-shade-notification-text">${escapeHtml(item.text)}</div>
     </div>
+    ${item.dismissible ? '<button type="button" class="wp-shade-notification-dismiss" title="Dismiss" aria-label="Dismiss"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>' : ''}
 </div>`).join('');
     }
 

@@ -31,6 +31,7 @@ import { buildUnifiedPrompt, UNIFIED_REFRESH_MAX_TOKENS } from './lib/unifiedPro
 import { parseUnifiedRefresh } from './lib/unifiedParsing.js';
 import { APP_REGISTRY, getApp, getSyncApps, resolveAppLabel, emptyStateCopy } from './lib/appRegistry.js';
 import { recordSyncNotifications, recordMessageNotification, getNotifications, getUnreadCounts, markNotificationRead, markAppNotificationsRead, clearNotifications } from './lib/notifications.js';
+import { CHARACTER_UPDATES_KEY, characterUpdateNotification, dismissUpdates, markUpdatesAnnounced, pruneUpdateMemory, unannouncedUpdates, undismissedUpdates, updateSentence } from './lib/characterUpdates.js';
 import { copyTextToClipboard } from './lib/clipboard.js';
 import { initialBatteryLevel, batteryLevel, trackerBatteryLevel, describeBatteryMode } from './lib/battery.js';
 import { refreshRemainingMessages, getQuotaSnapshot } from './lib/helixQuota.js';
@@ -8100,18 +8101,88 @@ function renderStatusBarNow() {
     });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Character updates. The Downloader checks the roster when the page loads and publishes the
+// installed characters with an update waiting (see its publishPendingUpdates). The phone shows
+// them as ONE notification that belongs to the install, not to a chat, so it is added when the
+// shade and lock screen are drawn and is never stored with a chat's own notifications.
+// Dismissing it (its x, "Clear all", or tapping it to open the Downloader) is remembered per
+// update, so the same update never comes back; a new one for the same character does.
+// ---------------------------------------------------------------------------------------------
+let pendingCharacterUpdates = Array.isArray(window.weylandCharacterUpdates) ? window.weylandCharacterUpdates : [];
+let characterUpdatesSeenAt = Date.now();
+
+function characterUpdateItem(settings) {
+    return characterUpdateNotification(settings, pendingCharacterUpdates, characterUpdatesSeenAt);
+}
+
+/** Notifications for the shade and lock screen: the character-update one first, then the chat's own. */
+function notificationsWithUpdates(settings, context) {
+    const own = getNotifications(settings, context.chatId).map(n => ({ ...n, appIcon: getApp(n.appKey)?.icon }));
+    const updates = characterUpdateItem(settings);
+    return updates ? [updates, ...own] : own;
+}
+
+function redrawNotificationSurfaces() {
+    if (!document.getElementById('wp-shade-list')) return; // phone not built yet
+    renderShadeNow();
+    renderLockScreenNow();
+}
+
+function dismissCharacterUpdates() {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    if (dismissUpdates(settings, pendingCharacterUpdates)) queueWeyPhoneSave(context);
+    redrawNotificationSurfaces();
+}
+
+/** Opens the Character Downloader (its own button does the roster refresh it needs). */
+function openCharacterDownloader() {
+    const button = document.getElementById('weylandOpenDownloader');
+    if (!button) {
+        wpToast('warning', 'The Character Downloader is not running. Reload the page and try again.');
+        return;
+    }
+    document.dispatchEvent(new CustomEvent('weyphone:put-away')); // the Downloader is a full overlay
+    button.click();
+}
+
+/** The Downloader delivered a fresh list of pending updates. */
+function onCharacterUpdates(list) {
+    pendingCharacterUpdates = Array.isArray(list) ? list : [];
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    let changed = pruneUpdateMemory(settings, pendingCharacterUpdates);
+    // The pop-up is shown once per update. The notification itself waits in the phone until it is
+    // dismissed, so a player who ignores the pop-up is not nagged with it on every launch.
+    const fresh = unannouncedUpdates(settings, pendingCharacterUpdates);
+    if (fresh.length) {
+        characterUpdatesSeenAt = Date.now();
+        changed = markUpdatesAnnounced(settings, fresh) || changed;
+        if (!phoneState.dnd) {
+            toastr.info(`${updateSentence(fresh)} Click here to open it.`, 'WeyPhone', {
+                timeOut: 12000,
+                extendedTimeOut: 4000,
+                onclick: () => { dismissCharacterUpdates(); openCharacterDownloader(); },
+            });
+        }
+    }
+    if (changed) queueWeyPhoneSave(context);
+    redrawNotificationSurfaces();
+}
+
 function renderLockScreenNow() {
     const context = SillyTavern.getContext();
     const settings = getSettings(context.extensionSettings);
     const now = new Date();
     const rpTime = resolveRpTime();
-    const unread = getNotifications(settings, context.chatId).filter(n => !n.read).slice(0, 4);
+    const unread = notificationsWithUpdates(settings, context).filter(n => !n.read).slice(0, 4);
     renderLockScreen({
         clockText: rpTime?.time ?? formatClockTime(now.getTime()),
         dateText: rpTime
             ? `${rpTime.weekday}, ${rpTime.date}`
             : now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }),
-        notifications: unread.map(n => ({ ...n, appIcon: getApp(n.appKey)?.icon })),
+        notifications: unread,
     });
 }
 
@@ -8147,7 +8218,7 @@ function renderShadeNow() {
     const context = SillyTavern.getContext();
     const settings = getSettings(context.extensionSettings);
     renderShade({
-        notifications: getNotifications(settings, context.chatId).map(n => ({ ...n, appIcon: getApp(n.appKey)?.icon })),
+        notifications: notificationsWithUpdates(settings, context),
         formatRelativeTime,
         syncing: isSyncInFlight(),
         airplane: phoneState.airplane,
@@ -8226,12 +8297,24 @@ function handleShadeClick(event) {
         const context = SillyTavern.getContext();
         const settings = getSettings(context.extensionSettings);
         clearNotifications(settings, context.chatId);
+        dismissUpdates(settings, pendingCharacterUpdates); // "Clear all" clears the update notice too
         queueWeyPhoneSave(context);
         renderShadeNow();
         refreshHomeScreenAvailability();
         return;
     }
     const notification = event.target.closest('.wp-shade-notification');
+    if (notification?.dataset.app === CHARACTER_UPDATES_KEY) {
+        // Its x only dismisses; anywhere else on it also opens the Downloader. Either way the player
+        // has seen this update, so it does not come back until a new one arrives.
+        const onlyDismiss = Boolean(event.target.closest('.wp-shade-notification-dismiss'));
+        dismissCharacterUpdates();
+        if (!onlyDismiss) {
+            setShadeOpen(false);
+            openCharacterDownloader();
+        }
+        return;
+    }
     if (notification) {
         openNotificationTarget(notification.dataset.app);
         return;
@@ -8633,6 +8716,10 @@ function initPanel() {
     document.addEventListener('wbv:opened', () => {
         if (panel.classList.contains('wp-open')) setPanelOpen(false);
     });
+    // The Downloader's roster check finished (it may also have finished before this ran: the list
+    // it left on window is read once here).
+    document.addEventListener('weyland:character-updates', event => onCharacterUpdates(event.detail));
+    if (pendingCharacterUpdates.length) onCharacterUpdates(pendingCharacterUpdates);
     // Same for a tile another extension added (externalApps): its app opens over the page.
     document.addEventListener('weyphone:put-away', () => {
         if (panel.classList.contains('wp-open')) setPanelOpen(false);

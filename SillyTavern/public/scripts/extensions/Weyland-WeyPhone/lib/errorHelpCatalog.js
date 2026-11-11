@@ -524,10 +524,10 @@ export const ERROR_HELP_CARDS = [
     {
         id: 'ltm', group: 'API key and account', title: 'Long-Term Memory: "LTM generation failed"',
         summary: 'A memory would not generate. Usually a 429 or a 400.',
-        aliases: ['ltm', 'long-term memory', 'long term memory', 'ltm generation failed', 'got response status', 'got response status 429', 'got response status 400', 'retrying on gemini-3.8-flash', 'ltm model failed', 'memory would not generate'],
+        aliases: ['ltm', 'long-term memory', 'long term memory', 'ltm generation failed', 'got response status', 'got response status 429', 'got response status 400', 'retrying on minimax-m3', 'ltm model failed', 'memory would not generate'],
         match: /\bLTM\b|long.?term memory/i,
         specificMatch: /ltm (?:generation|model) failed|weyland-ltm/i,
-        example: 'LTM generation failed: Got response status 429\nLTM model failed, retrying on gemini-3.8-flash',
+        example: 'LTM generation failed: Got response status 429\nLTM model failed, retrying on minimax-m3',
         explanation: [
             'Long-Term Memory writes a memory by sending the chat to a model, the same way a normal reply does. It uses your current connection, so anything that stops a reply can stop a memory too.',
             'The message only shows the status number it got back. The two you will see most are 429 and 400.',
@@ -543,7 +543,7 @@ export const ERROR_HELP_CARDS = [
                 'A model name from one provider usually means nothing to another. If you switched keys or providers recently, that is the most likely reason a memory suddenly stops working.',
                 'On OpenRouter the name needs the full form, like anthropic/claude-haiku-5.5, not a short name like gemini-3.8-flash.',
             ]),
-            step('Check the Fallback model box', "It's right under the model. LTM tries it when the first model fails, which is what the blue \"retrying on...\" message means. A short name there, like gemini-3.8-flash, won't work on OpenRouter, so clear it or put in a full OpenRouter name."),
+            step('Check the Fallback model box', "It's right under the model. LTM tries it when the first model fails, which is what the blue \"retrying on...\" message means. A short name there, like minimax-m3, won't work on OpenRouter, so clear it or put in a full OpenRouter name."),
             step('429: you may be out of allowance', [
                 'A memory is a request like any other. If your daily messages are used up, or the model is swamped, it gets a 429 and so does your next reply.',
                 'Wait for your allowance to reset, or try again in a few minutes. The 429 guide has the rest.',

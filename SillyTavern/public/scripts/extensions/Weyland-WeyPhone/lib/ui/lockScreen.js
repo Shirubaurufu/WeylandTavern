@@ -34,6 +34,7 @@ export function renderLockScreen({ clockText, dateText, notifications }) {
     list.innerHTML = notifications.map(item => `
 <div class="wp-lock-notification">
     ${item.appIcon ? `<img class="wp-lock-notification-icon" src="${escapeHtml(item.appIcon)}" alt="" />` : ''}
+    ${!item.appIcon && item.faIcon ? `<i class="wp-lock-notification-icon wp-notification-fa ${escapeHtml(item.faIcon)}" aria-hidden="true"></i>` : ''}
     <div class="wp-lock-notification-body">
         <div class="wp-lock-notification-title">${escapeHtml(item.title)}</div>
         <div class="wp-lock-notification-text">${escapeHtml(item.text)}</div>
