@@ -2272,14 +2272,6 @@ export function substituteParams(content, _name1, _name2, _original, _group, _re
         return '';
     }
 
-    // Weyland: fast path for text with no macro syntax (every World Info key is checked through here,
-    // ~1,500 calls per scan pass). Building the environment below re-reads every character card field
-    // (~0.4-1.2 ms per call), and evaluateMacros would return such text unchanged anyway: without "{{"
-    // it only tries the legacy <USER>/<BOT>/<CHAR>/<GROUP>/<CHARIFNOTGROUP> tokens, which need a "<".
-    if (!content.includes('{{') && !content.includes('<')) {
-        return content;
-    }
-
     const environment = {};
 
     if (typeof _original === 'string') {
@@ -6998,6 +6990,12 @@ export async function getSettings() {
     await eventSource.emit(event_types.SETTINGS_LOADED);
 }
 
+/** How many times a save is retried when the server reports settings.json as briefly locked. */
+const SETTINGS_SAVE_LOCK_RETRIES = 3;
+const SETTINGS_SAVE_RETRY_DELAY_MS = 750;
+/** Bumped by every save, so a retrying save can tell a newer one has superseded it. */
+let settingsSaveGeneration = 0;
+
 //MARK: saveSettings()
 export async function saveSettings(loopCounter = 0) {
     if (!settingsReady) {
@@ -7045,13 +7043,27 @@ export async function saveSettings(loopCounter = 0) {
     };
 
     const narratorSave = narratorSettingsSync.prepareSave();
+    const saveGeneration = ++settingsSaveGeneration;
     try {
-        const result = await fetch('/api/settings/save', {
-            method: 'POST',
-            headers: getRequestHeaders(),
-            body: JSON.stringify({ ...payload, weylandNarratorBaseline: narratorSave.baseline }),
-            cache: 'no-cache',
-        });
+        let result;
+        for (let retriesLeft = SETTINGS_SAVE_LOCK_RETRIES; ; retriesLeft--) {
+            result = await fetch('/api/settings/save', {
+                method: 'POST',
+                headers: getRequestHeaders(),
+                body: JSON.stringify({ ...payload, weylandNarratorBaseline: narratorSave.baseline }),
+                cache: 'no-cache',
+            });
+
+            // 'retry' means settings.json was briefly locked by another program and nothing was
+            // written. Try the same save again; only report a failure once the retries run out.
+            if (result.status !== 503) break;
+            const body = await result.clone().json().catch(() => null);
+            if (body?.result !== 'retry' || retriesLeft <= 0) break;
+            console.warn(`Settings file was busy (${body.code}), retrying save. Retries left: ${retriesLeft}`);
+            await delay(SETTINGS_SAVE_RETRY_DELAY_MS);
+            // A newer save started while we waited; it carries newer settings, so let it win.
+            if (saveGeneration !== settingsSaveGeneration) return true;
+        }
 
         if (!result.ok) {
             throw new Error(`Failed to save settings: ${result.statusText}`);
