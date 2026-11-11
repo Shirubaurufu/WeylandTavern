@@ -3,6 +3,7 @@ import { Popup, POPUP_TYPE, POPUP_RESULT } from "../../popup.js";
 import { fetchManifests, fetchKeyFile, openDownloadStream, downloadCharacters, listCharacters, listCharactersVersioned, downloadCharactersTest, manifestCache, removeCharacter, cancelDownload } from "./Modules/backend.js";
 import { REPAIR_CONFIRMATION_TITLE, REPAIR_CONFIRMATION_MESSAGE, isRepairAction, downloadOutcomeLabel } from "./Modules/repair.js";
 import { admitIds, formatBytes, queueDelayMs, summarizeBulk } from "./Modules/bulk.js";
+import { pendingUpdates, updatedNames, reloadMessage, RELOAD_TITLE } from "./Modules/updateNotice.js";
 
 const { extensionSettings, renderExtensionTemplateAsync } = SillyTavern.getContext();
 export const WT_DOWNLOAD_MODULE_NAME = "Weyland-Downloader";
@@ -341,6 +342,7 @@ async function refreshRoster(forceRebuild = false) {
 
         document.getElementById('banner-error').style.display = 'none';
         renderDownloader();
+        publishPendingUpdates(manifests);
 
         const activeHoverId = document.querySelector('.char-row:hover')?.getAttribute('data-id');
         if (activeHoverId && window.innerWidth > 900) showCharacterInfo(activeHoverId);
@@ -734,6 +736,40 @@ function handleRowDownloadClick(id, reDownload = false) {
     else startDownload([id], reDownload);
 }
 
+/**
+ * Tells the rest of the app which installed characters have an update waiting (WeyPhone turns it
+ * into a notification). Runs after every successful roster check, so the list also shrinks as
+ * characters get updated. A failed check publishes nothing: "could not reach the server" must not
+ * look like "no updates".
+ * @param {import('./types.js').ManifestResponse} manifests
+ */
+function publishPendingUpdates(manifests) {
+    try {
+        // With Auto-Update on these are about to be downloaded anyway, so there is nothing to announce.
+        const list = settings?.autoupdate ? [] : pendingUpdates(manifests, sysName => CHARACTER_DATA.find(c => c.sysName === sysName)?.name);
+        // @ts-ignore
+        window.weylandCharacterUpdates = list;
+        document.dispatchEvent(new CustomEvent('weyland:character-updates', { detail: list }));
+    } catch (error) {
+        console.warn(`[${WT_DOWNLOAD_MODULE_NAME}] Could not publish the pending updates:`, error);
+    }
+}
+
+// Characters that were already installed and got downloaded again while the Downloader was open.
+// The page keeps what it loaded at startup (sprite lists, the open chat's greetings), so closing the
+// Downloader after an update asks for a reload. A first install needs none.
+const updatedSinceOpen = new Set();
+
+/** Closes the Downloader; after an update it explains that a reload is needed and offers one. */
+async function closeDownloader() {
+    document.getElementById('wt-modal-overlay').style.display = 'none';
+    if (updatedSinceOpen.size === 0) return;
+    const names = [...updatedSinceOpen];
+    updatedSinceOpen.clear(); // asked once; "Later" is an answer, not a reason to ask on every close
+    const result = await Popup.show.confirm(RELOAD_TITLE, reloadMessage(names), { okButton: 'Reload now', cancelButton: 'Later' });
+    if (result === POPUP_RESULT.AFFIRMATIVE) location.reload();
+}
+
 async function reloadCharactersAfterDownload() {
     try {
         await getCharacters();
@@ -805,7 +841,10 @@ async function runQueue(firstJob) {
         rowProgress.clear();
         renderDownloader();
         lastJobStartMs = Date.now();
+        const alreadyInstalled = updatedNames(job.ids, CHARACTER_DATA); // read before the job changes "installed"
         const outcome = await runJob(job, addLine);
+        // A cancelled job may still have replaced some files, so it counts; a request that never ran does not.
+        if (!outcome.requestFailed) alreadyInstalled.forEach(name => updatedSinceOpen.add(name));
         jobsRun++;
         lastOutcome = downloadOutcomeLabel({ repair: job.reDownload, aborted: outcome.cancelled, failedCount: outcome.failedCount, requestFailed: outcome.requestFailed });
         // In a multi-job session each job gets its own result line; a lone job only gets the final one.
@@ -1121,7 +1160,7 @@ function bindWeylandEvents() {
     document.getElementById('btn-close-modal').addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!isProcessing) document.getElementById('wt-modal-overlay').style.display = 'none';
+        if (!isProcessing) void closeDownloader();
     });
 
     let pwTimeout;

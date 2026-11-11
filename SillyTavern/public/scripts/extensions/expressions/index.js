@@ -1517,6 +1517,14 @@ function setExpression(spriteFolderName, expression, options) {
 
 async function setExpressionNow(spriteFolderName, expression, { force = false, overrideSpriteFile = null } = {}) {
     await validateImages(spriteFolderName);
+    // Weyland: the folder's file list is read once and kept for the whole page session. The Downloader can add
+    // sprites to a folder while the page stays open, and Mien reads the folder fresh, so a specific file can be
+    // asked for that the kept list has never seen ("Couldn't find sprite file grief-4.avif", 2026-11-11). When the
+    // requested file is missing from the kept list, read the folder again once before choosing.
+    if (overrideSpriteFile && !spriteCache[spriteFolderName]?.some(x => x.files.some(file => file.fileName === overrideSpriteFile))) {
+        delete spriteCache[spriteFolderName];
+        await validateImages(spriteFolderName);
+    }
     // Nothing of ours is mid-fade here, so anything still marked is a fade a hidden tab never ticked (jQuery animates on
     // requestAnimationFrame) or a leftover flag. Finish it, then clear the flag so this swap cannot be refused.
     $('img.expression').stop(true, true).removeClass('expression-animating');

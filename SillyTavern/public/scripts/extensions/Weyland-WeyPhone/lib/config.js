@@ -141,6 +141,9 @@ export const defaultSettings = Object.freeze({
     // (label/path/fileName/folderName/source). A locked face is re-applied after every character
     // message; keyed by name so it survives chats and syncs per character.
     mienExpressionLocks: {},
+    // Character updates the Downloader reported: which ones the player dismissed, and which already
+    // had their pop-up, both as sysName -> the update's signature (see lib/characterUpdates.js).
+    characterUpdates: { dismissed: {}, announced: {} },
     // PromptOS Roleplay Shift -> Custom Preset: the player's saved feedback presets,
     // { id, name, text, updatedAt }[]. The one in use is copied into the RoleplayShiftCustom
     // global (that is what quick-reply-ext reads), so it survives even if this list is reset.

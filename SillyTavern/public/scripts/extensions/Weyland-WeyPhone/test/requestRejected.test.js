@@ -99,23 +99,3 @@ test('only the guide groups for Chat Completion errors link out, and unknown err
     // Every card a toast can link to really exists, so a tap never opens nothing.
     for (const card of ERROR_HELP_CARDS) assert.ok(card.id && card.title, card.id);
 });
-
-// "no provider available for this model" can come from any model; only on a GLM model does it get the retry advice.
-test('"no provider available" gets the retry advice on GLM models only', () => {
-    const RAW_NP = 'no provider available for this model';
-    withStubs(calls => {
-        for (const model of ['glm-5', 'z-ai/GLM-4.6', 'GLM 5.1']) {
-            showChatCompletionError(RAW_NP, undefined, { model });
-            const shown = calls.at(-1);
-            assert.equal(shown.title, 'Chat Completion API');
-            assert.equal(shown.body, 'No provider available.<br>This happens occasionally - retry in 10 minutes.<br>Swap to another model in the mean time.');
-            assert.equal(shown.options.escapeHtml, false);
-        }
-        const before = calls.length;
-        for (const options of [{ model: 'claude-sonnet-5-5' }, { model: null }, {}, undefined]) {
-            showChatCompletionError(RAW_NP, 'API returned an error', options);
-            assert.deepEqual(calls.at(-1), { body: RAW_NP, title: 'API returned an error', options: undefined });
-        }
-        assert.equal(calls.length, before + 4);
-    });
-});

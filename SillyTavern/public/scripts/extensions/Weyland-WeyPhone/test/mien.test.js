@@ -333,3 +333,14 @@ test('Mien renders the lock beside Set in chat, and states the held face when lo
     assert.match(el.innerHTML, /Locked: joy/);
     assert.match(el.innerHTML, /joy is locked\. Character messages will not change it\./);
 });
+
+// 2026-11-11: "Couldn't find sprite file grief-4.avif". The expressions extension keeps each folder's file list
+// for the whole page session; the Downloader can add sprites meanwhile, and Mien reads the folder fresh. A
+// requested file the kept list has never seen must make it read the folder again before choosing.
+test('a specific sprite file missing from the kept list makes expressions re-read the folder', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const source = await readFile(new URL('../../expressions/index.js', import.meta.url), 'utf8');
+    const start = source.indexOf('async function setExpressionNow');
+    const body = source.slice(start, source.indexOf('chooseSpriteForExpression(spriteFolderName, expression', start));
+    assert.match(body, /if \(overrideSpriteFile && !spriteCache\[spriteFolderName\]\?\.some\(x => x\.files\.some\(file => file\.fileName === overrideSpriteFile\)\)\) \{\s*delete spriteCache\[spriteFolderName\];\s*await validateImages\(spriteFolderName\);/);
+});
