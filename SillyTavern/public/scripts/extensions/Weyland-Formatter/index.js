@@ -474,14 +474,17 @@ async function formatParagraphs(message) {
 
                 try {
                     const matches = paragraph.match(weylandRegex.singleQuoteBetweenActionSpeechGuardrail);
-                    paragraph.match(weylandRegex.singleQuoteBetweenAction)?.forEach(match => {
-                        if (!matches?.filter(str => str.includes(match))) {
-                            weylandDebug(`#${index} - Formatting applied '${weylandRegex.singleQuoteBetweenAction}' with '${weylandRegex.singleQuoteBetweenActionReplace}' to: ${match}`)
-                            paragraph = paragraph.replace(
-                                match, 
-                                match.replace(weylandRegex.singleQuoteBetweenAction, weylandRegex.singleQuoteBetweenActionReplace)
-                            );
-                        }
+                    // Only the gap between two actions is speech ("*She pauses.* maybe, or *she shrugs.*").
+                    // Inside one action the same shape is just narration between two emphasized words
+                    // ("*she *knew* it was genuine because it was *awkward* and*"), so leave that alone.
+                    // The gap starts on a closing asterisk when an odd number of asterisks precede it on its line.
+                    paragraph = paragraph.replace(weylandRegex.singleQuoteBetweenAction, (match, inner, offset, whole) => {
+                        if (matches?.filter(str => str.includes(match))) return match;
+                        const lineStart = whole.lastIndexOf('\n', offset - 1) + 1;
+                        const asterisksBefore = (whole.slice(lineStart, offset).match(/\*/g) || []).length;
+                        if (asterisksBefore % 2 === 0) return match;
+                        weylandDebug(`#${index} - Formatting applied '${weylandRegex.singleQuoteBetweenAction}' with '${weylandRegex.singleQuoteBetweenActionReplace}' to: ${match}`);
+                        return weylandRegex.singleQuoteBetweenActionReplace.replace('$1', inner);
                     });
                 } catch (e) {
                     weylandDebug(`#${index} - ActionSingleQuoteFix error: ${e}`);
@@ -574,9 +577,25 @@ function showExperimentalWarning() {
  */
 function emphasizeNestedActions(paragraph) {
     if (!paragraph.includes('*')) return paragraph;
-    const pair = /(?<=[\s—]|^)(?<!\*)\*(?![\s*])([^*\n]+?)(?<![\s*])\*(?!\*)/g;
-    return paragraph.replace(pair, (match, inner, offset, whole) =>
-        insideOpenAction(whole, offset, match.length) ? `***${inner}***` : match);
+    // No quotes inside: "*—"out of our league"—*" between two actions is speech, not an emphasized word.
+    const pair = /(?<=[\s—]|^)(?<!\*)\*(?![\s*])([^*"\n]+?)(?<![\s*])\*(?!\*)/g;
+    // A rejected candidate must not swallow the next pair's opening asterisk: in
+    // "*Not the* "x" *flatten. They just—*droop*." the first candidate is "*flatten. They just—*",
+    // which is not inside an action, and "*droop*" starts on its closing asterisk.
+    const hits = [];
+    let found;
+    while ((found = pair.exec(paragraph)) !== null) {
+        if (insideOpenAction(paragraph, found.index, found[0].length)) {
+            hits.push({ start: found.index, end: found.index + found[0].length, inner: found[1] });
+        } else {
+            pair.lastIndex = found.index + found[0].length - 1;
+        }
+    }
+    for (let i = hits.length - 1; i >= 0; i--) {
+        const { start, end, inner } = hits[i];
+        paragraph = `${paragraph.slice(0, start)}***${inner}***${paragraph.slice(end)}`;
+    }
+    return paragraph;
 }
 
 /**
