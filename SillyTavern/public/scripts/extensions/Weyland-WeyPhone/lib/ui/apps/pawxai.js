@@ -2,7 +2,7 @@
 
 import { PAWXAI_MAX_PROMPTS, PAWXAI_PALETTES, PAWXAI_SUFFIX_PRESETS, groupSavedPawXaiPrompts, pawXaiSuffixEnabled } from '../../pawxai.js';
 import { ASSET_BASE_URL } from '../../assetPaths.js';
-import { RECOMMENDED_PHONE_MODEL, ALTERNATE_PHONE_MODELS, modelSelect, fallbackModelSelect } from './settings.js';
+import { MODEL_DEFAULTS, modelQuickfills, modelSelect, fallbackModelSelect } from './settings.js';
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -104,13 +104,6 @@ function renderSaved(savedPrompts, selectedCharacter, formatRelativeTime) {
     </div>`;
 }
 
-function modelQuickfills() {
-    return `<div class="wp-settings-recommend-row"><span class="wp-settings-recommend-label">Quick fill:</span>
-        <button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="wp-pawxai-model" data-model="${RECOMMENDED_PHONE_MODEL}">${RECOMMENDED_PHONE_MODEL}</button>
-        ${ALTERNATE_PHONE_MODELS.map(model => `<button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="wp-pawxai-model" data-model="${model}">${model}</button>`).join('')}
-    </div>`;
-}
-
 function renderSettings(settings, currentLiveModel) {
     return `<div class="wp-settings wp-pawxai-settings">
         <a class="wp-pawxai-referral-card" href="https://pixai.art/referral?refCode=YB7SKUFW&amp;utm_source=referral" target="_blank" rel="noopener noreferrer">
@@ -126,10 +119,10 @@ function renderSettings(settings, currentLiveModel) {
             <div class="wp-settings-section-title">Generation</div>
             <label class="wp-settings-field wp-settings-field-column"><span>Default model <small>(blank = current chat model)</small></span>
                 <div class="wp-settings-inline"><input id="wp-pawxai-model" type="text" placeholder="${escapeHtml(currentLiveModel || 'model id')}" value="${escapeHtml(settings.modelOverride)}" /><button type="button" class="wp-btn-sm wp-settings-use-current-model" data-input-id="wp-pawxai-model">Use current</button></div>
-                ${modelSelect('wp-pawxai-model', settings.modelOverride ?? '')}
-                ${modelQuickfills()}
+                ${modelSelect('wp-pawxai-model', settings.modelOverride ?? '', MODEL_DEFAULTS.pawxai.primary)}
+                ${modelQuickfills('wp-pawxai-model', [MODEL_DEFAULTS.pawxai.primary, MODEL_DEFAULTS.pawxai.backup])}
                 <span class="wp-settings-sublabel">Fallback if that model fails</span>
-                ${fallbackModelSelect('wp-pawxai-fallback', settings.fallbackModel)}
+                ${fallbackModelSelect('wp-pawxai-fallback', settings.fallbackModel, MODEL_DEFAULTS.pawxai.backup)}
             </label>
             <label class="wp-settings-field"><span>Prompts per set <small>(max ${PAWXAI_MAX_PROMPTS})</small></span><input id="wp-pawxai-count" type="number" min="1" max="${PAWXAI_MAX_PROMPTS}" value="${settings.promptCount}" /></label>
             <label class="wp-settings-field"><span>Focus</span><select id="wp-pawxai-focus">

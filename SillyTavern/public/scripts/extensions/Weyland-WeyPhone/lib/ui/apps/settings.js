@@ -5,6 +5,8 @@ import { TETHER_CONTEXT_MESSAGE_OPTIONS } from '../../roleplayTether.js';
 import { communityContactsSummaryMarkup } from './communityContacts.js';
 import { defaultControlMarkup } from './clock.js';
 import { getDefaultTimeMode } from '../../clockStorage.js';
+import { WEYLAND_MODEL_DEFAULTS as MODEL_DEFAULTS } from '../../../../../weyland-model-defaults.js';
+export { MODEL_DEFAULTS };
 
 // Display labels paired 1:1 with TETHER_CONTEXT_MESSAGE_OPTIONS ([15,30,45,60,0]); the trailing 0
 // stop means "no cap", shown as "All".
@@ -26,18 +28,12 @@ function tetherContextSliderMarkup(settings) {
     </label>`;
 }
 
-// Same UI format as Weyland-LTM's model selection (input + "Use current" + quickfill preset
-// buttons + disclaimer), with WeyPhone's own values. gemini-3.8-flash is the default per Lucky.
-// (HelixMind retired DeepSeek and MiniMax in 2026-11.) Everything here keeps Sonnet supply for
-// actual messaging.
-export const RECOMMENDED_PHONE_MODEL = 'gemini-3.8-flash';
-// Second choice, tried once when the chosen model errors out. Gemini 3.8 Flash across the board:
-// cheap, fast, reliably available, and never Sonnet.
-export const FALLBACK_PHONE_MODEL = 'gemini-3.8-flash';
-// This one list feeds the quickfill buttons on WeyPhone's own model fields, Kressa's model field,
-// and PawXai's — all three import it from here, so a model added below shows up in all of them.
-// (Weyland-LTM keeps a separate list of its own; new models need adding there too.)
-export const ALTERNATE_PHONE_MODELS = ['gemma-4-31b-it'];
+// Shared picker defaults are for social Sync; other apps pass their own recommendation.
+export const RECOMMENDED_PHONE_MODEL = MODEL_DEFAULTS.sync.primary;
+export const FALLBACK_PHONE_MODEL = MODEL_DEFAULTS.sync.backup;
+// Every app's backup, once each and never the recommendation itself (every primary is 3.8 Flash since 2026-11-14,
+// so listing the primaries here would only repeat the first button).
+export const ALTERNATE_PHONE_MODELS = [...new Set(Object.values(MODEL_DEFAULTS).map(m => m.backup))].filter(id => id !== RECOMMENDED_PHONE_MODEL);
 
 /**
  * Fallback-model dropdown. Same option list as the primary picker plus an explicit
@@ -50,7 +46,7 @@ export function fallbackModelSelect(id, currentValue, recommended = FALLBACK_PHO
             const label = modelId === recommended ? `${modelId} (recommended fallback)` : modelId;
             return `<option value="${escapeHtml(modelId)}"${modelId === current ? ' selected' : ''}>${escapeHtml(label)}</option>`;
         }));
-    return `<select id="${id}" class="wp-fallback-select" title="If the model above fails or is unavailable, WeyPhone retries once with this one instead of giving up.">${options.join('')}</select>`;
+    return `<select id="${id}" class="wp-fallback-select" title="If the model above fails or is unavailable, WeyPhone retries once with this one instead of giving up.">${options.join('')}</select>${modelQuickfills(id, [recommended])}`;
 }
 
 /** Connection Profile picker. Blank = follow whatever SillyTavern is connected to. */
@@ -191,6 +187,7 @@ export function collectPhoneModelIds(currentValue = '') {
     };
     add(RECOMMENDED_PHONE_MODEL);
     ALTERNATE_PHONE_MODELS.forEach(add);
+    Object.values(MODEL_DEFAULTS).forEach(pair => { add(pair.primary); add(pair.backup); });
     try {
         const source = SillyTavern.getContext().chatCompletionSettings?.chat_completion_source || 'custom';
         const selectors = MODEL_SELECTORS_BY_SOURCE[source] || MODEL_SELECTORS_BY_SOURCE.custom;
@@ -206,11 +203,11 @@ export function collectPhoneModelIds(currentValue = '') {
  * input stays the source of truth and remains editable for ids the live connection
  * doesn't advertise.
  */
-export function modelSelect(inputId, currentValue = '') {
+export function modelSelect(inputId, currentValue = '', recommended = RECOMMENDED_PHONE_MODEL) {
     const current = String(currentValue || '');
     const options = [`<option value=""${current === '' ? ' selected' : ''}>Use current chat model</option>`]
         .concat(collectPhoneModelIds(current).map((id) => {
-            const label = id === RECOMMENDED_PHONE_MODEL ? `${id} (recommended)` : id;
+            const label = id === recommended ? `${id} (recommended)` : id;
             return `<option value="${escapeHtml(id)}"${id === current ? ' selected' : ''}>${escapeHtml(label)}</option>`;
         }));
     return `<select class="wp-model-select" data-input-id="${inputId}" title="Pick from the models this connection offers">${options.join('')}</select>`;
@@ -456,15 +453,15 @@ export function renderSettingsScreen(container, { settings, currentLiveModel, lo
             <input id="wp-settings-texting-model" type="text" placeholder="${escapeHtml(currentLiveModel || 'model id')}" value="${escapeHtml(settings.textingModelOverride ?? '')}" />
             <button type="button" class="wp-btn-sm wp-settings-use-current-model" data-input-id="wp-settings-texting-model" title="Copy the active chat model">Use current</button>
         </div>
-        ${modelSelect('wp-settings-texting-model', settings.textingModelOverride ?? '')}
-        ${modelQuickfills('wp-settings-texting-model')}
+        ${modelSelect('wp-settings-texting-model', settings.textingModelOverride ?? '', MODEL_DEFAULTS.texting.primary)}
+        ${modelQuickfills('wp-settings-texting-model', [MODEL_DEFAULTS.texting.primary, MODEL_DEFAULTS.texting.backup])}
         <span class="wp-settings-sublabel">Fallback if that model fails</span>
-        ${fallbackModelSelect('wp-settings-texting-fallback', settings.textingFallbackModel)}
+        ${fallbackModelSelect('wp-settings-texting-fallback', settings.textingFallbackModel, MODEL_DEFAULTS.texting.backup)}
     </label>
     <label class="wp-settings-field wp-settings-field-column wp-settings-field-captioned" title="Which saved connection WeyPhone sends through. Leave this on your current chat connection unless you run more than one provider.">
         <span>Connection for WeyPhone <small>Almost everyone should leave this alone.</small></span>
         ${connectionProfileSelect('wp-settings-profile', settings.connectionProfileId)}
-        <small class="wp-settings-recommend-disclaimer"><strong>Lucky strongly recommends Gemini 3.8 Flash</strong> for WeyPhone generation. He asks that users avoid Sonnet here so Sonnet capacity stays available to the wider community.</small>
+        <small class="wp-settings-recommend-disclaimer">Recommended: Gemini 3.8 Flash for social Sync and for texting. Each has its own backup model.</small>
     </label>
 </div>`;
 
