@@ -1,7 +1,7 @@
 *,
 *::before,
 *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; -moz-text-size-adjust: 100%; text-size-adjust: 100%; }
 body { margin: 0; min-height: 100vh; font-family: var(--font-ui); color: var(--ink); background:
   radial-gradient(1200px 700px at 50% -10%, color-mix(in srgb, var(--accent-soft) 70%, transparent), transparent 70%),
   radial-gradient(900px 600px at 100% 100%, color-mix(in srgb, var(--energy) 18%, transparent), transparent 70%), var(--page); }

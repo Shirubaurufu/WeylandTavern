@@ -21,7 +21,7 @@
 // USER_GUIDE.md for the plain-language version to hand to end users.
 // =====================================================================
 
-import { applyRetiredModelSwapOnce } from '../../weyland-retired-models.js';
+import { WEYLAND_MODEL_DEFAULTS as MODELS } from '../../weyland-model-defaults.js';
 import {
     loadWorldInfo,
     saveWorldInfo,
@@ -48,40 +48,9 @@ const {
 export const WLM_MODULE_NAME = 'Weyland-LTM';
 const EXT_VERSION = '1.6.0';
 
-// Default LTM model out of the box for every fresh install. Lucky wants
-// Sonnet reserved for actual roleplay messaging rather than burned on LTM
-// summarization, so these are the alternatives offered as quick-fill
-// buttons in the settings panel. Existing users who've already saved a
-// (possibly blank) modelOverride are untouched — RECOMMENDED_LTM_MODEL only
-// applies as the default the first time the extension initializes for a
-// given install.
-const RECOMMENDED_LTM_MODEL = 'gemini-3.8-flash';
-// NOTE: LTM keeps its own list rather than sharing WeyPhone's ALTERNATE_PHONE_MODELS — the two
-// extensions are independently installable, so a model added to one must be added here too.
-// (Empty since HelixMind retired MiniMax M3 in 2026-11; add a model here to get a quick-fill button for it.)
-const ALTERNATE_LTM_MODELS = [];
-// Second choice when the chosen model errors out. Gemini 3.8 Flash is the house fallback
-// across WeyPhone/PawXai/Kressa too: cheap, fast, available, and never Sonnet.
-const FALLBACK_LTM_MODEL = 'gemini-3.8-flash';
-
-// The provider renamed this model in place (same model, new id string). Anyone who used the old
-// quick-fill button has the dead id saved in modelOverride, where every LTM summarization would
-// silently fail against it — so rewrite it on load rather than waiting for them to notice.
-// gemini-3.6-flash and 3.7-flash are both obsolete, superseded by 3.8. Neither id
-// appears as a literal anywhere any more — they only survive as values saved in
-// existing users' settings, which is exactly what this map is for.
-const STALE_MODEL_RENAMES = {
-    // Gemini 3.1 Pro was discontinued by Google without notice (2026-10-12); both of its ids move to 3.8 Flash.
-    'gemini-3-pro-preview': 'gemini-3.8-flash',
-    'gemini-3.1-pro-preview': 'gemini-3.8-flash',
-    'gemini-3.6-flash': 'gemini-3.8-flash',
-    'gemini-3.7-flash': 'gemini-3.8-flash',
-    // Helix lost access to GLM 4.7 entirely (2026-09-15); a stored setting pointing at either id
-    // fails every LTM request, so both are rewritten to the recommended model rather than left
-    // to error.
-    'glm-4.7-thinking': 'gemini-3.8-flash',
-    'glm-4.7': 'gemini-3.8-flash',
-};
+const RECOMMENDED_LTM_MODEL = MODELS.ltm.primary;
+const ALTERNATE_LTM_MODELS = [MODELS.ltm.backup];
+const FALLBACK_LTM_MODEL = MODELS.ltm.backup;
 
 // =====================================================================
 // SETTINGS
@@ -143,14 +112,7 @@ function loadSettings() {
     for (const [k, v] of Object.entries(defaultSettings)) {
         if (settings[k] === undefined) settings[k] = structuredClone(v);
     }
-    // Idempotent: only rewrites an exact stale id, so it's a no-op once migrated (and for anyone
-    // who never picked the renamed model).
-    const renamed = STALE_MODEL_RENAMES[settings.modelOverride];
-    if (renamed) settings.modelOverride = renamed;
-    // HelixMind retired DeepSeek and MiniMax (2026-11). A saved choice of either (model or fallback) moves to Gemini 3.8 Flash
-    // ONCE. Unlike the permanent renames above this never runs again, so picking one later, once HelixMind brings them back,
-    // is left alone. The marker is written even when nothing needed changing.
-    if (applyRetiredModelSwapOnce(settings) > 0) persistSettings();
+    // A saved model is left as it is (the 2026-11-13 rewrite of gemini-3.8-flash was dropped when Google restored it).
 }
 
 function persistSettings() {
@@ -264,6 +226,8 @@ function collectAvailableModelIds() {
 
     add(getCurrentModelId());
     add(settings?.modelOverride);
+    add(settings?.fallbackModel);
+    add(FALLBACK_LTM_MODEL);
     return Array.from(ids).sort((a, b) => a.localeCompare(b));
 }
 
@@ -844,6 +808,7 @@ function computeNextAutoRange(chatId) {
 //      wander off after a long <think> block and never actually answer.
 
 const THINKING_DISCIPLINE = `Keep any <think></think> reasoning SHORT — a handful of terse bullet points, not an essay. The instant you close </think>, continue in that SAME response with the actual output. Stopping after only the thinking block is a failure — you are not done until [END MEMORY ENTRY] (or the equivalent closing marker) has been written.`;
+const FORMATION_THINKING_DISCIPLINE = `Keep any <think></think> reasoning SHORT — a handful of terse bullet points, not an essay. The instant you close </think>, continue in that SAME response with the actual memory output. Stopping after only the thinking block is a failure - you are not done until [END MEMORY ENTRY] has been written.`;
 
 /**
  * Identity-only grounding shared by every prompt builder: fixes the summarizer guessing
@@ -919,7 +884,7 @@ function buildLTMPrompt(chatHistoryText, timeline = []) {
 
     const systemMsg = `[MEMORY FORMATION SYSTEM]
 
-You are assisting with memory formation for ${memorySubjectLabel()}. This is NOT a roleplay turn — you are stepping outside the story to produce a structured summary of it, for ${openWorld ? `${user}'s` : "the character's"} own long-term memory.
+You are assisting with memory formation for ${memorySubjectLabel()}. This is NOT a roleplay turn - you are stepping outside the story to produce a structured summary of it, for ${openWorld ? `${user}'s` : "the character's"} own long-term memory.
 ${timelineBlock}${personaBlock}
 Before writing, reason inside a single <think></think> block:
 - Confirm the boundaries of the excerpt. Do NOT invent context from before it begins.
@@ -929,10 +894,10 @@ ${dateInstruction}
 ${povInstruction}
 ${openWorld
         ? `- Use the real names of everyone who appears, exactly as the excerpt names them (and "${user}" for the player) — written out normally, not as placeholders or tokens. "${character}" is the system label for the world itself, NOT a person: it must never appear anywhere in your output, and must never be used in place of an actual character's name.`
-        : `- Use real names in your output ("${character}", "${user}") — write them out normally, not as placeholders or tokens.`}
-- Refer to "${user}" with the correct gender/pronouns${personaDescription ? ' from the USER IDENTITY REFERENCE above' : ' — if not evident from the excerpt, default to gender-neutral "they/them" rather than guessing'}.
+        : `- Use real names in your output ("${character}", "${user}") — write them normally, not as placeholders or tokens.`}
+- Refer to "${user}" with the correct gender/pronouns. ${personaDescription ? 'Use the USER IDENTITY REFERENCE above when the excerpt is ambiguous.' : 'If not evident from the excerpt, default to gender-neutral "they/them" rather than guessing.'}
 
-${THINKING_DISCIPLINE}
+${FORMATION_THINKING_DISCIPLINE}
 
 Output EXACTLY this structure and nothing else:
 
@@ -956,7 +921,23 @@ FRAGMENTS:
 
 [END MEMORY ENTRY]
 
-Guidelines: condense repetitive events; keep only major developments. For intimate/NSFW content, summarize briefly (what happened and why it mattered) — never a blow-by-blow.`;
+Guidelines:
+- condense repetitive events; keep only notable developments.
+- be as explicit in writing as the provided entry.
+    - If the provided entry is crude, vulgar and specific, your memory should be.
+    - If the provided entry is lax, polite and unoffensive, your memory should be.
+
+Your primary goals are:
+ - To correctly attribute WHO did WHAT. To mix up who did what is the ultimate failure.
+${openWorld
+        ? ' - To write a precise neutral account rather than a generic summary.'
+        : povMode === 'first'
+            ? ` - To write in the specific voice of ${character} rather than to be generic.`
+            : ' - To write in the requested neutral third-person voice rather than to be generic.'}
+ - To match the crudeness / explicit language or lack thereof of the included entry.
+ - To fully capture the sequence of events that happened.
+ - To produce a memory entry that an outside observer would be able to fully understand with no other context
+ - To end your response immediately upon sending [END MEMORY ENTRY].`;
 
     const excerptMsg = `${openWorld
         ? `CHAT EXCERPT FROM "${user}"'s OPEN-WORLD SESSION (multiple NPCs, no single main character)`
@@ -965,7 +946,7 @@ Guidelines: condense repetitive events; keep only major developments. For intima
 ${chatHistoryText}
 ---`;
 
-    const reminderMsg = `Reminder: do not continue the scene above and do not write a new line of dialogue or narration as ${openWorld ? 'anyone in it' : character}. Your only task right now is to produce the [MEMORY ENTRY] block described in the system instructions, summarizing the excerpt above. ${THINKING_DISCIPLINE}`;
+    const reminderMsg = `Reminder: do not continue the scene above and do not write a new line of dialogue or narration as ${openWorld ? 'anyone in it' : character}. Your only task right now is to produce the [MEMORY ENTRY] block described in the system instructions, summarizing the excerpt above. ${FORMATION_THINKING_DISCIPLINE}`;
 
     return [
         { role: 'system', content: systemMsg },
@@ -1898,13 +1879,17 @@ function buildModalHtml() {
             <button class="wlm-btn-sm wlm-model-quickfill" data-model="${RECOMMENDED_LTM_MODEL}" title="Switch to ${RECOMMENDED_LTM_MODEL}">${RECOMMENDED_LTM_MODEL}</button>
             ${ALTERNATE_LTM_MODELS.map(m => `<button class="wlm-btn-sm wlm-model-quickfill" data-model="${m}" title="Switch to ${m}">${m}</button>`).join('')}
           </div>
-          <small class="wlm-recommend-disclaimer">Lucky does not recommend Sonnet for LTM generation. Instead, use gemini-3.8-flash whenever possible. This ensures our Sonnet supply is used for actual messaging rather than LTM requests.</small>
+          <small class="wlm-recommend-disclaimer">Recommended: Gemini 3.8 Flash for memories, with GLM 4.7 Thinking as backup.</small>
         </label>
         <label class="wlm-field" title="If the model above fails or is unavailable, LTM retries once with this one instead of giving up. Leave it on ${FALLBACK_LTM_MODEL} unless you have a reason to change it.">
           <span>Fallback model <small>(used only if the model above fails)</small></span>
           <select id="wlm-set-fallback-model" title="Second choice, tried once if the first model errors out">
             <option value="">No fallback — fail instead of retrying</option>
           </select>
+          <div class="wlm-recommend-row">
+            <span class="wlm-recommend-label">Recommended backup:</span>
+            <button type="button" class="wlm-btn-sm wlm-model-quickfill" data-setting="fallbackModel" data-model="${FALLBACK_LTM_MODEL}">${FALLBACK_LTM_MODEL}</button>
+          </div>
         </label>
         <label class="wlm-field" title="Which saved connection LTM sends through. Leave this on your current chat connection unless you run more than one provider — if you do, pinning the provider that actually hosts your LTM model stops 'model not found' errors when your chat is connected somewhere else.">
           <span>Connection for LTM <small>(almost everyone should leave this alone)</small></span>
@@ -1994,6 +1979,12 @@ function injectModal() {
     // One handler for the recommended model + every alternate quick-fill button.
     document.querySelectorAll('.wlm-model-quickfill').forEach((quickfillBtn) => {
         quickfillBtn.addEventListener('click', () => {
+            if (quickfillBtn.dataset.setting === 'fallbackModel') {
+                settings.fallbackModel = quickfillBtn.dataset.model;
+                persistSettings();
+                syncModelPickers();
+                return;
+            }
             applyModelChoice(/** @type {HTMLElement} */ (quickfillBtn).dataset.model);
         });
     });

@@ -297,12 +297,26 @@ function musicButton(app, cls) {
     return b;
 }
 
+function tutorialSkipped(app) {
+    if (typeof app.setSkipTutorial === "function") return !!app.skipTutorial;
+    const n = app.s.games.noir;
+    return !!n.taught && !!n.flirtTaught;
+}
+
+function setTutorialSkipped(app, skip) {
+    if (typeof app.setSkipTutorial === "function") return app.setSkipTutorial(skip);
+    const n = app.s.games.noir;
+    n.taught = skip;
+    n.flirtTaught = skip;
+    app.store.changed("noir tutorial");
+}
+
 function tutorialButton(app) {
     const b = el("button", "nr-topbtn nr-tutorialbtn", {
         type: "button"
     });
     const paint = () => {
-        const skip = !!app.skipTutorial;
+        const skip = tutorialSkipped(app);
         b.textContent = skip ? DEMO_COPY.tutorialOff : DEMO_COPY.tutorialOn;
         b.classList.toggle("off", skip);
         b.setAttribute("aria-pressed", String(!skip));
@@ -311,7 +325,7 @@ function tutorialButton(app) {
     b.onclick = e => {
         e.stopPropagation();
         app.audio.tap();
-        app.setSkipTutorial(!app.skipTutorial);
+        setTutorialSkipped(app, !tutorialSkipped(app));
         paint();
     };
     paint();
@@ -396,7 +410,9 @@ function showLobby(app, {intro: intro = false} = {}) {
     };
     const right = el("div", "nr-topright");
     right.append(musicButton(app, "nr-topbtn"), rulesBtn);
-    top.append(back, wallet, right);
+    const tutorial = tutorialButton(app);
+    tutorial.classList.add("nr-tutorial-under");
+    top.append(back, wallet, right, tutorial);
     const foot = el("div", "nr-lobby-foot");
     foot.append(tables);
     root.append(titleScene(), top, logo, foot);
@@ -933,23 +949,30 @@ class NoirShow {
     sayTake(pool) {
         const take = this.unsaid((pool || []).filter((t => t.every((([w]) => this.present(w))))));
         if (!take) return false;
-        for (const [who, text] of take) this.say(who, text);
+        for (const line of take) this.say(...line);
         return true;
     }
     tally(seat, target) {
         const k = `${this.night.handNo}|${seat}>${target}`;
         return this.hits[k] = (this.hits[k] || 0) + 1;
     }
-    say(who, text) {
+    say(who, text, options = null) {
         if (!this.alive || !text || !this.panels[who] || !this.present(who)) return;
-        this.queue.push([ who, text ]);
+        this.queue.push([ who, text, options?.mood || null ]);
     }
     async talkOut() {
         while (this.alive && this.queue.length) {
-            const [who, text] = this.queue.shift();
+            const [who, text, mood] = this.queue.shift();
             if (!this.present(who)) continue;
+            if (mood) this.mood(who, mood, 36e5);
             this.showBubble(who, text, true);
             await this.tapWait();
+            if (mood) {
+                const {img: img} = this.panels[who];
+                clearTimeout(img._t);
+                img._held = false;
+                this.showRest(who);
+            }
         }
         this.hideBubbles();
     }
@@ -1139,7 +1162,7 @@ class NoirShow {
         this.floatNum(r.target, "♥", "red");
         this.mood(r.target, "grin", 2400);
         const back = this.line(r.target, HT.FLIRT_BACK[r.target]);
-        if (Array.isArray(back)) for (const [who, text] of back) this.say(who, text); else this.say(r.target, back);
+        if (Array.isArray(back)) for (const line of back) this.say(...line); else this.say(r.target, back);
         if (r.snubbed) {
             this.mood(r.snubbed, "cross", 3e3);
             this.say(r.snubbed, this.line(r.snubbed, HT.SNUBBED[r.snubbed]));
@@ -1184,7 +1207,7 @@ class NoirShow {
         this.glitchPop();
         for (const g of E.GIRLS) if (this.present(g)) this.mood(g, "shocked", 1600);
         const take = this.unsaid(L.GLITCH.filter((t => t.every((([who]) => this.present(who))))));
-        if (take) for (const [who, text] of take) this.say(who, text);
+        if (take) for (const line of take) this.say(...line);
     }
     glitchPop() {
         const p = el("div", "nr-gpop");
@@ -1432,9 +1455,9 @@ class NoirShow {
             for (const who of order) {
                 if (spoke.has(who)) continue;
                 const g = this.line(who, L.GREET[who]);
-                if (Array.isArray(g)) for (const [w, t] of g) {
-                    this.say(w, t);
-                    spoke.add(w);
+                if (Array.isArray(g)) for (const line of g) {
+                    this.say(...line);
+                    spoke.add(line[0]);
                 } else this.say(who, g);
             }
             await this.talkOut();
@@ -1952,7 +1975,7 @@ class NoirShow {
         const after = await this.lastCardShow(seat);
         await this.botMove(seat);
         if (after && this.alive && this.hand === h && h.hands[seat]?.length) {
-            for (const [who, text] of after) this.say(who, text);
+            for (const line of after) this.say(...line);
             await this.talkOut();
         }
     }
@@ -1963,7 +1986,7 @@ class NoirShow {
         const take = this.unsaid(takes);
         if (!take) return null;
         this.suspenseHand = n.handNo;
-        for (const [who, text] of take.lines) this.say(who, text);
+        for (const line of take.lines) this.say(...line);
         await this.talkOut();
         return take.after || null;
     }
@@ -1999,7 +2022,7 @@ class NoirShow {
         if (!this.alive || !ans) return mv;
         const kind = ans.kind;
         this.say(seat, ans.reply || this.line(seat, pick.said[kind]));
-        for (const [who, text] of pick.after?.[kind] || []) if (this.present(who)) this.say(who, text);
+        for (const line of pick.after?.[kind] || []) if (this.present(line[0])) this.say(...line);
         const score = pick.plays?.[kind] || kind;
         this.mood(seat, score === "wrong" ? "cross" : "grin", 1800);
         const odds = {
@@ -2233,7 +2256,7 @@ class NoirShow {
         if (fight?.length && (again || Math.random() < .6)) {
             const take = this.unsaid(fight, this.lastTake);
             this.lastTake = take;
-            for (const [who, text] of take) this.say(who, text);
+            for (const line of take) this.say(...line);
             const third = E.GIRLS.find((g => g !== seat && g !== target && this.present(g) && !take.some((([w]) => w === g))));
             if (third && Math.random() < .35) this.say(third, this.line(third, spoken(L.ONLOOKER[third])));
             return;
@@ -2355,7 +2378,7 @@ class NoirShow {
             if (flirts.length) {
                 this.girlFlirted = true;
                 this.lastBanterTurn = h.turns;
-                for (const [who, text] of flirts[Math.floor(Math.random() * flirts.length)]) this.say(who, text);
+                for (const line of flirts[Math.floor(Math.random() * flirts.length)]) this.say(...line);
                 await this.talkOut();
                 return;
             }
@@ -2381,7 +2404,7 @@ class NoirShow {
         this.banterUsed.add(`${idx}:${t}`);
         this.lastTopic = idx;
         this.lastBanterTurn = h.turns;
-        for (const [who, text] of bit) this.say(who, text);
+        for (const line of bit) this.say(...line);
         await this.talkOut();
     }
     async endHand() {
@@ -2452,7 +2475,7 @@ class NoirShow {
         const yes = await this.inviteBox(g, this.line(g, m.later ? inv.again : inv.ask), inv.sure, inv.laterBtn);
         if (!this.alive) return null;
         if (yes && scene.confirm) {
-            for (const [who, text] of scene.confirm.lines) this.say(who, text);
+            for (const line of scene.confirm.lines) this.say(...line);
             await this.talkOut();
             if (!this.alive) return null;
             const go = await this.inviteBox(g, null, scene.confirm.yes, scene.confirm.no);
@@ -2463,7 +2486,7 @@ class NoirShow {
                     scene: scene
                 }
             };
-            for (const [who, text] of scene.confirm.noLines) this.say(who, text);
+            for (const line of scene.confirm.noLines) this.say(...line);
         } else if (yes) {
             await this.playHeartScene(g, scene);
             return null;
@@ -2636,7 +2659,7 @@ class NoirShow {
         app.resetDemo();
         const closing = DEMO_COPY.closeLines[winner];
         if (closing) {
-            for (const [who, text] of closing) this.say(who, text);
+            for (const line of closing) this.say(...line);
             await this.talkOut();
         }
         if (!this.alive) return;
