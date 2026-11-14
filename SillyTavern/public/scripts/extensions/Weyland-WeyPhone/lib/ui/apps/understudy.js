@@ -14,17 +14,11 @@ import { catnipRecipes } from '../../copycatInstructions.js';
 //              dropdowns and each one explains itself once selected.
 //   Settings: "how does the app run": models, theme, automation. Set rarely, then left alone.
 
-import { UNDERSTUDY_SCOPES, UNDERSTUDY_NARRATORS, availableUnderstudyScopes, effectiveUnderstudyScope, understudyScopeHint } from '../../understudy.js';
-import { modelSelect, fallbackModelSelect, modelQuickfills, toggleRowMarkup } from './settings.js';
+import { UNDERSTUDY_SCOPES, UNDERSTUDY_NARRATORS, availableUnderstudyScopes, effectiveUnderstudyScope, understudyScopeHint, extractSpans } from '../../understudy.js';
+import { MODEL_DEFAULTS, modelSelect, fallbackModelSelect, modelQuickfills, toggleRowMarkup } from './settings.js';
 
-export const UNDERSTUDY_CAST_MODELS = ['gemini-3.8-flash', 'gemma-4-31b-it'];
-// The standout, best first. Which one is recommended as the fallback depends on which is
-// selected as the primary: recommending the same model as its own backup would not help.
-//
-// DeepSeek and MiniMax are gone from both lists: HelixMind retired them (2026-11). Before that, non-thinking DeepSeek returned
-// its input near-verbatim on this task (one measured run came back 99% identical word-for-word) while the
-// thinking variant performs the rewrite properly. Same family, completely different result.
-export const UNDERSTUDY_TOP_MODELS = ['gemini-3.8-flash'];
+export const UNDERSTUDY_CAST_MODELS = [MODEL_DEFAULTS.copycat.primary, MODEL_DEFAULTS.copycat.backup];
+export const UNDERSTUDY_TOP_MODELS = [MODEL_DEFAULTS.copycat.backup, MODEL_DEFAULTS.copycat.primary];
 
 // Four distinct cat-inspired moods rather than four shades of one. The stable ids remain in place
 // so an update never resets an existing user's chosen palette.
@@ -53,6 +47,34 @@ function escapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+export function formatCopycatReading(value) {
+    const text = String(value ?? '');
+    const emphasis = [...text.matchAll(/(?<!\*)(\*{2,3})(?!\*)([\s\S]+?)(?<!\*)\1(?!\*)/g)].map(match => ({
+        start: match.index, end: match.index + match[0].length, width: match[1].length,
+    }));
+    const markers = emphasis.flatMap(item => [
+        { start: item.start, end: item.start + item.width },
+        { start: item.end - item.width, end: item.end },
+    ]);
+    // Mask emphasis delimiters while finding action spans, retaining the original offsets.
+    // Use UTF-16 offsets, matching regex indices even when the text contains emoji.
+    const source = text.split('');
+    for (const marker of markers) source.fill(' ', marker.start, marker.end);
+    const spans = ['dialogue', 'actions'].flatMap(kind => extractSpans(source.join(''), kind)
+        .map(span => ({ start: span.start - 1, end: span.end + 1, kind })));
+    const boundaries = [...new Set([0, text.length, ...spans.flatMap(span => [span.start, span.end]),
+        ...markers.flatMap(marker => [marker.start, marker.end])])].sort((a, b) => a - b);
+    return boundaries.slice(0, -1).map((start, index) => {
+        const end = boundaries[index + 1];
+        if (markers.some(marker => marker.start <= start && marker.end >= end)) return '';
+        const span = spans.find(item => item.start <= start && item.end >= end);
+        const style = emphasis.find(item => item.start < start && item.end > end);
+        let content = escapeHtml(text.slice(start, end));
+        if (style) content = style.width === 3 ? `<strong><em>${content}</em></strong>` : `<u>${content}</u>`;
+        return span ? `<span class="wp-copycat-${span.kind}">${content}</span>` : content;
+    }).join('');
 }
 
 export const UNDERSTUDY_STATUS_LINES = [
@@ -116,7 +138,7 @@ function sourceCard(target, scope, isSpanScoped, noSpans) {
             <span class="wp-understudy-role">Last reply</span>
             ${target.header ? '<span class="wp-understudy-protected"><i class="fa-solid fa-lock"></i> header &amp; footer held</span>' : ''}
         </div>
-        <div class="wp-understudy-source">${escapeHtml(target.body)}</div>
+        <div class="wp-understudy-source wp-copycat-reading">${formatCopycatReading(target.body)}</div>
         ${isSpanScoped && !noSpans ? `<div class="wp-understudy-spancount"><i class="fa-solid fa-scissors"></i> ${target.spanCount} fragment${target.spanCount === 1 ? '' : 's'} in scope</div>` : ''}
         ${readingPicker(target)}
     </section>`;
@@ -157,8 +179,8 @@ function stageView({ target, draft, generating, error, settings, applied, take, 
         <button type="button" id="wp-understudy-tab-original" class="wp-understudy-tab${showOriginal ? ' wp-active' : ''}" role="tab" aria-selected="${showOriginal}">Original</button>
     </div>
     ${showOriginal
-        ? `<section class="wp-understudy-card wp-understudy-compare-card"><div class="wp-understudy-card-head"><span class="wp-understudy-eyebrow">Original reading</span></div><div class="wp-understudy-source">${escapeHtml(target.body)}</div></section>`
-        : `<div class="wp-understudy-draft-wrap"><label class="wp-understudy-draft-head" for="wp-understudy-draft"><span>Copycat's rewrite</span><small>Editable before use</small></label><textarea id="wp-understudy-draft" class="wp-understudy-draft" spellcheck="false">${escapeHtml(draft)}</textarea></div>`}` : ''}
+        ? `<section class="wp-understudy-card wp-understudy-compare-card"><div class="wp-understudy-card-head"><span class="wp-understudy-eyebrow">Original reading</span></div><div class="wp-understudy-source wp-copycat-reading">${formatCopycatReading(target.body)}</div></section>`
+        : `<div class="wp-understudy-draft-wrap"><div class="wp-understudy-draft-head"><span>Copycat's rewrite</span><button type="button" id="wp-copycat-edit-draft" class="wp-btn-sm" aria-controls="wp-understudy-draft" aria-expanded="false">Edit text</button></div><div id="wp-copycat-draft-preview" class="wp-copycat-reading">${formatCopycatReading(draft)}</div><textarea id="wp-understudy-draft" class="wp-understudy-draft" aria-label="Edit Copycat rewrite" spellcheck="false" hidden>${escapeHtml(draft)}</textarea></div>`}` : ''}
 
     ${generating ? `
     <div class="wp-understudy-stage" role="status" aria-live="polite"><span class="wp-understudy-stage-icon"><i class="fa-solid fa-rotate"></i></span><div><strong class="wp-understudy-stage-text">${escapeHtml(UNDERSTUDY_STATUS_LINES[statusIndex % UNDERSTUDY_STATUS_LINES.length])}</strong></div><div class="wp-understudy-stage-glow"></div></div>
@@ -289,10 +311,10 @@ export function renderUnderstudySettingsScreen(container, { settings, currentLiv
                     <input id="wp-understudy-model" type="text" placeholder="${escapeHtml(currentLiveModel || 'model id')}" value="${escapeHtml(settings.modelOverride ?? '')}" />
                     <button type="button" class="wp-btn-sm wp-settings-use-current-model" data-input-id="wp-understudy-model">Use current</button>
                 </div>
-                ${modelSelect('wp-understudy-model', settings.modelOverride ?? '')}
+                ${modelSelect('wp-understudy-model', settings.modelOverride ?? '', MODEL_DEFAULTS.copycat.primary)}
                 ${modelQuickfills('wp-understudy-model', UNDERSTUDY_CAST_MODELS)}
                 <span class="wp-settings-sublabel">Backup model</span>
-                ${fallbackModelSelect('wp-understudy-fallback', settings.fallbackModel ?? '', 'gemma-4-31b-it').replace('No fallback, fail instead of retrying', 'Disabled')}
+                ${fallbackModelSelect('wp-understudy-fallback', settings.fallbackModel ?? '', MODEL_DEFAULTS.copycat.backup).replace('No fallback, fail instead of retrying', 'Disabled')}
                 <small class="wp-settings-recommend-disclaimer">A backup model is optional. If the rewrite model fails, Copycat retries once on it instead of giving up.</small>
             </label>
         </section>

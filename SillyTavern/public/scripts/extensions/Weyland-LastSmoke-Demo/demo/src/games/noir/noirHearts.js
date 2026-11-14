@@ -19,13 +19,13 @@ export const SPEAKERS = {
  "eve": "Eve"
 };
 export const FLIRT_LESSON = [
- "The card I pulled didn't have a number on it, or a colour. Just a little red heart. Play it on whoever was next and she'd know I was sweet on her, and it'd cost me a card off the deck.",
- "Be nice to her till the hand was over and she'd remember it. Sweet-talk somebody else after her, or hit her with anything, and she'd remember that too."
+ "The card I pulled didn't have a number on it, or a color. Just a little red heart. \nPlay it on whoever was next and she'd know I was sweet on her.",
+ "Be nice to her till the hand was over and she'd remember it.. \nSweet-talk somebody else after her, or hit her with anything, and she'd remember that too."
 ];
 export const FLIRT_BACK = {
  "astrid": [
-  "*her tail starts going* Oh! ..Hi~",
-  "Sugar.. right in front of Belle?~ ..Do it again."
+  "*her tail starts wagging visibly* Oh! ..H-hi~ I like you too..~",
+  "Baabe.. right in front of Belle?~ ..Do it again."
  ],
  "belle": [
   "AWW, LOOK at you! You're flirtin' with me! In PUBLIC!",
@@ -50,7 +50,7 @@ export const FLIRT_BACK = {
  ],
  "eve": [
   "*her voice squeaks* ..What. *coughs* ..What was that.",
-  "*forgets the cigarette in her hand* ..Okay."
+  "*forgets the cigarette in her hand, blushing deeply.* .. Oh.. Okay.."
  ]
 };
 export const SNUBBED = {
@@ -71,7 +71,8 @@ export const JEALOUS = {
  "astrid": {
   "belle": [
    "HEY! Wolfmeat! I'm RIGHT here!",
-   "Astrid?! You're flirtin' with ASTRID?! In front of ME?!"
+   "Astrid?! You're flirtin' with ASTRID?! In front of ME?!",
+   "Oh! Oh, hah! Wolfmeat's fallin' for the trap.."
   ],
   "eve": [
    "..Get a room."
@@ -88,10 +89,11 @@ export const JEALOUS = {
  },
  "eve": {
   "belle": [
-   "EVE?! Since WHEN does Eve get flirted with?!"
+   "EVE?! Since WHEN does Eve get flirted with?!",
+   "Yeah! Get fucked, Eve!"
   ],
   "astrid": [
-   "Ooh, going for the hard one~ ..Good luck, sugar!"
+   "Ooh, going for the hard one~ ..Good luck, cutie!"
   ]
  }
 };
@@ -112,15 +114,15 @@ export const HEARTBREAK = {
 export const KEPT = {
  "astrid": [
   "*winks at you over her cards*",
-  "Mm. You were sweet to me all hand~"
+  "Hey, um.. you wanna hang out for a bit before the next hand?~"
  ],
  "belle": [
-  "*bumps your foot under the table* ..Heh.",
-  "Hey. You're alright, wolfmeat."
+  "*bumps your foot under the table, grinning* ..Mnm. I didn't forget, yknow. You're gonna get some.~",
+  "Hey. That flirting earlier - you were bein' serious, huh?\nCuz I can be serious. Kinda."
  ],
  "eve": [
-  "*a small nod, not looking at you*",
-  "..Mm."
+  "*She sits her cards down, giving you a direct, blushy nod.* ..Mm.",
+  ".. were you.. serious, about earlier?"
  ]
 };
 export const INVITE = {

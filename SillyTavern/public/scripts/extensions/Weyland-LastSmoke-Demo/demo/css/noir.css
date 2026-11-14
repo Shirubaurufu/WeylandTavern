@@ -471,6 +471,8 @@ html:not(.weytav-host) .game-layer:has(.nr-root, .nr-lobby) .game-stage { margin
 
 .nr-tutorialbtn { width: auto; padding: 0 9px; font: 800 10px/1 "Courier New", monospace; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
 .nr-tutorialbtn.off { opacity: .6; }
+
+.nr-tutorial-under { position: absolute; right: 12px; top: 48px; height: 24px; }
 .nr-musicbtn.off::after { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; background: var(--red, #d1263a); rotate: -45deg; }
 .game-head .nr-headbtn { flex: none; width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 0; background: transparent;
   color: #efeadf; font: 700 15px/1 "Courier New", monospace; cursor: pointer; opacity: .85; }

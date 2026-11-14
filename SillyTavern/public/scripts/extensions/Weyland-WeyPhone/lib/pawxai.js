@@ -1,6 +1,7 @@
 // lib/pawxai.js
 
 import { formatPawXaiAppearanceReferences } from './pawxaiCharacterAppearances.js';
+import { WEYLAND_MODEL_DEFAULTS as MODELS } from '../../../weyland-model-defaults.js';
 
 export const PAWXAI_MAX_PROMPTS = 10;
 export const PAWXAI_DEFAULT_QUALITY = '(masterpiece:1.1), (best quality), (ultra detailed)';
@@ -37,7 +38,7 @@ const CHARACTER_CUES = /\b(?:solo|\d+girls?|\d+boys?|multiple people|woman|women
 
 function clampCount(value) {
     const parsed = Number.parseInt(value, 10);
-    if (!Number.isFinite(parsed)) return 5;
+    if (!Number.isFinite(parsed)) return 4;
     return Math.min(PAWXAI_MAX_PROMPTS, Math.max(1, parsed));
 }
 
@@ -82,7 +83,8 @@ export function normalizePawXaiSettings(value = {}) {
         : null;
     return {
         promptCount: clampCount(value.promptCount),
-        modelOverride: typeof value.modelOverride === 'string' ? value.modelOverride : 'gemini-3.8-flash',
+        modelOverride: typeof value.modelOverride === 'string' ? value.modelOverride : MODELS.pawxai.primary,
+        fallbackModel: typeof value.fallbackModel === 'string' ? value.fallbackModel : MODELS.pawxai.backup,
         focus: ['balanced', 'character', 'environment', 'action', 'cinematic'].includes(value.focus) ? value.focus : 'balanced',
         framing: ['auto', 'portrait', 'medium shot', 'full body', 'wide shot', 'dynamic angle'].includes(value.framing) ? value.framing : 'auto',
         variation: ['close', 'balanced', 'wild'].includes(value.variation) ? value.variation : 'balanced',

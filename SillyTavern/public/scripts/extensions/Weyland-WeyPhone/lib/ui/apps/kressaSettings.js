@@ -1,6 +1,6 @@
 // lib/ui/apps/kressaSettings.js
 
-import { RECOMMENDED_PHONE_MODEL, ALTERNATE_PHONE_MODELS, modelSelect, fallbackModelSelect } from './settings.js';
+import { MODEL_DEFAULTS, modelQuickfills, modelSelect, fallbackModelSelect } from './settings.js';
 
 // Curated rather than free-form so every option keeps message contrast readable. The three colors
 // are also used by the settings swatches; the full surface mapping lives in style.css.
@@ -54,20 +54,16 @@ export function renderKressaSettingsScreen(container, { settings, currentLiveMod
     </div>
     <div class="wp-settings-section">
         <div class="wp-settings-section-title">Kressa's Model</div>
-        <label class="wp-settings-field wp-settings-field-column" title="Model ID used only for Kressa's replies. Leave blank to use whatever model your chat is currently connected to — recommended, so Kressa always feels like the real thing.">
-            <span>Model for Kressa <small>(blank = current chat model, recommended)</small></span>
+        <label class="wp-settings-field wp-settings-field-column" title="Model ID used only for Kressa's replies. Leave blank to use whatever model your chat is currently connected to.">
+            <span>Model for Kressa <small>(blank = current chat model)</small></span>
             <div class="wp-settings-inline">
                 <input id="wp-kressa-model" type="text" placeholder="${escapeHtml(currentLiveModel || 'model id')}" value="${escapeHtml(settings.kressaModel ?? '')}" />
             </div>
-            ${modelSelect('wp-kressa-model', settings.kressaModel ?? '')}
-            <div class="wp-settings-recommend-row">
-                <span class="wp-settings-recommend-label">Quick fill:</span>
-                <button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="wp-kressa-model" data-model="${RECOMMENDED_PHONE_MODEL}">${RECOMMENDED_PHONE_MODEL}</button>
-                ${ALTERNATE_PHONE_MODELS.map(m => `<button type="button" class="wp-btn-sm wp-model-quickfill" data-input-id="wp-kressa-model" data-model="${m}">${m}</button>`).join('')}
-            </div>
+            ${modelSelect('wp-kressa-model', settings.kressaModel ?? '', MODEL_DEFAULTS.texting.primary)}
+            ${modelQuickfills('wp-kressa-model', [MODEL_DEFAULTS.texting.primary, MODEL_DEFAULTS.texting.backup])}
             <span class="wp-settings-sublabel">Fallback if that model fails</span>
-            ${fallbackModelSelect('wp-kressa-fallback', settings.kressaFallbackModel)}
-            <small class="wp-settings-recommend-disclaimer">By default Kressa runs on your live chat model so her dedicated assistant app stays capable. Set a model here only if you want her on something cheaper.</small>
+            ${fallbackModelSelect('wp-kressa-fallback', settings.kressaFallbackModel, MODEL_DEFAULTS.texting.backup)}
+            <small class="wp-settings-recommend-disclaimer">Recommended: Gemini 3.8 Flash, with DeepSeek Flash as backup.</small>
         </label>
     </div>
     <div class="wp-settings-section">
