@@ -1,0 +1,12 @@
+{
+    "display_name": "Weyland-LTM",
+    "loading_order": 101,
+    "requires": [],
+    "optional": ["Weyland-Router"],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Weyland University",
+    "version": "1.6.0",
+    "homePage": "",
+    "auto_update": false
+}
