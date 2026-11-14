@@ -294,6 +294,7 @@
    through JS. */
 #wp-panel[data-view="memory"] #wp-back-button,
 #wp-panel[data-view="app-names"] #wp-back-button,
+#wp-panel[data-view="texting-settings"] #wp-back-button,
 #wp-panel[data-view="twitter-following"] #wp-back-button,
 #wp-panel[data-view="twitter-profile"] #wp-back-button,
 #wp-panel[data-view="threads"] #wp-back-button {
@@ -301,6 +302,7 @@
 }
 
 #wp-panel[data-view="messages"] #wp-compose-button,
+#wp-panel[data-view="messages"] #wp-texting-settings-button,
 #wp-panel[data-view="messages"] #wp-group-compose-button {
     display: flex;
 }
@@ -6462,6 +6464,21 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 #wp-panel[data-app="understudy"] :is(.wp-copycat-edit-note,.wp-copycat-choice-blurb){font-size:13px}
 #wp-panel[data-app="understudy"] .wp-copycat-choice{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;font-size:13px;min-height:40px}
 #wp-panel[data-app="understudy"] :is(.wp-understudy-source,.wp-understudy-draft){font-size:14px;line-height:1.6}
+/* Stable reading colors across all four Copycat themes. */
+#wp-panel[data-app="understudy"] .wp-copycat-reading {
+    background: #141820;
+    color: #e7edf4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 12px;
+    border-radius: 12px;
+}
+#wp-panel[data-app="understudy"] .wp-copycat-actions { color: #b9a9ec; font-style: italic; }
+#wp-panel[data-app="understudy"] .wp-copycat-dialogue { color: #f6d28b; }
+#wp-panel[data-app="understudy"] #wp-copycat-draft-preview { max-height: 55vh; overflow-y: auto; }
+#wp-panel[data-app="understudy"] :is(.wp-copycat-reading,.wp-understudy-draft)[hidden] { display: none; }
 #wp-panel[data-app="understudy"] .wp-understudy-feedback{font-size:16px;line-height:1.5}
 #wp-panel[data-app="understudy"] .wp-understudy-note-box{border:1px dashed color-mix(in srgb,var(--en-accent) 48%,transparent);border-radius:19px;padding:13px;background:color-mix(in srgb,var(--en-accent-2) 10%,var(--en-surface))}
 #wp-panel[data-app="understudy"] .wp-understudy-note-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}

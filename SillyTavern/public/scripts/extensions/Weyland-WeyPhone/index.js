@@ -6,7 +6,7 @@ import { resolveMasterPrompt, resolvePostHistoryInstructions, resolveCharacterPe
 import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLorebookContactProfile, resolveWorldInfoTethered, resolveWorldInfoUntethered } from './lib/worldInfo.js';
 import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
 import { narratorSettingsSync } from '../../../script.js';
-import { buildSystemPrompt, buildTextingSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
+import { buildSystemPrompt, buildTextingSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, sendMessageWithFallback, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
 import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, filterNewMessageContacts, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
 import { closeMessageTimeEditor, initMessageTimeGestures, showMessageTimeEditor } from './lib/ui/messageTimeEditor.js';
@@ -50,6 +50,7 @@ import { createNote, getNotes, getNote, updateNote, deleteNote } from './lib/not
 import { renderNotesScreen, renderNoteEditorScreen } from './lib/ui/apps/notes.js';
 import { createHostedRegistrar } from './lib/registrar.js';
 import { renderAppNamesScreen, renderCharacterWallpapersScreen, renderFolderWallpapersScreen, renderSettingsScreen, WALLPAPER_PRESETS } from './lib/ui/apps/settings.js';
+import { renderTextingSettingsScreen } from './lib/ui/apps/textingSettings.js';
 import { renderCommunityBooksScreen, renderCommunityPickScreen, renderCommunityDeleteScreen } from './lib/ui/apps/communityContacts.js';
 import { scanBookForCandidates, addCommunityContacts, getCommunityContacts, deleteCommunityContacts, communityLorebookNames, communityContactDirectoryEntry, communityPickableBookNames } from './lib/communityLorebook.js';
 import { renderClockScreen, renderTimerEditorScreen, renderAlarmEditorScreen, renderClockAlertScreen, renderClockPickerScreen, ringDashoffset, pickerBasename } from './lib/ui/apps/clock.js';
@@ -66,7 +67,7 @@ import { KRESSA_PALETTES, renderKressaSettingsScreen } from './lib/ui/apps/kress
 import { renderDiscorgiSettingsScreen } from './lib/ui/apps/discorgiSettings.js';
 import { DISCORGI_CHANNELS } from './lib/discorgiChannels.js';
 import { renderPawXaiScreen } from './lib/ui/apps/pawxai.js';
-import { COPYCAT_PALETTES, renderUnderstudyScreen, renderUnderstudySettingsScreen, UNDERSTUDY_STATUS_LINES } from './lib/ui/apps/understudy.js';
+import { COPYCAT_PALETTES, renderUnderstudyScreen, renderUnderstudySettingsScreen, UNDERSTUDY_STATUS_LINES, formatCopycatReading } from './lib/ui/apps/understudy.js';
 import {
     UNDERSTUDY_SCOPES,
     UNDERSTUDY_NARRATORS,
@@ -693,7 +694,7 @@ function maybeShowOnboarding() {
 // still just a placeholder chosen to avoid visibly truncating conversational replies mid-
 // sentence — not a final tuned value; replace once a real user-facing setting exists.
 // Every WeyPhone reply cap is 8000 (Lucky, 2026-09-23). These are ceilings, not targets: each
-// app prompt still sets its own length. Thinking models (gemini-3.8-flash) spend hidden
+// app prompt still sets its own length. Thinking models spend hidden
 // reasoning out of the same budget, and a low cap is how a request comes back empty.
 const DEFAULT_MAX_TOKENS = 8000;
 // Memory entries are meant to be short (2-4 sentences) — a much smaller cap than regular replies.
@@ -1163,23 +1164,23 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
 
         const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
         const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
-        // Same model precedence as texting: explicit Settings-app model (default gemini-3.8-flash)
+        // Same model precedence as texting: explicit Settings-app model
         // > live main-chat model > the profile's own snapshot.
         const flavorModel = resolveModelOverride({
             settingsModel: settings.modelOverride,
             liveModel: context.getChatCompletionModel?.(),
         });
-        const flavorOverridePayload = flavorModel ? { model: flavorModel } : undefined;
         allowance = currentGenerationAllowance(context, settings);
         if (!allowance.allowed) {
             showGenerationCooldown(allowance);
             return;
         }
-        const result = await sendMessage({
-            sendRequest: (id, msgs) => context.ConnectionManagerRequestService.sendRequest(id, msgs, maxTokens, undefined, flavorOverridePayload),
+        const result = await sendMessageWithFallback({
+            sendRequest: (id, msgs, model) => context.ConnectionManagerRequestService.sendRequest(id, msgs, maxTokens, undefined, model ? { model } : undefined),
             profileId,
             messages,
             model: flavorModel,
+            fallbackModel: settings.fallbackModelOverride,
         });
 
         const rawText = extractResponseText(result);
@@ -1613,11 +1614,12 @@ async function generateGroupReply(conversationId, conversation, context, setting
         const messages = buildMessages({ systemPromptText: substituted, history, userMessage: wire(conversation.messages.at(-1)), historyMaxTokens: PHONE_THREAD_MAX_TOKENS });
         const profileId = resolveProfileId(settings, context.extensionSettings.connectionManager?.selectedProfile ?? '', context.extensionSettings.connectionManager?.profiles);
         const modelOverride = resolveModelOverride({ settingsModel: settings.textingModelOverride, liveModel: context.getChatCompletionModel?.() });
-        const result = await sendMessage({
-            sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(id, requestMessages, DEFAULT_MAX_TOKENS, undefined, modelOverride ? { model: modelOverride } : undefined),
+        const result = await sendMessageWithFallback({
+            sendRequest: (id, requestMessages, model) => context.ConnectionManagerRequestService.sendRequest(id, requestMessages, DEFAULT_MAX_TOKENS, undefined, model ? { model } : undefined),
             profileId,
             messages,
             model: modelOverride,
+            fallbackModel: settings.textingFallbackModel,
         });
         const parsed = parseGroupReply(extractResponseText(result));
         if (!parsed.messages.length) throw new Error('The group did not return any usable messages.');
@@ -1773,20 +1775,20 @@ async function generateReply(conversationId, conversation, context, settings) {
         const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
         const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
         // Model precedence (see resolveModelOverride): the user's explicit Settings-app model
-        // (default gemini-3.8-flash — texting is a small generation, don't spend Sonnet on it)
+        // (Gemini 3.8 Flash on a fresh install)
         // beats the live main-chat model, which beats the profile's stale snapshot. Kressa is
         // the exception: her dedicated assistant app runs on its OWN setting
-        // (settings.kressaModel), whose empty default means the live main-chat model.
+        // (settings.kressaModel); an explicit blank follows the live main-chat model.
         const liveModel = context.getChatCompletionModel?.();
         const modelOverride = isKressa
             ? resolveModelOverride({ settingsModel: settings.kressaModel, liveModel })
             : resolveModelOverride({ settingsModel: settings.textingModelOverride, liveModel });
-        const overridePayload = modelOverride ? { model: modelOverride } : undefined;
-        const result = await sendMessage({
-            sendRequest: (id, msgs) => context.ConnectionManagerRequestService.sendRequest(id, msgs, DEFAULT_MAX_TOKENS, undefined, overridePayload),
+        const result = await sendMessageWithFallback({
+            sendRequest: (id, msgs, model) => context.ConnectionManagerRequestService.sendRequest(id, msgs, DEFAULT_MAX_TOKENS, undefined, model ? { model } : undefined),
             profileId,
             messages,
             model: modelOverride,
+            fallbackModel: isKressa ? settings.kressaFallbackModel : settings.textingFallbackModel,
         });
 
         const replyText = extractResponseText(result);
@@ -3152,16 +3154,27 @@ function refreshUnderstudyTarget() {
         : 'Copycat is now on the latest reply.', 'Copycat');
 }
 
-/** The N messages before the target, oldest first, for scene context. */
+/**
+ * The N messages before the target, oldest first, for scene context.
+ *
+ * Hidden messages (ST's eye icon / /hide set `is_system`) are skipped, exactly as ST's own prompt
+ * builder skips them, and they do not use up the count either: ST's "messages in context" counts
+ * visible messages only. Without this a rewrite saw a reply the player had hidden on purpose and
+ * apologised for it (Discord report, 2026-11-12: hidden ice-spell list leaked into a wind-spell rewrite).
+ */
 function collectUnderstudyContext(context, targetIndex, count) {
     const chat = context.chat ?? [];
-    const start = Math.max(0, targetIndex - Math.max(0, Number(count) || 0));
-    return chat.slice(start, targetIndex)
-        .filter(message => message && String(message.mes ?? '').trim())
-        .map(message => ({
+    const wanted = Math.max(0, Number(count) || 0);
+    const picked = [];
+    for (let i = targetIndex - 1; i >= 0 && picked.length < wanted; i--) {
+        const message = chat[i];
+        if (!message || message.is_system || !String(message.mes ?? '').trim()) continue;
+        picked.push({
             name: message.is_user ? (context.name1 || 'User') : (message.name || context.name2 || 'Character'),
             text: String(message.mes).trim(),
-        }));
+        });
+    }
+    return picked.reverse();
 }
 
 /** Everything the screen needs about the message being rewritten. */
@@ -4227,6 +4240,23 @@ function handleScreenBodyClick(event) {
         return;
     }
     // --- Settings app controls ---
+    const editDraftButton = event.target.closest('#wp-copycat-edit-draft');
+    if (editDraftButton) {
+        const editor = document.getElementById('wp-understudy-draft');
+        const preview = document.getElementById('wp-copycat-draft-preview');
+        const editing = editor.hidden;
+        editor.hidden = !editing;
+        preview.hidden = editing;
+        preview.innerHTML = formatCopycatReading(editor.value);
+        editDraftButton.textContent = editing ? 'Done editing' : 'Edit text';
+        editDraftButton.setAttribute('aria-expanded', String(editing));
+        if (editing) editor.focus();
+        return;
+    }
+    if (event.target.closest('#wp-texting-all-settings')) {
+        showScreen('settings-app');
+        return;
+    }
     const wallpaperSwatch = event.target.closest('.wp-wallpaper-swatch');
     if (wallpaperSwatch) {
         const context = SillyTavern.getContext();
@@ -4253,6 +4283,12 @@ function handleScreenBodyClick(event) {
         const input = document.getElementById(quickfillBtn.dataset.inputId);
         if (input) {
             input.value = quickfillBtn.dataset.model;
+            document.querySelectorAll('.wp-model-select').forEach(select => {
+                if (select.dataset.inputId === input.id) {
+                    if (input.value && !Array.from(select.options).some(option => option.value === input.value)) select.add(new Option(input.value, input.value));
+                    select.value = input.value;
+                }
+            });
             input.dispatchEvent(new Event('change', { bubbles: true }));
         }
         return;
@@ -5718,6 +5754,17 @@ function handleScreenBodyChange(event) {
         const settings = getSettings(context.extensionSettings);
         settings.textingModelOverride = event.target.value.trim();
         queueWeyPhoneSave(context);
+        if (currentView === 'texting-settings') {
+            const model = settings.textingModelOverride;
+            const select = document.querySelector('.wp-model-select[data-input-id="wp-settings-texting-model"]');
+            if (model && !Array.from(select.options).some(option => option.value === model)) {
+                select.add(new Option(model, model));
+            }
+            select.value = model;
+            document.getElementById('wp-texting-model-status').textContent = model
+                ? `Selected model: ${model}`
+                : `Following your current chat model: ${context.getChatCompletionModel?.() || 'Chosen by your connection profile'}`;
+        }
         return;
     }
     // Fallback models and the connection-profile pin: same shape as the primary
@@ -5765,6 +5812,14 @@ function handleScreenBodyChange(event) {
         const settings = getSettings(context.extensionSettings);
         settings[simpleSettingSelects[event.target.id]] = event.target.value.trim();
         queueWeyPhoneSave(context);
+        if (currentView === 'texting-settings' && event.target.id === 'wp-settings-texting-fallback') {
+            const model = settings.textingFallbackModel;
+            const select = document.querySelector('.wp-model-select[data-input-id="wp-settings-texting-fallback"]');
+            if (model && !Array.from(select.options).some(option => option.value === model)) {
+                select.add(new Option(model, model));
+            }
+            select.value = model;
+        }
         return;
     }
     if (event.target.id === 'wp-settings-hard-mode') {
@@ -5844,6 +5899,7 @@ function handleScreenBodyChange(event) {
 // own refresh button). Screens simply show their cached content with its "generated N ago" age.
 
 function helpAppKeyForView(view, settings) {
+    if (view === 'texting-settings') return 'messages';
     if (view === 'phone-app') return currentPhoneApp;
     if (view === 'saved-posts') return currentSavedAppKey;
     if (view.startsWith('twitter-')) return 'feed';
@@ -7115,7 +7171,7 @@ function showScreen(view) {
         : view === 'saved-posts' ? currentSavedAppKey
         : view.startsWith('twitter-') ? 'feed'
         : view === 'threads' ? (currentThreadsAppKey ?? 'messages')
-        : (view === 'messages' || view === 'conversation' || view === 'group-compose' || view === 'thread-details' || view === 'memory') ? 'messages'
+        : (view === 'messages' || view === 'texting-settings' || view === 'conversation' || view === 'group-compose' || view === 'thread-details' || view === 'memory') ? 'messages'
         : (view === 'contacts-app' || view === 'contact-detail') ? 'contacts'
         : (view === 'calculator' || view === 'calculator-settings') ? 'calculator'
         : (view === 'notes' || view === 'note-editor') ? 'notes'
@@ -7194,6 +7250,13 @@ function showScreen(view) {
             console.warn(`[WeyPhone] ${external.label} could not mount:`, error);
             screenBody.innerHTML = `<div class="wp-empty-state"><i class="fa-solid fa-triangle-exclamation"></i><div>${external.label} could not open.</div><button type="button" class="menu_button" data-external-app-retry>Retry</button></div>`;
         });
+        return;
+    }
+
+    if (view === 'texting-settings') {
+        title.textContent = 'Texting settings';
+        renderPanelAvatar(document.getElementById('wp-panel-avatar'), null);
+        renderTextingSettingsScreen(screenBody, { settings, currentLiveModel: context.getChatCompletionModel?.() ?? '' });
         return;
     }
 
@@ -8159,9 +8222,7 @@ function onCharacterUpdates(list) {
     if (fresh.length) {
         characterUpdatesSeenAt = Date.now();
         changed = markUpdatesAnnounced(settings, fresh) || changed;
-        // No pop-up on FFFox's own install (WTCreator = FFFox); the notification still waits in the phone.
-        const isCreatorInstall = context.extensionSettings?.variables?.global?.WTCreator === 'FFFox';
-        if (!phoneState.dnd && !isCreatorInstall) {
+        if (!phoneState.dnd) {
             toastr.info(`${updateSentence(fresh)} Click here to open it.`, 'WeyPhone', {
                 timeOut: 12000,
                 extendedTimeOut: 4000,
@@ -8855,6 +8916,8 @@ function initPanel() {
             } else {
                 showScreen(pickerReturn || 'clock'); // back = cancel, keep the current value
             }
+        } else if (currentView === 'texting-settings') {
+            showScreen('messages');
         } else if (currentView === 'understudy-settings') {
             showScreen('understudy');
         } else if (currentView === 'kressa-settings') {
@@ -8895,6 +8958,7 @@ function initPanel() {
     };
     backButton.addEventListener('click', goBack);
     composeButton.addEventListener('click', () => showScreen('contacts'));
+    document.getElementById('wp-texting-settings-button').addEventListener('click', () => showScreen('texting-settings'));
     groupComposeButton.addEventListener('click', () => {
         groupSelectionNames = [];
         groupDraftTitle = '';
@@ -9409,7 +9473,7 @@ jQuery(async () => {
     // install out of settings.json on first run. On any failure this returns null (or the legacy
     // copy) and WeyPhone falls back to whatever ST already loaded into extensionSettings, so a
     // storage problem degrades to the old behavior instead of showing an empty phone.
-    /** The data exactly as stored, copied BEFORE getSettings migrates it (see the retired-model note below). */
+    /** The data exactly as stored, copied BEFORE getSettings migrates it. */
     let storedBaseline = null;
     try {
         const stored = await migrateWeyPhoneStore();
@@ -9425,12 +9489,8 @@ jQuery(async () => {
     // up, so they grew with the number of chats a user had ever opened. Both are regenerable caches.
     const prunedBuckets = pruneOrphanedChatBuckets(settings);
     initializeSettingsSync(settings);
-    // The one-time DeepSeek/MiniMax model swap (config.js) runs inside getSettings, which is AFTER the data was read. The sync
-    // baseline above is taken from the already-migrated settings, so without this the swap and its "done" marker never reach the
-    // data file: it would run again on every load and overwrite a model the player picked later, once HelixMind brings them back.
-    // Every other migration is idempotent, which is why nothing needed this until now. Re-baseline on the stored copy so the swap
-    // counts as a local change and gets saved, once.
-    if (storedBaseline && storedBaseline.retiredModelSwap !== settings.retiredModelSwap) {
+    // Persist backfills and model migrations against the original stored baseline.
+    if (storedBaseline && JSON.stringify(storedBaseline) !== JSON.stringify(settings)) {
         settingsSyncBaseline = storedBaseline;
         queueWeyPhoneSave(context);
     }

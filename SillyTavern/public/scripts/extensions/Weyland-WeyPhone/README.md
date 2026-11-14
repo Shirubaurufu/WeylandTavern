@@ -32,6 +32,27 @@ experimental phone-block work provided the foundation for this rebuild. Thank yo
 
 ## Opening WeyPhone
 
+### Model defaults
+
+| Feature | Primary | Backup |
+|---|---|---|
+| Messages / Kressa | `gemini-3.8-flash` | `deepseek-v4.1-flash` |
+| Social Sync | `gemini-3.8-flash` | `gemma-4-31b-it` |
+| Phone memories / LTM | `gemini-3.8-flash` | `glm-4.7-thinking` |
+| PawXai | `gemini-3.8-flash` | `glm-4.7-thinking` |
+| Copycat | `gemini-3.8-flash` | `glm-5` |
+
+These apply to new installs and to settings that were never changed. Saved choices, including blank
+overrides and disabled backups, are never rewritten. Main chat and profiles stay untouched.
+Model settings include quick-fill buttons. Messages also has a settings cog in its inbox header.
+PawXai starts with four prompts per set; existing counts are preserved.
+
+Sync, generated profiles, and PawXai share three generation slots per rolling window: 15 minutes
+for Standard, 10 for Plus, and 5 for Platinum. Copycat previews use lavender actions and gold speech
+across all themes; **Edit text** opens the rewrite editor and **Done editing** restores the colored preview.
+
+### Phone controls
+
 Click Weyland Tavern's existing **chat-bar phone button**. The old floating orange launcher has
 been retired.
 

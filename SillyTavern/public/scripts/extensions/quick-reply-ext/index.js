@@ -31,7 +31,7 @@ import { detector } from "./src/similarity.js";
 import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
 import { applyOocToCardSlots, buildOocPostHistory, buildOocSystemPrompt, cardPostHistoryExtras, cardSystemPromptExtras, isOocModeEnabled, stripFromMessages } from "./src/oocMode.js";
 import { NARRATOR_SUBBOTS, NARRATOR_SUBBOT_NAMES } from "./src/narratorSubbots.js";
-import { applyGeminiBypassForModel, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
+import { analysisDelta, applyGeminiBypassForModel, isGeminiModel, swapPromptTexts, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
 import { BAPHOMET_VAR, applyBaphometToRequest, baphometHidden, baphometThoughts } from "./src/baphomet.js";
 import { applyKinsbaneCommand } from "./src/kinsbaneCommands.js";
 import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.js";
@@ -100,6 +100,12 @@ async function OnBeforeGeneration(args) {
 function OnRequestReady(data) {
     try {
         if (!data) return;
+        // Gemini Bypass on + a Gemini model: send the Analysis-off build XXX kept in ravtegGemini/postravGemini.
+        // Matched on the EXPANDED text, since the card's {{getvar::ravteg}} slot was filled before the Router rolled.
+        if (isGeminiModel(data.model) && String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled') {
+            const swapped = swapGeminiNoAnalysis(data.messages);
+            if (swapped) DebugLog(`Gemini Bypass: Analysis skipped for ${data.model} (${swapped})`);
+        }
         const { bypassRemoved, box6Cut } = applyGeminiBypassForModel(data.messages, data.model);
         if (bypassRemoved) DebugLog(`Gemini Bypass left out for ${data.model}`);
         if (box6Cut) DebugLog(`Gemini Bypass: box 6 warm-up cut for ${data.model}`);
@@ -158,6 +164,36 @@ function OnRequestReady(data) {
     } catch (error) {
         console.error(`[WQR] Command message Error:`, error);
     }
+}
+
+/**
+ * Swaps the analysis part of ravteg/postrav for XXX's Analysis-off build in a request's messages. Only the chunk that
+ * differs is swapped (analysisDelta), because the rest can hold random macros that would expand differently a second
+ * time. Each chunk is expanded the way ST expanded the card fields (macros, \r removed, newlines collapsed when that
+ * setting is on), twice, because a value's own macros can be filled in a second pass. Kris's Krisrav holds the same
+ * text as postrav, so it matches too.
+ * @returns {number} replacements made (0 = nothing to do, or the text wasn't found)
+ */
+function swapGeminiNoAnalysis(messages) {
+    const context = SillyTavern.getContext();
+    const expand = (text) => {
+        let out = context.substituteParams(context.substituteParams(text)).replace(/\r/g, '');
+        if (context.powerUserSettings?.collapse_newlines) out = out.replace(/\n+/g, '\n'); // ST's collapseNewlines
+        return out;
+    };
+    const pairs = [];
+    for (const [normal, gemini] of [["ravteg", "ravtegGemini"], ["postrav", "postravGemini"]]) {
+        if (!getLocalVariable(gemini)) continue;
+        const delta = analysisDelta(getLocalVariable(normal), getLocalVariable(gemini));
+        if (!delta) continue;
+        const from = expand(delta.from), to = expand(delta.to);
+        // A chunk at the very start/end of a card field was trimmed with it, so fall back to the trimmed text.
+        pairs.push(messages.some(m => typeof m?.content === 'string' && m.content.includes(from)) ? { from, to } : { from: from.trim(), to: to.trim() });
+    }
+    if (!pairs.length) return 0;
+    const swapped = swapPromptTexts(messages, pairs);
+    if (!swapped) console.warn('[WQR] Gemini Bypass: the Analysis-on prompt was not found in the request, so Gemini still got the analysis.');
+    return swapped;
 }
 
 /**
@@ -2399,17 +2435,37 @@ async function XXX(charName) {
         setLocalVariable("ravteg", assembled.teg);
         // Built-in prompts and OOC bring their own voice; do not inject an extra roleplay narrator.
         setLocalVariable("NarratorEarly", specialBoxes || isOocModeEnabled(getGlobalVariable("OOCMode")) ? "" : assembled.narratorEarly.replaceAll("{{getvar::LocalNarrator}}", getLocalVariable("LocalNarrator")));
-        let resolvedPost = resolvePromptPost({ ...base, post: assembled.post }, {
-            focus: getLocalVariable("ExpAltShow") === "true" ? base.expaltshow : "{{getglobalvar::RPFocus}}",
-            htmlEnabled: getGlobalVariable("HTML!") === "Enabled",
-            htmlInstructions: strings.whtml,
-        });
         // A greeting may need a last-word reminder that belongs to its intro context. PromptOS's
         // intro On/Off control owns this variable alongside ConstantScenario, so disabling that
         // context removes the reminder too. Appending here keeps it at the very end of postrav.
         const introPostHistory = String(getLocalVariable("IntroPostHistory") ?? "").trim();
-        if (introPostHistory) resolvedPost = `${resolvedPost.trimEnd()}\n\n${introPostHistory}`;
+        const finishPost = (post) => {
+            const resolved = resolvePromptPost({ ...base, post }, {
+                focus: getLocalVariable("ExpAltShow") === "true" ? base.expaltshow : "{{getglobalvar::RPFocus}}",
+                htmlEnabled: getGlobalVariable("HTML!") === "Enabled",
+                htmlInstructions: strings.whtml,
+            });
+            return introPostHistory ? `${resolved.trimEnd()}\n\n${introPostHistory}` : resolved;
+        };
+        const resolvedPost = finishPost(assembled.post);
         setLocalVariable("postrav", resolvedPost);
+        // Gemini Bypass + Analysis on: also build this prompt exactly as Analysis OFF would, so OnRequestReady can send that
+        // version to Gemini models only (isGeminiModel in src/promptModifiers.js). Empty = nothing to swap. Same inputs as
+        // above except analysisOn, and the shift item in its no-scene-sheet form, like the real Analysis switch.
+        let geminiTeg = "", geminiPost = "";
+        if (geminiBypassEnabled && analysisOn && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const plain = assemblePromptLayers(base, beta, {
+                analysisOn: false, shift, shiftScope, geminiBypassEnabled, narrator: activeNarrator, narratorStrength: getGlobalVariable("NarratorStrength"),
+                shiftItem: buildRoleplayShiftItem(shift, beta, false, shiftScope),
+            });
+            const plainPost = finishPost(plain.post);
+            if (plain.teg !== assembled.teg || plainPost !== resolvedPost) {
+                geminiTeg = plain.teg;
+                geminiPost = plainPost;
+            }
+        }
+        setLocalVariable("ravtegGemini", geminiTeg);
+        setLocalVariable("postravGemini", geminiPost);
         // OOC Mode (PromptOS -> Modes -> Experimental) replaces the whole Weyland base prompt for
         // every prompt choice, so it runs after shared assembly: the card, lorebooks and chat stay, the
         // narrator comes along inside the OOC prompt (src/oocMode.js explains the wording). No

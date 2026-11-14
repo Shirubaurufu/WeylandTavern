@@ -1,5 +1,6 @@
 // lib/panel.js
 
+import { modelQuickfills, MODEL_DEFAULTS } from './ui/apps/settings.js';
 import { ASSET_BASE_URL, MAPS_BASE_URL } from './assetPaths.js';
 import { postIdFor } from './savedPosts.js';
 import { createStatusBarMarkup } from './ui/statusBar.js';
@@ -32,6 +33,7 @@ export function createPanelMarkup() {
             <button type="button" id="wp-phone-app-saved-button" class="wp-header-btn" title="Saved posts" aria-label="Saved posts"><i class="fa-solid fa-bookmark"></i></button>
             <button id="wp-help-button" class="wp-header-btn" title="What is this?" aria-label="What is this?"><i class="fa-solid fa-circle-question"></i></button>
             <button type="button" id="wp-kressa-settings-button" class="wp-header-btn" title="Kressa settings" aria-label="Kressa settings"><i class="fa-solid fa-gear"></i></button>
+            <button type="button" id="wp-texting-settings-button" class="wp-header-btn" title="Texting settings" aria-label="Texting settings"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
             <button type="button" id="wp-group-compose-button" class="wp-header-btn" title="New Group Chat" aria-label="New group chat"><i class="fa-solid fa-user-group"></i></button>
             <button type="button" id="wp-compose-button" class="wp-header-btn" title="New Message" aria-label="New message"><i class="fa-solid fa-pen-to-square"></i></button>
         </div>
@@ -854,11 +856,13 @@ export function renderMemoryScreen(container, memories, editingMemoryId = null, 
         exchanges
     </label>
     <label class="wp-memory-settings-label">Primary model
-        <input type="text" id="wp-memory-primary-model-input" placeholder="gemini-3.8-flash" />
+        <input type="text" id="wp-memory-primary-model-input" placeholder="${MODEL_DEFAULTS.ltm.primary}" />
     </label>
+    ${modelQuickfills('wp-memory-primary-model-input', [MODEL_DEFAULTS.ltm.primary])}
     <label class="wp-memory-settings-label">Backup model (used if primary fails)
-        <input type="text" id="wp-memory-backup-model-input" placeholder="gemini-3.8-flash" />
+        <input type="text" id="wp-memory-backup-model-input" placeholder="${MODEL_DEFAULTS.ltm.backup}" />
     </label>
+    ${modelQuickfills('wp-memory-backup-model-input', [MODEL_DEFAULTS.ltm.backup])}
     <div id="wp-memory-actions">
         <button id="wp-memory-generate-now-button" class="menu_button"${generateNowDisabled ? ' disabled' : ''}>${isGenerating ? 'Generating…' : 'Generate memory now'}</button>
         <button id="wp-memory-regenerate-last-button" class="menu_button"${regenerateLastDisabled ? ' disabled' : ''}>Regenerate last memory</button>

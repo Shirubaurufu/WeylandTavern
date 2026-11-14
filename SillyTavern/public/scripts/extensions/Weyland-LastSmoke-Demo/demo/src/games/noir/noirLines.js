@@ -149,7 +149,7 @@ export const GLITCH = [
  [
   [
    "eve",
-   "Is that a legal move?"
+   ". . . Is that a legal move?"
   ],
   [
    "belle",
@@ -197,7 +197,7 @@ export const GLITCH = [
   ],
   [
    "eve",
-   "...Weird. Me neither."
+   "...Mnm. Strange.."
   ]
  ]
 ];
@@ -262,11 +262,11 @@ export const SOUR_JAB = [
  "Don't look at me, I'm.. busy. Being betrayed, apparently."
 ];
 export const LESSONS = {
- "goal": "Okay, newbie, quick lesson before Belle eats you alive~ We go around the table, left to right across the top, then back to you~ First one to get rid of all their cards wins the hand, and everybody else pays for whatever they're still holding! Four hands, then the bar closes.",
+ "goal": "Okay, newbie, quick lesson before Belle eats you alive~ \nWe go around the table - First one to get rid of all their cards wins the hand, and everybody else pays for whatever they're still holding!",
  "play": "Your turn~ It's basically Uno. Match the card in the middle: same colour OR same number. See how some of yours are sitting up? Those are the ones that fit.. so just tap one!",
  "draw": "*peeking over your shoulder* Aww, none of your cards work for this one.. mnm - that's okay though! Tap the deck and draw one. If it fits, you can play it right away~",
  "symbols": "Ooh, you've got a mean one~ Skip makes the next girl miss her turn, Reverse turns the table around, Draw 2 makes her draw two.. and a Wild goes on anything, you just pick the colour!",
- "lastcall": "Two cards left! Hit LAST SMOKE before you play, okay? Light up, so everybody knows you're almost out. If somebody catches you sitting on one card without it, you draw two.. and Belle WILL catch you.",
+ "lastcall": "Two cards left! Hit LAST SMOKE before you play, okay? Light up, so everybody knows you're almost out. If somebody catches you sitting on one card without it, you draw two.. ",
  "bribe": "Oh! And see BRIBE down there? Once a hand you can slip one of us some chips for a favour.. tap it on your turn and see what we'll do for you~ Hehe.",
  "catch": "Ooh, did you see that? When somebody's down to one card and forgets to say it, tap CATCH HER! on her picture, quick! Then SHE draws two~"
 };
@@ -335,6 +335,32 @@ export const SUSPENSE = {
      ".. ughh.."
     ]
    ]
+  },
+  {
+   "lines": [
+    [
+     "belle",
+     "*holds her last card up to her forehead, face out* Nobody look! NOBODY!\n..Eve, you looked."
+    ],
+    [
+     "eve",
+     "It's facing me, Belle."
+    ],
+    [
+     "belle",
+     "Then CLOSE your EYES!"
+    ]
+   ],
+   "after": [
+    [
+     "eve",
+     "It wasn't gonna play, by the way."
+    ],
+    [
+     "belle",
+     "I KNOW that NOW, Eve!"
+    ]
+   ]
   }
  ],
  "eve": [
@@ -342,7 +368,7 @@ export const SUSPENSE = {
    "lines": [
     [
      "eve",
-     "*sets her last card face down and taps it, once*"
+     "*sets her last card face down and taps her hand on the table, once*"
     ],
     [
      "belle",
@@ -359,6 +385,32 @@ export const SUSPENSE = {
      "That was the most disappointin' tap of my LIFE, Eve!"
     ]
    ]
+  },
+  {
+   "lines": [
+    [
+     "eve",
+     "One card."
+    ],
+    [
+     "astrid",
+     "Ooh! Eve, are you nervous? You look nervous!"
+    ],
+    [
+     "eve",
+     "This is my face."
+    ]
+   ],
+   "after": [
+    [
+     "astrid",
+     "..Okay, NOW you look nervous."
+    ],
+    [
+     "eve",
+     "*sighs*"
+    ]
+   ]
   }
  ],
  "astrid": [
@@ -366,7 +418,7 @@ export const SUSPENSE = {
    "lines": [
     [
      "astrid",
-     "*fans herself with her last card* Oh no.. whatever will you all do without me?~"
+     "*fans herself with her last card* Oh no.. whatever could happen?~"
     ],
     [
      "belle",
@@ -381,6 +433,28 @@ export const SUSPENSE = {
     [
      "belle",
      "That's your LOSIN' face, babe! I know it real well!"
+    ]
+   ]
+  },
+  {
+   "lines": [
+    [
+     "astrid",
+     "Okay, okay, nobody breathe.. Neshe says I jinx it when people breathe.."
+    ],
+    [
+     "eve",
+     "*exhales a huge cloud of smoke right at her*"
+    ],
+    [
+     "astrid",
+     "EVE!"
+    ]
+   ],
+   "after": [
+    [
+     "astrid",
+     "See?! JINXED! That's on you, Eve!"
     ]
    ]
   }
@@ -446,7 +520,7 @@ export const COURT_MAD = {
  ],
  "astrid": [
   {
-   "ask": "So.. give me one good reason I shouldn't bury you right now. Go ahead! I'm listening!",
+   "ask": "So.. I'm feeling kinda.. mean right now, babe.. give me one good reason I shouldn't bury you right now. ",
    "right": [
     "I'm sorry! I really, really am!",
     "I'll make it up to you! Drinks are on me!"
@@ -488,7 +562,7 @@ export const COURT = {
     "Should I be?"
    ],
    "wrong": [
-    "Of a girl named ANNABELLE? Pfft!",
+    "You should be scared of ***me***, Annabelle.",
     "Not even a little, Annabelle."
    ],
    "said": {
@@ -541,7 +615,7 @@ export const COURT = {
    "meh": [
     "Uh, Camels mostly?",
     "Whatever's cheapest, honestly.",
-    "Lucky Strikes?"
+    "Newports?"
    ],
    "wrong": [
     "I don't smoke.",
@@ -715,7 +789,7 @@ export const AGAIN_BY_YOU = {
  ],
  "astrid": [
   "Again?.. Wow. Okay.. so it's like a THING now. Cool. Cool cool cool.",
-  "Twice, sugar? ..No, it's fine.\nI'm counting, but it's fine."
+  "Twice, honey? ..No, it's fine.\nI'm counting, but it's fine."
  ]
 };
 export const SOUR_SKIPPED = [
@@ -754,7 +828,7 @@ export const AGAIN_ON_YOU = {
   "*doesn't even look up* Again."
  ],
  "astrid": [
-  "Oopsie! ..Again! Hehe, sorry, sugar~",
+  "Oopsie! ..Again! Hehe, sorry, babe~",
   "Twice in a row?? Gosh, it's like the cards LIKE you!"
  ]
 };
@@ -771,7 +845,7 @@ export const GIRL_HITS_AGAIN = {
   [
    [
     "eve",
-    "Belle. That's two."
+    "..Belle. That's two."
    ],
    [
     "belle",
@@ -779,7 +853,7 @@ export const GIRL_HITS_AGAIN = {
    ],
    [
     "eve",
-    "So was the last person who did that."
+    "Roll somewhere else."
    ]
   ]
  ],
@@ -803,7 +877,7 @@ export const GIRL_HITS_AGAIN = {
    ],
    [
     "eve",
-    "You talked."
+    "You're here."
    ]
   ]
  ],
@@ -879,7 +953,23 @@ export const GIRL_HITS = {
    ],
    [
     "eve",
-    "Watch your drink."
+    "Stop."
+   ],
+   [
+    "belle",
+    "I LIKE you Eve! It's how I show you I like you."
+   ],
+   [
+    "eve",
+    "Stop liking me."
+   ],
+   [
+    "astrid",
+    "I like you too, Eve!~"
+   ],
+   [
+    "eve",
+    "*shakes her head, scowling down at her cards* .. mnm."
    ]
   ],
   [
@@ -911,7 +1001,7 @@ export const GIRL_HITS = {
   [
    [
     "astrid",
-    "Ow, ow, ow! My nails!"
+    "Ow, ow, ow! My nail chipped!"
    ],
    [
     "belle",
@@ -1056,7 +1146,7 @@ export const SETUP_OUCH = {
  ],
  "astrid": [
   "FOUR?! Sweetie, that is NOT how you treat a lady!",
-  "Four whole cards??\nMy nails can barely hold the ones I had!"
+  "Four whole cards??\nHoney, I don't NEED them!"
  ]
 };
 export const OUCH = {
@@ -1145,15 +1235,33 @@ export const GIRL_FLIRTS = [
   ],
   [
    "belle",
-   "Are you flirtin' with ME or with my WALLET?"
+   "Mnmm Astrid, honey, are you flirtin' with me? Or do you need somethin'. "
   ],
   [
    "astrid",
-   "Can't it be both~?"
+   "Can't it be both?~"
   ],
   [
    "belle",
-   "..HAH! Okay, that's kinda hot, I'm not gonna lie!"
+   "Mnm - no, it can't. But I like your style, babe!~"
+  ]
+ ],
+ [
+  [
+   "astrid",
+   "Y'know, Belle, when you're not yelling, you're actually really pretty~"
+  ],
+  [
+   "belle",
+   "*her ears go red, grinning* .. I'm ALWAYS yellin'!"
+  ],
+  [
+   "astrid",
+   "I know, sweetie. Shame~"
+  ],
+  [
+   "eve",
+   "Mnmn."
   ]
  ],
  [
@@ -1177,6 +1285,28 @@ export const GIRL_FLIRTS = [
    "belle",
    "SO cute!"
   ]
+ ],
+ [
+  [
+   "belle",
+   "Eve! If I win this hand, you gotta kiss me!"
+  ],
+  [
+   "eve",
+   "Win it, then."
+  ],
+  [
+   "belle",
+   "..WAIT. REALLY?!"
+  ],
+  [
+   "eve",
+   "Play your cards, Belle."
+  ],
+  [
+   "astrid",
+   "Ohmygosh~"
+  ]
  ]
 ];
 export const BANTER = [
@@ -1184,7 +1314,10 @@ export const BANTER = [
   [
    [
     "belle",
-    "Eve. Eve! That's your fourth since we sat down!"
+    "Eve. Eve! That's your fourth since we sat down!",
+    {
+     "mood": "cross"
+    }
    ],
    [
     "eve",
@@ -1192,7 +1325,7 @@ export const BANTER = [
    ],
    [
     "belle",
-    "HAH! Okay, I gotta respect the commitment, honestly."
+    "HAH! Okay, ignore me."
    ]
   ],
   [
@@ -1231,6 +1364,112 @@ export const BANTER = [
  [
   [
    [
+    "belle",
+    "Hey, hey, watch this, watch this!"
+   ],
+   [
+    "belle",
+    "*blows a perfect smoke ring*"
+   ],
+   [
+    "eve",
+    "Wow. You should do that for money."
+   ],
+   [
+    "belle",
+    "I DO do it for money, Eve!!"
+   ]
+  ],
+  [
+   [
+    "belle",
+    "*blows a smoke ring that settles right over Eve's head*"
+   ],
+   [
+    "belle",
+    "HAH! Look, a halo! You're an angel now!"
+   ],
+   [
+    "eve",
+    "Do that again and you'll meet one."
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "astrid",
+    "Eve, you'd be sooo pretty if you smiled more~"
+   ],
+   [
+    "eve",
+    "I'd be so pretty if you talked less."
+   ],
+   [
+    "astrid",
+    "*gasps, delighted* See?? THERE'S my girl!"
+   ]
+  ],
+  [
+   [
+    "astrid",
+    "Eve, smile! Just once! Pleeease, for me~"
+   ],
+   [
+    "eve",
+    "*glares at her, and says nothing*"
+   ],
+   [
+    "astrid",
+    "Nawww! Evey you're so cute when you act all aaaangry!~"
+   ],
+   [
+    "eve",
+    "*blushes, and turns back to her cards*"
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "astrid",
+    "Ooh, Eve, what're you drawing on that napkin?"
+   ],
+   [
+    "eve",
+    "You."
+   ],
+   [
+    "astrid",
+    "Awww! ..wait, why do I have horns?"
+   ],
+   [
+    "eve",
+    "Artistic license."
+   ]
+  ],
+  [
+   [
+    "belle",
+    "What're you drawin' over there, Eve?"
+   ],
+   [
+    "eve",
+    "Your face when you lose."
+   ],
+   [
+    "belle",
+    "That's just a frowny face! That's not even GOOD!"
+   ],
+   [
+    "eve",
+    "It's accurate."
+   ]
+  ]
+ ],
+ [
+  [
+   [
     "astrid",
     "Okay, Eve, rate my dress, and be honest!"
    ],
@@ -1259,6 +1498,70 @@ export const BANTER = [
    [
     "astrid",
     "Okay, but.. in a classy way, right? Right??"
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "belle",
+    "You're countin' cards. I KNOW you're countin' cards, I can SEE you doin' it!"
+   ],
+   [
+    "eve",
+    "I'm counting the minutes until you stop talking."
+   ],
+   [
+    "belle",
+    "HAH! That's not a no!"
+   ]
+  ],
+  [
+   [
+    "belle",
+    "Look at her! Eve's got a system, she's got a SYSTEM!"
+   ],
+   [
+    "eve",
+    "The system is I'm better than you."
+   ],
+   [
+    "belle",
+    "Okay, rude, but.. could you teach it to me?"
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "astrid",
+    "Belle, honey, your hair's all.. um.. everywhere tonight~"
+   ],
+   [
+    "belle",
+    "Says the girl who spends an HOUR on hers! *reaches over and ruffles it*"
+   ],
+   [
+    "astrid",
+    "BELLE! It was TWO hours!"
+   ]
+  ],
+  [
+   [
+    "astrid",
+    "Belle, is the red natural? It's so pretty!"
+   ],
+   [
+    "belle",
+    "Born with it, babe! You want some?"
+   ],
+   [
+    "astrid",
+    "You can't SHARE hair, silly!"
+   ],
+   [
+    "belle",
+    "Not with THAT attitude!"
    ]
   ]
  ],
@@ -1327,6 +1630,334 @@ export const BANTER = [
    [
     "astrid",
     "Since I started losing, obviously!"
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "belle",
+    "Hey, Eve, swap seats with me. I wanna sit by the new one!"
+   ],
+   [
+    "eve",
+    "I'm not moving."
+   ],
+   [
+    "belle",
+    "Then I'll sit in your LAP, Eve, don't test me!"
+   ],
+   [
+    "eve",
+    "*does not move*"
+   ]
+  ],
+  [
+   [
+    "astrid",
+    "*hooks her arm through yours* Mine for the night, okay?\nBelle can go find her own~"
+   ],
+   [
+    "belle",
+    "I don't gotta FIND one, I'm lookin' right at 'em!"
+   ],
+   [
+    "eve",
+    "*exhales* Worst bar in the city."
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "belle",
+    "Okay, vote! Prettiest girl at this table, go! New one votes first!"
+   ],
+   [
+    "astrid",
+    "Ooh, yes, vote~\nNo pressure, sugar~\n..It's me."
+   ],
+   [
+    "eve",
+    "I'm abstaining."
+   ],
+   [
+    "belle",
+    "You can't ABSTAIN, you're on the BALLOT!"
+   ]
+  ],
+  [
+   [
+    "astrid",
+    "Belle, sweetie, you've got hookah breath..\nMaybe don't lean on them so much?"
+   ],
+   [
+    "belle",
+    "It's DOUBLE APPLE, it's a delicious breath!"
+   ],
+   [
+    "astrid",
+    "*leans in herself* See, I just smell like perfume~"
+   ],
+   [
+    "eve",
+    "You both smell like this bar."
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "astrid",
+    "Ooh, Belle.. I think the new one likes you~"
+   ],
+   [
+    "belle",
+    "Nobody likes ANYBODY, okay?! We're playin' cards!"
+   ],
+   [
+    "astrid",
+    "Ohmygosh, her EARS went red!\nBelle is blushing!"
+   ],
+   [
+    "belle",
+    "THAT'S THE HOOKAH! It's HOT in here!"
+   ]
+  ],
+  [
+   [
+    "belle",
+    "*looks you up and down, real slow* Mmm. Wolfmeat."
+   ],
+   [
+    "astrid",
+    "Belle! You can't just SAY that out loud!"
+   ],
+   [
+    "belle",
+    "Why not?! Look at 'em, they're TOTAL wolfmeat!"
+   ],
+   [
+    "eve",
+    "Leave the new one alone. They're turning red."
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "belle",
+    "Thanks for lettin' me crash Tuesday, Eve! Best couch in the city, I swear!"
+   ],
+   [
+    "eve",
+    "You awoo'd."
+   ],
+   [
+    "belle",
+    "*her ears go flat* I don't DO that!!"
+   ],
+   [
+    "astrid",
+    "*gasps* Ohmygosh, that's ADORABLE~ Do it now!"
+   ],
+   [
+    "belle",
+    "NO!"
+   ]
+  ],
+  [
+   [
+    "astrid",
+    "Belle, Dash says you make little noises in your sleep~"
+   ],
+   [
+    "belle",
+    "DASH IS A LIAR!"
+   ],
+   [
+    "astrid",
+    "Little 'awoo's~"
+   ],
+   [
+    "eve",
+    "She does."
+   ],
+   [
+    "belle",
+    "EVE!!"
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "belle",
+    "*slides Astrid's gin away* That's your THIRD, babe! Water now!"
+   ],
+   [
+    "astrid",
+    "Belle! Since when are you the drink police?!"
+   ],
+   [
+    "belle",
+    "Since you started singin' to the coat rack!"
+   ],
+   [
+    "astrid",
+    "He was a GOOD listener~"
+   ]
+  ],
+  [
+   [
+    "astrid",
+    "Belle, sweetie, got anything for a headache~?"
+   ],
+   [
+    "belle",
+    "Aspirin. ACTUAL aspirin, Astrid, don't look at me like that!"
+   ],
+   [
+    "astrid",
+    "I wasn't looking at you like anything~"
+   ],
+   [
+    "eve",
+    "She was."
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "belle",
+    "Don't lend Astrid money, cutie! Free advice!"
+   ],
+   [
+    "astrid",
+    "Belle!! I ALWAYS pay people back!"
+   ],
+   [
+    "eve",
+    "Name one."
+   ],
+   [
+    "astrid",
+    "..The cab guy?"
+   ]
+  ],
+  [
+   [
+    "belle",
+    "Cutie! Don't give Astrid your address!"
+   ],
+   [
+    "astrid",
+    "BELLE!"
+   ],
+   [
+    "eve",
+    "Or your mother's maiden name."
+   ],
+   [
+    "astrid",
+    "That was ONE time!"
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "astrid",
+    "Eve, why do you always smell like a campfire?"
+   ],
+   [
+    "eve",
+    "Hellhound."
+   ],
+   [
+    "astrid",
+    "..That's it? That's the whole answer?"
+   ],
+   [
+    "eve",
+    "That's the whole answer."
+   ],
+   [
+    "belle",
+    "I LIKE it! Smells like a cookout!"
+   ]
+  ],
+  [
+   [
+    "belle",
+    "*sniffs* Eve, is that you or the ashtray?"
+   ],
+   [
+    "eve",
+    "Both."
+   ],
+   [
+    "belle",
+    "HAH! Fair!"
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "belle",
+    "My chem professor called me 'terrifyingly gifted' today!"
+   ],
+   [
+    "eve",
+    "He's right about the first part."
+   ],
+   [
+    "belle",
+    "HEY!"
+   ],
+   [
+    "astrid",
+    "Aww, that's so nice, Belle~ ..Which part was the first part?"
+   ]
+  ],
+  [
+   [
+    "belle",
+    "I aced the chem midterm! The WHOLE thing! Somebody clap!"
+   ],
+   [
+    "astrid",
+    "*claps* Yaaay~"
+   ],
+   [
+    "eve",
+    "*claps exactly twice*"
+   ],
+   [
+    "belle",
+    "Eve, that's the nicest thing you've EVER done!"
+   ]
+  ]
+ ],
+ [
+  [
+   [
+    "belle",
+    "So.. y'all think aliens are real? Or nah."
+   ],
+   [
+    "eve",
+    "Yes."
+   ],
+   [
+    "astrid",
+    "*blinks* .. Damn.. that was fast. What makes you so sure, huh?"
+   ],
+   [
+    "eve",
+    ".. just am."
    ]
   ]
  ]

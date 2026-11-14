@@ -1,19 +1,19 @@
 const APP_HELP = {
     chronicle: {
         intro: 'Weyland’s local newspaper and campus bulletin.',
-        bullets: ['Read city headlines and practical campus alerts.', 'Refreshes together with Chitter, Discorgi, and Yip Yap when you tap Sync.', 'One Sync uses one shared generation slot and updates all four social apps.', 'Shared cooldown: Standard gets 2 generations per 15 minutes, Paw Patrol Plus gets 2 per 10 minutes, and Platinum gets 2 per 5 minutes.'],
+        bullets: ['Read city headlines and practical campus alerts.', 'Refreshes together with Chitter, Discorgi, and Yip Yap when you tap Sync.', 'One Sync uses one shared generation slot and updates all four social apps.', 'Shared cooldown: Standard gets 3 generations per 15 minutes, Paw Patrol Plus gets 3 per 10 minutes, and Platinum gets 3 per 5 minutes.'],
     },
     feed: {
         intro: 'A public social feed for Weyland’s cast and local accounts.',
-        bullets: ['Browse posts, likes, and character profiles.', 'Registrar characters you imported may appear occasionally.', 'Refreshes as part of the four-app Sync.', 'Sync and newly generated character profiles use the shared cooldown: Standard gets 2 generations per 15 minutes, Plus gets 2 per 10 minutes, and Platinum gets 2 per 5 minutes.'],
+        bullets: ['Browse posts, likes, and character profiles.', 'Registrar characters you imported may appear occasionally.', 'Refreshes as part of the four-app Sync.', 'Sync and newly generated character profiles use the shared cooldown: Standard gets 3 generations per 15 minutes, Plus gets 3 per 10 minutes, and Platinum gets 3 per 5 minutes.'],
     },
     chat: {
         intro: 'A live server-style view of Weyland community chatter.',
-        bullets: ['Messages are grouped into channels.', 'Expect short conversations, announcements, and campus nonsense.', 'Refreshes as part of the four-app Sync.', 'Shared cooldown: Standard gets 2 generations per 15 minutes, Paw Patrol Plus gets 2 per 10 minutes, and Platinum gets 2 per 5 minutes.'],
+        bullets: ['Messages are grouped into channels.', 'Expect short conversations, announcements, and campus nonsense.', 'Refreshes as part of the four-app Sync.', 'Shared cooldown: Standard gets 3 generations per 15 minutes, Paw Patrol Plus gets 3 per 10 minutes, and Platinum gets 3 per 5 minutes.'],
     },
     board: {
         intro: 'Weyland’s anonymous local message board.',
-        bullets: ['Expect confessions, complaints, missed connections, and gossip.', 'Posts are anonymous and are not organized conversations.', 'Refreshes as part of the four-app Sync.', 'Shared cooldown: Standard gets 2 generations per 15 minutes, Paw Patrol Plus gets 2 per 10 minutes, and Platinum gets 2 per 5 minutes.'],
+        bullets: ['Expect confessions, complaints, missed connections, and gossip.', 'Posts are anonymous and are not organized conversations.', 'Refreshes as part of the four-app Sync.', 'Shared cooldown: Standard gets 3 generations per 15 minutes, Paw Patrol Plus gets 3 per 10 minutes, and Platinum gets 3 per 5 minutes.'],
     },
     messages: {
         intro: 'Private text conversations with available Weyland contacts.',

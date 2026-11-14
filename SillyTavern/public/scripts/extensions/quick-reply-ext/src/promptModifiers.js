@@ -174,6 +174,89 @@ export function applyGeminiBypassForModel(messages, model) {
     return result;
 }
 
+// With Gemini Bypass on, Gemini gets NO analysis at all (Lucky, 2026-11-14): the bypass text alone still let it loop on
+// the scene sheet. The model is only known on the final payload (Weyland-Router rolls it AFTER the card's
+// {{getvar::ravteg}} / post-history were already expanded), so XXX keeps an Analysis-off build of both slots in chat vars
+// and OnRequestReady swaps the expanded text. Other models (Sonnet, GLM, DeepSeek...) are untouched. "Argon" is Gemini 4
+// Argon, whose id may not say "gemini"; matched as its own word so "Targon" doesn't count.
+const GEMINI_FAMILY = /gemini|(^|[^a-z])argon/i;
+
+export function isGeminiModel(model) {
+    return GEMINI_FAMILY.test(String(model ?? ''));
+}
+
+/**
+ * The part of an Analysis-on prompt that the Analysis-off build replaces, cut at whole lines: everything before the first
+ * line that differs and after the last one is shared. Swapping only this chunk (expanded on its own) matters because the
+ * rest of a prompt can hold random macros (the post-history's "EXACTLY {{random}} thought sections"): expanding the whole
+ * prompt again rolls a different number and the text no longer matches the request (live test, 2026-11-14).
+ * Line cuts also keep a {{macro}} from being split in half.
+ * @returns {{from: string, to: string}|null} null when the two are identical
+ */
+export function analysisDelta(onText, offText) {
+    const on = String(onText ?? ''), off = String(offText ?? '');
+    if (on === off) return null;
+    let start = 0;
+    const max = Math.min(on.length, off.length);
+    while (start < max && on[start] === off[start]) start++;
+    start = on.lastIndexOf('\n', start - 1) + 1; // back to the start of that line (0 when none)
+    let end = 0;
+    while (end < max - start && on[on.length - 1 - end] === off[off.length - 1 - end]) end++;
+    // `end` shared characters at the tail; move the cut forward to the next line start inside them.
+    const tailFrom = on.length - end;
+    const lineStart = on.indexOf('\n', tailFrom - 1);
+    let onEnd = lineStart < 0 || lineStart + 1 > on.length ? on.length : Math.max(tailFrom, lineStart + 1);
+    // A pure insertion (2026 + Hard Mode: Analysis off ADDS Beta's bridge line) leaves nothing to search for, so take the
+    // line before it along as the anchor, or the line after it at the very top.
+    if (onEnd <= start && start === 0) {
+        const next = on.indexOf('\n', onEnd);
+        onEnd = next < 0 ? on.length : next + 1;
+    }
+    // The swap replaces the FIRST match, so grow the chunk upward a line at a time until its first match is this spot
+    // (a lone blank line or a common sentence would otherwise land somewhere earlier in the prompt).
+    while (start > 0 && (onEnd <= start || on.indexOf(on.slice(start, onEnd)) !== start)) {
+        start = on.lastIndexOf('\n', start - 2) + 1;
+    }
+    const shared = on.length - onEnd;
+    return { from: on.slice(start, onEnd), to: off.slice(start, off.length - shared) };
+}
+
+/**
+ * Replaces the FIRST match of each `from` text with its `to` text in a chat-completion payload, in place, searching the
+ * messages in order (system prompt first, chat history after), so a copy quoted later in the chat is never touched.
+ * Only exact, non-empty matches change; squashed system messages still contain the text as a substring.
+ * @param {Array} messages
+ * @param {Array<{from: string, to: string}>} pairs
+ * @returns {number} how many replacements were made
+ */
+export function swapPromptTexts(messages, pairs) {
+    if (!Array.isArray(messages)) return 0;
+    const pending = (pairs || []).filter(p => p && p.from && typeof p.to === 'string' && p.from !== p.to);
+    if (!pending.length) return 0;
+    let swapped = 0;
+    const swap = text => {
+        if (typeof text !== 'string') return text;
+        for (let i = 0; i < pending.length; i++) {
+            const { from, to } = pending[i];
+            const at = text.indexOf(from);
+            if (at < 0) continue;
+            text = text.slice(0, at) + to + text.slice(at + from.length);
+            pending.splice(i--, 1);
+            swapped++;
+        }
+        return text;
+    };
+    for (const message of messages) {
+        if (!message) continue;
+        if (Array.isArray(message.content)) {
+            for (const part of message.content) if (part?.type === 'text') part.text = swap(part.text);
+        } else {
+            message.content = swap(message.content);
+        }
+    }
+    return swapped;
+}
+
 // Rules for character thoughts (the [bracketed] inner voice), added to every thoughts-ON block (rav.thinkYes) at the
 // three ThoughtSet assignments in XXX. They ride inside that block, so they cost nothing unless thoughts are on, and they
 // live here rather than in rav.js because upstream regenerates rav.js.
