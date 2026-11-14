@@ -1,5 +1,6 @@
 import { getRoleplayMode, isValidRoleplayMode, ROLEPLAY_MODES } from './roleplayMode.js';
 import { protectRepliedCaptures } from './roleplayCapture.js';
+import { WEYLAND_MODEL_DEFAULTS as MODELS } from '../../../weyland-model-defaults.js';
 
 /**
  * @typedef {Object} Conversation
@@ -10,48 +11,14 @@ import { protectRepliedCaptures } from './roleplayCapture.js';
  * @property {number} lastActive
  */
 
-// Defaults chosen by the operator: Gemini 3.8 Flash as primary and, since HelixMind retired MiniMax M3 (2026-11), as the
-// fallback if the primary model call fails. (GLM 4.7 was the original primary; retired below once Helix
-// lost access to it.)
-export const DEFAULT_MEMORY_PRIMARY_MODEL = 'gemini-3.8-flash';
-export const DEFAULT_MEMORY_BACKUP_MODEL = 'gemini-3.8-flash';
+export const DEFAULT_MEMORY_PRIMARY_MODEL = MODELS.ltm.primary;
+export const DEFAULT_MEMORY_BACKUP_MODEL = MODELS.ltm.backup;
 
-// HelixMind renamed this exact model id (2026-07-30) with no change to the underlying model.
-// Existing settings/conversations already hold a real STRING value for these fields, so the
-// type-based backfills in migrateMemoryFields never touch them — this explicitly rewrites the
-// stale id wherever it's stored so already-created threads don't keep silently sending a model id
-// the provider no longer recognizes. Add future provider renames here.
-// gemini-3.6-flash is superseded by 3.8 (2026-09-14) and is now obsolete — same treatment, so
-// anyone still pinned to it moves across instead of quietly failing every phone/Kressa/PawXai call.
-const STALE_MODEL_RENAMES = {
-    // Gemini 3.1 Pro was discontinued by Google without notice (2026-10-12); both of its ids move to 3.8 Flash.
-    'gemini-3-pro-preview': 'gemini-3.8-flash',
-    'gemini-3.1-pro-preview': 'gemini-3.8-flash',
-    'gemini-3.6-flash': 'gemini-3.8-flash',
-    'gemini-3.7-flash': 'gemini-3.8-flash',
-    // Helix lost access to GLM 4.7 entirely (2026-09-15) — both the thinking and plain ids now
-    // fail every request. Rewritten rather than left to error.
-    'glm-4.7-thinking': 'gemini-3.8-flash',
-    'glm-4.7': 'gemini-3.8-flash',
-};
-
-/**
- * Rewrites any stored model-id string that a provider has since renamed (see
- * STALE_MODEL_RENAMES) — both the top-level model settings and every per-conversation memory
- * model. Idempotent — safe to call on every settings load.
- * @param {{modelOverride?: string, textingModelOverride?: string, kressaModel?: string, pawxai?: {modelOverride?: string}, conversations: Record<string, Conversation>}} settings
- */
-export function migrateStaleModelNames(settings) {
-    for (const key of ['modelOverride', 'textingModelOverride', 'kressaModel']) {
-        if (STALE_MODEL_RENAMES[settings[key]]) settings[key] = STALE_MODEL_RENAMES[settings[key]];
-    }
-    if (settings.pawxai && STALE_MODEL_RENAMES[settings.pawxai.modelOverride]) {
-        settings.pawxai.modelOverride = STALE_MODEL_RENAMES[settings.pawxai.modelOverride];
-    }
-    for (const conversation of Object.values(settings.conversations ?? {})) {
-        if (STALE_MODEL_RENAMES[conversation.memoryPrimaryModel]) conversation.memoryPrimaryModel = STALE_MODEL_RENAMES[conversation.memoryPrimaryModel];
-        if (STALE_MODEL_RENAMES[conversation.memoryBackupModel]) conversation.memoryBackupModel = STALE_MODEL_RENAMES[conversation.memoryBackupModel];
-    }
+// Saved model choices are left exactly as they are. (Until 2026-11-14 this rewrote a saved
+// "gemini-3.8-flash" to the newer defaults; Google restored 3.8 Flash, so that was dropped.)
+// Kept as a function because the settings loader still calls it; it is the place for the next
+// rename if a model id is ever retired for good.
+export function migrateStaleModelNames(settings) { // eslint-disable-line no-unused-vars
 }
 
 let lastTimestamp = 0;

@@ -1,4 +1,4 @@
-import { applyRetiredModelSwapOnce } from '../../../weyland-retired-models.js';
+import { WEYLAND_MODEL_DEFAULTS as MODELS } from '../../../weyland-model-defaults.js';
 import { migrateLegacyConversations, migrateMemoryFields, migrateTetheredFields, migrateContactHistoryFields, migrateStaleModelNames } from './storage.js';
 
 export const MODULE_NAME = 'WeyPhone';
@@ -31,33 +31,28 @@ export const defaultSettings = Object.freeze({
     // User-authored relationship/background notes keyed by stable contact identity. These are
     // injected into texting prompts but never written into the main roleplay or lorebooks.
     contactContexts: {},
-    // Model every WeyPhone generation runs on (texting + sync). Deliberately defaults to Gemini 3.8 Flash:
-    // Lucky discourages spending Sonnet on what amounts to a small text.
-    // Empty string = follow the live main-chat model. Kressa has her own setting (kressaModel).
-    modelOverride: 'gemini-3.8-flash',
+    // Social Sync model. Empty string follows the live main-chat model.
+    modelOverride: MODELS.sync.primary,
     // Texting is deliberately independent from the social-app Sync model. Existing installs are
     // migrated to their prior modelOverride below so this split does not silently change DMs.
-    textingModelOverride: 'gemini-3.8-flash',
-    kressaModel: '', // '' = live main-chat model (default per Lucky)
+    textingModelOverride: MODELS.texting.primary,
+    kressaModel: MODELS.texting.primary,
     // Second choice, tried once when the model above errors out. Blank = no retry.
-    fallbackModelOverride: 'gemini-3.8-flash',
-    textingFallbackModel: 'gemini-3.8-flash',
-    kressaFallbackModel: 'gemini-3.8-flash',
+    fallbackModelOverride: MODELS.sync.backup,
+    textingFallbackModel: MODELS.texting.backup,
+    kressaFallbackModel: MODELS.texting.backup,
     // Weyland's global Hard Mode is deliberately isolated from WeyPhone. These independent
     // opt-ins only take effect while the global HardToggle is actually On.
     phoneHardModeEnabled: false,
     kressaHardModeEnabled: false,
     kressaPalette: 'twilight',
     calculatorPalette: 'graphite',
-    // Understudy: second-model rewrite pass over the last reply. gemini-3.8-flash is the default
-    // on measured results - it rewrites properly where others polish.
-    // (HelixMind retired its DeepSeek and MiniMax models in 2026-11; see weyland-retired-models.js.)
+    // Understudy: second-model rewrite pass over the last reply.
     understudy: {
         // Visible Copycat theme. The internal object name is retained for saved-setting compatibility.
         palette: 'opening-night',
-        modelOverride: 'gemini-3.8-flash',
-        // Backup retries are opt-in.
-        fallbackModel: '',
+        modelOverride: MODELS.copycat.primary,
+        fallbackModel: MODELS.copycat.backup,
         scope: 'full',
         contextMessages: 5,
         // Weyland narrator persona to write the rewrite in the style of. 'off' = no modifier,
@@ -89,9 +84,9 @@ export const defaultSettings = Object.freeze({
         autoToasts: true,
     },
     pawxai: {
-        promptCount: 5,
-        modelOverride: 'gemini-3.8-flash',
-        fallbackModel: 'gemini-3.8-flash',
+        promptCount: 4,
+        modelOverride: MODELS.pawxai.primary,
+        fallbackModel: MODELS.pawxai.backup,
         palette: 'orchid-night',
         focus: 'balanced',
         framing: 'auto',
@@ -226,13 +221,9 @@ export function getSettings(extensionSettings) {
         extensionSettings[MODULE_NAME] = structuredClone(defaultSettings);
     }
     const settings = extensionSettings[MODULE_NAME];
-    // PawXai originally shipped with three prompts and no palette key. That precise legacy shape
-    // can safely take the new five-prompt default without overriding a later user choice.
-    const needsPawXaiFivePromptMigration = settings.pawxai && typeof settings.pawxai === 'object'
-        && !('palette' in settings.pawxai) && settings.pawxai.promptCount === 3;
     // Before the model controls were split, modelOverride drove both Sync and texting. Preserve
     // that choice for existing installs instead of unexpectedly moving their DMs to a new model.
-    const needsTextingModelMigration = !('textingModelOverride' in settings);
+    const needsTextingModelMigration = !('textingModelOverride' in settings) && typeof settings.modelOverride === 'string';
     for (const key of Object.keys(defaultSettings)) {
         if (!(key in settings)) {
             settings[key] = structuredClone(defaultSettings[key]);
@@ -257,7 +248,6 @@ export function getSettings(extensionSettings) {
     for (const [key, value] of Object.entries(defaultSettings.pawxai)) {
         if (!(key in settings.pawxai)) settings.pawxai[key] = structuredClone(value);
     }
-    if (needsPawXaiFivePromptMigration) settings.pawxai.promptCount = 5;
     if (!settings.contactRenames || typeof settings.contactRenames !== 'object' || Array.isArray(settings.contactRenames)) {
         settings.contactRenames = {};
     }
@@ -269,9 +259,6 @@ export function getSettings(extensionSettings) {
     migrateTetheredFields(settings);
     migrateContactHistoryFields(settings);
     migrateStaleModelNames(settings);
-    // HelixMind retired DeepSeek and MiniMax (2026-11). A saved choice of either moves to Gemini 3.8 Flash ONCE; unlike the
-    // permanent renames above, it never runs again, so picking one after HelixMind brings them back is respected.
-    applyRetiredModelSwapOnce(settings);
     migrateRemoveAethel(settings);
     migratePhoneAppKeys(settings);
     reconcileClockSource(settings.ui);

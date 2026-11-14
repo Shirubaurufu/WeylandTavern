@@ -2,12 +2,12 @@ const MINUTE_MS = 60_000;
 const MAX_EVENT_AGE_MS = 24 * 60 * MINUTE_MS;
 
 export const GENERATION_RATE_LIMITS = Object.freeze({
-    standard: Object.freeze({ key: 'standard', label: 'Standard', maxRequests: 2, windowMs: 15 * MINUTE_MS }),
-    plus: Object.freeze({ key: 'plus', label: 'Paw Patrol Plus', maxRequests: 2, windowMs: 10 * MINUTE_MS }),
-    platinum: Object.freeze({ key: 'platinum', label: 'Paw Patrol Platinum', maxRequests: 2, windowMs: 5 * MINUTE_MS }),
+    standard: Object.freeze({ key: 'standard', label: 'Standard', maxRequests: 3, windowMs: 15 * MINUTE_MS }),
+    plus: Object.freeze({ key: 'plus', label: 'Paw Patrol Plus', maxRequests: 3, windowMs: 10 * MINUTE_MS }),
+    platinum: Object.freeze({ key: 'platinum', label: 'Paw Patrol Platinum', maxRequests: 3, windowMs: 5 * MINUTE_MS }),
     // Display-only Platinum-window counter for testing. Admin generations are never blocked and
     // remaining may intentionally become negative so repeated successful outputs stay visible.
-    admin: Object.freeze({ key: 'admin', label: 'Admin test counter', maxRequests: 2, windowMs: 5 * MINUTE_MS, enforced: false }),
+    admin: Object.freeze({ key: 'admin', label: 'Admin test counter', maxRequests: 3, windowMs: 5 * MINUTE_MS, enforced: false }),
 });
 
 function truthy(value) {

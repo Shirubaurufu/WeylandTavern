@@ -211,3 +211,20 @@ export async function sendMessage({ sendRequest, profileId, messages, model = ''
     }
     return sendRequest(profileId, limitPhoneRequestMessages(withGeminiBypass(messages, model)));
 }
+
+// Retry from the original messages so each model gets its own prompt policy.
+export async function sendMessageWithFallback({ sendRequest, profileId, messages, model = '', fallbackModel = '' }) {
+    const request = requestModel => sendMessage({
+        sendRequest: (id, requestMessages) => sendRequest(id, requestMessages, requestModel),
+        profileId,
+        messages,
+        model: requestModel,
+    });
+    try {
+        return await request(model);
+    } catch (error) {
+        const fallback = String(fallbackModel ?? '').trim();
+        if (!profileId || error.name === 'AbortError' || !fallback || fallback === model) throw error;
+        return request(fallback);
+    }
+}

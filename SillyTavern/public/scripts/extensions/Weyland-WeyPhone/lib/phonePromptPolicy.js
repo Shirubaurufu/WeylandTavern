@@ -67,8 +67,8 @@ export function applyPhoneCourseCorrection(content, correction = '') {
  */
 /**
  * Prepends WEYPHONE_GEMINI_BYPASS to every WeyPhone-owned request, always (not gated on the
- * PromptOS toggle, which governs the main roleplay). WeyPhone defaults to gemini-3.8-flash, a
- * thinking model; the bypass keeps its reasoning to a couple of brief sections and tells it there
+ * PromptOS toggle, which governs the main roleplay). For thinking models, the bypass keeps
+ * reasoning to a couple of brief sections and tells the model there
  * is no analysis step. It addresses Gemini/Google/MiMo by name, so other models can ignore it.
  * Applied at the shared send helpers (sendMessage / sendMemoryRequest) so no app can miss it.
  * Idempotent, and never mutates the caller's array.
