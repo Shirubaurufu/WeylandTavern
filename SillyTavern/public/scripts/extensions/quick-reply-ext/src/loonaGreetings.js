@@ -62,8 +62,107 @@ export function stripDrunkThoughtsFromRequest(messages) {
     return changed;
 }
 
+// ---- Switching start scenarios mid-chat (PromptOS, 2026-11-15) ----
+//
+// Both starts boil down to two chat variables, so switching one chat between them is just rewriting those:
+//   behind the door: ConstantScenario = the post-breakup context from scenarios.js, DrunkCoach empty
+//   drunk:           ConstantScenario = strings.redD (turned him down) or strings.redH (almost hooked up),
+//                    DrunkCoach = strings.redT for turbo drunk, empty for kinda drunk
+// Nothing else differs (both records set StartingYear Junior; Scenario / CharKeys / ConstantContext /
+// IntroPostHistory are unused by Loona). The drunk thoughts section rides inside redD / redH, and the
+// thoughts-off cut keys on its markers, not on the greeting, so it follows the switch with no extra work.
+// The costume follows the posted greeting's own outfit code ([O1] on the drunk one), like any other reply.
+//
+// Lucky (2026-11-15): switching TO a start must run that start like a fresh chat would (the drunk choice popup,
+// then the start's greeting posted as a new message), followed by a one-time time skip note. So the picker only
+// offers the three starts; the four drunk versions are chosen in the same popup the greeting setup uses
+// (LOONA_DRUNK_CHOICES, shared with Scenarios() so the two can't drift apart).
+export const LOONA_DOOR_MARKER = 'POST-BREAKUP DEPRESSION';
+
+export const LOONA_START_OPTIONS = [
+    { id: 'door', label: 'Behind the door', description: 'December, two weeks after the breakup. She won\'t come out of her room.' },
+    { id: 'drunk', label: 'Drunk night', description: 'March. She stumbles home from a party. You pick how drunk and how the night went.' },
+    { id: 'off', label: 'Off', description: 'No starting context at all.' },
+];
+
+/** The drunk setup popup's buttons, in the order it shows them (Scenarios() and the PromptOS switch both use this). */
+export const LOONA_DRUNK_CHOICES = ['Dismissed Him - Kinda Drunk', 'Nearly Hooked Up - Kinda Drunk', 'Dismissed Him - Turbo Drunk', 'Nearly Hooked Up - Turbo Drunk'];
+// What a fresh chat falls back to when the popup is closed without a pick (unchanged from the original setup).
+export const LOONA_DRUNK_DEFAULT_CHOICE = 'Dismissed Him - Turbo Drunk';
+
+/** 'turbo-dismissed' etc. for one of the popup's button labels. */
+export function loonaDrunkIdFromChoice(choice) {
+    const label = String(choice ?? '');
+    return `${label.includes('Turbo') ? 'turbo' : 'kinda'}-${label.includes('Dismissed') ? 'dismissed' : 'hooked'}`;
+}
+
+/** Plain words for a drunk version, shown under the picker's Drunk button. */
+export const LOONA_DRUNK_LABELS = {
+    'kinda-dismissed': 'Kinda drunk, turned him down',
+    'kinda-hooked': 'Kinda drunk, almost hooked up',
+    'turbo-dismissed': 'Turbo drunk, turned him down',
+    'turbo-hooked': 'Turbo drunk, almost hooked up',
+};
+
+/** The picker's three-way view of a start: 'door', 'drunk', 'off' or 'unknown'. */
+export function loonaStartGroup(startId) {
+    if (startId === 'door' || startId === 'off' || startId === 'unknown') return startId;
+    return startId === 'drunk' || startId in LOONA_DRUNK_LABELS ? 'drunk' : 'unknown';
+}
+
+/**
+ * Which start a chat is on, read back from its variables (so it is right even when the choice was made in the
+ * original setup popup). Texts saved by an older version still count: the door context by its header, the drunk
+ * ones by their thoughts section. A drunk text that matches neither current version can't say whether he was
+ * turned down, so it reads as plain 'drunk' (no version); text that is neither reads as 'unknown', and then no
+ * button lights up rather than a wrong one.
+ * @param {{constantScenario?: string, drunkCoach?: string}} vars
+ * @param {{redD: string, redH: string, redT: string}} texts
+ * @returns {string} 'door', 'off', a drunk version id ('turbo-hooked'...), 'drunk' or 'unknown'
+ */
+export function loonaStartOf({ constantScenario, drunkCoach } = {}, texts) {
+    const scenario = String(constantScenario ?? '');
+    if (!scenario.trim()) return 'off';
+    if (scenario.includes(LOONA_DOOR_MARKER)) return 'door';
+    const turbo = String(drunkCoach ?? '').trim() !== '' ? 'turbo' : 'kinda';
+    if (scenario === String(texts.redH)) return `${turbo}-hooked`;
+    if (scenario === String(texts.redD)) return `${turbo}-dismissed`;
+    if (scenario.includes(DRUNK_THOUGHTS_START)) return 'drunk';
+    return 'unknown';
+}
+
+/**
+ * The two variables a start sets: 'door', 'off' or a drunk version id. `doorContext` is the behind-the-door
+ * record's ConstantScenario.
+ * @returns {{ConstantScenario: string, DrunkCoach: string}}
+ */
+export function loonaStartValues(id, { doorContext, redD, redH, redT }) {
+    if (!['door', 'off', ...Object.keys(LOONA_DRUNK_LABELS)].includes(id)) throw new Error(`Unknown Loona start "${id}".`);
+    if (id === 'off') return { ConstantScenario: '', DrunkCoach: '' };
+    if (id === 'door') {
+        if (!String(doorContext ?? '').trim()) throw new Error('The behind-the-door context is missing.');
+        return { ConstantScenario: String(doorContext), DrunkCoach: '' };
+    }
+    const [level, outcome] = id.split('-');
+    return { ConstantScenario: String(outcome === 'hooked' ? redH : redD), DrunkCoach: level === 'turbo' ? String(redT) : '' };
+}
+
+/**
+ * The card greeting to post when switching to a start: the drunk one is told apart by [O1], behind the door is the
+ * other real greeting (not drunk, not the custom start). By content, never position (see the top of this file).
+ * @param {'door'|'drunk'} kind
+ * @param {string[]} cardGreetings first_mes followed by alternate_greetings
+ * @returns {string|undefined}
+ */
+export function loonaGreetingText(kind, cardGreetings) {
+    const list = (Array.isArray(cardGreetings) ? cardGreetings : []).filter(text => String(text ?? '').trim());
+    if (kind === 'drunk') return list.find(isLoonaDrunkStart);
+    if (kind === 'door') return list.find(text => !isLoonaDrunkStart(text) && !isCustomStart(text));
+    return undefined;
+}
+
 /** The "write me a custom scenario" greeting has no start context of its own. */
-function isCustomStart(greetingText) {
+export function isCustomStart(greetingText) {
     return /\[CS\]|Following your character information and personality as a basis/.test(String(greetingText ?? ''));
 }
 

@@ -27,6 +27,13 @@ export const KRESSA_POST_CHATLOG_ORIENTATION = `[KRESSA ORIENTATION]
 Do not continue the roleplay above, write dialogue for anyone in it, or treat its most recent line as a prompt to keep the scene going. Remain Kressa: a friend outside the roleplay who is aware of it and can discuss it, never a participant inside it.
 [END KRESSA ORIENTATION]`;
 
+// Group text threads in Observe (2026-11-15). The [TETHERED VIEW] framing talks to one "you", so this tells the
+// model that every participant in the thread can see the roleplay, and keeps them reacting in their own voices
+// instead of continuing the scene. Without it a model can decide only one of them was "shown" the story.
+export const GROUP_OBSERVER_ORIENTATION = `[GROUP THREAD ORIENTATION]
+Everyone in this group text thread can see the roleplay above and knows what is happening in it. When {{user}} brings it up, each participant reacts the way their own personality would, and they can talk about it with each other too. None of them are characters in that story: do not continue it or write dialogue for anyone in it.
+[END GROUP THREAD ORIENTATION]`;
+
 /**
  * @param {{characterId: number|undefined, groupId: string|undefined}} options
  * @returns {boolean}

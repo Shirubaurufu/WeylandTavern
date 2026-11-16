@@ -259,7 +259,8 @@ test("Belle's intro-only post-history reminder follows the PromptOS context togg
     const promptSource = readFileSync(fileURLToPath(new URL('../../quick-reply-ext/index.js', import.meta.url)), 'utf8');
     assert.match(introSource, /CONTEXT_VARS = \[[^\]]*"IntroPostHistory"/);
     assert.match(introSource, /\["Scenario", "ConstantScenario", "ConstantContext", "IntroPostHistory"\]/);
-    assert.match(promptSource, /getLocalVariable\("IntroPostHistory"\)[\s\S]*resolvedPost = `\$\{resolvedPost\.trimEnd\(\)\}\\n\\n\$\{introPostHistory\}`/);
+    // finishPost appends it to both the normal post-history and the Gemini Bypass no-analysis copy.
+    assert.match(promptSource, /getLocalVariable\("IntroPostHistory"\)[\s\S]*`\$\{resolved\.trimEnd\(\)\}\\n\\n\$\{introPostHistory\}`[\s\S]*setLocalVariable\("postrav", resolvedPost\)/);
 });
 
 test('Mental Health Directives are individual choices with the updated explanation', () => {
