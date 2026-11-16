@@ -589,7 +589,12 @@ export class SlashCommandParser {
         // -> TOAST: *:}* {:
         // -> TOAST: *{:* :}
         const escapeOffset = this.jumpedEscapeSequence ? -1 : 0;
-        const escapes = this.text.slice(this.index + offset + escapeOffset).replace(/^(\\*).*$/s, '$1').length;
+        // Weyland: count the backslashes directly. The stock line ran `.replace(/^(\\*).*$/s, '$1')` over the WHOLE
+        // rest of the script on every symbol test, so parsing was quadratic: the 103 KB "School Year" quick reply froze
+        // the page 5.2 s on desktop (tens of seconds on phones) before its menu appeared. Same count, 56 ms.
+        const escapeStart = this.index + offset + escapeOffset;
+        let escapes = 0;
+        while (this.text[escapeStart + escapes] === '\\') escapes++;
         const test = (sequence instanceof RegExp) ?
             (text) => new RegExp(`^${sequence.source}`).test(text) :
             (text) => text.startsWith(sequence)

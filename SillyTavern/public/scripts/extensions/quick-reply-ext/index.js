@@ -25,7 +25,8 @@ import { scenarios, tails } from "./src/scenarios.js";
 import { charPer, specialChar } from "./src/charper.js";
 import { ravs } from "./src/promptRegistry.js";
 import { SHIFT_BODIES, SHIFT_FRAME, SHIFT_SCOPES } from "./src/roleplayShifts.js";
-import { describeIntroContext, INTRO_CONTEXT_STATE_VARS, introHadScenario, setIntroContextMode, setIntroVariant } from "./src/introContext.js";
+import { applyLoonaStart, askLoonaDrunkStart, describeIntroContext, INTRO_CONTEXT_STATE_VARS, introHadScenario, setIntroContextMode, setIntroVariant } from "./src/introContext.js";
+import { addTimeSkipNote, readTimeSkip, TIME_SKIP_VAR, timeSkipNote, timeSkipState } from "./src/introSwitch.js";
 import { activeDoseShift, applyDoseForGeneration, describeDose, endDose, startDose } from "./src/dose.js";
 import { detector } from "./src/similarity.js";
 import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
@@ -39,7 +40,7 @@ import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, get
 import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
 import { pickBackgroundForReply } from "./src/autoBackground.js";
 import { CHARACTER_THOUGHTS_VARIABLE, characterThoughtsEnabled, supportsCharacterThoughtsToggle } from "./src/characterThoughts.js";
-import { isLoonaDrunkStart, loonaGreetingRecord, stripDrunkThoughtsFromRequest } from "./src/loonaGreetings.js";
+import { isLoonaDrunkStart, LOONA_DRUNK_DEFAULT_CHOICE, loonaDrunkIdFromChoice, loonaGreetingRecord, stripDrunkThoughtsFromRequest } from "./src/loonaGreetings.js";
 
 const debug = true;
 
@@ -149,6 +150,21 @@ function OnRequestReady(data) {
         }
     } catch (error) {
         console.error(`[WQR] Loona thoughts cut Error:`, error);
+    }
+    // A PromptOS start switch (Loona / Belle): the reply right after the new greeting, and its rerolls, get a one-time
+    // time skip note so the model leaves the old timeline. Spent after that; see src/introSwitch.js. Skipped in OOC
+    // Mode (no roleplay reply is being written), but not cleared there, so it still applies once OOC is off.
+    try {
+        const raw = getLocalVariable(TIME_SKIP_VAR);
+        if (data && raw) {
+            const state = timeSkipState(raw, SillyTavern.getContext().chat?.length ?? 0);
+            if (state === 'spent') deleteLocalVariable(TIME_SKIP_VAR);
+            else if (state === 'active' && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+                if (addTimeSkipNote(data.messages, timeSkipNote(readTimeSkip(raw)?.name))) DebugLog(`Start switch: time skip note added`);
+            }
+        }
+    } catch (error) {
+        console.error(`[WQR] Time skip note Error:`, error);
     }
     // !Look and journal codes in Kinsbane Manor / Aiko chats: the command changes the prompt for this one message
     // (and its rerolls). See src/kinsbaneCommands.js. Skipped in OOC Mode, where the scene sheet isn't sent anyway.
@@ -1124,14 +1140,9 @@ async function Scenarios(userMessage) {
                 case "Loona": {
                     // The drunk greeting, wherever it sits on the card (see src/loonaGreetings.js).
                     if (isLoonaDrunkStart(greetingText)) {
-                        const result = await doButtons({labels: `["Dismissed Him - Kinda Drunk","Nearly Hooked Up - Kinda Drunk","Dismissed Him - Turbo Drunk","Nearly Hooked Up - Turbo Drunk"]`}, strings.redC);
-                        const choice = result ? result : "Dismissed Him - Turbo Drunk";
-                        const dismissed = choice.includes("Dismissed");
-                        const turbo = choice.includes("Turbo");
-                        if (turbo) {
-                            setLocalVariable("DrunkCoach", strings.redT);
-                        }
-                        setLocalVariable("ConstantScenario", dismissed ? strings.redD : strings.redH);
+                        // The same popup and variables PromptOS's mid-chat switch uses (src/introContext.js), so the
+                        // two can't drift apart. Closing it without a pick still means turbo drunk, turned him down.
+                        applyLoonaStart((await askLoonaDrunkStart()) ?? loonaDrunkIdFromChoice(LOONA_DRUNK_DEFAULT_CHOICE));
                     }
                     break;
                 }

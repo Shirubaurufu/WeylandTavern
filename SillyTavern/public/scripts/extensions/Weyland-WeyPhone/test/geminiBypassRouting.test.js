@@ -52,7 +52,7 @@ test('stripGeminiBypassFromMessages finds it inside squashed and multipart conte
 test('quick-reply-ext applies the bypass per model at CHAT_COMPLETION_SETTINGS_READY', () => {
     const source = fs.readFileSync(new URL('../../quick-reply-ext/index.js', import.meta.url), 'utf8');
     assert.match(source, /eventSource\.on\(event_types\.CHAT_COMPLETION_SETTINGS_READY, OnRequestReady\)/);
-    const handler = source.slice(source.indexOf('function OnRequestReady'), source.indexOf('function OnRequestReady') + 600);
+    const handler = source.slice(source.indexOf('function OnRequestReady'), source.indexOf('function OnRequestReady') + 1200);
     assert.match(handler, /applyGeminiBypassForModel\(data\.messages, data\.model\)/);
 });
 
@@ -121,10 +121,10 @@ test('WeyPhone send helpers pass the request model through to the bypass check',
 
 test('every WeyPhone sendMessage call site tells the helper its model', () => {
     const source = fs.readFileSync(new URL('../index.js', import.meta.url), 'utf8');
-    const calls = source.split('sendMessage({').slice(1);
+    const calls = source.split(/sendMessage(?:WithFallback)?\(\{/).slice(1);
     assert.ok(calls.length >= 5);
     for (const call of calls) {
         // The call's own closing "});" comes after a "model," / "model: x," line.
-        assert.match(call.slice(0, 900), /\n\s+model(: \w+)?,\r?\n\s+\}\);/, `call site missing model: ${call.slice(0, 120)}`);
+        assert.match(call.split(/\r?\n\s+\}\);/)[0], /\n\s+model(: \w+)?,/, `call site missing model: ${call.slice(0, 120)}`);
     }
 });
