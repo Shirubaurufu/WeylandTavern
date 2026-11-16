@@ -52,7 +52,7 @@ export function buildTextingSystemPrompt({ discussionInstructions, relationshipC
 }
 
 export function buildGroupSystemPrompt({ participants, worldInfo = '', worldInfoBefore = '',
-    personaContext = '', memoryBlock = '', textingInstructions = '', relationshipContext = '', finalInstructions = '' }) {
+    personaContext = '', memoryBlock = '', tetheredBlock = '', textingInstructions = '', relationshipContext = '', finalInstructions = '' }) {
     const profiles = participants.map(participant => `## ${participant.name}\n${participant.personalityText}`).join('\n\n');
     const names = participants.map(participant => participant.name).join(', ');
     return buildTextingSystemPrompt({
@@ -61,7 +61,8 @@ export function buildGroupSystemPrompt({ participants, worldInfo = '', worldInfo
             'Every reply line must be exactly: Incoming¦time¦speaker name¦message\n' +
             "Never write {{user}}'s messages and never merge speakers.",
         relationshipContext, textingInstructions, personaContext, worldInfoBefore,
-        personalityText: profiles, worldInfoAfter: worldInfo, memoryBlock, finalInstructions,
+        // tetheredBlock = the Observe [TETHERED VIEW]; same slot and order as a one-on-one thread.
+        personalityText: profiles, worldInfoAfter: worldInfo, memoryBlock, tetheredBlock, finalInstructions,
     });
 }
 

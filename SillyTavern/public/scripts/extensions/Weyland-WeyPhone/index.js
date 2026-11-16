@@ -20,7 +20,7 @@ import { FIRST_CONTACT_BLOCK } from './lib/firstContact.js';
 import { isKnownByDefault } from './lib/knownContacts.js';
 import { buildMemoryGenerationMessages, joinMemoriesForInjection, sendMemoryRequest } from './lib/memoryGeneration.js';
 import { createSettledTrigger } from './lib/settledTrigger.js';
-import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText, KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS, KRESSA_POST_CHATLOG_ORIENTATION, KRESSA_PHONE_USER_INSTRUCTIONS } from './lib/tetheredContext.js';
+import { isMainRoleplayActive, resolveMainActiveLtmEntries, resolveMainHistorySlice, formatMainHistoryTranscript, buildTetheredViewBlock, convertMainChatToMessages, buildScanHistoryWithExtraText, KRESSA_ROLEPLAY_COMPANION_INSTRUCTIONS, KRESSA_POST_CHATLOG_ORIENTATION, KRESSA_PHONE_USER_INSTRUCTIONS, GROUP_OBSERVER_ORIENTATION } from './lib/tetheredContext.js';
 import { getPhoneAppContent, setPhoneAppContent } from './lib/phoneApps.js';
 import { toggleLike } from './lib/twitterLikes.js';
 import { parseTwitterPosts } from './lib/twitterParsing.js';
@@ -839,7 +839,7 @@ async function resolveWorldInfo(context, history, additionalBookNames = [], char
 // resolveMainActiveLtmEntries's own "no book bound yet" behavior — this function must never throw,
 // since generateReply has no separate error path for "tethered assembly failed" vs "the whole
 // reply failed."
-async function buildTetheredContext(context, conversation, { kressaObserver = false } = {}) {
+async function buildTetheredContext(context, conversation, { kressaObserver = false, groupObserver = false } = {}) {
     if (getRoleplayMode(conversation) !== ROLEPLAY_MODES.OBSERVE) return '';
     if (!isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId })) return '';
 
@@ -876,7 +876,8 @@ async function buildTetheredContext(context, conversation, { kressaObserver = fa
         worldInfoText: worldInfo,
         ltmEntries,
         historyTranscript,
-        postTranscriptInstructions: kressaObserver ? KRESSA_POST_CHATLOG_ORIENTATION : undefined,
+        postTranscriptInstructions: kressaObserver ? KRESSA_POST_CHATLOG_ORIENTATION
+            : groupObserver ? GROUP_OBSERVER_ORIENTATION : undefined,
     });
 }
 
@@ -1583,13 +1584,23 @@ async function generateGroupReply(conversationId, conversation, context, setting
             userName: context.name1 || 'User',
             charName: profile.name,
         })).join('\n');
-        const worldInfo = await resolveWorldInfo(
-            context,
-            buildPhoneWorldInfoScanHistory(conversation.messages),
-            Object.values(conversation.participantBooks ?? {}).filter(name => name !== 'Weyland'),
-            participants,
-            groupProfileContext,
-        );
+        // Observe works in group threads the same way it does one-on-one (2026-11-15, Elven Badger: Jenn and Lucy
+        // could each observe Weybot alone but acted confused in a group thread, because this path never built the
+        // [TETHERED VIEW] at all). Same rule as generateReply: the main roleplay's lore REPLACES the phone thread's
+        // own scan, so the shared Weyland book isn't sent twice; with no roleplay open we keep the phone scan.
+        // The participants' subbot profiles above don't come from that scan, so they're unaffected.
+        const effectivelyTethered = getRoleplayMode(conversation) === ROLEPLAY_MODES.OBSERVE &&
+            isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId });
+        const worldInfo = effectivelyTethered
+            ? { worldInfoBefore: '', worldInfoAfter: '' }
+            : await resolveWorldInfo(
+                context,
+                buildPhoneWorldInfoScanHistory(conversation.messages),
+                Object.values(conversation.participantBooks ?? {}).filter(name => name !== 'Weyland'),
+                participants,
+                groupProfileContext,
+            );
+        const tetheredBlock = await buildTetheredContext(context, conversation, { groupObserver: true });
         const userName = context.name1 || 'User';
         const personaContext = buildPersonaContextBlock(userName, context.powerUserSettings?.persona_description);
         const systemPrompt = buildGroupSystemPrompt({
@@ -1597,6 +1608,7 @@ async function generateGroupReply(conversationId, conversation, context, setting
             worldInfoBefore: worldInfo.worldInfoBefore,
             worldInfo: worldInfo.worldInfoAfter,
             personaContext,
+            tetheredBlock,
             memoryBlock: joinMemoriesForInjection(getPinnedMemories(settings, conversationId)),
             textingInstructions: TEXTING_MODE_INSTRUCTIONS,
             relationshipContext: buildGroupContactContextBlock(participants, settings.contactContexts),

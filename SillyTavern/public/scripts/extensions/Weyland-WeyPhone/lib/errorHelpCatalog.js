@@ -470,7 +470,35 @@ export const ERROR_HELP_CARDS = [
             step('Wait a little and try again', "Give it a minute or two. If it keeps happening, check the Discord's announcements in case there's an outage."),
             step('Try another model', 'If another model works, use it for now and switch back later.'),
         ],
-        related: ['timeout', 'rate'],
+        related: ['timeout', 'rate', 'circuit-breaker'],
+    },
+    {
+        // "provider circuit breaker is open" (2026-11-15, Lucky). The model failed or hit its usage limits several
+        // times in a short window, so the provider benched it for a cooldown instead of letting everyone keep
+        // hammering it. It can arrive with a 503 or 429 in front, so specificMatch has to beat those cards.
+        // Group matters: weyland-error-notice.js only adds "tap for more info" to Replies / Connection / API key cards.
+        id: 'circuit-breaker', group: 'API key and account', title: 'Provider Circuit Breaker Is Open',
+        summary: 'The model is on a short cooldown. Wait a bit or switch models.',
+        aliases: ['circuit breaker', 'provider circuit breaker is open', 'circuit open', 'breaker open', 'cooldown', 'cooling down', 'model on cooldown'],
+        match: /circuit[\s_-]*breaker|breaker (?:is )?open/i,
+        specificMatch: /circuit[\s_-]*breaker/i,
+        example: 'provider circuit breaker is open',
+        explanation: [
+            "The model you're using ran into errors, or hit its usage limits, a bunch of times in a short stretch.",
+            "So the provider put it on a cooldown to let it warm back up. Think of it like a breaker in your house flipping off: it stops everyone from hammering a model that's already struggling.",
+            "It isn't your key, your chat or anything you wrote. Everyone using that model is getting the same thing right now.",
+        ],
+        route: { model: [3, 'cooling down'] },
+        steps: [
+            step('Give it a few minutes', [
+                "The cooldown ends on its own. Wait a little, then try again.",
+                "Rerolling over and over won't get you through any faster, so there's no need to sit there spamming it.",
+            ]),
+            step('Or switch to another model for now', "Open the API panel and pick something else. Only the model that tripped is on cooldown, so others should answer right away. You can switch back once it's had a breather."),
+            step("Check WeyPhone's model too", "Texting, Copycat and app sync can each use their own model. If the phone keeps getting this, swap its model in WeyPhone Settings as well."),
+        ],
+        note: "If the Router is on with other models in its pool, it'll usually skip the cooled-down one for you.",
+        related: ['server', 'rate', COMMUNITY_MODEL_LIMIT_ARTICLE],
     },
     {
         id: 'model', group: 'API key and account', title: 'Model Not Found / Unavailable',

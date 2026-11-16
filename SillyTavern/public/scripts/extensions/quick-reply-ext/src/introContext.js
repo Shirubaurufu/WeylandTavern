@@ -23,13 +23,24 @@ import { getLocalVariable } from "../../../variables.js";
 import { deleteLocalVariable, setLocalVariable } from "./variables.js";
 import { findLoreBookEntry, setEntryField } from "./lorebook.js";
 import { getFirstMessage } from "./chat.js";
-import { isLoonaDrunkStart } from "./loonaGreetings.js";
+import {
+    LOONA_DRUNK_CHOICES, LOONA_DRUNK_LABELS, LOONA_START_OPTIONS, loonaDrunkIdFromChoice, loonaGreetingRecord,
+    loonaGreetingText, loonaStartGroup, loonaStartOf, loonaStartValues,
+} from "./loonaGreetings.js";
+import { BELLE_INTROS, belleIntroId, matchIntroRecord, planIntroSwitch, TIME_SKIP_VAR } from "./introSwitch.js";
+import { scenarios } from "./scenarios.js";
 import { getCurrentCharacterName } from "./general.js";
+import { doButtons } from "./popups.js";
 import strings from "./strings.js";
 import { BAPHOMET_VAR, baphometHidden } from "./baphomet.js";
+import { sendMessageAs } from "../../../slash-commands.js";
+import { is_send_press } from "../../../../script.js";
 
 const STASH = "IntroCtxStash";
 const MODE = "IntroCtxMode";
+// Which start a mid-chat switch last put this chat on (an option id). Read first by the pickers, because a switched
+// chat's first message is still the ORIGINAL greeting.
+const SWITCHED_START = "IntroStart";
 // IntroPostHistory is greeting-owned just like the WI context. It is appended to postrav only
 // while present, so turning an intro Off also removes its final post-history reminder.
 const CONTEXT_VARS = ["Scenario", "CharKeys", "ConstantScenario", "ConstantContext", "ContextTimer", "IntroPostHistory"];
@@ -37,7 +48,7 @@ const CONTEXT_VARS = ["Scenario", "CharKeys", "ConstantScenario", "ConstantConte
 const ALWAYS_KEY = "/[\\s\\S]/";
 
 /** Variables to clear when Scenarios() sets up a fresh greeting, so a new intro starts on Auto. */
-export const INTRO_CONTEXT_STATE_VARS = [STASH, MODE];
+export const INTRO_CONTEXT_STATE_VARS = [STASH, MODE, SWITCHED_START, TIME_SKIP_VAR];
 
 // Characters that write ConstantScenario themselves at runtime: emptying it would fight their own
 // logic (Mirror re-runs Scenarios() whenever it's empty; Weybot rebuilds it every message).
@@ -86,43 +97,163 @@ export function introHadScenario() {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Mid-chat start switches (Loona, Belle; 2026-11-15). A switch plays the new start the way a fresh
+// chat would: its setup popup (Loona's drunk choices), its greeting record's variables, then its
+// greeting posted as a new message, and the next reply gets a one-time time skip note (added to the
+// outgoing request by OnRequestReady in index.js; see src/introSwitch.js for when it applies).
+// ---------------------------------------------------------------------------------------------
+
+/** The drunk setup popup, shared with Scenarios() so a fresh chat and a switch ask the same thing.
+ * @returns {Promise<string|null>} a drunk version id ('turbo-dismissed'...), or null when closed without a pick */
+export async function askLoonaDrunkStart() {
+    const result = await doButtons({ labels: JSON.stringify(LOONA_DRUNK_CHOICES) }, strings.redC);
+    return result ? loonaDrunkIdFromChoice(result) : null;
+}
+
+/** Writes Loona's two start variables (ConstantScenario + DrunkCoach) for 'door', 'off' or a drunk version id. */
+export function applyLoonaStart(id) {
+    const doorContext = scenarios.get("Loona")?.greetings?.find(record => record?.ConstantScenario)?.ConstantScenario;
+    const values = loonaStartValues(id, { doorContext, redD: strings.redD, redH: strings.redH, redT: strings.redT });
+    setOrClear("ConstantScenario", values.ConstantScenario);
+    setOrClear("DrunkCoach", values.DrunkCoach);
+}
+
+function cardGreetings() {
+    const context = SillyTavern.getContext();
+    const data = context.characters?.[context.characterId]?.data;
+    return [data?.first_mes, ...(data?.alternate_greetings ?? [])].map(text => String(text ?? ""));
+}
+
+/** A switch is refused while a reply is being written, and before the chat's own setup has run (that setup runs on
+ * the first player message and reads the FIRST greeting, so it would undo the switch; before then, swiping the
+ * greeting does the same job). */
+function assertCanSwitch() {
+    if (is_send_press) throw new Error("Wait for the current reply to finish, then switch.");
+    if (getLocalVariable("ScenarioSet") !== "true") {
+        throw new Error("This chat hasn't started yet. Swipe the first message to pick a different start, or send a message first.");
+    }
+}
+
+/**
+ * Puts the chat on one greeting record and posts that greeting. `afterRecord` runs once the record is applied, for
+ * values a start sets outside its record (Loona's drunk variables).
+ */
+async function switchToStart({ charName, startId, records, record, greetingText, afterRecord }) {
+    if (!String(greetingText ?? "").trim()) throw new Error("That start's greeting couldn't be found on the card.");
+    const context = SillyTavern.getContext();
+    const anchor = context.chat.length; // where the greeting is about to land
+    // A fresh start: the generic Auto/On/Off choice and its stash belong to the old start.
+    for (const name of [STASH, MODE]) deleteLocalVariable(name, true);
+    const plan = planIntroSwitch(records, record, anchor);
+    for (const name of plan.clear) deleteLocalVariable(name, true);
+    for (const [name, value] of Object.entries(plan.set)) setOrClear(name, value);
+    afterRecord?.();
+    setLocalVariable(SWITCHED_START, startId, true);
+    setLocalVariable(TIME_SKIP_VAR, JSON.stringify({ anchor, name: charName }));
+    // The shared "Scenario" entry fires on this chat's CharKeys, written into it on every chat open; do it now too.
+    await applyScenarioKeys(getLocalVariable("CharKeys"));
+    // SillyTavern's own /sendas: macros filled in, and the normal reply events run (outfit, expressions, backgrounds).
+    await sendMessageAs({ name: charName }, greetingText);
+}
+
+/** Loona's current start, read back from her variables (works for chats set up by the original popup). */
+function loonaCurrentStart() {
+    return loonaStartOf({
+        constantScenario: getLocalVariable("ConstantScenario"),
+        drunkCoach: getLocalVariable("DrunkCoach"),
+    }, { redD: strings.redD, redH: strings.redH, redT: strings.redT });
+}
+
+/** Belle's records, with the intro each one is (only the four real intros; the custom start has no record). */
+function belleIntroRecords() {
+    const records = scenarios.get("Belle")?.greetings ?? [];
+    return records.map((record, index) => ({ index, record, id: belleIntroId(record) })).filter(item => item.id);
+}
+
+function belleCurrentIntro() {
+    const switched = getLocalVariable(SWITCHED_START);
+    if (switched && BELLE_INTROS[switched]) return switched;
+    const records = scenarios.get("Belle")?.greetings ?? [];
+    const index = matchIntroRecord(records, originalValues());
+    if (index >= 0) return belleIntroId(records[index]) ?? "unknown";
+    // Older saved text: fall back to which greeting the chat opened with.
+    const first = String(getFirstMessage("char")?.mes ?? "").trim();
+    const context = SillyTavern.getContext();
+    const greetings = cardGreetings();
+    const hit = belleIntroRecords().find(item => context.substituteParams(greetings[item.index] ?? "").trim() === first);
+    return hit?.id ?? "unknown";
+}
+
+// ---------------------------------------------------------------------------------------------
 // Variant pickers: greetings whose setup popup offers choices that change prompt text. Each one
 // reads its current choice back from the variables it sets, so it stays right even if the user
 // picked through the original popup. To add a character: one entry here, nothing else.
 // ---------------------------------------------------------------------------------------------
 const VARIANT_GROUPS = [
     {
-        id: "loona-drunk",
-        label: "Drunk start",
-        // Loona's whole intro context IS this choice (ConstantScenario + DrunkCoach), so the group
-        // carries its own Off option and replaces the generic Auto/On/Off toggle.
+        // Was "Drunk start" (drunk chats only, silent variable swap). Since 2026-11-15 every Loona chat, the custom start
+        // included, can switch between behind-the-door and a drunk night: the switch runs the start like a fresh chat
+        // (drunk popup, greeting posted, one-time time skip). Clicking Drunk night while already drunk only re-asks the
+        // popup to change how drunk / how the night went: same night, so no new greeting and no skip. Her whole intro
+        // context IS this choice (ConstantScenario + DrunkCoach), so the group carries its own Off option and replaces
+        // the generic Auto/On/Off toggle. Greetings are recognised by what they are, not their position on the card.
+        id: "loona-start",
+        label: "Starting scenario",
         ownsContext: true,
-        // By what the greeting is, not its position on the card (see src/loonaGreetings.js).
-        applies: (charName, greetingSwipe, greetingText) => charName === "Loona" && isLoonaDrunkStart(greetingText),
-        options: [
-            { id: "kinda-dismissed", label: "Kinda drunk, turned him down" },
-            { id: "kinda-hooked", label: "Kinda drunk, almost hooked up" },
-            { id: "turbo-dismissed", label: "Turbo drunk, turned him down" },
-            { id: "turbo-hooked", label: "Turbo drunk, almost hooked up" },
-            { id: "off", label: "Off" },
-        ],
-        current() {
-            const scenario = String(getLocalVariable("ConstantScenario") ?? "");
-            if (!scenario) return "off";
-            const turbo = String(getLocalVariable("DrunkCoach") ?? "") === strings.redT;
-            const hooked = scenario === strings.redH;
-            return `${turbo ? "turbo" : "kinda"}-${hooked ? "hooked" : "dismissed"}`;
+        applies: (charName) => charName === "Loona",
+        options() {
+            const variant = LOONA_DRUNK_LABELS[loonaCurrentStart()];
+            return LOONA_START_OPTIONS.map(option => (option.id === "drunk" && variant
+                ? { ...option, description: `Now: ${variant}. Tap to change it.` }
+                : option));
         },
-        apply(id) {
-            // Same variables the original setup popup writes (Scenarios(), case "Loona").
-            if (id === "off") {
-                setOrClear("ConstantScenario", "");
-                setOrClear("DrunkCoach", "");
-                return;
+        current: () => loonaStartGroup(loonaCurrentStart()),
+        async apply(id) {
+            const now = loonaStartGroup(loonaCurrentStart());
+            if (id === "off") { applyLoonaStart("off"); return; }
+            if (id === now && id !== "drunk") return; // already there
+            assertCanSwitch();
+            // The drunk choices come first: closing the popup cancels the whole switch, nothing changed.
+            let drunkId = null;
+            if (id === "drunk") {
+                drunkId = await askLoonaDrunkStart();
+                if (!drunkId) return;
+                if (now === "drunk") { applyLoonaStart(drunkId); return; }
             }
-            const [level, outcome] = id.split("-");
-            setOrClear("ConstantScenario", outcome === "hooked" ? strings.redH : strings.redD);
-            setOrClear("DrunkCoach", level === "turbo" ? strings.redT : "");
+            const records = scenarios.get("Loona")?.greetings ?? [];
+            const greetingText = loonaGreetingText(id, cardGreetings());
+            await switchToStart({
+                charName: "Loona",
+                startId: id,
+                records,
+                record: loonaGreetingRecord(records, greetingText, 0) ?? {},
+                greetingText,
+                afterRecord: () => applyLoonaStart(drunkId ?? "door"),
+            });
+        },
+    },
+    {
+        // Belle's four intros (2026-11-15, Lucky: "make sure belle's can transition to her missing intro(s)", which
+        // covers "She's gone", the intro where Belle is missing, and any intro a chat couldn't reach before). Same
+        // switch as Loona's. Her generic Auto/On/Off toggle stays (ownsContext false); a switch starts it back on Auto.
+        id: "belle-start",
+        label: "Starting scenario",
+        ownsContext: false,
+        applies: (charName) => charName === "Belle",
+        options: () => belleIntroRecords().map(item => ({ id: item.id, ...BELLE_INTROS[item.id] })),
+        current: () => belleCurrentIntro(),
+        async apply(id) {
+            if (id === belleCurrentIntro()) return; // already there
+            assertCanSwitch();
+            const target = belleIntroRecords().find(item => item.id === id);
+            if (!target) throw new Error("That intro isn't available for Belle.");
+            await switchToStart({
+                charName: "Belle",
+                startId: id,
+                records: scenarios.get("Belle")?.greetings ?? [],
+                record: target.record,
+                greetingText: cardGreetings()[target.index],
+            });
         },
     },
     {
@@ -199,7 +330,7 @@ export function describeIntroContext() {
     const context = hasContext && !groups.some(group => group.ownsContext)
         ? { mode: /** @type {"auto"|"on"|"off"} */ (getLocalVariable(MODE) || "auto"), fades: Boolean(original.Scenario) }
         : null;
-    const variants = groups.map(group => ({ id: group.id, label: group.label, options: group.options, current: group.current() }));
+    const variants = groups.map(group => ({ id: group.id, label: group.label, options: groupOptions(group), current: group.current() }));
 
     if (!context && !variants.length) {
         return { available: false, reason: "This intro doesn't set any starting context to change.", context: null, variants: [] };
@@ -229,6 +360,12 @@ export async function setIntroContextMode(mode) {
 /** Switch a variant picker (Loona's drunk start, Willow's eyes) to one of its options. */
 export async function setIntroVariant(groupId, optionId) {
     const group = activeGroups(getCurrentCharacterName()).find(item => item.id === groupId);
-    if (!group || !group.options.some(option => option.id === optionId)) throw new Error("That intro option isn't available in this chat.");
-    group.apply(optionId);
+    if (!group || !groupOptions(group).some(option => option.id === optionId)) throw new Error("That intro option isn't available in this chat.");
+    // Awaited: a start switch shows a popup and posts a greeting before the caller rebuilds the prompt.
+    await group.apply(optionId);
+}
+
+/** A group's options: a fixed list, or a function for lists that depend on the chat (Belle's intros, Loona's "Now:"). */
+function groupOptions(group) {
+    return typeof group.options === "function" ? group.options() : group.options;
 }
