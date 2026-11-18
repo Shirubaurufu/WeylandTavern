@@ -26,7 +26,7 @@ import { charPer, specialChar } from "./src/charper.js";
 import { ravs } from "./src/promptRegistry.js";
 import { SHIFT_BODIES, SHIFT_FRAME, SHIFT_SCOPES } from "./src/roleplayShifts.js";
 import { applyLoonaStart, askLoonaDrunkStart, describeIntroContext, INTRO_CONTEXT_STATE_VARS, introHadScenario, setIntroContextMode, setIntroVariant } from "./src/introContext.js";
-import { addTimeSkipNote, readTimeSkip, TIME_SKIP_VAR, timeSkipNote, timeSkipState } from "./src/introSwitch.js";
+import { addTimeSkipNote, isCustomStartGreeting, readTimeSkip, TIME_SKIP_VAR, timeSkipNote, timeSkipState } from "./src/introSwitch.js";
 import { activeDoseShift, applyDoseForGeneration, describeDose, endDose, startDose } from "./src/dose.js";
 import { detector } from "./src/similarity.js";
 import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
@@ -327,8 +327,11 @@ async function OnUser(messageID) {
                 }
             }
 
-            // MuseFirst
-            if (characterName === "Muse" && getGlobalVariable("Muse1st") !== "true") {
+            // MuseFirst: the popup explains her scripted experiment (day codes, evening cutscenes), so it is skipped on
+            // her custom start, where the story is whatever the player asked for. Muse1st stays unset there, so the
+            // player still gets the explanation the first time they play the real experiment.
+            if (characterName === "Muse" && getGlobalVariable("Muse1st") !== "true"
+                && !isCustomStartGreeting(getFirstMessage("char")?.mes)) {
                 await doPopup({large: true, wide: true}, strings.musF);
                 setGlobalVariable("Muse1st", "true");
             }
@@ -1098,7 +1101,7 @@ async function Scenarios(userMessage) {
             return "Missing greeting"
         }
 
-        if (/Following your character information and personality as a basis/.test(greetingText)) {
+        if (isCustomStartGreeting(greetingText)) {
             inject({id: "ooc", ephemeral: "true", role: "user", depth: "0", position: "chat"}, strings.oocI);
         }
 
@@ -2400,7 +2403,11 @@ async function XXX(charName) {
         } else if (getLocalVariable("SpecialThoughts") && rav.thinkSpec) {
             // The greeting's own thoughts block (drunk Jenn and the like, see greetingThoughtSet); rav.thinkSpec is only the
             // "thoughts disabled" line, kept as the fallback for a greeting that has none.
-            setLocalVariable("ThoughtSet", greetingThoughtSet(scenarios.get(charName), getFirstMessage("char")?.swipe_id) || rav.thinkSpec);
+            // After a PromptOS start switch the chat's first message is still the OLD greeting, so the record the switch
+            // applied (chat variable IntroRecordIndex, src/introSwitch.js INTRO_RECORD_VAR) decides which block this is.
+            const switchedRecord = String(getLocalVariable("IntroRecordIndex") ?? "").trim();
+            const thoughtRecord = switchedRecord !== "" ? Number(switchedRecord) : getFirstMessage("char")?.swipe_id;
+            setLocalVariable("ThoughtSet", greetingThoughtSet(scenarios.get(charName), thoughtRecord) || rav.thinkSpec);
         } else {
             setLocalVariable("ThoughtSet", "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]");
         }

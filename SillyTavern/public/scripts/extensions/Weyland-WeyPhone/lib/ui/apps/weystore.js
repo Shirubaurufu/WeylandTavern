@@ -85,10 +85,14 @@ function lastSmokeLogoMarkup() {
     return `<span class="wp-ws-last-smoke-logo" role="img" aria-label="Last Smoke"><svg viewBox="-1 -1 ${columns * CW + 2} ${6 * CH + 2}" shape-rendering="crispEdges" aria-hidden="true"><defs><linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${6 * CH}">${stops}</linearGradient></defs>${parts.join('')}</svg></span>`;
 }
 
+function foxfireLogoMarkup() {
+    return '<img class="wp-ws-eff-logo" src="/scripts/extensions/Weyland-EllieFoxfireFortunes/app/assets/logo.webp" alt="Foxfire Fortunes" width="900" height="260">';
+}
+
 function posterWordmarkMarkup(app) {
-    return app.key === 'last-smoke-demo'
-        ? lastSmokeLogoMarkup()
-        : `<span class="wp-ws-wordmark">${escapeHtml(app.label)}</span>`;
+    if (app.key === 'last-smoke-demo') return lastSmokeLogoMarkup();
+    if (app.key === 'ellie-foxfire-fortunes') return foxfireLogoMarkup();
+    return `<span class="wp-ws-wordmark">${escapeHtml(app.label)}</span>`;
 }
 
 const COST_ICONS = {
@@ -101,12 +105,16 @@ const COST_ICONS = {
 /** The small facts under an app's name: what it costs, and what it needs before it will open.
  *  The cost is spelled out. The "needs" is a single glyph with a tooltip, because a row is narrow
  *  and two worded chips wrapped onto a second line; the app page says it in full. */
+// Which membership opens a locked app, escaped for markup. From the store model (lib/weystore.js
+// membershipName): Kressa says "Plus or Platinum", a Platinum-only app (Foxfire Fortunes) says "Platinum".
+const memberOf = app => escapeHtml(app.membership || 'Paw Patrol Plus or Platinum');
+
 function chipsMarkup(app) {
     const cost = app.listing.cost ?? { kind: 'unknown', label: '' };
     const chips = [];
     if (cost.label) chips.push(`<span class="wp-ws-chip wp-ws-chip-${escapeHtml(cost.kind)}"><i class="${COST_ICONS[cost.kind] ?? COST_ICONS.unknown}" aria-hidden="true"></i>${escapeHtml(cost.label)}</span>`);
     if (app.key === 'last-smoke-demo') chips.push('<span class="wp-ws-chip wp-ws-chip-demo">(DEMO)</span>');
-    if (app.needsMembership) chips.push('<span class="wp-ws-chip wp-ws-chip-member" title="Opens with Paw Patrol Plus or Platinum"><i class="fa-solid fa-crown" aria-hidden="true"></i><span class="wp-ws-sr">Opens with Paw Patrol Plus or Platinum</span></span>');
+    if (app.needsMembership) chips.push(`<span class="wp-ws-chip wp-ws-chip-member" title="Opens with ${memberOf(app)}"><i class="fa-solid fa-crown" aria-hidden="true"></i><span class="wp-ws-sr">Opens with ${memberOf(app)}</span></span>`);
     else if (app.needsRoleplay) chips.push('<span class="wp-ws-chip wp-ws-chip-needs" title="Needs a roleplay chat open"><i class="fa-solid fa-book-open" aria-hidden="true"></i><span class="wp-ws-sr">Needs a roleplay chat open</span></span>');
     return chips.join('');
 }
@@ -120,7 +128,7 @@ function ctaMarkup(app, { busyKey, size = '' } = {}) {
         return `<button type="button" class="wp-ws-cta wp-ws-cta-busy${sizeClass}" disabled aria-label="Adding ${name}"><span>Adding</span></button>`;
     }
     if (!app.installed && app.locked) {
-        return `<button type="button" class="wp-ws-cta wp-ws-cta-membership${sizeClass}" disabled aria-label="${name} needs a Paw Patrol Plus or Platinum membership"><i class="fa-solid fa-crown" aria-hidden="true"></i><span>Members</span></button>`;
+        return `<button type="button" class="wp-ws-cta wp-ws-cta-membership${sizeClass}" disabled aria-label="${name} needs a ${memberOf(app)} membership"><i class="fa-solid fa-crown" aria-hidden="true"></i><span>Members</span></button>`;
     }
     if (!app.installed) {
         return `<button type="button" class="wp-ws-cta wp-ws-cta-get${sizeClass}" data-ws-action="get" data-key="${escapeHtml(app.key)}" aria-label="Get ${name}"><span>Get</span></button>`;
@@ -133,9 +141,16 @@ function heroMarkup(app, extra = '') {
     // An app with no banner (an extension that supplied none) gets one built from its accent and
     // its icon, so no page ever shows an empty box. A banner that fails to load falls back to the
     // same thing (see the error listener in renderWeyStoreScreen).
-    const art = hero
+    const still = hero
         ? `<img class="wp-ws-hero-art" src="${escapeHtml(hero)}" alt="" style="object-position:${escapeHtml(heroPosition ?? '50% 50%')}" />`
         : '';
+    // A catalog listing may give a looping video (Foxfire Fortunes: Ellie's idle loop). It sits over the still,
+    // which shows while it loads, if it fails (the video is then just removed, see the error guard), and for
+    // reduced motion (CSS hides the video). Muted and inline, so phones let it play on its own.
+    const video = app.listing.heroVideo
+        ? `<video class="wp-ws-hero-video" src="${escapeHtml(app.listing.heroVideo)}"${hero ? ` poster="${escapeHtml(hero)}"` : ''} autoplay muted loop playsinline disablepictureinpicture preload="auto" aria-hidden="true" style="object-position:${escapeHtml(app.listing.heroVideoPosition ?? '50% 50%')}"></video>`
+        : '';
+    const art = still + video;
     // Spans, not divs: the spotlight puts this banner inside a <button>.
     return `<span class="wp-ws-hero${hero ? '' : ' is-plain'}${heroTone === 'dark' ? ' is-dark' : ''}" style="--ws-accent:${escapeHtml(app.accent)}">
         ${art}
@@ -227,7 +242,7 @@ function miniAppMarkup(app, { draggable = false } = {}) {
         ${app.installed || !app.locked
             ? `<button type="button" class="wp-ws-mini-mark" data-ws-action="toggle" data-key="${escapeHtml(app.key)}" aria-pressed="${app.installed}"
                 aria-label="${app.installed ? `Remove ${label} from the phone` : `Add ${label} to the phone`}"><i class="fa-solid ${app.installed ? 'fa-minus' : 'fa-plus'}" aria-hidden="true"></i></button>`
-            : `<span class="wp-ws-mini-mark wp-ws-mini-mark-member" title="Needs a Paw Patrol Plus or Platinum membership"><i class="fa-solid fa-crown" aria-hidden="true"></i><span class="wp-sr-only">Needs a Paw Patrol Plus or Platinum membership</span></span>`}
+            : `<span class="wp-ws-mini-mark wp-ws-mini-mark-member" title="Needs a ${memberOf(app)} membership"><i class="fa-solid fa-crown" aria-hidden="true"></i><span class="wp-sr-only">Needs a ${memberOf(app)} membership</span></span>`}
         <span class="wp-ws-mini-label">${label}</span>
     </span>`;
 }
@@ -323,7 +338,7 @@ function factMarkup(icon, label, value) {
 function detailMarkup(app, model, view) {
     const { listing } = app;
     const cost = listing.cost ?? { kind: 'unknown', label: '' };
-    const needs = app.needsMembership ? 'Paw Patrol Plus or Platinum'
+    const needs = app.needsMembership ? (app.membership || 'Paw Patrol Plus or Platinum')
         : app.needsRoleplay ? 'A roleplay chat open'
         : 'Nothing. Opens any time';
     const holding = app.footprint || 'Nothing saved yet';
@@ -344,7 +359,9 @@ function detailMarkup(app, model, view) {
             <div class="wp-ws-id-text">
                 ${app.key === 'last-smoke-demo'
                     ? `<h2 class="wp-ws-detail-logo">${lastSmokeLogoMarkup()}</h2>`
-                    : `<h2 class="wp-ws-wordmark">${escapeHtml(app.label)}</h2>`}
+                    : app.key === 'ellie-foxfire-fortunes'
+                        ? `<h2 class="wp-ws-detail-logo">${foxfireLogoMarkup()}</h2>`
+                        : `<h2 class="wp-ws-wordmark">${escapeHtml(app.label)}</h2>`}
                 <p>${escapeHtml(listing.tagline)}</p>
             </div>
         </header>
@@ -354,10 +371,11 @@ function detailMarkup(app, model, view) {
             ${app.system ? '<span class="wp-ws-builtin-note"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i>Built in</span>' : ''}
         </div>
         ${app.locked ? `<p class="wp-ws-locked"><i class="fa-solid fa-lock" aria-hidden="true"></i>${app.installed
-            ? 'You can keep the tile on your phone, but it opens with a Paw Patrol Plus or Platinum membership.'
-            : 'Adding this one takes a Paw Patrol Plus or Platinum membership.'}</p>` : ''}
+            ? `You can keep the tile on your phone, but it opens with a ${memberOf(app)} membership.`
+            : `Adding this one takes a ${memberOf(app)} membership.`}</p>` : ''}
         ${String(listing.about ?? '').split(/\n{2,}/).map(paragraph => paragraph.trim()).filter(Boolean)
             .map(paragraph => `<p class="wp-ws-about">${escapeHtml(paragraph)}</p>`).join('')}
+        ${shotsMarkup(listing)}
         <div class="wp-ws-facts">
             ${factMarkup(COST_ICONS[cost.kind] ?? COST_ICONS.unknown, 'Costs', cost.label || 'Set by its extension')}
             ${factMarkup('fa-solid fa-key', 'Needs', needs)}
@@ -372,6 +390,70 @@ function detailMarkup(app, model, view) {
             <div class="wp-ws-pair-list">${pairs.map(pair => `<button type="button" class="wp-ws-pair" data-ws-action="detail" data-key="${escapeHtml(pair.key)}">${iconMarkup(pair)}<span>${escapeHtml(pair.label)}</span></button>`).join('')}</div>
         </section>` : ''}
     </article>`;
+}
+
+/**
+ * Screenshots from the app, a row of thumbnails in the middle of its page (catalog `shots`). Tapping one opens
+ * it full screen (openShotViewer). Not data-ws-action buttons: they never touch the store's state, so the
+ * store's own click handler (index.js) is left out of it.
+ */
+function shotsMarkup(listing) {
+    const shots = Array.isArray(listing.shots) ? listing.shots.filter(shot => shot?.src) : [];
+    if (!shots.length) return '';
+    return `<section class="wp-ws-shots" aria-label="Screenshots">
+        <span class="wp-ws-kicker">A look inside</span>
+        <div class="wp-ws-shot-row">${shots.map((shot, i) => `<button type="button" class="wp-ws-shot" data-ws-shot="${i}" aria-label="Open screenshot: ${escapeHtml(shot.alt ?? '')}">
+            <img src="${escapeHtml(shot.src)}" alt="${escapeHtml(shot.alt ?? '')}" loading="lazy" draggable="false" />
+        </button>`).join('')}</div>
+    </section>`;
+}
+
+/**
+ * One screenshot over the whole window. It is easy to get out of on purpose (Lucky, 2026-11-18): a tap
+ * anywhere closes it, so does the close button or Escape. The arrows step through the others (a tap on an
+ * arrow is the one tap that doesn't close it). Lives on <body>, so the phone panel's own sizing can't clip it.
+ */
+function openShotViewer(shots, start) {
+    document.querySelector('.wp-ws-viewer')?.remove();
+    let index = start;
+    const viewer = document.createElement('div');
+    viewer.className = 'wp-ws-viewer';
+    viewer.setAttribute('role', 'dialog');
+    viewer.setAttribute('aria-modal', 'true');
+    viewer.setAttribute('aria-label', 'Screenshot');
+    const many = shots.length > 1;
+    viewer.innerHTML = `<img class="wp-ws-viewer-img" alt="" draggable="false" />
+        <button type="button" class="wp-ws-viewer-close" aria-label="Close"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        ${many ? `<button type="button" class="wp-ws-viewer-step is-prev" aria-label="Previous screenshot"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+        <button type="button" class="wp-ws-viewer-step is-next" aria-label="Next screenshot"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+        <span class="wp-ws-viewer-count"></span>` : ''}`;
+    const img = viewer.querySelector('.wp-ws-viewer-img');
+    const show = () => {
+        img.src = shots[index].src;
+        img.alt = shots[index].alt ?? '';
+        const count = viewer.querySelector('.wp-ws-viewer-count');
+        if (count) count.textContent = `${index + 1} / ${shots.length}`;
+    };
+    const close = () => {
+        viewer.remove();
+        document.removeEventListener('keydown', onKey, true);
+    };
+    const step = by => { index = (index + by + shots.length) % shots.length; show(); };
+    function onKey(event) {
+        if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); }
+        else if (many && event.key === 'ArrowRight') step(1);
+        else if (many && event.key === 'ArrowLeft') step(-1);
+    }
+    viewer.addEventListener('click', event => {
+        event.stopPropagation();
+        const stepper = event.target.closest('.wp-ws-viewer-step');
+        if (stepper) step(stepper.classList.contains('is-prev') ? -1 : 1);
+        else close();
+    });
+    document.addEventListener('keydown', onKey, true);
+    show();
+    document.body.append(viewer);
+    viewer.querySelector('.wp-ws-viewer-close').focus({ preventScroll: true });
 }
 
 function snackMarkup(snack) {
@@ -421,9 +503,18 @@ export function renderWeyStoreScreen(container, model, view = {}) {
         container.dataset.wsHeroGuard = 'true';
         container.addEventListener('error', event => {
             const art = event.target;
+            // A banner video that won't play just goes; the still under it carries on.
+            if (art?.classList?.contains('wp-ws-hero-video')) { art.remove(); return; }
             if (!art?.classList?.contains('wp-ws-hero-art')) return;
             art.closest('.wp-ws-hero')?.classList.add('is-plain');
             art.remove();
         }, true);
+        // Screenshot thumbnails (shotsMarkup) open the viewer. Read from the page being shown, kept below.
+        container.addEventListener('click', event => {
+            const thumb = event.target.closest?.('[data-ws-shot]');
+            if (!thumb || !container.wsShots?.length) return;
+            openShotViewer(container.wsShots, Number(thumb.dataset.wsShot) || 0);
+        });
     }
+    container.wsShots = Array.isArray(detailApp?.listing?.shots) ? detailApp.listing.shots.filter(shot => shot?.src) : [];
 }

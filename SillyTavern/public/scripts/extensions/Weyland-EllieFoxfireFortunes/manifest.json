@@ -1,0 +1,12 @@
+{
+    "display_name": "Foxfire Fortunes",
+    "loading_order": 193,
+    "requires": [],
+    "optional": [],
+    "dependencies": ["Weyland-WeyPhone", "Weyland-MuseStoryMachine"],
+    "js": "index.js",
+    "author": "Weyland",
+    "version": "0.1.0",
+    "homePage": "",
+    "auto_update": false
+}

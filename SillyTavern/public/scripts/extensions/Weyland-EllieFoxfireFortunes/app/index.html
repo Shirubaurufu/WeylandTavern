@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Foxfire Fortunes</title>
+<!-- Fonts are bundled (assets/fonts, declared in parlor.css): no request leaves the player's install. -->
+<link rel="stylesheet" href="parlor.css">
+</head>
+<body>
+<div id="app" data-screen="dark" data-lit="0">
+
+  <header class="top">
+    <span class="sandbox-chip" title="No model is called. The cards write a stand-in fortune.">SANDBOX</span>
+    <h1 class="logo"><img src="assets/logo.webp" alt="Foxfire Fortunes" width="900" height="260"></h1>
+    <button class="top-btn" id="btnSound" aria-label="Sound" aria-pressed="true">
+      <svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="18" r="2.6" fill="currentColor"/><circle cx="17" cy="16" r="2.6" fill="currentColor"/></svg>
+    </button>
+    <button class="top-btn" id="btnSettings" aria-label="Settings" aria-controls="settingsPanel" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.3 1a7.5 7.5 0 0 0-2.6-1.5L14.2 2.6h-4.4l-.3 2.5A7.5 7.5 0 0 0 6.9 6.6l-2.3-1-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.3-1a7.5 7.5 0 0 0 2.6 1.5l.3 2.5h4.4l.3-2.5a7.5 7.5 0 0 0 2.6-1.5l2.3 1 2-3.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="top-btn" id="btnBranch" aria-label="The wishing branch">
+      <svg viewBox="0 0 24 24"><path d="M3 8c6-1 12 0 18 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 8v9l2-2 2 2V9M15 10v7l1.5-1.5L18 17v-6" fill="currentColor" opacity=".9"/></svg>
+    </button>
+  </header>
+
+  <!-- THE ROOM: one painted frame (1280x720 units). The camera moves over it. -->
+  <section id="stage">
+    <div id="scene">
+      <!-- Ellie is only ever the video now (Lucky, 2026-11-18: the old drawn sprites must never be seen). Under it
+           sits its own first frame (ellie-still.webp, cut from the video), so the room is never empty while the
+           video loads, with reduced motion, or if the video can't play. The old layered room (room-back, candle
+           passes, tail frames, mood sprites, blink, glass, glow) is gone; the dark room is the same picture dimmed
+           by a filter that lifts with each candle. -->
+      <div id="art" role="img" aria-label="Ellie, a kitsune in a fortune teller's shawl, leaning over a crystal ball">
+        <img class="ly" id="still" src="assets/ellie-still.webp" alt="" draggable="false">
+        <video class="ly" id="loop" src="assets/ellie-crystal-ball-loop.webm" poster="assets/ellie-still.webp" muted loop playsinline preload="auto" disablepictureinpicture aria-hidden="true"></video>
+      </div>
+      <div id="blush"></div>
+      <canvas id="fire" width="640" height="360"></canvas>
+      <div id="visions"></div>
+      <div id="emote" hidden></div>
+      <button id="hitBall" class="hit" aria-label="The crystal ball"></button>
+      <button id="hitEar" class="hit" aria-label="Ellie's ear"></button>
+      <button id="hitTail" class="hit" aria-label="Ellie's tail"></button>
+    </div>
+    <div class="vignette"></div>
+    <div id="flash"></div>
+    <div class="clock" id="clock">3:07 AM</div>
+    <div id="bubble" hidden><b>Ellie</b><span id="bubbleText"></span></div>
+    <div class="gaze-ring" id="gazeRing" hidden>
+      <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="track"/><circle cx="60" cy="60" r="54" class="fill" id="gazeFill"/></svg>
+    </div>
+  </section>
+
+  <!-- THE TABLE: everything the player touches lies on the velvet. -->
+  <section id="table">
+    <div class="fringe" aria-hidden="true"></div>
+
+    <!-- DARK: light three candles to begin -->
+    <div class="panel" data-panel="dark">
+      <p class="whisper">You step behind the red curtain at the Sakurai Cafe, late at night.</p>
+      <div class="candles" id="candles">
+        <button class="candle" aria-label="Light the first candle"><i class="flame"></i><i class="wax"></i></button>
+        <button class="candle tall" aria-label="Light the second candle"><i class="flame"></i><i class="wax"></i></button>
+        <button class="candle" aria-label="Light the third candle"><i class="flame"></i><i class="wax"></i></button>
+      </div>
+      <p class="hint" id="candleHint">Light the candles</p>
+    </div>
+
+    <!-- ASK: the question, who it is about, how long a road -->
+    <div class="panel" data-panel="ask">
+      <div class="who" id="who">
+        <span class="who-tag">A reading for</span>
+        <input id="inChar" value="Belle" maxlength="24" aria-label="Character" spellcheck="false">
+        <span class="who-amp">&amp;</span>
+        <input id="inUser" value="Lucky" maxlength="24" aria-label="You" spellcheck="false">
+      </div>
+      <label class="slip">
+        <span class="slip-label">Write down what your mind holds..</span>
+        <span class="slip-label slip-label-after">... or nothing at all.</span>
+        <textarea id="question" rows="3" maxlength="1560" placeholder="e.g. Dash and I are on the run from the police"></textarea>
+        <span class="slip-pen" aria-hidden="true"></span>
+      </label>
+      <!-- Kept slips: requests the player saved to use again. The list opens in its own box (#keptModal) so
+           the writing screen stays short; there they can be used, renamed or thrown away (Lucky, 2026-11-17). -->
+      <div class="kept-head" id="kept">
+        <button class="ghost small" id="btnKeptOpen">Kept slips</button>
+        <button class="ghost small" id="btnKeep">Keep this one</button>
+      </div>
+      <div class="sub">How many scenes?</div>
+      <div class="spreads" id="spreads" role="radiogroup">
+        <button role="radio" data-n="3" aria-checked="false"><span class="dots"><i></i><i></i><i></i></span><b>Three</b><small>a short tale</small></button>
+        <button role="radio" data-n="5" aria-checked="true" class="on"><span class="dots"><i></i><i></i><i></i><i></i><i></i></span><b>Five</b><small>a proper story</small></button>
+        <button role="radio" data-n="7" aria-checked="false"><span class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>Seven</b><small>a long road</small></button>
+      </div>
+      <button class="cta" id="btnShuffle">Pick the scenes</button>
+    </div>
+
+    <!-- DRAW: the spread, the fan, the omens -->
+    <div class="panel" data-panel="draw">
+      <!-- The menu is the main way in, like the Story Machine's: every tile says in plain words what
+           happens in that scene. The tarot card behind it is decoration, nobody has to know the deck. -->
+      <div class="sub" id="pickHead">Pick what happens</div>
+      <div class="slots" id="slots"></div>
+      <div class="menu-wrap">
+        <div class="menu" id="menu"></div>
+        <!-- Only about eight tiles fit at first and the rows end cleanly, so nothing told players there were
+             more (Lucky, 2026-11-17). The fade and this tag show there is more below; both go once scrolled. -->
+        <span class="menu-more" id="menuMore" aria-hidden="true">More below</span>
+      </div>
+      <div class="draw-row">
+        <button class="ghost" id="btnFate">Surprise me</button>
+        <button class="ghost" id="btnClear">Clear</button>
+        <button class="ghost" id="btnBack">Change your request</button>
+      </div>
+      <div class="sub">Set the mood</div>
+      <div class="omens">
+        <button class="omen" id="omMoon"><span class="moon"><i></i></span><b>Darkness</b><small id="valMoon"></small></button>
+        <button class="omen" id="omEmber"><span class="ember"><i></i></span><b>Spice</b><small id="valEmber"></small></button>
+        <button class="omen" id="omIncense"><span class="incense"><i></i><u></u></span><b>Pace</b><small id="valIncense"></small></button>
+        <!-- Connection: the red thread of fate between the two of them. One drawing per step, named by its id:
+             unset = slack and dashed, platonic = pale, casual = one loose loop (not tied), complicated = a tangle,
+             dating = a wave, partnered = a knot, breaking = frayed in the middle, broken = cut. parlor.css shows the
+             one matching data-c. -->
+        <button class="omen conn" id="omConn" data-c="unset"><span class="thread"><svg viewBox="0 6 34 22" aria-hidden="true">
+          <circle cx="5" cy="17" r="3.6" class="ring"/><circle cx="29" cy="17" r="3.6" class="ring"/>
+          <path class="t t-unset" d="M8.6 17Q17 27 25.4 17"/>
+          <path class="t t-platonic" d="M8.6 17Q17 21 25.4 17"/>
+          <path class="t t-casual" d="M8.6 17Q13 18 15.4 14.6A2.7 2.7 0 1 1 18.4 16.6Q21 18.4 25.4 17"/>
+          <path class="t t-complicated" d="M8.6 17Q12 13.5 14 18T18.5 13.8Q21.5 19.5 15.8 19.4Q12.6 15.6 19.4 15Q22 17 25.4 17"/>
+          <path class="t t-dating" d="M8.6 17Q12.5 25 17 17T25.4 17"/>
+          <g class="t t-partnered"><path d="M8.6 17H25.4"/><circle cx="17" cy="17" r="2.4"/></g>
+          <g class="t t-breaking"><path d="M8.6 17H13.4"/><path d="M20.6 17H25.4"/><path class="fray" d="M13.4 17L15.6 14.4M13.4 17L16.2 17.4M13.4 17L15.2 19.8M20.6 17L18.4 14.6M20.6 17L17.8 16.4M20.6 17L18.8 19.9M16.2 17.4L17.8 16.4"/></g>
+          <g class="t t-broken"><path d="M8.6 17Q12 18 13.5 24"/><path d="M25.4 17Q22 18 20.5 24"/></g>
+        </svg></span><b>Connection</b><small id="valConn">Unset</small></button>
+        <button class="omen" id="omCross" aria-pressed="false"><span class="cross"><i></i><i></i></span><b>Two endings</b><small id="valCross">Off</small></button>
+      </div>
+      <!-- Two switches for how the fortune is written. Both are remembered on this device.
+           "Plan it out first" makes the planner fill a short sheet before the plan (on by default).
+           "Writer can act for me" lets the plan decide what the player's character does (off by default). -->
+      <div class="switches">
+        <button class="switch" id="swSheet" aria-pressed="true"><i></i><span><b>Plan it out first</b><small>a longer wait, closer to what you asked</small></span></button>
+        <button class="switch" id="swActs" aria-pressed="false"><i></i><span><b>Writer can act for me</b><small>the story may decide what you do</small></span></button>
+      </div>
+      <button class="cta fire" id="btnGaze" disabled>Gaze into the foxfire</button>
+      <!-- Each gaze is one model request, so it costs a message from the player's allowance. -->
+      <p class="cost">Consumes one message</p>
+    </div>
+
+    <!-- GAZE -->
+    <div class="panel" data-panel="gaze">
+      <p class="whisper" id="gazeNote">She is reading. Try not to breathe on it.</p>
+      <button class="ghost" id="btnBreak">Break the gaze (cancel)</button>
+    </div>
+
+    <!-- UNFOLDING: the fortune the chat is following -->
+    <div class="panel" data-panel="unfold">
+      <div class="uf-head"><span class="uf-tag" id="ufTag">UNFOLDING</span><span class="uf-title" id="ufTitle"></span></div>
+      <div class="uf-cards" id="ufCards"></div>
+      <div class="uf-roads" id="ufRoads" hidden></div>
+      <div class="uf-chapter" id="ufChapter"></div>
+      <div class="uf-controls">
+        <button class="round" id="ufPrev" aria-label="Previous card">&#9664;</button>
+        <button class="round wide" id="ufToggle">Pause</button>
+        <button class="round" id="ufNext" aria-label="Next card">&#9654;</button>
+      </div>
+      <div class="draw-row">
+        <button class="ghost" id="ufRead">Read the whole fortune</button>
+        <button class="ghost" id="ufKeep">Keep for later</button>
+        <button class="ghost" id="ufNew">Ask again</button>
+        <button class="ghost danger" id="ufBurn">Burn it</button>
+      </div>
+    </div>
+
+    <!-- THE WISHING BRANCH: kept fortunes -->
+    <div class="panel" data-panel="branch">
+      <div class="uf-head"><span class="uf-title">The wishing branch</span><button class="ghost" id="branchBack">Back</button></div>
+      <div class="branch" id="branch"></div>
+      <p class="whisper" id="branchEmpty">Nothing tied here yet. Keep a fortune and it hangs on the branch.</p>
+    </div>
+
+    <!-- SETTINGS: the player's standing preferences. Saved by the api (WeyTav: extension settings, so they
+         follow the player to every device). Built as groups so more settings can be added below later. -->
+    <div class="panel" id="settingsPanel" data-panel="settings">
+      <div class="uf-head"><span class="uf-title">Settings</span><button class="ghost" id="settingsBack">Back</button></div>
+      <section class="set-group">
+        <h3 class="set-title">Keep out of my stories</h3>
+        <p class="set-note">Tap anything you never want in a fortune. It stays out even on the darkest settings, unless you ask for it in your own words on the slip.</p>
+        <div class="chips" id="blockChips"></div>
+        <div class="set-add">
+          <input id="blockInput" maxlength="80" placeholder="Add your own, e.g. spiders" aria-label="Something else to keep out" spellcheck="false">
+          <button class="ghost small" id="blockAdd">Add</button>
+        </div>
+        <div class="chips own" id="blockOwn"></div>
+      </section>
+      <button class="ghost settings-reset" id="settingsReset">Reset settings</button>
+    </div>
+  </section>
+
+  <!-- THE FORTUNE: an omikuji slip that unrolls over the table -->
+  <div id="reading" hidden>
+    <div class="scroll" id="scroll">
+      <div class="scroll-rod"></div>
+      <div class="paper" id="paper"></div>
+      <div class="burnline" id="burnline"></div>
+    </div>
+    <div class="seals">
+      <button class="seal red" id="slSeal"><i>封</i><span>Seal it in</span></button>
+      <button class="seal" id="slAgain"><i>再</i><span>Read again</span></button>
+      <button class="seal" id="slTie"><i>結</i><span>Tie it up</span></button>
+      <button class="seal blue" id="slBurn"><i>火</i><span id="slBurnText">Burn it</span></button>
+    </div>
+  </div>
+
+  <!-- One card, held up close -->
+  <div class="overlay" id="cardModal" hidden>
+    <div class="held">
+      <div class="held-card" id="heldCard"></div>
+      <div class="held-info">
+        <span class="held-pos" id="heldPos"></span>
+        <h3 id="heldName"></h3>
+        <p id="heldMeaning"></p>
+        <div class="held-btns">
+          <button class="ghost" id="heldTurn">Turn it around</button>
+          <button class="ghost" id="heldSwap">Take it out</button>
+          <button class="cta small" id="heldOk">Keep it</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- The kept slips, in their own box. Tap a slip to put it on the writing slip; the pen renames it. -->
+  <div class="overlay" id="keptModal" hidden>
+    <div class="modal-card kept-card">
+      <div class="kept-card-head"><span class="kept-title">Kept slips</span><button class="ghost small" id="keptClose">Done</button></div>
+      <div class="kept-list" id="keptList"></div>
+      <p class="kept-empty" id="keptEmpty">Nothing kept yet. Write something on the slip and tap Keep this one.</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal" hidden><div class="modal-card"><p id="modalText"></p><div class="modal-btns" id="modalBtns"></div></div></div>
+</div>
+<script src="cards.js"></script>
+<script src="parlor.js"></script>
+</body>
+</html>

@@ -184,6 +184,49 @@ export function renderNoticeDialog(container, { kicker = 'WeyPhone', title, body
     container.hidden = false;
 }
 
+/**
+ * A yes/no question in the phone's own dialog box (#wp-app-help), so it shows over PromptOS on the phone
+ * instead of SillyTavern's popup over the whole page behind it (Lucky, 2026-11-18: the "Move forward in the
+ * story?" check was popping up on the main screen). Resolves true for the OK button; false for Cancel, the X,
+ * or a tap on the backdrop. All three carry data-help-close, so the phone's own click handler (index.js)
+ * closes the box as for any notice. Each box gets an id, and a click only answers the box it belongs to: a
+ * box wiped by a screen redraw just never answers (nothing happens, the safe outcome), and its listener can't
+ * answer a later box by mistake.
+ */
+let confirmSeq = 0;
+// `body` is plain text (escaped); `bodyHtml` is markup the caller already made safe, like forwardConfirmText().
+export function renderConfirmDialog(container, { kicker = 'WeyPhone', title, body, bodyHtml, okLabel = 'OK', cancelLabel = 'Cancel' }) {
+    const id = `wp-confirm-${++confirmSeq}`;
+    container.innerHTML = `
+<div class="wp-app-help-backdrop" data-help-close data-confirm-for="${id}"></div>
+<section class="wp-app-help-card" role="alertdialog" aria-modal="true" aria-labelledby="wp-app-help-title" data-confirm-id="${id}">
+    <div class="wp-app-help-heading">
+        <div>
+            <div class="wp-app-help-kicker">${escapeHtml(kicker)}</div>
+            <div id="wp-app-help-title" class="wp-app-help-title">${escapeHtml(title)}</div>
+        </div>
+        <button type="button" class="wp-app-help-close" data-help-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    ${bodyHtml ?? noticeParagraph(body ?? '')}
+    <div class="wp-app-help-actions">
+        <button type="button" class="wp-btn-sm" data-help-close data-confirm="cancel">${escapeHtml(cancelLabel)}</button>
+        <button type="button" class="wp-btn-sm wp-app-help-ok" data-help-close data-confirm="ok">${escapeHtml(okLabel)}</button>
+    </div>
+</section>`;
+    container.hidden = false;
+    container.querySelector('[data-confirm="cancel"]')?.focus?.({ preventScroll: true });
+    return new Promise(resolve => {
+        const onClick = event => {
+            const target = event.target;
+            const mine = target?.closest?.(`[data-confirm-id="${id}"]`) || target?.closest?.(`[data-confirm-for="${id}"]`);
+            if (!mine || !target.closest('[data-help-close]')) return;
+            container.removeEventListener('click', onClick, true);
+            resolve(target.closest('[data-confirm]')?.dataset.confirm === 'ok');
+        };
+        container.addEventListener('click', onClick, true);
+    });
+}
+
 export function renderAppHelpDialog(container, { appKey, appLabel }) {
     const help = getAppHelp(appKey);
     if (!help) {

@@ -35,7 +35,7 @@ function infoDisclosure(text, label) {
 
 function choiceButtons(items, active, action, valueKey = 'id', disabled = false, rowClass = '') {
     return `<div class="wp-narrative-choice-grid${rowClass ? ` ${rowClass}` : ''}">${items.map(item => `
-        <button type="button" class="wp-narrative-choice${selectedClass(active === item[valueKey])}" data-narrative-action="${escapeHtml(action)}" data-value="${escapeHtml(item[valueKey])}" ${disabled ? 'disabled' : ''}>
+        <button type="button" class="wp-narrative-choice${selectedClass(active === item[valueKey])}" data-narrative-action="${escapeHtml(action)}" data-value="${escapeHtml(item[valueKey])}" ${disabled || item.disabled ? 'disabled' : ''}>
             <span class="wp-narrative-choice-dot" aria-hidden="true"></span>
             <strong>${escapeHtml(item.label ?? item.short)}</strong>
             <small>${escapeHtml(item.description)}</small>
@@ -402,6 +402,7 @@ function introContextCard(snapshot) {
         <div class="wp-narrative-intro-group">
             <strong class="wp-narrative-intro-group-label">${escapeHtml(group.label)}</strong>
             ${choiceButtons(group.options.map(option => ({ ...option, id: `${group.id}|${option.id}`, description: option.description ?? '' })), `${group.id}|${group.current}`, 'set-intro-variant')}
+            ${group.options.some(option => option.disabled) ? '<p class="wp-narrative-intro-locked-note">Greyed-out starts come earlier in the story than this chat, so they can’t be switched back to.</p>' : ''}
         </div>`).join('')}
     </section>`;
 }
