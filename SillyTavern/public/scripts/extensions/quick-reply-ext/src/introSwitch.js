@@ -53,8 +53,9 @@ export function planIntroSwitch(records, record, anchor) {
 export const BELLE_INTROS = {
     party: { label: "Rivera's party", description: "Rivera's house party. Belle is already buzzed." },
     hottub: { label: 'The hot tub', description: 'Same party, out on the back porch, in the hot tub.' },
-    doorway: { label: 'The doorway', description: 'Five weeks into a complicated relationship. Your dorm room, 2 AM.' },
-    gone: { label: "She's gone", description: 'Five weeks in, and Belle has gone missing. You have to find her.' },
+    // Same night, two points on it: Belle is missing, then Dash drags her home and she turns up at your door.
+    doorway: { label: 'Missing - came home', description: 'Five weeks in. Belle ran off that night and she is back at your door, 2 AM.' },
+    gone: { label: 'Missing', description: 'Five weeks in, and Belle has gone missing. You have to find her.' },
 };
 
 /** 'party' | 'hottub' | 'doorway' | 'gone' | null for one of Belle's greeting records. */
@@ -67,6 +68,38 @@ export function belleIntroId(record) {
     return null;
 }
 
+// ---- Blake's intros (2026-11-16, Lucky) ----
+//
+// Five records, one per card greeting by position, like Belle's (the sixth greeting is the custom [CS] start, which has
+// no record). Two of them need more than variables, and both are handled by the plan/clear rules above:
+//  - move-in carries EarlyStart (RosterSB reads it every run: "new to Weyland", Jenn unassigned). Leaving it clears
+//    EarlyStart; RosterSB never removes the NewSchool/NewPhone text it wrote, so the switch drops those itself.
+//  - the drunk night carries SpecialThoughts + its own ThoughtSet. XXX rewrites ThoughtSet every run from the record of
+//    the chat's FIRST message swipe, which is the wrong record after a switch, so the switch also stores the record
+//    index (IntroRecordIndex) and XXX reads that first.
+// StartingYear is never touched (see NOT_CLEARED), so a Freshman chat that jumps to the sophomore festival keeps its
+// freshman-based ages; the descriptions below say when an intro is set in a later year.
+export const BLAKE_INTROS = {
+    movein: { label: 'Move-in day', description: 'Your first day in the dorm. Blake already claimed a bed and is asleep in it.' },
+    drunk: { label: 'Drunk roommate', description: 'Three months in. Blake stumbles in, very drunk. Her thoughts are on.' },
+    movie: { label: 'Movie night', description: 'Six months in, a comfortable roommate routine. A text interrupts your movie.' },
+    festival: { label: 'Moonlight Festival', description: 'Sophomore year, six months into dating. Before the festival, on the couch.' },
+    hilltop: { label: 'Festival hilltop', description: 'Sophomore year, same night. On the hilltop as the rain starts.' },
+};
+
+/** 'movein' | 'drunk' | 'movie' | 'festival' | 'hilltop' | null for one of Blake's greeting records. */
+export function blakeIntroId(record) {
+    if (String(record?.EarlyStart ?? '') === 'true') return 'movein';
+    if (String(record?.SpecialThoughts ?? '') === 'true') return 'drunk';
+    const constant = String(record?.ConstantScenario ?? '');
+    if (/Moonlight Festival/i.test(constant)) return /hilltop/i.test(constant) ? 'hilltop' : 'festival';
+    if (constant.trim()) return 'movie';
+    return null;
+}
+
+/** Chat variable holding the index of the record a mid-chat switch applied (XXX reads it for the greeting's thoughts). */
+export const INTRO_RECORD_VAR = 'IntroRecordIndex';
+
 /**
  * Which record a chat is on, from the intro variables it holds (pass the PromptOS stash when there is one, since
  * the generic Off empties the live ones). -1 when nothing matches, e.g. text saved by an older build.
@@ -75,6 +108,17 @@ export function matchIntroRecord(records, values) {
     const list = Array.isArray(records) ? records : [];
     const same = (a, b) => String(a ?? '').trim() !== '' && String(a) === String(b ?? '');
     return list.findIndex(record => same(record?.ConstantScenario, values?.ConstantScenario) || same(record?.Scenario, values?.Scenario));
+}
+
+/**
+ * True for a card's custom start (the "[CS]" greeting): the model builds a brand new scenario from the player's
+ * first message, so none of the card's scripted story applies. Recognised by its OOC instruction, the same text
+ * Scenarios() in index.js has always keyed the custom-start injection on, so both agree on what a custom start is.
+ * Why it is shared: Muse's first-time popup explains her scripted 14-day experiment (day codes, skip to the evening
+ * cutscene), which is wrong for a custom start, so OnUser skips it there (2026-11-17, Lucky).
+ */
+export function isCustomStartGreeting(text) {
+    return /Following your character information and personality as a basis/.test(String(text ?? ''));
 }
 
 // ---- the one-time time skip note ----

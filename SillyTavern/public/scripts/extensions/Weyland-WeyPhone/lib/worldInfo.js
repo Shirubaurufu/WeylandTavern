@@ -115,6 +115,15 @@ export function findLorebookCharacterEntry(book, charName) {
             });
         });
         if (explicitSubbotMatches.length === 1) return explicitSubbotMatches[0];
+        // Lore can carry the summon command too: "Never Ender" (Belle's drug) is keyed !Belle so it
+        // fires when she is summoned, which tied with her real subbot and dropped "Belle Calloway"
+        // from the group-chat picker. The subbot is the one NAMED after the character, so a single
+        // explicit match whose comment is one of the name parts wins, the same tie-break the
+        // exact-match path above uses.
+        if (explicitSubbotMatches.length > 1) {
+            const named = explicitSubbotMatches.filter(entry => nameParts.includes(normalizeCharacterIdentity(entry.comment)));
+            if (named.length === 1) return named[0];
+        }
     }
     return partMatches.length === 1 ? partMatches[0] : null;
 }

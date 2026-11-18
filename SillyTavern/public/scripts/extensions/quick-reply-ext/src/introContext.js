@@ -27,7 +27,8 @@ import {
     LOONA_DRUNK_CHOICES, LOONA_DRUNK_LABELS, LOONA_START_OPTIONS, loonaDrunkIdFromChoice, loonaGreetingRecord,
     loonaGreetingText, loonaStartGroup, loonaStartOf, loonaStartValues,
 } from "./loonaGreetings.js";
-import { BELLE_INTROS, belleIntroId, matchIntroRecord, planIntroSwitch, TIME_SKIP_VAR } from "./introSwitch.js";
+import { INTRO_RECORD_VAR, matchIntroRecord, planIntroSwitch, TIME_SKIP_VAR } from "./introSwitch.js";
+import { INTRO_TIMELINES, LOCKED_NOTE, lockedStarts, timelineGroupId, timelineOptions } from "./introTimelines.js";
 import { scenarios } from "./scenarios.js";
 import { getCurrentCharacterName } from "./general.js";
 import { doButtons } from "./popups.js";
@@ -48,7 +49,7 @@ const CONTEXT_VARS = ["Scenario", "CharKeys", "ConstantScenario", "ConstantConte
 const ALWAYS_KEY = "/[\\s\\S]/";
 
 /** Variables to clear when Scenarios() sets up a fresh greeting, so a new intro starts on Auto. */
-export const INTRO_CONTEXT_STATE_VARS = [STASH, MODE, SWITCHED_START, TIME_SKIP_VAR];
+export const INTRO_CONTEXT_STATE_VARS = [STASH, MODE, SWITCHED_START, TIME_SKIP_VAR, INTRO_RECORD_VAR];
 
 // Characters that write ConstantScenario themselves at runtime: emptying it would fight their own
 // logic (Mirror re-runs Scenarios() whenever it's empty; Weybot rebuilds it every message).
@@ -149,6 +150,10 @@ async function switchToStart({ charName, startId, records, record, greetingText,
     for (const [name, value] of Object.entries(plan.set)) setOrClear(name, value);
     afterRecord?.();
     setLocalVariable(SWITCHED_START, startId, true);
+    // Which record this start came from, for XXX's thoughts block (the chat's first message is still the OLD greeting).
+    const recordIndex = (Array.isArray(records) ? records : []).indexOf(record);
+    if (recordIndex >= 0) setLocalVariable(INTRO_RECORD_VAR, String(recordIndex), true);
+    else deleteLocalVariable(INTRO_RECORD_VAR, true);
     setLocalVariable(TIME_SKIP_VAR, JSON.stringify({ anchor, name: charName }));
     // The shared "Scenario" entry fires on this chat's CharKeys, written into it on every chat open; do it now too.
     await applyScenarioKeys(getLocalVariable("CharKeys"));
@@ -164,24 +169,74 @@ function loonaCurrentStart() {
     }, { redD: strings.redD, redH: strings.redH, redT: strings.redT });
 }
 
-/** Belle's records, with the intro each one is (only the four real intros; the custom start has no record). */
-function belleIntroRecords() {
-    const records = scenarios.get("Belle")?.greetings ?? [];
-    return records.map((record, index) => ({ index, record, id: belleIntroId(record) })).filter(item => item.id);
+/** A timeline character's records, with the start each one is (a card's custom [CS] greeting has no record). */
+function timelineRecords(charName) {
+    const intros = INTRO_TIMELINES[charName]?.intros ?? [];
+    const records = scenarios.get(charName)?.greetings ?? [];
+    return records
+        .map((record, index) => ({ index, record, intro: intros.find(intro => intro.matches(record)) }))
+        .filter(item => item.intro);
 }
 
-function belleCurrentIntro() {
+/** Which start a chat is on: the last mid-chat switch, else the record its intro variables match, else the greeting it opened with. */
+function timelineCurrentStart(charName) {
     const switched = getLocalVariable(SWITCHED_START);
-    if (switched && BELLE_INTROS[switched]) return switched;
-    const records = scenarios.get("Belle")?.greetings ?? [];
+    const items = timelineRecords(charName);
+    if (switched && items.some(item => item.intro.id === switched)) return switched;
+    const records = scenarios.get(charName)?.greetings ?? [];
     const index = matchIntroRecord(records, originalValues());
-    if (index >= 0) return belleIntroId(records[index]) ?? "unknown";
-    // Older saved text: fall back to which greeting the chat opened with.
+    const byContent = index >= 0 ? items.find(item => item.index === index) : null;
+    if (byContent) return byContent.intro.id;
+    // Older saved text (or a Generic Off chat): fall back to which greeting the chat opened with.
     const first = String(getFirstMessage("char")?.mes ?? "").trim();
     const context = SillyTavern.getContext();
     const greetings = cardGreetings();
-    const hit = belleIntroRecords().find(item => context.substituteParams(greetings[item.index] ?? "").trim() === first);
-    return hit?.id ?? "unknown";
+    const byText = items.find(item => context.substituteParams(greetings[item.index] ?? "").trim() === first);
+    if (byText) return byText.intro.id;
+    const swipe = Number(getFirstMessage("char")?.swipe_id);
+    return items.find(item => item.index === swipe)?.intro.id ?? "unknown";
+}
+
+/**
+ * The "Starting scenario" group for one character (Belle, Blake and the School Year cast; the order and the labels are
+ * in src/introTimelines.js). A switch plays the new start the way a fresh chat would: its record is applied, its card
+ * greeting is posted as a new message (that is what puts the intro text into the chat), and the next reply gets the
+ * one-time time skip note. FORWARD ONLY: starts at or before the current tier are locked (Fox, 2026-11-16).
+ */
+function timelineGroup(charName) {
+    return {
+        id: timelineGroupId(charName),
+        label: "Starting scenario",
+        ownsContext: false,
+        forwardOnly: true,
+        applies: (name) => name === charName,
+        options: () => timelineOptions(timelineRecords(charName).map(item => item.intro), timelineCurrentStart(charName)),
+        current: () => timelineCurrentStart(charName),
+        async apply(id) {
+            const now = timelineCurrentStart(charName);
+            if (id === now) return; // already there
+            const items = timelineRecords(charName);
+            const target = items.find(item => item.intro.id === id);
+            if (!target) throw new Error(`That intro isn't available for ${charName}.`);
+            if (lockedStarts(items.map(item => item.intro), now).get(id)) throw new Error("That intro is earlier in the story than where this chat already is.");
+            assertCanSwitch();
+            const records = scenarios.get(charName)?.greetings ?? [];
+            await switchToStart({
+                charName,
+                startId: id,
+                records,
+                record: target.record,
+                greetingText: cardGreetings()[target.index],
+                afterRecord: () => {
+                    // RosterSB only writes these while EarlyStart is set and never removes them, so a chat leaving the move-in
+                    // start would keep telling the model {{user}} is new to Weyland. Moving in sets them again on its next run.
+                    if (records.some(record => record?.EarlyStart === "true") && target.record?.EarlyStart !== "true") {
+                        for (const name of ["NewSchool", "NewPhone"]) deleteLocalVariable(name, true);
+                    }
+                },
+            });
+        },
+    };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -200,18 +255,24 @@ const VARIANT_GROUPS = [
         id: "loona-start",
         label: "Starting scenario",
         ownsContext: true,
+        forwardOnly: true,
         applies: (charName) => charName === "Loona",
         options() {
             const variant = LOONA_DRUNK_LABELS[loonaCurrentStart()];
-            return LOONA_START_OPTIONS.map(option => (option.id === "drunk" && variant
-                ? { ...option, description: `Now: ${variant}. Tap to change it.` }
-                : option));
+            const pastDoor = loonaStartGroup(loonaCurrentStart()) === "drunk";
+            return LOONA_START_OPTIONS.map(option => {
+                if (option.id === "drunk" && variant) return { ...option, description: `Now: ${variant}. Tap to change it.` };
+                // Forward only: behind-the-door (December) is earlier than the drunk night (March).
+                if (option.id === "door" && pastDoor) return { ...option, description: `${option.description} ${LOCKED_NOTE}`, disabled: true };
+                return option;
+            });
         },
         current: () => loonaStartGroup(loonaCurrentStart()),
         async apply(id) {
             const now = loonaStartGroup(loonaCurrentStart());
             if (id === "off") { applyLoonaStart("off"); return; }
             if (id === now && id !== "drunk") return; // already there
+            if (id === "door" && now === "drunk") throw new Error("That intro is earlier in the story than where this chat already is.");
             assertCanSwitch();
             // The drunk choices come first: closing the popup cancels the whole switch, nothing changed.
             let drunkId = null;
@@ -232,30 +293,8 @@ const VARIANT_GROUPS = [
             });
         },
     },
-    {
-        // Belle's four intros (2026-11-15, Lucky: "make sure belle's can transition to her missing intro(s)", which
-        // covers "She's gone", the intro where Belle is missing, and any intro a chat couldn't reach before). Same
-        // switch as Loona's. Her generic Auto/On/Off toggle stays (ownsContext false); a switch starts it back on Auto.
-        id: "belle-start",
-        label: "Starting scenario",
-        ownsContext: false,
-        applies: (charName) => charName === "Belle",
-        options: () => belleIntroRecords().map(item => ({ id: item.id, ...BELLE_INTROS[item.id] })),
-        current: () => belleCurrentIntro(),
-        async apply(id) {
-            if (id === belleCurrentIntro()) return; // already there
-            assertCanSwitch();
-            const target = belleIntroRecords().find(item => item.id === id);
-            if (!target) throw new Error("That intro isn't available for Belle.");
-            await switchToStart({
-                charName: "Belle",
-                startId: id,
-                records: scenarios.get("Belle")?.greetings ?? [],
-                record: target.record,
-                greetingText: cardGreetings()[target.index],
-            });
-        },
-    },
+    // Belle (2026-11-15), Blake (2026-11-16) and the School Year cast: one generated group each, forward only.
+    ...Object.keys(INTRO_TIMELINES).map(timelineGroup),
     {
         id: "willow-eyes",
         label: "Eye expressions",
@@ -330,7 +369,7 @@ export function describeIntroContext() {
     const context = hasContext && !groups.some(group => group.ownsContext)
         ? { mode: /** @type {"auto"|"on"|"off"} */ (getLocalVariable(MODE) || "auto"), fades: Boolean(original.Scenario) }
         : null;
-    const variants = groups.map(group => ({ id: group.id, label: group.label, options: groupOptions(group), current: group.current() }));
+    const variants = groups.map(group => ({ id: group.id, label: group.label, options: groupOptions(group), current: group.current(), forwardOnly: Boolean(group.forwardOnly) }));
 
     if (!context && !variants.length) {
         return { available: false, reason: "This intro doesn't set any starting context to change.", context: null, variants: [] };
@@ -360,7 +399,9 @@ export async function setIntroContextMode(mode) {
 /** Switch a variant picker (Loona's drunk start, Willow's eyes) to one of its options. */
 export async function setIntroVariant(groupId, optionId) {
     const group = activeGroups(getCurrentCharacterName()).find(item => item.id === groupId);
-    if (!group || !groupOptions(group).some(option => option.id === optionId)) throw new Error("That intro option isn't available in this chat.");
+    const chosen = group ? groupOptions(group).find(option => option.id === optionId) : null;
+    if (!chosen) throw new Error("That intro option isn't available in this chat.");
+    if (chosen.disabled) throw new Error("That intro is earlier in the story than where this chat already is.");
     // Awaited: a start switch shows a popup and posts a greeting before the caller rebuilds the prompt.
     await group.apply(optionId);
 }

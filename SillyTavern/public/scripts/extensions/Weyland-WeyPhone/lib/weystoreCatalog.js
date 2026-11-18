@@ -28,7 +28,8 @@ const EXTENSIONS_ROOT_URL = EXTENSION_BASE_URL.slice(0, EXTENSION_BASE_URL.lastI
 export const STORE_SHELVES = Object.freeze([
     { id: 'games', title: 'Games and demos', blurb: 'Things to play between scenes.' },
     { id: 'feeds', title: 'The feed four', blurb: 'One Sync writes all four at once.', order: ['chronicle', 'feed', 'chat', 'board'] },
-    { id: 'story', title: 'Story tools', blurb: 'For the roleplay you have open.', order: ['narrative', 'understudy', 'pawxai', 'mien'] },
+    // Foxfire Fortunes leads the shelf (Lucky, 2026-11-18).
+    { id: 'story', title: 'Story tools', blurb: 'For the roleplay you have open.', order: ['ellie-foxfire-fortunes', 'narrative', 'understudy', 'pawxai', 'mien'] },
     { id: 'people', title: 'People', blurb: 'Who you can reach, and how.', order: ['kressa', 'messages', 'contacts'] },
     { id: 'campus', title: 'Around Weyland', blurb: 'The campus and the community.', order: ['housing', 'registrar', 'weybooru'] },
     { id: 'pocket', title: 'Pocket stuff', blurb: 'Small, quiet, and free to run.', order: ['clock', 'notes', 'calculator', 'settings'] },
@@ -304,6 +305,45 @@ const LISTINGS = {
         posterPosition: '50% 39%',
         heroTone: 'dark',
     },
+    // Ellie's Foxfire Fortunes ships as its own extension (Weyland-EllieFoxfireFortunes). Same reason as
+    // Last Smoke for keeping the listing here: one place for store copy, under this file's house rules
+    // and their test. If the extension is missing, never shown.
+    'ellie-foxfire-fortunes': {
+        shelf: 'story',
+        fresh: true,
+        // Pinned to the front-page spotlight (Lucky, 2026-11-18), even after the player has looked at it, which
+        // is when `fresh` alone would let another app take the banner. See buildStoreModel in lib/weystore.js.
+        featured: true,
+        // Like the Last Smoke demo, it ships OFF the phone: players add it from here on purpose (Lucky, 2026-11-17).
+        defaultOff: true,
+        // Tagline and about are Lucky's own words (2026-11-18), including his ".." pauses.
+        tagline: 'Let fortune guide your roleplays.. or destroy them.',
+        about: 'Step in and request a fortune from the Mystical Miss Tomoryu.. but be warned: these fortunes really do come true.\n\nFoxfire Fortunes allows you to guide roleplays that follow scripted scenes, much like the Muse experience. When you create a fortune with Miss Tomoryu, your roleplay follows it like a loose script, allowing characters to behave in ways they otherwise never would.\n\nYour story can be modified in many different ways, but those are for you to discover..',
+        points: [
+            'Three, five or seven chapters, in the order you pick them',
+            'Two endings: the story can split on a choice that stays yours, and you can cross over later',
+            'Change any line before it goes into the chat',
+            'Keep the questions you like and use them again in any chat',
+            'Tie fortunes you are not using yet to the wishing branch and bring them back later',
+        ],
+        cost: { kind: 'message', label: '1 message per fortune' },
+        // No note or 'Goes well with' pointing at Muse's Story Machine: it is not released (Lucky, 2026-11-18).
+        // Codex's store banner (EFF-24), drawn with a calm left third for the logo and tagline.
+        hero: `${EXTENSIONS_ROOT_URL}/Weyland-EllieFoxfireFortunes/app/assets/store-hero.webp`,
+        // Ellie herself, moving (the app's idle loop), on the spotlight banner and her page's banner. The still
+        // above is its poster and stays the shelf tile's art. Muted and looped; reduced motion keeps the still.
+        heroVideo: `${EXTENSIONS_ROOT_URL}/Weyland-EllieFoxfireFortunes/app/assets/ellie-crystal-ball-loop.webm`,
+        heroVideoPosition: '62% 45%',
+        // Real screens from the app, shown mid-page; tapping one opens it full screen (Lucky, 2026-11-18).
+        shots: [
+            { src: `${EXTENSIONS_ROOT_URL}/Weyland-EllieFoxfireFortunes/app/assets/store-shot-1.webp`, alt: 'Writing a request for a reading' },
+            { src: `${EXTENSIONS_ROOT_URL}/Weyland-EllieFoxfireFortunes/app/assets/store-shot-2.webp`, alt: 'Picking what happens in each scene' },
+            { src: `${EXTENSIONS_ROOT_URL}/Weyland-EllieFoxfireFortunes/app/assets/store-shot-3.webp`, alt: 'The finished fortune on its paper slip' },
+        ],
+        heroPosition: '50% 40%',
+        posterPosition: '70% 35%',
+        heroTone: 'dark',
+    },
 };
 
 // `fresh` is off by default: only a curated listing (or an extension's own store block) may call
@@ -328,6 +368,9 @@ const FALLBACK = Object.freeze({
     heroTone: 'art',
 });
 
+// Only these can come from an extension's own store block. `featured`, `heroVideo`, `heroVideoPosition` and
+// `shots` are deliberately left out of FALLBACK so they stay catalog-only: an extension can't pin itself to the
+// front page or put a video on it.
 const LISTING_FIELDS = Object.keys(FALLBACK);
 
 /**

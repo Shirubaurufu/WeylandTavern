@@ -277,6 +277,15 @@
 .wp-app-help-card p { margin: 16px 0 12px; line-height: 1.5; }
 .wp-app-help-card ul { margin: 0; padding-left: 20px; }
 .wp-app-help-card li { margin: 8px 0; line-height: 1.45; }
+/* Yes/no buttons of a phone confirm (renderConfirmDialog in lib/ui/appHelp.js). */
+.wp-app-help-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.wp-app-help-actions .wp-btn-sm { flex: 1; min-height: 38px; }
+.wp-app-help-actions .wp-app-help-ok {
+    border-color: var(--wp-app-accent);
+    background: color-mix(in srgb, var(--wp-app-accent) 32%, #222);
+    color: #fff;
+    font-weight: 700;
+}
 .wp-app-help-section { margin-top: 18px; }
 .wp-app-help-section h3 {
     margin: 0 0 8px;
@@ -5562,6 +5571,15 @@ button.wp-narrative-switch:hover { filter: brightness(1.15); }
 /* Roleplay intro context: variant pickers (Loona's drunk start, Willow's eyes) get a small label
    so they read as a separate choice from the Auto/On/Off row above them. */
 .wp-narrative-intro-group { margin-top: 12px; }
+/* "Greyed-out starts..." under a forward-only picker. It sits inside the group div, so `.wp-narrative-card > p` misses it
+   and it fell back to the page's big default text (Lucky, 2026-11-18); styled like .wp-narrative-note. */
+.wp-narrative-intro-locked-note {
+    display: flex; gap: 7px; align-items: baseline;
+    margin: 8px 0 0; padding: 8px 9px; border-radius: 9px;
+    background: rgba(58, 18, 6, .05); color: var(--wn-ink-muted);
+    font-size: 10px; line-height: 1.35;
+}
+.wp-narrative-intro-locked-note::before { content: '\f023'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 9px; opacity: .7; }
 .wp-narrative-intro-group-label { display: block; margin-bottom: 6px; color: var(--wn-ember); font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 /* ---------------------------------------------------------------------------
    PromptOS upgrades from the UI lab ("PromptOS-UI-Lab/08", 2026-10-02): the Home screen keeps the

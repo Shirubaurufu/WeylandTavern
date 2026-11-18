@@ -39,11 +39,14 @@ const CAST_PHOTO = 'https://cast.weybooru.com/images/photos/';
 /**
  * Homes that differ from the cast site until it is updated, by the character's full name there.
  * Jenn moves in with Lucy after the first day of classes (Lucky, 2026-10-09); the cast site still
- * lists her starting room (276, Kris's). Delete an entry once data.json says the same thing.
+ * lists her starting room (276, Kris's). Eve and Rosa's assignments follow the Weyland lorebook
+ * (entries 62 and 82). Delete an entry once data.json says the same thing.
  * The Residence Directory (Weyland-WeyPhone/maps/weyland_dorms.html) keeps the same list.
  */
 export const HOME_OVERRIDES = Object.freeze({
     'Jenn Morrison': 'Sterling Hall, Room 268',
+    'Eve Faulkner': 'Sterling Hall, Room 317',
+    'Rosa Faulkner': 'Sterling Hall, Room 315',
 });
 
 /** "[[Sterling Hall]]" / "[[BBB:Black Barrel Bar]]" -> plain text (the cast site's link syntax). */

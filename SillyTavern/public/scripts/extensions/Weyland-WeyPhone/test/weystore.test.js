@@ -155,6 +155,53 @@ test('store copy follows the house rules: no invented stats, no unreleased chara
     assert.doesNotMatch(rendered.innerHTML, /—|chaska|aethel/i);
 });
 
+test('Fortunes uses the app wordmark across WeyStore, with the full name for screen readers', () => {
+    const FORTUNES = { key: 'ellie-foxfire-fortunes', label: 'Fortunes', icon: '/f.svg', accent: '#6fd3ff', mount() {} };
+    const store = model(fresh(), { externalApps: [FORTUNES] });
+    store.spotlight = { key: FORTUNES.key, kicker: 'Featured' };
+    const logo = '<img class="wp-ws-eff-logo" src="/scripts/extensions/Weyland-EllieFoxfireFortunes/app/assets/logo.webp" alt="Foxfire Fortunes"';
+    const shelf = container();
+    renderWeyStoreScreen(shelf, store, { tab: 'browse' });
+    assert.match(shelf.innerHTML, /wp-ws-poster wp-ws-p-ellie-foxfire-fortunes/);
+    assert.ok(shelf.innerHTML.includes(`<span class="wp-ws-spot-name">${logo}`));
+    assert.ok(shelf.innerHTML.includes(`<span class="wp-ws-poster-title">${logo}`));
+    const page = container();
+    renderWeyStoreScreen(page, store, { detailKey: FORTUNES.key });
+    assert.ok(page.innerHTML.includes(`<h2 class="wp-ws-detail-logo">${logo}`));
+    assert.match(page.innerHTML, /1 message per fortune/);
+});
+
+test('Foxfire Fortunes holds the spotlight, moving, even after it has been seen (Lucky, 2026-11-18)', () => {
+    const FORTUNES = { key: 'ellie-foxfire-fortunes', label: 'Fortunes', icon: '/f.svg', accent: '#6fd3ff', mount() {} };
+    const settings = fresh();
+    assert.equal(model(settings, { externalApps: [LAST_SMOKE, FORTUNES] }).spotlight.key, FORTUNES.key);
+    settings.weystore = { ...(settings.weystore ?? {}), seen: { [FORTUNES.key]: true, 'last-smoke-demo': true } };
+    for (const day of [0, 1, 2, 3]) {
+        assert.deepEqual(model(settings, { day, externalApps: [LAST_SMOKE, FORTUNES] }).spotlight, { key: FORTUNES.key, kicker: 'Featured' });
+    }
+    // Without the extension there is nothing to feature, and the usual rules apply.
+    assert.notEqual(model(settings, { externalApps: [LAST_SMOKE] }).spotlight.key, FORTUNES.key);
+    // An extension can't feature itself or add a video through its own store block.
+    const pushy = storeListing('some-tile', { store: { featured: true, heroVideo: '/x.webm', shots: [{ src: '/y.webp' }] } });
+    assert.equal(pushy.featured, undefined);
+    assert.equal(pushy.heroVideo, undefined);
+    assert.equal(pushy.shots, undefined);
+
+    const store = model(settings, { externalApps: [FORTUNES] });
+    const shelf = container();
+    renderWeyStoreScreen(shelf, store, { tab: 'browse' });
+    assert.match(shelf.innerHTML, /<video class="wp-ws-hero-video" src="[^"]*ellie-crystal-ball-loop\.webm"[^>]* muted loop playsinline/);
+    const page = container();
+    renderWeyStoreScreen(page, store, { detailKey: FORTUNES.key });
+    assert.match(page.innerHTML, /Let fortune guide your roleplays\.\. or destroy them\./);
+    assert.match(page.innerHTML, /Mystical Miss Tomoryu/);
+    assert.equal((page.innerHTML.match(/data-ws-shot="\d"/g) ?? []).length, 3);
+    // The screenshots sit between the description and the facts.
+    assert.ok(page.innerHTML.indexOf('wp-ws-shots') > page.innerHTML.lastIndexOf('wp-ws-about'));
+    assert.ok(page.innerHTML.indexOf('wp-ws-shots') < page.innerHTML.indexOf('wp-ws-facts'));
+    assert.equal(page.wsShots.length, 3);
+});
+
 test('an extension tile gets a page: its own store block wins, then the catalog, then a default', () => {
     const unknown = storeListing('mystery-app', { key: 'mystery-app', label: 'Mystery' });
     assert.equal(unknown.shelf, 'extras');
@@ -166,6 +213,14 @@ test('an extension tile gets a page: its own store block wins, then the catalog,
     assert.equal(known.shelf, 'games');
     assert.equal(known.cost.kind, 'free');
     assert.match(known.hero, /^\/scripts\/extensions\/Weyland-LastSmoke-Demo\/demo\/assets\//);
+
+    // Ellie's Foxfire Fortunes (its own extension): story shelf, costs a message, banner read from its folder.
+    const fortunes = storeListing('ellie-foxfire-fortunes', { key: 'ellie-foxfire-fortunes', label: 'Fortunes' });
+    assert.equal(fortunes.shelf, 'story');
+    // It leads the Story tools shelf (Lucky, 2026-11-18).
+    assert.equal(STORE_SHELVES.find(s => s.id === 'story').order[0], 'ellie-foxfire-fortunes');
+    assert.equal(fortunes.cost.kind, 'message');
+    assert.match(fortunes.hero, /^\/scripts\/extensions\/Weyland-EllieFoxfireFortunes\/app\/assets\/.+\.webp$/);
 
     const described = storeListing('mystery-app', { store: { tagline: 'Hello', shelf: 'games', hero: 'https://x/y.webp' } });
     assert.equal(described.tagline, 'Hello');
