@@ -62,6 +62,18 @@ test('lorebook contact resolver prefers Zora subbot trigger over Zora location l
     );
 });
 
+test('a directory full name resolves to the subbot named after them when lore shares their !command (Belle Calloway)', () => {
+    // Real Weyland.json uids 33 and 80: Never Ender is keyed !Belle so it fires on her summon.
+    const subbot = { key: ['!Belle', 'Belle', '!belle'], comment: 'Belle', content: '{{getvar::BE}}' };
+    const neverEnder = { key: ['!Belle', '!belle', 'never ender', 'pill'], comment: 'Never Ender', content: '{{getvar::NEVEND}}' };
+    const book = { entries: { 33: subbot, 80: neverEnder } };
+    assert.equal(findLorebookCharacterEntry(book, 'Belle Calloway'), subbot);
+    assert.equal(findLorebookCharacterEntry(book, 'Belle'), subbot);
+    // Two entries both named after a name part stay ambiguous.
+    const twin = { key: ['!Calloway'], comment: 'Calloway', content: 'other' };
+    assert.equal(findLorebookCharacterEntry({ entries: { 33: subbot, 80: neverEnder, 90: twin } }, 'Belle Calloway'), null);
+});
+
 test('lorebook contact resolver prefers a full-name alias and rejects disabled or ambiguous first-name entries', () => {
     const full = { key: ['Aris Thorne'], comment: 'Aris', content: 'correct' };
     const book = { entries: {

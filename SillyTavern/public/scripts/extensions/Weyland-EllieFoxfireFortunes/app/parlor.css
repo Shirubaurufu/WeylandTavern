@@ -1,0 +1,511 @@
+/* Foxfire Fortunes. One phone-width column: the painted room on top, the velvet table below.
+   Everything drawn here in CSS/SVG is a stand-in with the same box as the art Codex is asked for
+   (see ../CODEX ASSET REQUESTS.md), so a finished asset drops in without moving anything. */
+/* The fonts ship with the app (Codex's subsets, OFL notices beside them), so nothing is fetched from Google
+   while it runs inside WeyPhone. A glyph missing from a subset falls back to the next font in each stack. */
+@font-face { font-family: 'Cinzel'; font-weight: 500; font-display: swap; src: url(assets/fonts/cinzel-500.woff2) format('woff2'); }
+@font-face { font-family: 'Cinzel'; font-weight: 700; font-display: swap; src: url(assets/fonts/cinzel-700.woff2) format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 500; font-display: swap; src: url(assets/fonts/cormorant-garamond-500.woff2) format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 600; font-display: swap; src: url(assets/fonts/cormorant-garamond-600.woff2) format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 500; font-display: swap; src: url(assets/fonts/cormorant-garamond-500-italic.woff2) format('woff2'); }
+@font-face { font-family: 'Klee One'; font-weight: 400; font-display: swap; src: url(assets/fonts/klee-one-400.woff2) format('woff2'); }
+@font-face { font-family: 'Klee One'; font-weight: 600; font-display: swap; src: url(assets/fonts/klee-one-600.woff2) format('woff2'); }
+@font-face { font-family: 'Shippori Mincho'; font-weight: 600; font-display: swap; src: url(assets/fonts/shippori-mincho-600.woff2) format('woff2'); }
+@font-face { font-family: 'Shippori Mincho'; font-weight: 800; font-display: swap; src: url(assets/fonts/shippori-mincho-800.woff2) format('woff2'); }
+:root {
+    --night: #0d0a1c; --night2: #171233; --velvet: #7a1622; --velvet2: #4e0d18; --velvet3: #2e0810;
+    --gold: #d7a84a; --gold2: #c9973a; --gold-dim: #8a6a2c;
+    --fox: #4aa8ff; --fox2: #9fe0ff; --fox3: #dff4ff;
+    --paper: #f3e6c8; --paper2: #e6d3a8; --ink: #2a1a2e; --seal: #b3262b; --plum: #f5b6c8;
+    --display: 'Cinzel', 'Times New Roman', serif;
+    --body: 'Cormorant Garamond', Georgia, serif;
+    --hand: 'Klee One', 'Comic Sans MS', cursive;
+    --jp: 'Shippori Mincho', 'Yu Mincho', serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; background: #05040b; color: var(--paper); font: 500 17px/1.35 var(--body); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, [contenteditable]:focus-visible { outline: 2px solid var(--fox2); outline-offset: 2px; }
+
+/* Wider than the column (tablets, foldables, desktop): the sides were flat black bars (Lucky's screenshot,
+   2026-11-17). Now they carry the scene: the room, blurred and dimmed, behind the top, and the table's velvet
+   behind the bottom, so the app reads as a window onto the parlor. The column itself is unchanged. */
+body { background: linear-gradient(#07050f 0 34%, var(--velvet2) 52%, var(--velvet3)); }
+body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; height: 52%; pointer-events: none;
+    background: url(assets/ellie-still.webp) center 30% / cover; filter: blur(22px) brightness(.7) saturate(.9);
+    -webkit-mask-image: linear-gradient(#000 60%, #0000); mask-image: linear-gradient(#000 60%, #0000); }
+#app { position: relative; width: min(100vw, 480px); height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--night); box-shadow: 0 0 80px #000; }
+
+/* ---------- top strip (floats over the room) ---------- */
+.top { position: absolute; inset: 0 0 auto 0; z-index: 6; display: flex; align-items: center; gap: 8px; padding: 8px 10px 22px; background: linear-gradient(#07050fd9, #07050f00); pointer-events: none; }
+.top > * { pointer-events: auto; }
+.sandbox-chip { position: absolute; top: calc(100% - 14px); left: 10px; font: 700 9px/1 var(--display); letter-spacing: .14em; color: var(--night); background: var(--gold); padding: 4px 6px; border-radius: 3px; }
+.logo { flex: 1; margin: 0; display: flex; flex-direction: column; line-height: 1; min-width: 0; }
+/* Toned down (Lucky, 2026-11-17: it stood out too much over the art): smaller and partly see-through. */
+.logo img { display: block; width: min(100%, 150px); height: auto; opacity: .72; }
+.top-btn { flex: 0 0 36px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--gold-dim); background: #0d0a1ccc; color: var(--gold); display: grid; place-items: center; }
+.top-btn svg { width: 19px; height: 19px; }
+.top-btn[aria-pressed="false"] { color: #6b6480; border-color: #3a3550; }
+.top-btn:disabled { opacity: .45; cursor: default; }
+.top-btn.ping { animation: ping .9s; }
+@keyframes ping { 30% { transform: scale(1.35); box-shadow: 0 0 22px var(--fox); color: var(--fox3); } }
+
+/* ---------- the room ---------- */
+#stage { position: relative; flex: 0 0 clamp(210px, 36dvh, 330px); overflow: hidden; background: #000; transition: flex-basis .9s cubic-bezier(.4, 0, .2, 1); }
+#app[data-screen="dark"] #stage { flex-basis: 56dvh; }
+#app[data-screen="gaze"] #stage { flex-basis: 66dvh; }
+#app[data-screen="ask"] #stage { flex-basis: clamp(210px, 40dvh, 360px); }
+#scene { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; transition: transform 1.3s cubic-bezier(.35, 0, .2, 1), filter 1.2s; will-change: transform; }
+#art { position: relative; display: block; width: 1280px; height: 720px; }
+/* The room (see index.html): the video's first frame as a still, and the video over it. Both full-frame. */
+.ly { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+/* The video (Lucky's Seedance loop, 2026-11-17) is the only Ellie since 2026-11-18. `fill`, not `cover`: the file
+   is 832x478, a hair wider than 16:9, and the still under it was cut to 1280x720 the same way, so the two
+   line up exactly and the fade from one to the other doesn't jump. */
+#still { object-fit: fill; }
+#loop { object-fit: fill; opacity: 0; transition: opacity .45s; }
+#scene.loop-on #loop { opacity: 1; }
+/* The video's fire is far brighter than the drawn one, and pale blue words vanished into it. White with a
+   dark halo reads on top of it and still glows. */
+#scene.loop-on .vision { color: #fff; text-shadow: 0 0 2px #06102e, 0 0 6px #06102e, 0 0 12px #06102e, 0 0 26px #2a5cff; }
+/* The dark room is the lit picture, dimmed; each candle lifts it a step (the candle-light passes are gone). */
+#app[data-lit="0"] #scene { filter: brightness(.22) saturate(.45); }
+#app[data-lit="1"] #scene { filter: brightness(.45) saturate(.65); }
+#app[data-lit="2"] #scene { filter: brightness(.7) saturate(.85); }
+/* Opening (parlor.js init): no size or camera animation for the first frames, and the room fades in at its
+   resting framing instead of panning there. */
+#stage { animation: roomin 1s ease-out both; }
+@keyframes roomin { from { opacity: 0; } }
+#app.opening #stage, #app.opening #scene { transition: none; }
+/* While the stage grows into the gaze, the scene follows each frame of the resize instead of easing behind it. */
+#scene.tracking { transition: filter 1.2s; }
+#scene[data-mood="startle"] #art, #scene[data-mood="fluster"] #art { animation: flinch .45s; }
+@keyframes flinch { 20% { transform: translate(-7px, 5px) rotate(-.5deg); } 50% { transform: translate(5px, -3px); } 80% { transform: translate(-2px, 1px); } }
+#fire { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; mix-blend-mode: screen; pointer-events: none; }
+/* Blush sits on her cheeks in the painting. Stand-in for the expression layers (EFF-03). */
+#blush { position: absolute; left: 438px; top: 270px; width: 170px; height: 62px; pointer-events: none; opacity: 0; transition: opacity .6s; mix-blend-mode: multiply;
+    background: radial-gradient(ellipse 44px 22px at 24% 50%, #ff5f7ecc, #ff5f7e00 100%); }
+#scene[data-mood="shy"] #blush, #scene[data-spice="2"] #blush { opacity: .55; }
+#scene[data-mood="fluster"] #blush, #scene[data-spice="3"] #blush { opacity: 1; }
+#emote { position: absolute; left: 640px; top: 96px; font: 700 64px/1 var(--jp); color: #fff; text-shadow: 0 0 18px var(--fox), 0 3px 0 #0008; pointer-events: none; animation: emote 2.2s both; }
+@keyframes emote { 0% { transform: translateY(20px) scale(.4); opacity: 0; } 12% { transform: translateY(0) scale(1.15); opacity: 1; } 20% { transform: scale(1); } 80% { opacity: 1; } 100% { transform: translateY(-16px); opacity: 0; } }
+#visions { position: absolute; inset: 0; pointer-events: none; }
+.vision { position: absolute; transform: translate(-50%, -50%); font: 700 15px/1.15 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--fox3); text-shadow: 0 0 14px var(--fox), 0 0 30px #2a5cff; width: 190px; text-align: center; animation: vision 2.6s both; }
+@keyframes vision { 0% { opacity: 0; transform: translate(-50%, -20%) scale(.6); filter: blur(6px); } 25% { opacity: 1; filter: blur(0); } 100% { opacity: 0; transform: translate(-50%, -160%) scale(1.15); filter: blur(3px); } }
+/* The gaze's words: they surface slowly, hang in the glass, then drift up and fade over the rest of their life
+   (several seconds, set per word from the expected wait in gaze()). Shorter rise than the quick version, so a
+   word stays inside the ball the whole time. */
+.vision.slow { animation-name: vision-slow; animation-timing-function: ease-in-out; }
+@keyframes vision-slow {
+    0% { opacity: 0; transform: translate(-50%, -20%) scale(.85); filter: blur(6px); }
+    25% { opacity: 1; transform: translate(-50%, -45%) scale(1); filter: blur(0); }
+    60% { opacity: 1; transform: translate(-50%, -75%) scale(1.03); filter: blur(0); }
+    100% { opacity: 0; transform: translate(-50%, -120%) scale(1.08); filter: blur(3px); }
+}
+.hit { position: absolute; border-radius: 50%; }
+#hitBall { left: 705px; top: 205px; width: 290px; height: 290px; }
+#hitEar { left: 215px; top: 10px; width: 430px; height: 215px; border-radius: 40%; }
+#hitTail { left: 95px; top: 330px; width: 240px; height: 330px; border-radius: 45%; }
+.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 55% 45%, #0000 45%, #05030ecc 100%), linear-gradient(#0000 78%, #1a0509 100%); transition: opacity 1s; }
+#app[data-dark="2"] .vignette, #app[data-dark="3"] .vignette { background: radial-gradient(ellipse at 60% 48%, #0000 30%, #05030ef2 100%), linear-gradient(#0000 78%, #1a0509 100%); }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+#flash.blue { background: var(--fox2); }
+#flash.go { animation: flash .7s; }
+@keyframes flash { 8% { opacity: .9; } 100% { opacity: 0; } }
+.clock { position: absolute; left: 10px; bottom: 10px; font: 600 10px/1 var(--display); letter-spacing: .12em; color: #cfc6e6aa; background: #07050f99; padding: 4px 7px; border-radius: 10px; border: 1px solid #ffffff14; }
+#app[data-screen="dark"] .clock { bottom: auto; top: 58px; }
+#bubble { position: absolute; right: 10px; bottom: 10px; max-width: 76%; padding: 8px 12px 9px; border-radius: 14px 14px 4px 14px; background: #f8efdaf2; color: var(--ink); font: 400 15px/1.3 var(--hand); box-shadow: 0 4px 18px #000a, 0 0 0 1px #c9973a88; animation: bubble .3s both; transform-origin: 100% 100%; min-height: 34px; }
+#bubble b { display: block; font: 700 9px/1 var(--display); letter-spacing: .16em; color: #8a5a1c; margin-bottom: 3px; text-transform: uppercase; }
+#bubbleText { display: block; text-wrap: balance; overflow-wrap: break-word; }
+#bubble[data-mood="fluster"], #bubble[data-mood="shy"] { background: #ffeceff2; }
+#bubble[data-mood="startle"] { animation: bubble .3s both, flinch .4s; }
+@keyframes bubble { from { transform: scale(.7) translateY(8px); opacity: 0; } }
+#app[data-screen="gaze"] #bubble { bottom: 14px; left: 50%; right: auto; transform: translateX(-50%); animation: none; border-radius: 14px; width: max-content; }
+/* Centred on the ball and sized to it by layout() in parlor.js (left, top, width); these are only the fallback. */
+.gaze-ring { position: absolute; left: 50%; top: 50%; width: min(64vw, 300px); aspect-ratio: 1; transform: translate(-50%, -50%) rotate(-90deg); pointer-events: none; animation: fade .7s both; }
+.gaze-ring svg { width: 100%; height: 100%; overflow: visible; }
+.gaze-ring circle { fill: none; stroke-width: 2.5; }
+.gaze-ring .track { stroke: #9fe0ff33; stroke-dasharray: 2 6; }
+.gaze-ring .fill { stroke: var(--fox3); stroke-linecap: round; stroke-dasharray: 339; stroke-dashoffset: 339; transition: stroke-dashoffset .4s linear; filter: drop-shadow(0 0 6px var(--fox)); }
+
+/* ---------- the table ---------- */
+#table { position: relative; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px 14px calc(18px + env(safe-area-inset-bottom));
+    background: radial-gradient(120% 70% at 50% 0, #9a2030 0, var(--velvet) 30%, var(--velvet2) 70%, var(--velvet3) 100%); box-shadow: inset 0 14px 22px -10px #000c; scrollbar-width: thin; scrollbar-color: var(--gold-dim) transparent; }
+/* Gold tassels along the table edge (EFF-14 replaces this). */
+.fringe { position: sticky; top: -16px; z-index: 3; height: 11px; margin: -16px -14px 8px; pointer-events: none;
+    background: linear-gradient(var(--gold), var(--gold2)) top / 100% 3px no-repeat, repeating-linear-gradient(90deg, var(--gold2) 0 2px, #0000 2px 6px) 0 3px / 100% 8px no-repeat; filter: drop-shadow(0 2px 2px #0008); }
+.panel { display: none; flex-direction: column; gap: 12px; animation: panel .5s both; }
+@keyframes panel { from { opacity: 0; transform: translateY(12px); } }
+#app[data-screen="dark"] [data-panel="dark"], #app[data-screen="ask"] [data-panel="ask"], #app[data-screen="draw"] [data-panel="draw"],
+#app[data-screen="gaze"] [data-panel="gaze"], #app[data-screen="unfold"] [data-panel="unfold"], #app[data-screen="branch"] [data-panel="branch"],
+#app[data-screen="settings"] [data-panel="settings"] { display: flex; }
+.whisper { margin: 4px 0; text-align: center; font-style: italic; color: #f3e6c8cc; }
+.hint { margin: 0; text-align: center; font: 600 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--gold); animation: breathe 2.4s infinite; }
+@keyframes breathe { 50% { opacity: .45; } }
+.sub { font: 600 11px/1 var(--display); letter-spacing: .18em; text-transform: uppercase; color: var(--gold); text-align: center; margin-top: 2px; }
+
+.cta { align-self: center; min-width: 72%; padding: 13px 20px; border-radius: 30px; font: 700 14px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: #2a1404;
+    background: linear-gradient(#f3cf7a, var(--gold2)); box-shadow: 0 4px 0 #7a5516, 0 8px 18px #0008, inset 0 1px 0 #fff8; transition: transform .1s, box-shadow .1s, filter .3s; }
+.cta:active { transform: translateY(3px); box-shadow: 0 1px 0 #7a5516, 0 3px 8px #0008; }
+.cta.small { min-width: 0; padding: 10px 16px; font-size: 12px; }
+.cta.fire { color: #04122a; background: linear-gradient(var(--fox3), var(--fox)); box-shadow: 0 4px 0 #1a4f96, 0 0 26px #4aa8ff99, inset 0 1px 0 #fff; animation: glow 2s infinite; }
+@keyframes glow { 50% { box-shadow: 0 4px 0 #1a4f96, 0 0 44px #4aa8ffdd, inset 0 1px 0 #fff; } }
+/* Small print under the gaze button. Negative top margin pulls it up toward the button it belongs to. */
+.cost { margin: -4px 0 0; text-align: center; font: italic 500 13px/1.2 var(--body); color: var(--paper); opacity: .7; }
+.cta:disabled { filter: grayscale(1) brightness(.55); animation: none; cursor: default; box-shadow: 0 4px 0 #222; }
+.ghost { padding: 8px 12px; border-radius: 18px; border: 1px solid #d7a84a77; background: #1a060b88; color: var(--paper); font: 600 13px/1.1 var(--body); }
+.ghost:active { background: #d7a84a33; }
+.ghost.danger { border-color: #4aa8ff77; color: var(--fox2); }
+/* The table's own buttons (Clear, Surprise me, Change your request, Kept slips, Keep this one, Break the gaze
+   and the rest), dressed to belong on the velvet (Lucky, 2026-11-18: the plain outlined pills looked like a
+   web form). A brocade tab: dark wine, a gold double rule, small gold diamonds at each end, engraved capitals.
+   Modals keep the plain paper version (their own .ghost rules come later and win). */
+#table .ghost { position: relative; padding: 9px 20px 8px; border-radius: 4px; border: 1px solid #d7a84aaa;
+    font: 700 10.5px/1.15 var(--display); letter-spacing: .13em; text-transform: uppercase; color: #f4dea6; text-shadow: 0 1px 0 #000b;
+    background: linear-gradient(#45101b, #2a0710 55%, #1e040b);
+    box-shadow: inset 0 0 0 2px #2a0710, inset 0 0 0 3px #d7a84a44, inset 0 1px 0 4px #ffffff08, 0 2px 0 #0009, 0 5px 12px #0007;
+    transition: transform .1s, box-shadow .15s, color .15s; }
+#table .ghost::before, #table .ghost::after { content: ''; position: absolute; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 4px #d7a84a88; }
+#table .ghost::before { left: 7px; }
+#table .ghost::after { right: 7px; }
+#table .ghost:hover { color: #fff1c8; box-shadow: inset 0 0 0 2px #2a0710, inset 0 0 0 3px #d7a84a88, 0 2px 0 #0009, 0 5px 14px #0008, 0 0 12px #d7a84a33; }
+#table .ghost:active { transform: translateY(2px); background: linear-gradient(#56142a, #2e0812); box-shadow: inset 0 0 0 2px #2a0710, inset 0 0 0 3px #d7a84a77, 0 0 0 #0009, 0 2px 6px #0007; }
+#table .ghost:disabled { opacity: .45; transform: none; }
+#table .ghost.small { padding: 7px 17px 6px; font-size: 9.5px; }
+#table .ghost.small::before { left: 6px; } #table .ghost.small::after { right: 6px; }
+/* The foxfire buttons (Burn it, Break the gaze): the same tab in midnight blue with a blue rule. */
+#table .ghost.danger, #table #btnBreak { color: var(--fox3); border-color: #4aa8ffaa; background: linear-gradient(#10224a, #0a1430 55%, #060b1e);
+    box-shadow: inset 0 0 0 2px #0a1430, inset 0 0 0 3px #4aa8ff44, 0 2px 0 #0009, 0 5px 12px #0007, 0 0 16px #4aa8ff22; }
+#table .ghost.danger::before, #table .ghost.danger::after, #table #btnBreak::before, #table #btnBreak::after { background: var(--fox2); box-shadow: 0 0 5px var(--fox); }
+#table #btnBreak { align-self: center; padding: 11px 26px 10px; font-size: 11px; }
+.draw-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+/* dark: three candles */
+.candles { display: flex; justify-content: center; align-items: flex-end; gap: 34px; height: 120px; }
+.candle { position: relative; width: 44px; height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.candle.tall { height: 108px; }
+.candle .wax { width: 20px; flex: 1; margin-top: 30px; border-radius: 4px 4px 2px 2px; background: linear-gradient(90deg, #cdbf9c, #fff5dc 40%, #b8a67c); box-shadow: 0 6px 0 -1px #5a4320, 0 9px 0 -1px #c9973a, 0 14px 12px #0009; }
+.candle .wax::before { content: ''; position: absolute; left: 50%; top: 22px; width: 2px; height: 9px; background: #2a1a12; transform: translateX(-50%); }
+.candle .flame { position: absolute; top: 0; left: 50%; width: 16px; height: 28px; margin-left: -8px; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; background: radial-gradient(ellipse at 50% 78%, #fff 0 18%, #ffd866 38%, #ff8a2a 70%, #ff8a2a00 100%); opacity: 0; transform: scale(.2); transform-origin: 50% 100%; transition: opacity .25s, transform .3s; }
+.candle.lit .flame { opacity: 1; transform: scale(1); animation: flicker 1.7s infinite; filter: drop-shadow(0 0 14px #ffb347); }
+.candle:not(.lit)::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 1px dashed #d7a84a55; animation: breathe 2.4s infinite; }
+@keyframes flicker { 0%, 100% { transform: scale(1) rotate(-2deg); } 30% { transform: scale(1.06, .94) rotate(2deg); } 60% { transform: scale(.95, 1.08) rotate(-1deg); } 80% { transform: scale(1.03, .98) rotate(3deg); } }
+
+/* ask */
+.who { display: flex; align-items: baseline; justify-content: center; gap: 7px; flex-wrap: wrap; }
+.who-tag { font: 600 11px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); width: 100%; text-align: center; margin-bottom: 2px; }
+.who input { width: 7.2em; text-align: center; background: none; border: 0; border-bottom: 1px dashed #d7a84a99; font: 600 20px/1.2 var(--body); color: var(--paper); padding: 2px; border-radius: 0; }
+/* In WeyPhone the names are the open chat's: no chip, no underline, nothing to type into. */
+.live .sandbox-chip { display: none; }
+.live .who input { border-bottom-color: transparent; pointer-events: none; }
+.who-amp { font: italic 500 18px var(--body); color: var(--gold); }
+.slip { position: relative; display: block; padding: 10px 14px 26px; border-radius: 3px; color: var(--ink); transform: rotate(-.6deg); box-shadow: 0 8px 18px #0009, 0 1px 0 #fff8 inset;
+    background: linear-gradient(105deg, var(--paper), #f8eed6 50%, var(--paper2)); }
+.slip-label { display: block; font: 700 9.5px/1.3 var(--display); letter-spacing: .16em; color: #8a5a1c; margin-bottom: 4px; }
+/* The second half of the prompt answers the first from the other side of the slip (Lucky, 2026-11-17). */
+.slip-label-after { margin-top: 8px; text-align: right; }
+/* The ruled lines belong to the writing box, not the slip, so the words always sit on them (Lucky's screenshot,
+   2026-11-17: they used to start at a fixed height on the slip and drifted between the rows of text). One rule
+   per 28px line, under the letters' baseline. `local` makes the lines scroll with the text in a long request. */
+.slip textarea { display: block; width: 100%; resize: none; border: 0; font: 400 17px/28px var(--hand); color: var(--ink); padding: 0; outline: none;
+    background: repeating-linear-gradient(#0000 0 24px, #2a1a2e12 24px 26px, #0000 26px 28px); background-attachment: local; }
+.slip textarea::placeholder { color: #2a1a2e66; }
+/* Her dad's old pen, lying on the slip (EFF-15). */
+.slip-pen { position: absolute; right: 12px; bottom: 9px; width: 96px; height: 8px; border-radius: 5px 2px 2px 5px; transform: rotate(-5deg); pointer-events: none;
+    background: linear-gradient(90deg, #1c1a22 0 62%, var(--gold2) 62% 66%, #1c1a22 66% 88%, #c8c8d0 88%); box-shadow: 3px 5px 6px #0006; }
+/* Kept slips: a little tray of saved questions under the writing slip. Each is a scrap of the same paper. */
+.kept { display: flex; flex-direction: column; gap: 7px; padding: 9px 10px 10px; border-radius: 10px; border: 1px dashed #d7a84a55; background: #1a060b55; }
+.kept-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kept-title { font: 600 11px/1 var(--display); letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+.ghost.small { padding: 5px 10px; font-size: 12.5px; }
+.ghost:disabled { opacity: .45; }
+/* The kept slips box (#keptModal): the same paper card as the other modals, holding the list. */
+.kept-card { max-width: 420px; text-align: left; display: flex; flex-direction: column; gap: 10px; max-height: calc(100% - 8px); }
+.kept-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kept-card .kept-title { color: #8a5a1c; }
+.kept-card .ghost { color: var(--ink); background: #fff6; border-color: #8a5a1c66; }
+.kept-card .kept-empty { margin: 0; font: italic 500 15px/1.3 var(--body); color: #2a1a2e99; }
+.kept-list { display: flex; flex-direction: column; gap: 7px; min-height: 0; overflow-y: auto; padding: 2px 4px 6px; }
+.kept-list:empty { display: none; }
+/* A slip with a name shows the name big and the request small under it. */
+.kept-use { display: flex; flex-direction: column; gap: 1px; }
+.kept-use b { font: 600 14px/1.2 var(--body); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kept-use span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kept-use b + span { font-size: 12.5px; color: #2a1a2e99; }
+.kept-name { flex: 1; min-width: 0; margin: 4px 0 4px 6px; padding: 4px 7px; border: 1px solid #8a5a1c66; border-radius: 4px; background: #fffa; font: 600 14px/1.2 var(--body); color: var(--ink); }
+.kept-rename { flex: 0 0 34px; border: 0; border-left: 1px dashed #2a1a2e33; background: none; color: #8a5a1c; display: grid; place-items: center; }
+.kept-rename svg { width: 15px; height: 15px; }
+.kept-slip { display: flex; align-items: stretch; border-radius: 3px; background: linear-gradient(90deg, var(--paper2), var(--paper) 40%); box-shadow: 0 3px 7px #0007; }
+.kept-slip:nth-child(odd) { transform: rotate(-.4deg); }
+.kept-slip:nth-child(even) { transform: rotate(.35deg); }
+.kept-use { flex: 1; min-width: 0; padding: 6px 9px; border: 0; background: none; text-align: left; font: 400 14px/1.3 var(--hand); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kept-slip.on { box-shadow: 0 3px 7px #0007, 0 0 0 2px var(--fox); }
+.kept-forget { flex: 0 0 34px; border: 0; border-left: 1px dashed #2a1a2e33; background: none; color: #8a5a1c; font: 600 16px/1 var(--body); }
+.kept-forget:active { color: var(--seal); }
+.kept-empty { margin: 0; font: italic 500 13.5px/1.25 var(--body); color: #f3e6c899; }
+.kept-empty[hidden] { display: none; }
+
+.spreads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.spreads button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px 9px; border-radius: 10px; border: 1px solid #d7a84a55; background: #1a060b77; transition: transform .15s, background .2s; }
+.spreads b { font: 700 13px/1 var(--display); letter-spacing: .08em; color: var(--paper); }
+.spreads small { font: italic 500 13px/1 var(--body); color: #f3e6c899; }
+.dots { display: flex; gap: 2px; height: 22px; align-items: center; }
+.dots i { width: 8px; height: 13px; border-radius: 2px; background: var(--back) center / cover, #2b2a66; box-shadow: 0 1px 2px #000; }
+.spreads .on { background: #d7a84a2e; border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 6px 14px #0007, 0 0 16px #d7a84a44; }
+.spreads .on .dots i { box-shadow: 0 0 6px var(--fox); }
+
+/* ---------- cards ---------- */
+.card { display: block; width: 100%; aspect-ratio: 5 / 8; perspective: 600px; }
+.card .inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .55s cubic-bezier(.3, .9, .3, 1.15); }
+.card.flipped .inner { transform: rotateY(180deg); }
+.card .back, .card .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 7%; box-shadow: 0 3px 8px #0009; }
+.card .back { background: var(--back) center / 100% 100%; }
+.card .face { transform: rotateY(180deg); }
+.card.rev .face { transform: rotateY(180deg) rotateZ(180deg); }
+/* Cards that never turn over (the fortune slip, the unfolding row) are drawn flat: a filter or glow on a parent
+   breaks the 3D flip in Chrome and the face comes out see-through. */
+.card.flat .inner { transform: none; transition: none; }
+.card.flat .back, .card.flat .face { backface-visibility: visible; -webkit-backface-visibility: visible; }
+.card.flat .face { transform: none; }
+.card.flat.rev .face { transform: rotate(180deg); }
+.card.flat.flipped .back, .card.flat:not(.flipped) .face { display: none; }
+.card-svg { display: block; width: 100%; height: 100%; }
+/* Sized for the cream plates on Codex's card frame (top: numeral, bottom: name). */
+.c-num { font: 700 6.6px var(--display); fill: #3a2410; }
+.c-name { font: 700 5.6px var(--display); fill: #3a2410; letter-spacing: .3px; }
+.c-glyph { fill: none; stroke: var(--ink); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+.c-glyph .a { fill: var(--gold2); fill-opacity: .9; }
+.c-glyph .thin { stroke-width: 1.2; }
+.c-glyph .bolt { stroke: #2f7fe0; stroke-width: 3; }
+
+.slots { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
+.slot { position: relative; flex: 1 1 0; max-width: 78px; min-width: 0; display: flex; flex-direction: column; }
+.slots[data-n="3"] .slot { max-width: 92px; }
+.slot::before { content: ''; display: block; aspect-ratio: 5 / 8; border-radius: 7%; border: 1.5px dashed #d7a84a88; background: #1a060b55; }
+.slot.filled::before { border-color: #0000; background: none; }
+.slot:not(.filled):nth-child(1 of :not(.filled))::before { border-color: var(--fox2); box-shadow: 0 0 14px #4aa8ff77 inset, 0 0 10px #4aa8ff55; animation: breathe 1.8s infinite; }
+.slot-num { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 5 / 8; display: grid; place-items: center; font: 700 15px var(--display); color: #d7a84a99; }
+.slot.filled .slot-num { display: none; }
+.slot .card { position: absolute; left: 0; top: 0; }
+.slot-pos { margin-top: 5px; font: 600 8.5px/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; text-align: center; color: #f3e6c8bb; }
+.slots.crossed::after { content: 'Two endings: the story splits at the middle scene'; flex: 0 0 100%; text-align: center; font: italic 500 13px/1 var(--body); color: var(--fox2); }
+
+/* The menu: 44 plain-word tiles in two columns. Left column is a card the right way up, right column the
+   same card reversed, so a row is one card. It scrolls inside its own box so the mood row and the big
+   button stay close by. */
+/* "More below": the bottom of the list fades out and a small tag sits on it until the list is scrolled to the end. */
+.menu-wrap { position: relative; }
+.menu-wrap.more .menu { -webkit-mask-image: linear-gradient(#000 calc(100% - 44px), #0005); mask-image: linear-gradient(#000 calc(100% - 44px), #0005); }
+.menu-more { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); padding: 3px 10px 4px; border-radius: 10px; background: #07050fcc; border: 1px solid #d7a84a66;
+    font: 600 9px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); pointer-events: none; opacity: 0; transition: opacity .25s; }
+.menu-more::after { content: ''; display: inline-block; margin-left: 6px; border: 4px solid transparent; border-top-color: currentColor; border-bottom: 0; vertical-align: 1px; }
+.menu-wrap.more .menu-more { opacity: 1; }
+.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; max-height: 34dvh; overflow-y: auto; padding: 6px; border-radius: 10px; border: 1px solid #d7a84a44; background: #1a060b99; scrollbar-width: thin; scrollbar-color: #d7a84a88 #0000; }
+.beat { position: relative; min-height: 44px; padding: 7px 26px 7px 9px; border-radius: 7px; border: 1px solid #d7a84a33; background: #2a0c1488; text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 2px; transition: background .15s, border-color .15s, opacity .15s; }
+.beat.rev { background: #14122e88; border-color: #4aa8ff33; }
+.beat b { font: 600 14.5px/1.12 var(--body); color: var(--paper); }
+.beat small { font: 600 8.5px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: #d7a84aaa; }
+.beat i { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); min-width: 18px; font: 700 12px/1 var(--display); font-style: normal; text-align: center; color: var(--night); }
+.beat:active { background: #d7a84a33; }
+.beat.on { background: linear-gradient(105deg, var(--gold), #f0cf7c); border-color: #fff3c4; box-shadow: 0 0 10px #d7a84a77; }
+.beat.on b { color: var(--ink); }
+.beat.on small { color: #5a3a10; }
+.beat.other { opacity: .42; }
+.fly { position: fixed; z-index: 50; border-radius: 4px; background: var(--back) center / 100% 100%; box-shadow: 0 10px 20px #000a, 0 0 16px #4aa8ff88; pointer-events: none; transform-origin: 0 0; }
+.wisp { position: fixed; z-index: 60; width: 24px; height: 24px; border-radius: 50%; pointer-events: none; background: radial-gradient(#fff 0 18%, var(--fox2) 36%, #4aa8ff00 72%); box-shadow: 0 0 22px 6px #4aa8ffaa; }
+
+/* omens */
+/* Five omens since Connection (2026-11-18): three over two. "CONNECTION" doesn't fit a fifth of a phone's width,
+   so the grid has six columns; the first three take two each, the last two take three each. */
+.omens { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.omens > .omen { grid-column: span 2; }
+.omens > .omen:nth-child(n + 4) { grid-column: span 3; }
+.omen { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 2px 8px; border-radius: 10px; border: 1px solid #d7a84a44; background: #1a060b77; }
+.omen:active { background: #d7a84a22; }
+.omen b { font: 700 10px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.omen small { font: 600 12.5px/1 var(--body); color: var(--paper); white-space: nowrap; }
+.omen > span { position: relative; width: 34px; height: 34px; display: block; }
+.moon { border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 35% 35%, #fffbe6, #e3d6a4 70%); box-shadow: 0 0 calc(14px - var(--p) * 4px) #fff3b0aa; }
+.moon i { position: absolute; inset: -1px; border-radius: 50%; background: #120d24; transform: translateX(calc(108% - var(--p) * 36%)); transition: transform .5s; }
+.ember i { position: absolute; left: 50%; bottom: 3px; width: 20px; height: 26px; margin-left: -10px; border-radius: 50% 50% 50% 50% / 64% 64% 36% 36%; transform-origin: 50% 100%;
+    transform: scale(calc(.55 + var(--p) * .17)); transition: transform .4s, filter .4s; filter: hue-rotate(calc(var(--p) * -9deg)) drop-shadow(0 0 calc(2px + var(--p) * 4px) #ff7a3a);
+    background: radial-gradient(ellipse at 50% 80%, #fff3c4 0 16%, #ffb03a 42%, #ff4a2a 76%, #ff4a2a00 100%); animation: flicker 1.5s infinite; }
+.incense i { position: absolute; left: 50%; bottom: 0; width: 3px; margin-left: -1.5px; height: calc(30px - var(--p) * 8px); background: linear-gradient(#ff9a4a 0 3px, #6b4a2c 3px); border-radius: 2px; transition: height .4s; }
+.incense u { position: absolute; left: 50%; bottom: calc(30px - var(--p) * 8px); width: 12px; height: 12px; margin-left: -3px; border-left: 1.5px solid #ffffff88; border-radius: 50%; animation: smoke 2.6s infinite; transition: bottom .4s; }
+@keyframes smoke { from { transform: translateY(4px) scale(.6); opacity: 0; } 40% { opacity: .9; } to { transform: translateY(-8px) scale(1.2) rotate(30deg); opacity: 0; } }
+.cross i { position: absolute; left: 50%; bottom: 2px; width: 3px; height: 30px; margin-left: -1.5px; border-radius: 2px; background: #f3e6c899; transform-origin: 50% 100%; transition: transform .4s, background .4s; }
+.omen[aria-pressed="true"] .cross i:first-child { transform: rotate(-32deg); background: var(--gold); }
+.omen[aria-pressed="true"] .cross i:last-child { transform: rotate(32deg); background: var(--fox2); box-shadow: 0 0 8px var(--fox); }
+.omen[aria-pressed="true"] { border-color: var(--fox2); }
+/* Connection: the red thread between two rings. Only the step's own drawing shows. Unset is a slack, dashed,
+   pale thread and the whole omen sits dimmed (it isn't sent) until it is tapped. */
+/* Wider than the other omens' 34px and cropped to the drawing's band, so it reads at the same size as the moon. */
+.omen > span.thread { width: 56px; }
+.thread svg { width: 100%; height: 100%; overflow: visible; }
+.thread .ring { fill: none; stroke: var(--gold); stroke-width: 1.2; transition: stroke .4s; }
+.thread .t { display: none; fill: none; stroke: #e0303a; stroke-width: 1.5; stroke-linecap: round; filter: drop-shadow(0 0 3px #ff4a5a88); }
+.thread .t-unset { stroke: #f3e6c877; stroke-dasharray: 2 2.5; filter: none; }
+.thread .t-platonic { stroke: var(--paper); filter: none; }
+.thread .t-casual { stroke: #ff8a9a; stroke-width: 1.2; }
+.thread .t-complicated { stroke-width: 1.2; }
+.thread .t-partnered circle { fill: var(--seal); stroke: #ff9aa2; stroke-width: 1; }
+.thread .t-partnered { filter: drop-shadow(0 0 5px #ff4a5acc); }
+.thread .t-breaking .fray { stroke-width: .8; }
+.omen.conn[data-c="unset"] .t-unset, .omen.conn[data-c="platonic"] .t-platonic, .omen.conn[data-c="casual"] .t-casual,
+.omen.conn[data-c="complicated"] .t-complicated, .omen.conn[data-c="dating"] .t-dating, .omen.conn[data-c="partnered"] .t-partnered,
+.omen.conn[data-c="breaking"] .t-breaking, .omen.conn[data-c="broken"] .t-broken { display: inline; }
+.omen.conn[data-c="unset"] { opacity: .5; }
+.omen.conn[data-c="unset"] .ring, .omen.conn[data-c="broken"] .ring { stroke: var(--gold-dim); }
+/* Settings: groups on the velvet. Blocked chips turn into a red seal with a cross, like a slip that was struck out. */
+.set-group { display: flex; flex-direction: column; gap: 9px; padding: 12px 12px 13px; border-radius: 10px; border: 1px solid #d7a84a44; background: #1a060b77; }
+.set-title { margin: 0; font: 700 12px/1.1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.settings-reset { align-self: flex-start; margin-top: 2px; }
+.set-note { margin: 0; font: italic 500 14px/1.3 var(--body); color: #f3e6c8cc; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips:empty { display: none; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 16px; border: 1px solid #d7a84a77; background: #1a060b88; color: var(--paper); font: 600 14px/1.1 var(--body); }
+.chip:active { background: #d7a84a33; }
+.chip::before { content: ''; width: 9px; height: 9px; border-radius: 50%; border: 1px solid #d7a84a99; }
+.chip[aria-pressed="true"] { background: var(--seal); border-color: #ffb9a8; color: #fff3ec; text-decoration: line-through; text-decoration-color: #fff8; box-shadow: 0 0 10px #b3262b77; }
+.chip[aria-pressed="true"]::before { content: '\2715'; width: auto; height: auto; border: 0; font-size: 11px; line-height: 1; text-decoration: none; }
+.chips.own .chip { background: var(--seal); border-color: #ffb9a8; color: #fff3ec; }
+.chips.own .chip::before { display: none; }
+.chips.own .chip b { font: 700 15px/1 var(--body); opacity: .8; }
+.set-add { display: flex; gap: 6px; }
+.set-add input { flex: 1; min-width: 0; padding: 7px 10px; border-radius: 16px; border: 1px dashed #d7a84a88; background: #0d0a1c88; color: var(--paper); font: 500 15px/1.2 var(--body); }
+.set-add input::placeholder { color: #f3e6c877; }
+/* The two writing switches under the dials: a small lantern that is lit when the switch is on. */
+.switches { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.switch { display: flex; align-items: center; gap: 8px; padding: 8px 9px; border-radius: 10px; border: 1px solid #d7a84a44; background: #1a060b77; text-align: left; min-width: 0; }
+.switch:active { background: #d7a84a22; }
+.switch i { flex: 0 0 14px; height: 14px; border-radius: 50%; background: #3a3550; box-shadow: inset 0 1px 2px #0008; transition: background .25s, box-shadow .25s; }
+.switch span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.switch b { font: 700 10px/1.1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.switch small { font: 500 12.5px/1.15 var(--body); color: #f3e6c8bb; }
+.switch[aria-pressed="true"] { border-color: var(--fox2); }
+.switch[aria-pressed="true"] i { background: radial-gradient(circle at 40% 35%, var(--fox3), var(--fox)); box-shadow: 0 0 9px var(--fox); }
+
+/* ---------- unfolding ---------- */
+.uf-head { display: flex; align-items: center; gap: 8px; }
+.uf-tag { font: 700 9px/1 var(--display); letter-spacing: .16em; padding: 4px 7px; border-radius: 3px; background: var(--fox); color: #04122a; box-shadow: 0 0 12px #4aa8ff88; }
+.uf-tag.off { background: #5a5068; color: #ddd; box-shadow: none; }
+.uf-title { flex: 1; font: 600 21px/1.1 var(--body); color: var(--paper); min-width: 0; }
+.uf-cards { display: flex; gap: 8px; align-items: flex-end; overflow-x: auto; padding: 14px 4px 4px; scrollbar-width: none; }
+.uf-cards::-webkit-scrollbar { display: none; }
+.uf-card { flex: 0 0 50px; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: transform .3s, filter .3s; }
+.uf-card span { font: 700 10px/1 var(--display); color: #f3e6c8aa; }
+.uf-card.past { filter: brightness(.6) saturate(.6); }
+.uf-card.now { flex-basis: 64px; transform: translateY(-8px); }
+.uf-card.now .card { border-radius: 7%; box-shadow: 0 0 12px 2px var(--fox), 0 0 30px 4px #4aa8ff88; }
+.uf-card.now span { color: var(--fox2); }
+.uf-cross { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-bottom: 18px; font: 600 9px/1 var(--display); color: var(--fox2); letter-spacing: .08em; white-space: nowrap; }
+.uf-cross i { width: 14px; height: 14px; transform: rotate(45deg); border: 2px solid var(--fox2); box-shadow: 0 0 8px var(--fox); }
+.uf-cross.past i { background: var(--fox2); }
+.uf-roads { display: flex; gap: 6px; align-items: center; }
+.uf-roads > span { font: 700 9px/1 var(--display); letter-spacing: .16em; color: var(--gold); }
+.uf-roads button { flex: 1; display: flex; gap: 6px; align-items: center; padding: 7px 9px; border-radius: 8px; border: 1px solid #d7a84a55; background: #1a060b77; text-align: left; font: 500 13px/1.1 var(--body); min-width: 0; }
+.uf-roads b { font: 700 13px var(--display); color: var(--gold); }
+.uf-roads .on { border-color: var(--fox2); background: #4aa8ff26; }
+.uf-chapter { padding: 12px 14px; border-radius: 4px; color: var(--ink); background: linear-gradient(105deg, var(--paper), #f8eed6 50%, var(--paper2)); box-shadow: 0 8px 18px #0008; }
+.uf-chapter.done { opacity: .7; }
+.uf-chapter h3 { margin: 4px 0; font: 600 22px/1.1 var(--body); }
+.uf-chapter p { margin: 4px 0; }
+.uf-fork { color: #1a4f96; font-style: italic; }
+.ch-meta { display: block; font: 700 9px/1.2 var(--display); letter-spacing: .12em; text-transform: uppercase; color: #8a5a1c; }
+.ch-ends { font-style: italic; color: #5a3f4a; font-size: 15px; }
+.uf-controls { display: flex; justify-content: center; align-items: center; gap: 12px; }
+.round { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--gold); background: #1a060bcc; color: var(--gold); font-size: 15px; box-shadow: 0 4px 10px #0008; }
+.round.wide { width: auto; padding: 0 20px; border-radius: 24px; font: 700 12px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; }
+.round:disabled { opacity: .35; cursor: default; }
+.round:active:not(:disabled) { transform: scale(.93); }
+
+/* ---------- the wishing branch ---------- */
+.branch { position: relative; height: 250px; margin: 0 -6px; }
+.bough { position: absolute; inset: 0 0 auto 0; height: 84px; }
+.bough svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 4px #0008); }
+.knot { position: absolute; left: var(--x); top: 24px; display: flex; flex-direction: column; align-items: center; transform-origin: 50% 0; animation: sway 4s var(--d) ease-in-out infinite alternate; }
+.knot i { width: 1.5px; height: calc(var(--len) - 70px); background: #e9d9b0aa; }
+.knot span { writing-mode: vertical-rl; max-height: 132px; overflow: hidden; padding: 8px 4px; font: 400 12px/1.15 var(--hand); color: var(--ink); background: linear-gradient(90deg, var(--paper2), var(--paper) 50%, var(--paper2)); border-radius: 2px; box-shadow: 0 3px 6px #0008; border-top: 6px solid var(--seal); }
+.knot.l-0 span { border-top-color: var(--gold); } .knot.l-4 span { border-top-color: #2a1a2e; background: #d9d0c0; }
+@keyframes sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+
+/* ---------- the fortune: an omikuji slip ---------- */
+#reading { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; padding: 52px 12px calc(10px + env(safe-area-inset-bottom)); background: #07050fd9; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: fade .3s both; }
+@keyframes fade { from { opacity: 0; } }
+.scroll { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.scroll-rod { height: 14px; margin: 0 -5px; border-radius: 7px; background: linear-gradient(#6a4526, #2e1a0c); box-shadow: 0 4px 8px #000a; position: relative; z-index: 2; }
+.scroll-rod::before, .scroll-rod::after { content: ''; position: absolute; top: -2px; width: 9px; height: 18px; border-radius: 3px; background: linear-gradient(var(--gold), var(--gold-dim)); }
+.scroll-rod::before { left: -3px; } .scroll-rod::after { right: -3px; }
+.paper { flex: 1; min-height: 0; overflow-y: auto; margin: -3px 4px 0; padding: 16px 16px 22px; color: var(--ink); scrollbar-width: thin; scrollbar-color: #c9973a88 transparent;
+    background: repeating-linear-gradient(92deg, #0000 0 3px, #8a6a2c08 3px 4px), linear-gradient(105deg, var(--paper), #faf1dc 45%, var(--paper2)); box-shadow: 0 16px 30px #000b; border-bottom: 5px double var(--seal);
+    animation: unroll .8s cubic-bezier(.3, .8, .3, 1) both; }
+@keyframes unroll { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+.paper-head { display: flex; justify-content: space-between; align-items: flex-start; border-top: 4px solid var(--seal); border-bottom: 1px solid var(--seal); padding: 8px 2px; margin-bottom: 10px; }
+.tate { writing-mode: vertical-rl; font: 600 12px/1 var(--jp); letter-spacing: .2em; color: var(--seal); }
+.luck { text-align: center; }
+.luck b { display: block; font: 800 42px/1 var(--jp); color: var(--seal); }
+.luck span { font: 700 10px/1 var(--display); letter-spacing: .18em; text-transform: uppercase; color: #8a5a1c; }
+.luck.l-4 b { color: var(--ink); }
+.paper h2 { margin: 0 0 4px; text-align: center; font: 600 27px/1.08 var(--body); }
+.premise { margin: 0 0 10px; text-align: center; font-style: italic; color: #4a3550; }
+.note { position: relative; margin: 6px 6px 14px auto; max-width: 84%; padding: 9px 12px 8px; transform: rotate(1.4deg); font: 400 14.5px/1.3 var(--hand); background: #fff7c9; box-shadow: 2px 4px 8px #0004; }
+.note i { display: block; text-align: right; font-style: normal; font-size: 12.5px; color: #8a5a1c; }
+.note i::before { content: '~ '; }
+.ch { display: grid; grid-template-columns: 50px 1fr; gap: 11px; padding: 10px 0; border-top: 1px dashed #8a6a2c66; animation: inkin .6s both; }
+@keyframes inkin { from { opacity: 0; filter: blur(4px); transform: translateY(6px); } }
+.ch.here { background: #4aa8ff1c; margin: 0 -8px; padding: 10px 8px; border-radius: 6px; box-shadow: inset 3px 0 0 var(--fox); }
+.ch h3 { margin: 3px 0 2px; font: 600 20px/1.1 var(--body); }
+.ch p { margin: 2px 0; }
+.ch-ends b, .finale b { font: 700 9px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: #8a5a1c; font-style: normal; }
+.finale { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--seal); font-style: italic; }
+.crossing { margin: 6px 0; padding: 10px 12px; text-align: center; border: 1px solid #1a4f96; border-radius: 6px; background: #4aa8ff14; animation: inkin .6s both; }
+.crossing-tag { font: 700 9px/1 var(--display); letter-spacing: .2em; color: #1a4f96; }
+.crossing p { margin: 5px 0 3px; font: 600 19px/1.15 var(--body); }
+.crossing small { font-size: 13px; color: #4a3550; font-style: italic; }
+.road { margin: 10px 0; padding: 4px 10px 10px; border-left: 3px solid var(--gold2); background: #c9973a12; }
+.road.r-B { border-left-color: #2f7fe0; background: #4aa8ff10; }
+.road-head { display: flex; gap: 8px; align-items: baseline; padding-top: 6px; }
+.road-head b { font: 700 11px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; }
+.road-head span { font-style: italic; }
+.edit-hint { margin: 14px 0 0; text-align: center; font: 400 13px var(--hand); color: #8a5a1c; }
+[contenteditable] { border-radius: 3px; transition: background .2s; }
+[contenteditable]:hover { background: #c9973a1f; }
+[contenteditable]:focus { background: #fff9; outline: 1px dashed #8a5a1c; outline-offset: 1px; }
+/* Burn it: the foxfire eats the slip from the bottom up. */
+.burnline { position: absolute; left: 0; right: 0; bottom: 0; height: 46px; opacity: 0; pointer-events: none; background: linear-gradient(#4aa8ff00, var(--fox2) 45%, #fff 55%, #4aa8ff00); filter: blur(5px); }
+#reading.burning .paper { animation: burnup 1.4s ease-in forwards; }
+#reading.burning .burnline { animation: burnline 1.4s ease-in forwards; }
+@keyframes burnup { to { clip-path: inset(0 0 100% 0); filter: brightness(.5) sepia(1) hue-rotate(170deg); } }
+@keyframes burnline { 0% { bottom: 0; opacity: 1; } 90% { opacity: 1; } 100% { bottom: 100%; opacity: 0; } }
+#reading.sealed .scroll::after { content: '封'; position: absolute; left: 50%; top: 42%; width: 130px; height: 130px; margin: -65px; display: grid; place-items: center; font: 800 84px/1 var(--jp); color: var(--seal); border: 6px solid var(--seal); border-radius: 14px; mix-blend-mode: multiply; animation: stamp .45s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes stamp { from { transform: scale(2.6) rotate(-24deg); opacity: 0; } to { transform: scale(1) rotate(-9deg); opacity: .88; } }
+#reading.tying .paper { animation: tie .8s ease-in-out; }
+@keyframes tie { 45% { transform: scale(.82, .9) rotate(2deg); filter: brightness(1.15); } }
+.seals { display: flex; justify-content: center; gap: 10px; padding-top: 12px; }
+.seal { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 74px; color: var(--paper); font: 600 12px/1.05 var(--body); }
+.seal i { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 9px; font: 800 24px/1 var(--jp); font-style: normal; color: var(--paper); background: #3a2a44; border: 2px solid #f3e6c855; box-shadow: 0 4px 0 #0007; transform: rotate(-4deg); transition: transform .12s; }
+.seal:active i { transform: rotate(-4deg) translateY(3px) scale(.95); }
+.seal.red i { background: var(--seal); border-color: #ffb9a8; box-shadow: 0 4px 0 #5e0f14, 0 0 16px #b3262b88; }
+.seal.blue i { background: #1a4f96; border-color: var(--fox2); box-shadow: 0 4px 0 #0c2a55, 0 0 14px #4aa8ff77; }
+
+/* ---------- overlays ---------- */
+.overlay { position: absolute; inset: 0; z-index: 30; display: flex; overflow-y: auto; padding: 18px; background: #07050fe0; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: fade .2s both; }
+/* margin:auto centres it when it fits and lets the top stay reachable when the picker makes it taller than the screen. */
+.held { width: 100%; margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.held-card { width: min(46vw, 190px); flex: none; animation: heldin .45s cubic-bezier(.2, 1.3, .4, 1) both; filter: drop-shadow(0 0 26px #4aa8ff88); }
+@keyframes heldin { from { transform: translateY(60px) scale(.5) rotate(-8deg); opacity: 0; } }
+.held-info { text-align: center; }
+.held-pos { font: 700 10px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.held-info h3 { margin: 5px 0 2px; font: 600 25px/1.1 var(--body); }
+.held-info p { margin: 0 0 10px; font-style: italic; color: #f3e6c8cc; }
+.held-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
+.modal-card { width: 100%; margin: auto; padding: 18px 16px 14px; border-radius: 6px; color: var(--ink); background: linear-gradient(105deg, var(--paper), var(--paper2)); box-shadow: 0 18px 40px #000, 0 0 0 1px var(--gold2); text-align: center; }
+.modal-card p { margin: 0 0 14px; font: 600 18px/1.25 var(--body); }
+.modal-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.modal-card .ghost { color: var(--ink); border-color: #8a5a1c88; background: #fff5; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; }
+}

@@ -41,7 +41,7 @@ import { renderLockScreen } from './lib/ui/lockScreen.js';
 import { renderShade } from './lib/ui/shade.js';
 import { renderHomeScreen, setHomeFolderOpen } from './lib/ui/homeScreen.js';
 import { renderWeyStoreScreen } from './lib/ui/apps/weystore.js';
-import { applyLoadout, buildStoreModel, createHomeFolder, homeLayout, isAppInstalled, markAppSeen, moveHomeApp, moveHomeFolder, removeEmptyHomeFolder, renameHomeFolder, setAppInstalled } from './lib/weystore.js';
+import { applyLoadout, buildStoreModel, createHomeFolder, homeLayout, isAppInstalled, markAppSeen, membershipName, moveHomeApp, moveHomeFolder, removeEmptyHomeFolder, renameHomeFolder, setAppInstalled } from './lib/weystore.js';
 import { getCastEntries, searchCast } from './lib/castDirectory.js';
 import { renderContactsAppScreen, renderContactDetailScreen } from './lib/ui/apps/contacts.js';
 import { initialState as calcInitialState, reduceKeypress } from './lib/calculatorEngine.js';
@@ -86,7 +86,7 @@ import {
 } from './lib/understudy.js';
 import { PAWXAI_PALETTES, buildPawXaiMessages, deletePawXaiPrompt, findPawXaiSceneContext, normalizePawXaiSettings, parsePawXaiResponse, pawXaiSuffixEnabled, savePawXaiPrompt, togglePawXaiSuffix } from './lib/pawxai.js';
 import { renderOnboarding, clampOnboardingPage, ONBOARDING_PAGES } from './lib/ui/onboarding.js';
-import { renderAppHelpDialog, renderNoticeDialog } from './lib/ui/appHelp.js';
+import { renderAppHelpDialog, renderConfirmDialog, renderNoticeDialog } from './lib/ui/appHelp.js';
 import { createAppTutorial, shouldShowAppTutorial } from './lib/ui/appTutorials.js';
 import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster, syncRegistrarAutoContacts } from './lib/registrarLorebook.js';
 import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
@@ -103,6 +103,7 @@ import { installGeminiBlockNotice } from './lib/ui/geminiBlockNotice.js';
 // Only for Custom Preset's starting example (Slow Burn's player quote); quick-reply-ext owns the text.
 import { SHIFT_BODIES } from '../quick-reply-ext/src/roleplayShifts.js';
 import { CHARACTER_THOUGHTS_VARIABLE } from '../quick-reply-ext/src/characterThoughts.js';
+import { FORWARD_CONFIRM_TITLE, forwardConfirmText, needsForwardConfirm } from '../quick-reply-ext/src/introTimelines.js';
 import { buildTetherInjectionPlan, canCapturePhoneScopeIntoConversation, initialRoleplayModeForPhoneScope, locatePhoneScopes, reconcileTetherPrompts, resolvePhoneParticipantName, routePhoneScope, sameParticipants, TETHER_CONTEXT_MESSAGE_OPTIONS } from './lib/roleplayTether.js';
 import { adoptLegacyRoleplayCapture, createCaptureId, ensureCaptureSource, inheritRoleplayThreads, installRoleplayCaptureEvents, pruneMissingRoleplayCaptures, reconcileRoleplayCapture } from './lib/roleplayCapture.js';
 import { getRoleplayMode, isConversationLinkedToChat, ROLEPLAY_MODES } from './lib/roleplayMode.js';
@@ -2180,7 +2181,7 @@ function openKressaConversation() {
 // WeyPhone ships no knowledge of those apps. An extension pushes
 //   { key, label, icon | iconFa, accent, open() }
 // for a standalone overlay, or
-//   { key, label, icon | iconFa, accent, mount(container, controls), unmount?() }
+//   { key, label, icon | iconFa, accent, mount(container, controls), unmount?(), back?() }
 // for a real in-phone screen. `controls.close()` returns to WeyPhone Home. The latter keeps
 // WeyPhone's status/navigation chrome and lets the phone own sizing on both desktop and mobile.
 // onto window.weyPhoneExternalApps (create the array if it is missing, since load order between
@@ -2198,6 +2199,19 @@ function externalApps() {
 
 function externalApp(key) {
     return externalApps().find(app => app.key === key) ?? null;
+}
+
+// The phone's back button inside a mounted extension app. An app with screens of its own can pass
+// `back()` in its registration: return true when it stepped back inside itself, false (or nothing)
+// to let the phone go home as before. Without it, back always went home, which closed the whole app
+// from a screen three steps deep (Ellie's Foxfire Fortunes, 2026-11-16). Same idea as registrarApp.back().
+function externalAppBack() {
+    const app = externalApp(currentExternalAppKey);
+    if (typeof app?.back !== 'function') return false;
+    try { return app.back() === true; } catch (error) {
+        console.warn(`[WeyPhone] ${app.label} back() failed:`, error);
+        return false;
+    }
 }
 
 // ---------------------------------------------------------------- WeyStore
@@ -2340,7 +2354,7 @@ function launchAppFromStore(key) {
     const app = weystoreModel(context).byKey.get(key);
     if (!app || !app.installed) return;
     if (app.locked) {
-        showTierLockedNotice();
+        showTierLockedNotice(key);
         return;
     }
     if (app.needsRoleplay && !isMainRoleplayActive({ characterId: context.characterId, groupId: context.groupId })) {
@@ -2405,7 +2419,10 @@ function weystoreAddBlocked(key, context = SillyTavern.getContext()) {
 /** A loadout (or a loadout undo) can turn a membership app on in one stroke; turn it back off.
  *  The store's own buttons never offer the add in the first place (wp-ws-cta-membership). */
 function enforceMembershipApps(context = SillyTavern.getContext()) {
-    for (const app of APP_REGISTRY) {
+    // Extension tiles that declare tierGated (Foxfire Fortunes) follow the same rule as registry apps. This
+    // only runs right after a loadout is applied, so it stops a loadout adding a locked app; an app the player
+    // already had when their membership lapsed is not removed (it shows locked on the home screen).
+    for (const app of [...APP_REGISTRY, ...externalApps()]) {
         if (app.tierGated && !appVisibleForTier(app, getTier(context))) setWeyStoreInstalled(app.key, false);
     }
 }
@@ -2418,7 +2435,8 @@ function handleWeyStoreAction(control) {
     const labelOf = appKey => weystoreModel(context, settings).byKey.get(appKey)?.label ?? 'App';
     const blockedFromAdd = appKey => {
         if (!weystoreAddBlocked(appKey, context)) return false;
-        showWeyStoreSnack(`${labelOf(appKey)} opens with a Paw Patrol Plus or Platinum membership.`);
+        const def = APP_REGISTRY.find(app => app.key === appKey) || externalApp(appKey);
+        showWeyStoreSnack(`${labelOf(appKey)} opens with a ${membershipName(def?.tierGated || 'any')} membership.`);
         return true;
     };
 
@@ -4074,7 +4092,19 @@ function handleFormatWeyPhone() {
     wpToast('success', 'WeyPhone formatted. First-time setup is ready.');
 }
 
-function showTierLockedNotice() {
+function showTierLockedNotice(key = 'kressa') {
+    // Extension tiles with their own membership (Foxfire Fortunes: Platinum only) get a plain notice in their
+    // own name; Kressa keeps her written one below.
+    const external = externalApp(key);
+    if (external?.tierGated) {
+        renderNoticeDialog(document.getElementById('wp-app-help'), {
+            kicker: external.label,
+            title: `${external.label} locked`,
+            body: `This app is a ${membershipName(external.tierGated)} feature!`,
+            bullets: ['Upgrade your membership to unlock it.'],
+        });
+        return;
+    }
     renderNoticeDialog(document.getElementById('wp-app-help'), {
         kicker: 'Kressa',
         title: 'Wolfgirl Assistant locked',
@@ -5043,7 +5073,7 @@ function handleScreenBodyClick(event) {
             return;
         }
         if (appTile.classList.contains('wp-app-tile-tier-locked')) {
-            showTierLockedNotice();
+            showTierLockedNotice(appTile.dataset.app);
             return;
         }
         if (appTile.classList.contains('wp-app-tile-disabled')) {
@@ -6933,6 +6963,17 @@ async function handleNarrativeAction(button) {
         } else if (action === 'set-intro-variant') {
             if (!before.hasChat || !globalThis.WeylandIntroContext) return;
             const [group, option] = value.split('|');
+            // Forward-only starts (Belle, Blake, Loona and the School Year cast) can't be undone, so ask first (Lucky, 2026-11-16).
+            const variant = globalThis.WeylandIntroContext.describe?.()?.variants?.find(item => item.id === group);
+            if (needsForwardConfirm(variant, option)) {
+                const label = variant.options?.find(item => item.id === option)?.label ?? option;
+                // Asked inside the phone, over PromptOS, not with SillyTavern's page-wide popup (Lucky, 2026-11-18).
+                const confirmed = await renderConfirmDialog(document.getElementById('wp-app-help'), {
+                    kicker: 'PromptOS', title: FORWARD_CONFIRM_TITLE, bodyHtml: forwardConfirmText(label), // already HTML, label escaped
+                    okLabel: 'Move forward', cancelLabel: 'Stay here',
+                });
+                if (!confirmed) return;
+            }
             await globalThis.WeylandIntroContext.setVariant(group, option);
             // XXX re-syncs Standard Kris's post-history to the current prompt (see its Krisrav note), and rebuilds Bap's thoughts block.
             await rebuildNarrativePrompts('XXX');
@@ -7227,8 +7268,11 @@ function showScreen(view) {
                     label: resolveAppLabel(settings, app.key),
                     tierLocked: !appVisibleForTier(app, tier),
                 })),
+            // An extension tile the player's membership can't open (Foxfire Fortunes is Platinum-only) stays on
+            // the home screen but locked, like Kressa: a membership that lapses keeps the tile and its data, and
+            // tapping it shows the locked notice instead of opening the app (Lucky, 2026-11-17).
             extraApps: homeExternalApps.filter(app => isAppInstalled(settings, app.key))
-                .map(({ key, label, icon, iconFa, accent }) => ({ key, label, icon, iconFa, accent: accent || '#8A8A8A' })),
+                .map(app => ({ key: app.key, label: app.label, icon: app.icon, iconFa: app.iconFa, accent: app.accent || '#8A8A8A', tierLocked: !appVisibleForTier(app, tier) })),
             layout: homeLayout(settings, [...APP_REGISTRY.map(app => app.key), ...externalKeys], externalKeys),
             syncAvailable: getSyncApps().some(app => isAppInstalled(settings, app.key)),
             badges: getUnreadCounts(settings, context.chatId),
@@ -8898,6 +8942,8 @@ function initPanel() {
             return;
         }
         if (currentView === 'registrar' && registrarApp.back()) {
+            return;
+        } else if (currentView === 'external-app' && externalAppBack()) {
             return;
         } else if (currentView === 'twitter-following') {
             showScreen('twitter-feed');

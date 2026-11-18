@@ -503,6 +503,12 @@ export function dayNumber(date = new Date()) {
     return Math.floor((date.getTime() - date.getTimezoneOffset() * 60000) / 86400000);
 }
 
+/** The membership a tierGated app opens with, as players read it (see lib/tier.js: 'platinum' = PPP1 only). */
+export function membershipName(tierGated) {
+    if (!tierGated) return '';
+    return tierGated === 'platinum' ? 'Paw Patrol Platinum' : 'Paw Patrol Plus or Platinum';
+}
+
 /**
  * Builds everything the store screens show, as plain data.
  *
@@ -528,9 +534,13 @@ export function buildStoreModel({ registry, externalApps = [], settings, labelFo
             external,
             system,
             installed: isAppInstalled(settings, app.key),
-            locked: !external && isLocked(app),
+            // Membership applies to extension tiles too when they declare `tierGated` (Foxfire Fortunes is
+            // Platinum-only, Lucky 2026-11-17). A tile without the field is never locked: appVisibleForTier
+            // treats a missing tierGated as open to everyone.
+            locked: isLocked(app),
             needsRoleplay: !external && app.requiresRoleplay === true,
-            needsMembership: !external && Boolean(app.tierGated),
+            needsMembership: Boolean(app.tierGated),
+            membership: membershipName(app.tierGated),
             fresh: listing.fresh === true && seen[app.key] !== true,
             footprint: appFootprint(settings, app.key),
             home: 'Home screen',
@@ -567,13 +577,18 @@ export function buildStoreModel({ registry, externalApps = [], settings, labelFo
 
     // Spotlight: a new arrival first. Otherwise one app a day, preferring something the player
     // does not have yet (a pick they already own is a wasted banner), and never a system app.
+    // A listing marked `featured` holds the banner above both (Foxfire Fortunes, Lucky 2026-11-18): it stays
+    // there after the player has seen it, unlike a new arrival. Only an app this install actually has can be
+    // featured, so a missing extension never leaves an empty banner.
     const removable = apps.filter(app => !app.system);
+    const featured = removable.find(app => app.listing.featured === true);
     const fresh = removable.find(app => app.fresh);
     const pool = removable.filter(app => !app.installed).length ? removable.filter(app => !app.installed) : removable;
-    const pick = fresh ?? (pool.length ? pool[((day % pool.length) + pool.length) % pool.length] : null);
+    const pick = featured ?? fresh ?? (pool.length ? pool[((day % pool.length) + pool.length) % pool.length] : null);
     const spotlight = pick ? {
         key: pick.key,
-        kicker: fresh ? 'New arrival'
+        kicker: pick.fresh ? 'New arrival'
+            : pick === featured ? 'Featured'
             : pick.key === 'last-smoke-demo' ? 'Featured demo'
             : pick.installed ? 'Today’s pick' : 'Not on your phone yet',
     } : null;

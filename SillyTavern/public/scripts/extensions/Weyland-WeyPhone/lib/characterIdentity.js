@@ -52,6 +52,10 @@ const CHARACTER_ALIAS_GROUPS = [
     ['blake', 'blake fuyuki'],
     ['loren', 'doctor loren', 'loren montenegro', 'doctor loren montenegro'],
     ['mr. wolfy', 'mr wolfy'],
+    // The cast directory spells him "Garret"; his subbot (rsbGT, Weyland.json uid 92) and every
+    // other Weyland text say "Garrett". Without this the subbot lookup missed him and he never
+    // showed in WeyPhone's group-chat picker.
+    ['garrett', 'garret', 'garrett sullivan', 'garret sullivan'],
 ];
 
 const OFFICIAL_FIRST_NAME_ALIASES = buildFirstNameAliases(CAST_SNAPSHOT.map(entry => entry.name));
@@ -65,6 +69,7 @@ const PREFERRED_CONTACT_DISPLAY_NAMES = {
     dash: 'Dash',
     bap: 'Bap',
     blake: 'Blake Fuyuki',
+    garrett: 'Garrett Sullivan',
 };
 
 export function preferredContactDisplayName(value) {
