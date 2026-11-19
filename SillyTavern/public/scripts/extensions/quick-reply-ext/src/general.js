@@ -119,7 +119,8 @@ export function getCharacterCostumeFromText(charText, charName="", allowExtra) {
         const costumeTag = [...charText.matchAll(/\] ?\[(\w+?)\]/g).map(m => m[1])].reverse()[0];
         const extraTag = /O\d/.test(costumeTag);
         const NSFW = getGlobalVariable("NSFW") === "false";
-        allowExtra = (allowExtra ?? getGlobalVariable("PPP1") === "true") 
+        // Extra outfits are a Paw Patrol Plus perk (Plus or Platinum) since 2026-11-18; they were Platinum-only before.
+        allowExtra = (allowExtra ?? (getGlobalVariable("PP1") === "true" || getGlobalVariable("PPP1") === "true")) 
         || [ // List of characters that will always load extra costumes
             "BlakeSerra",
         ].includes(charName);

@@ -226,6 +226,13 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 .kept-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .kept-card .kept-title { color: #8a5a1c; }
 .kept-card .ghost { color: var(--ink); background: #fff6; border-color: #8a5a1c66; }
+/* The model picker (#modelModal): two labelled dropdowns on the same paper card as the kept slips. */
+.model-field { display: flex; flex-direction: column; gap: 5px; text-align: left; font: 600 15px/1.2 var(--body); color: var(--ink); }
+.model-field small { font-weight: 500; opacity: .7; }
+.model-field select { width: 100%; padding: 9px 10px; border-radius: 4px; border: 1px solid #8a5a1c88; background: #fff8; color: var(--ink); font: 600 15px/1.2 var(--body); }
+.model-note { margin: 0; font: italic 500 14px/1.3 var(--body); color: #2a1a2ecc; }
+/* The error box can carry a second paragraph ("your cards are still on the table"). */
+#modalText { white-space: pre-line; }
 .kept-card .kept-empty { margin: 0; font: italic 500 15px/1.3 var(--body); color: #2a1a2e99; }
 .kept-list { display: flex; flex-direction: column; gap: 7px; min-height: 0; overflow-y: auto; padding: 2px 4px 6px; }
 .kept-list:empty { display: none; }

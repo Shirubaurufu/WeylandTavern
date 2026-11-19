@@ -490,6 +490,7 @@
         // The scene list always opens at the top. This has to happen after the panel is shown: a scroll
         // position set while it is hidden is ignored, so the list used to reopen where it was left.
         if (screen === 'draw') { $('menu').scrollTop = 0; syncMenuMore(); }
+        saveBench();
     }
     // "More below" on the scene list, until it is scrolled to the end.
     function syncMenuMore() {
@@ -530,8 +531,9 @@
     function setupAsk() {
         for (const b of $('spreads').querySelectorAll('button')) {
             b.addEventListener('click', () => {
-                touch(); state.n = Number(b.dataset.n); snd.fx('tap');
-                for (const o of $('spreads').querySelectorAll('button')) { o.classList.toggle('on', o === b); o.setAttribute('aria-checked', String(o === b)); }
+                touch(); snd.fx('tap');
+                setSpreadN(Number(b.dataset.n));
+                saveBench();
             });
         }
         // Only the sandbox lets you type the names; in WeyPhone they are the open chat's.
@@ -544,6 +546,98 @@
         $('keptModal').addEventListener('click', e => { if (e.target === $('keptModal')) closeKept(); });
         $('question').addEventListener('input', syncKept);
         renderKept();
+    }
+
+    // The spread-size buttons (3, 5 or 7 scenes): sets the number and lights the matching button.
+    function setSpreadN(n) {
+        state.n = n;
+        for (const o of $('spreads').querySelectorAll('button')) { const on = Number(o.dataset.n) === n; o.classList.toggle('on', on); o.setAttribute('aria-checked', String(on)); }
+    }
+
+    // ---------- the workbench: progress survives closing the app (see bench.js) ----------
+    // Everything the player set up is written to this device's storage as they go: the spread, the slip, the omens
+    // and the screen. An unsealed fortune is kept per chat. WeyPhone deletes this page when the phone closes, so
+    // without this a failed request plus "close the phone to change the model" lost the whole scene (Lucky,
+    // 2026-11-18).
+    const bench = window.EFFBench || null;
+    let benchTimer = null, restoring = false;
+    // The chat a reading belongs to. The sandbox has no chats, so it uses one fixed name.
+    const benchChat = () => (LIVE ? api.status().chatId : 'sandbox') || '';
+    function spreadSnapshot() {
+        const scr = app.dataset.screen;
+        return {
+            n: state.n, slots: state.slots.map(s => (s ? { id: s.id, rev: !!s.rev } : null)), question: $('question').value,
+            spice: state.spice, dark: state.dark, pace: state.pace, conn: state.conn, cross: state.cross,
+            // Closed mid-gaze comes back to the cards: the request itself carries on in the parent page.
+            screen: scr === 'draw' || scr === 'gaze' ? 'draw' : 'ask',
+        };
+    }
+    function saveBench() {
+        if (!bench || restoring) return;
+        clearTimeout(benchTimer);
+        benchTimer = setTimeout(flushBench, 250);
+    }
+    function flushBench() {
+        clearTimeout(benchTimer); benchTimer = null;
+        if (!bench || restoring) return;
+        bench.saveSpread(spreadSnapshot());
+    }
+    // The open fortune, with whatever was typed on the paper, saved under the chat it was written for (not the
+    // chat that happens to be open now: the player can switch chats with the paper still out).
+    const isFreshDraft = () => !$('reading').hidden && state.mode === 'draft' && state.fromBranch == null;
+    function saveDraftReading() { if (bench && isFreshDraft()) bench.saveReading(state.readingChat, readPaper()); }
+    function dropDraftReading() { if (bench && state.mode === 'draft' && state.fromBranch == null) bench.dropReading(state.readingChat ?? benchChat()); }
+
+    // A saved spread back on the table. Every value is checked, since storage can hold anything (an older version,
+    // a hand edit). Returns true when the player was on the cards, so init() can take them back there.
+    function restoreSpread() {
+        const sp = bench?.getSpread();
+        if (!sp) return false;
+        const sizes = [...$('spreads').querySelectorAll('button')].map(b => Number(b.dataset.n));
+        const int = (v, lo, hi, dflt) => (Number.isInteger(v) && v >= lo && v <= hi ? v : dflt);
+        restoring = true;
+        try {
+            const n = sizes.includes(sp.n) ? sp.n : state.n;
+            setSpreadN(n);
+            const used = new Set();
+            state.slots = Array.from({ length: n }, (_, i) => {
+                const s = Array.isArray(sp.slots) ? sp.slots[i] : null;
+                if (!s || !Number.isInteger(s.id) || !ARCANA[s.id] || used.has(s.id)) return null;
+                used.add(s.id);
+                return { id: s.id, rev: !!s.rev };
+            });
+            if (typeof sp.question === 'string') $('question').value = sp.question.slice(0, Number($('question').maxLength) > 0 ? $('question').maxLength : 1560);
+            state.spice = int(sp.spice, 0, 3, state.spice);
+            state.dark = int(sp.dark, 0, 3, state.dark);
+            state.pace = int(sp.pace, 0, 2, state.pace);
+            state.conn = int(sp.conn, 0, CONN.length - 1, state.conn);
+            state.cross = !!sp.cross;
+            syncOmens(); syncKept();
+        } finally { restoring = false; }
+        return sp.screen === 'draw' && state.slots.some(Boolean);
+    }
+
+    // An unsealed fortune for this chat, opened again. `onlyFresh` is for while the app is open: then only a
+    // fortune the parent saved with nobody here to take it (dressed: false) opens by itself. One the player already
+    // looked at and put aside waits for the next time the app opens.
+    function restoreReading({ onlyFresh = false } = {}) {
+        if (!bench || !$('reading').hidden || !['ask', 'draw', 'unfold'].includes(app.dataset.screen)) return false;
+        const chat = benchChat(), r = bench.getReading(chat);
+        if (!r?.story?.chapters?.length || (onlyFresh && r.dressed)) return false;
+        let story = structuredClone(r.story);
+        if (!r.dressed) {
+            const cards = (r.opts?.cards || []).filter(c => c && Number.isInteger(c.id) && ARCANA[c.id]);
+            if (!cards.length) return false;
+            try { story = dress(story, { cards, darkness: r.opts.darkness ?? state.dark, spice: r.opts.spice ?? state.spice }); } catch { return false; }
+            // The cards the fortune was read from go back on the table too, so "Read again" uses the same spread.
+            const sizes = [...$('spreads').querySelectorAll('button')].map(b => Number(b.dataset.n));
+            if (sizes.includes(cards.length)) { setSpreadN(cards.length); state.slots = cards.map(c => ({ id: c.id, rev: !!c.rev })); }
+        }
+        buildMenu(); buildSlots();
+        show('draw');
+        openReading(story, 'draft');
+        if (!r.dressed) say(['happy', 'Oh! It came through while you were away.'], { required: true });
+        return true;
     }
 
     // ---------- kept slips: requests saved to use again ----------
@@ -605,6 +699,7 @@
         $('btnKeep').textContent = t && at >= 0 ? 'Kept' : 'Keep this one';
         $('btnKeptOpen').textContent = list.length ? `Kept slips (${list.length})` : 'Kept slips';
         $('keptList').querySelectorAll('.kept-slip').forEach((s, i) => s.classList.toggle('on', i === at));
+        saveBench();   // runs on every keystroke on the slip and when a kept slip is put on it
     }
     function keepQuestion() {
         const t = keptText();
@@ -647,6 +742,7 @@
         box.classList.toggle('crossed', state.cross);
         box.style.setProperty('--at', Math.floor(state.n / 2));
         syncMenu(); syncGaze();
+        saveBench();
     }
     // The menu: all 22 cards, both ways up, as 44 plain "this happens" tiles. One tap adds a scene.
     // Lucky's note: the Story Machine was easy because you just picked from a wide menu, so the player
@@ -692,6 +788,7 @@
         const slot = { id, rev };
         state.slots[i] = slot;
         syncMenu();
+        saveBench();
         // A card-sized back flies from the tapped tile to its place in the row.
         const src = fromEl.getBoundingClientRect(), from = { left: src.left + src.width / 2 - 20, top: src.top + src.height / 2 - 32, width: 40, height: 64 };
         const target = $('slots').children[i], to = target.getBoundingClientRect();
@@ -758,8 +855,10 @@
     function closeHeld() { $('cardModal').hidden = true; snd.fx('place'); buildSlots(); }
 
     // ---------- omens: the dials, as things on the table ----------
+    // Kept outside setupOmens so restoring a saved spread (restoreSpread) can redraw the dials too.
+    let syncOmens = () => {};
     function setupOmens() {
-        const sync = () => {
+        const sync = syncOmens = () => {
             $('omMoon').style.setProperty('--p', state.dark); $('valMoon').textContent = DARK[state.dark];
             $('omEmber').style.setProperty('--p', state.spice); $('valEmber').textContent = SPICE[state.spice];
             $('omIncense').style.setProperty('--p', state.pace); $('valIncense').textContent = PACE_NAMES[state.pace];
@@ -767,6 +866,7 @@
             $('omCross').setAttribute('aria-pressed', String(state.cross)); $('valCross').textContent = state.cross ? 'On' : 'Off';
             scene.dataset.spice = state.spice; app.dataset.dark = state.dark;
             $('slots').classList.toggle('crossed', state.cross);
+            saveBench();
         };
         $('omMoon').addEventListener('click', () => { touch(); state.dark = (state.dark + 1) % 4; sync(); snd.fx('tap'); say(LINES.moon[state.dark]); });
         $('omEmber').addEventListener('click', () => { touch(); state.spice = (state.spice + 1) % 4; sync(); snd.fx('tap'); if (state.spice > 1) fire.burst(12); say(LINES.ember[state.spice]); });
@@ -883,6 +983,49 @@
         $('settingsReset').addEventListener('click', resetSettings);
         $('blockAdd').addEventListener('click', addBlock);
         $('blockInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addBlock(); } });
+    }
+
+    // ---------- the model picker (top bar, Settings, and the "fire went out" box) ----------
+    // Lucky, 2026-11-18: a request failed on his phone and the only way to try another model was to close WeyPhone
+    // and change the chat's own model. Now Foxfire has its own choice, like Copycat: a model ('' = whatever the chat
+    // uses) and a backup tried once if it fails. The list is WeyPhone's (the house models plus whatever this
+    // connection offers). Saved at once by the parent; it counts from the next reading, never the one in progress.
+    const hasModels = () => typeof api.getModels === 'function';
+    function modelSummary(m) {
+        const main = m.model || (m.live ? `the chat's model (${m.live})` : "the chat's model");
+        return `Fortunes are written by ${main}.${m.fallback ? ` If it fails, ${m.fallback} tries once.` : ' No backup.'}`;
+    }
+    function renderModels() {
+        if (!hasModels()) return;
+        const m = api.getModels();
+        const fill = (sel, current, first) => {
+            const ids = [...new Set([...(m.options || []), ...(current ? [current] : [])])];
+            sel.replaceChildren(el('option', { value: '', text: first }), ...ids.map(id => el('option', { value: id, text: id })));
+            sel.value = current || '';
+        };
+        fill($('modelMain'), m.model, m.live ? `Use the chat's model (${m.live})` : "Use the chat's model");
+        fill($('modelBackup'), m.fallback, 'No backup');
+        $('modelNote').textContent = `${modelSummary(m)} A change counts from the next reading.`;
+        $('setModelNow').textContent = modelSummary(m);
+    }
+    function openModels() {
+        if (!hasModels()) return;
+        touch(); snd.fx('tap');
+        renderModels();
+        $('modelModal').hidden = false;
+    }
+    function closeModels() { $('modelModal').hidden = true; renderModels(); }
+    function setupModels() {
+        if (!hasModels()) return;
+        $('btnModel').hidden = false;
+        $('setModelGroup').hidden = false;
+        $('btnModel').addEventListener('click', openModels);
+        $('setModelOpen').addEventListener('click', openModels);
+        $('modelClose').addEventListener('click', () => { snd.fx('tap'); closeModels(); });
+        $('modelModal').addEventListener('click', e => { if (e.target === $('modelModal')) closeModels(); });
+        $('modelMain').addEventListener('change', () => { api.setModels({ model: $('modelMain').value }); snd.fx('place'); renderModels(); });
+        $('modelBackup').addEventListener('change', () => { api.setModels({ fallback: $('modelBackup').value }); snd.fx('place'); renderModels(); });
+        renderModels();
     }
 
     // ---------- the gaze ----------
@@ -1004,7 +1147,11 @@
                 return;
             }
             say(['shy', 'Oh... it went quiet.']);
-            modal(`The fire went out: ${err?.message || err}`, [['Okay', true, true]]);
+            // The cards, the slip and the omens are all still on the table (and saved), so trying another model is
+            // one tap away instead of a trip out of the phone.
+            const msg = `The fire went out: ${err?.message || err}\n\nYour cards and your slip are still on the table.`;
+            const choice = await modal(msg, hasModels() ? [['Okay', false], ['Try another model', 'model', true]] : [['Okay', true, true]]);
+            if (choice === 'model') openModels();
         }
     }
     function breakGaze() {
@@ -1073,6 +1220,8 @@
         $('paper').scrollTop = 0;
         requestAnimationFrame(() => { $('paper').scrollTop = 0; });
         snd.fx('unroll');
+        // A fresh fortune is saved the moment it is on the table, so closing the phone now loses nothing.
+        if (editable && fromBranch == null) { state.readingChat = benchChat(); saveDraftReading(); }
     }
     function readPaper() {
         const p = $('paper'), st = structuredClone(state.draft);
@@ -1099,10 +1248,14 @@
     function closeReading(silent) { $('reading').hidden = true; if (!silent) state.fromBranch = null; }
 
     function setupReading() {
+        // Edits typed on an unsealed fortune are saved too (half a second after the last keystroke).
+        let paperTimer = null;
+        $('paper').addEventListener('input', () => { clearTimeout(paperTimer); paperTimer = setTimeout(saveDraftReading, 500); });
         $('slSeal').addEventListener('click', async () => {
             const s = api.status();
             if (s.story && !await confirmModal(`This chat already follows "${s.story.title}". Swap it for this one?`, 'Swap it', 'Keep the old one')) return;
             api.loadStory(readPaper());
+            dropDraftReading();   // sealed in: the chat has it now, so it is not waiting on the table any more
             snd.fx('stamp'); $('reading').classList.add('sealed');
             say(LINES.sealed[0]);
             await wait(1300);
@@ -1121,6 +1274,7 @@
         });
         $('slBurn').addEventListener('click', async () => {
             if (state.mode !== 'draft') { closeReading(); snd.fx('tap'); return; }
+            dropDraftReading();
             if (state.fromBranch != null) api.unshelve(state.fromBranch);
             snd.fx('burn'); $('reading').classList.add('burning');
             sayFrom(LINES.burned);
@@ -1162,11 +1316,21 @@
             }));
         }
         const c = chapterAt(story, s.chapter, route), card = ARCANA[c.card.id];
+        // The chapter being played can be retyped here, the way the fortune could before it was sealed (Lucky,
+        // 2026-11-18). Not once it is fulfilled: nothing follows it any more. The span remembers which chapter it
+        // shows, so a save that lands after the player tapped another card still goes to the right one.
+        const editable = !s.done, ce = editable ? { contenteditable: 'true', spellcheck: 'false' } : {};
+        // "Ends when" reads as one sentence, so the shown text starts lower-case; the saved text keeps its own case
+        // unless the player actually changed it (saveChapterEdit compares against what was shown).
+        const endsShown = `${c.ends.charAt(0).toLowerCase()}${c.ends.slice(1)}`;
         $('ufChapter').classList.toggle('done', s.done);
+        $('ufChapter').dataset.n = String(s.chapter); $('ufChapter').dataset.route = route || '';
         $('ufChapter').replaceChildren(
             el('span', { class: 'ch-meta', text: `Card ${label(story, s.chapter, route)} of ${total} · ${c.pos} · ${card.name}${c.card.rev ? ', reversed' : ''}` }),
-            el('h3', { text: c.name }), el('p', { text: c.scene }), el('p', { class: 'ch-ends', text: `Ends when ${c.ends.charAt(0).toLowerCase()}${c.ends.slice(1)}` }),
-            f && s.chapter === f && !s.done ? el('p', { class: 'uf-fork', text: `Then the crossing: ${story.fork.choice}` }) : '');
+            el('h3', { 'data-f': 'name', ...ce, text: c.name }), el('p', { 'data-f': 'scene', ...ce, text: c.scene }),
+            el('p', { class: 'ch-ends' }, el('b', { text: 'Ends when ' }), el('span', { 'data-f': 'ends', 'data-shown': endsShown, ...ce, text: endsShown })),
+            f && s.chapter === f && !s.done ? el('p', { class: 'uf-fork', text: `Then the crossing: ${story.fork.choice}` }) : '',
+            editable ? el('p', { class: 'edit-hint', text: 'Tap any line to change this chapter. The next reply follows the new version.' }) : '');
         $('ufPrev').disabled = s.chapter <= 1 && !s.done;
         $('ufNext').disabled = s.done;
         // Plain words (Lucky, 2026-11-16): "Veil the cards" did not say that it stops the chat following the fortune.
@@ -1193,6 +1357,19 @@
         syncKeepLater();
         await wait(800);
         $('btnBranch').classList.remove('ping'); void $('btnBranch').offsetWidth; $('btnBranch').classList.add('ping');
+    }
+    // Saves what the player typed into the unfolding chapter. Called half a second after the last keystroke and
+    // again when the field loses focus; the parent ignores a save that changes nothing.
+    let chapterEditTimer = null;
+    function saveChapterEdit() {
+        clearTimeout(chapterEditTimer); chapterEditTimer = null;
+        const box = $('ufChapter'), n = Number(box.dataset.n);
+        if (!n || typeof api.editChapter !== 'function') return;
+        const txt = f => (box.querySelector(`[data-f="${f}"]`)?.textContent || '').replace(/\s+/g, ' ').trim();
+        const endsNode = box.querySelector('[data-f="ends"]');
+        const ends = txt('ends');
+        // Untouched "ends when" goes back as '' (= keep the stored text, capital letter and all).
+        api.editChapter(n, box.dataset.route || null, { name: txt('name'), scene: txt('scene'), ends: ends === endsNode?.dataset.shown ? '' : ends });
     }
     function jumpTo(n, route = null) {
         const s = api.status();
@@ -1221,6 +1398,10 @@
         $('ufRead').addEventListener('click', () => openReading(api.status().story, 'view'));
         $('ufNew').addEventListener('click', () => { snd.fx('tap'); show('ask'); say(LINES.ask[0]); });
         $('ufKeep').addEventListener('click', keepForLater);
+        $('ufChapter').addEventListener('input', () => { clearTimeout(chapterEditTimer); chapterEditTimer = setTimeout(saveChapterEdit, 500); });
+        $('ufChapter').addEventListener('focusout', () => { if (chapterEditTimer) saveChapterEdit(); });
+        // Enter in the one-line chapter name finishes it instead of breaking the line.
+        $('ufChapter').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset?.f === 'name') { e.preventDefault(); e.target.blur(); } });
         $('ufBurn').addEventListener('click', async () => {
             const kept = api.status().shelf.some(k => k.title === api.status().story?.title);
             if (!await confirmModal(kept ? 'Burn this fortune? The chat stops following it. The copy on the wishing branch stays.' : 'Burn this fortune? The chat stops following it. (Tap Keep for later first if you want it again.)', 'Burn it', 'Keep it')) return;
@@ -1265,12 +1446,13 @@
     function stepBack() {
         if (!$('modal').hidden) { $('modalBtns').firstElementChild?.click(); return true; } // first button is always the "no"/cancel
         if (!$('keptModal').hidden) { closeKept(); return true; }
+        if (!$('modelModal').hidden) { closeModels(); return true; }
         if (!$('cardModal').hidden) { closeHeld(); return true; }
         if (!$('reading').hidden) {
             // A fresh fortune that is not sealed or tied would be lost, and it cost a message: ask first.
             if (state.mode === 'draft' && state.fromBranch == null) {
                 confirmModal('Put this fortune down? It is not sealed in or tied to the branch, so it will be gone.', 'Put it down', 'Keep reading')
-                    .then(yes => { if (yes) { closeReading(); snd.fx('tap'); } });
+                    .then(yes => { if (yes) { dropDraftReading(); closeReading(); snd.fx('tap'); } });
             } else {
                 // closeReading() forgets fromBranch, so read it first: a kept fortune goes back to the branch.
                 const fromBranch = state.fromBranch != null;
@@ -1405,6 +1587,12 @@
             },
             finish() { if (data.st) { data.st.done = true; ping(); } },
             setActive(on) { if (data.st) { data.st.active = on; ping(); } },
+            editChapter(n, route, fields) {
+                const ch = data.st && chapterAt(data.st.story, n, route);
+                if (!ch) return false;
+                for (const k of ['name', 'scene', 'ends']) if (fields[k]) ch[k] = fields[k];
+                ping(); return true;
+            },
             eject() { data.st = null; ping(); },
             shelve(story) { data.shelf.unshift(story); data.shelf = data.shelf.slice(0, 12); ping(); },
             unshelve(i) { data.shelf.splice(i, 1); ping(); },
@@ -1436,7 +1624,7 @@
         idleLoop.start();   // the dark room shows her too (dimmed), and show() isn't called for it
         showNames();
         if (LIVE) { app.classList.add('live'); $('inChar').readOnly = true; $('inUser').readOnly = true; $('inChar').tabIndex = -1; $('inUser').tabIndex = -1; }
-        setupCandles(); setupAsk(); setupHeld(); setupOmens(); setupReading(); setupUnfold(); setupSettings();
+        setupCandles(); setupAsk(); setupHeld(); setupOmens(); setupReading(); setupUnfold(); setupSettings(); setupModels();
         $('btnGaze').addEventListener('click', gaze);
         $('btnFate').addEventListener('click', fate);
         $('btnClear').addEventListener('click', clearSlots);
@@ -1459,8 +1647,13 @@
         api.subscribe(() => {
             showNames();
             const scr = app.dataset.screen, has = !!api.status().story;
-            if (scr === 'unfold') renderUnfold();
+            // Not while the player is typing into the chapter: a redraw would throw away the caret (and our own
+            // save is one of the things that calls this). The next redraw after they leave the field catches up.
+            if (scr === 'unfold') { if (!$('ufChapter').contains(document.activeElement)) renderUnfold(); }
             else if (scr === 'ask' && has && $('reading').hidden) show('unfold');
+            // A fortune asked for before the app was closed and reopened lands here when it arrives (this page
+            // isn't the one that asked, so nothing else would show it). Never during a gaze of our own.
+            restoreReading({ onlyFresh: true });
         });
         // She fidgets when it is quiet. Rarely: silence is her default.
         setInterval(() => {
@@ -1472,16 +1665,26 @@
         snd.startMusic();
         document.addEventListener('pointerdown', snd.startMusic);
         document.addEventListener('click', snd.startMusic);
-        window.addEventListener('pagehide', () => { snd.stopMusic(); snd.stopReadingSounds(); snd.ambience(false); });
+        window.addEventListener('pagehide', () => { snd.stopMusic(); snd.stopReadingSounds(); snd.ambience(false); flushBench(); saveDraftReading(); });
+        // A phone going to sleep or switching apps hides the page without closing it: write now, while we can.
+        document.addEventListener('visibilitychange', () => { if (document.hidden) { flushBench(); saveDraftReading(); } });
         layout();
         // The candle opening plays once, ever (Lucky: boot up and get to the menu). After that the room is
         // already lit and she just says hi.
         let litBefore = false;
         try { litBefore = !!localStorage.getItem('eff.lit'); } catch { /* storage blocked: play the opening */ }
+        // Whatever was on the table when the app last closed goes back on it (bench.js): the slip, the cards, the
+        // omens. Restored even in the dark room, so lighting the candles finds it waiting.
+        const backToCards = restoreSpread();
         if (litBefore) {
             document.querySelectorAll('.candle').forEach(c => c.classList.add('lit'));
             app.dataset.lit = 3; fire.set(1); home();
+            // An unsealed fortune for this chat comes first; otherwise back to the cards if that's where they were.
+            if (!restoreReading() && backToCards) { buildMenu(); buildSlots(); show('draw'); }
             setTimeout(() => say(LINES.greet[1]), 500);
+            // Closed while she was still looking: the request carries on in the parent page and its fortune is
+            // saved when it lands (restoreReading in the subscriber above shows it).
+            if (LIVE && api.status().busy) setTimeout(() => say(['think', 'Still looking... I will put it on the table when it comes.'], { required: true }), 3200);
         }
     }
     init();

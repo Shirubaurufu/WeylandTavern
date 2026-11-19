@@ -15,12 +15,18 @@ import { getContext, extension_settings } from '../../extensions.js';
 import * as wp from '../Weyland-WeyPhone/lib/generation.js';
 import { getTier, appVisibleForTier } from '../Weyland-WeyPhone/lib/tier.js';
 import {
-    buildInjection, readChapterFlag, nextChapterState, afterDelete, forkChapter, totalFor, chapterLabel,
+    buildInjection, readChapterFlag, nextChapterState, afterDelete, forkChapter, totalFor, chapterLabel, chapterAt,
 } from './storyCore.js';
 // The planner's view of the chat (card text with the charPer fallback, named cast and places): Muse's
 // helpers, copied (see chatContext.js). test/storyCoreCopy.test.mjs checks the copies against Muse's.
 import { hasOpenChat, oocModeOn, currentCharacter, cardText, recentChat, loreText } from './chatContext.js';
 import { buildFortuneMessages, parseFortune, fortuneMaxTokens, isFilterRefusal, ACTS_FOR_USER_NOTE, BLOCK_OPTIONS, BLOCK_CUSTOM_MAX, BLOCK_CUSTOM_CHARS } from './fortuneCore.js';
+// The model list WeyPhone's own pickers use (Copycat's included), so Foxfire offers exactly the same models.
+import { collectPhoneModelIds } from '../Weyland-WeyPhone/lib/ui/apps/settings.js';
+// The workbench store (app/bench.js) is a plain script shared with the app page; importing it runs it, and it
+// puts EFFBench on this window. See that file for why progress lives in localStorage.
+import './app/bench.js';
+const storePendingReading = (...a) => globalThis.EFFBench?.storePendingReading(...a);
 
 const KEY = 'ellie-foxfire-fortunes';
 const APP_NAME = 'Foxfire Fortunes'; // "Ellie's" dropped from the name (Lucky, 2026-11-17)
@@ -36,6 +42,7 @@ const SHELF_MAX = 12;
 const PROMPTS_MAX = 20;
 const PROMPT_CHARS = 1560; // the textarea's own maxlength
 const PROMPT_NAME_CHARS = 40; // a kept slip's name: a short label, one line in the kept-slips box
+const CHAPTER_EDIT_CHARS = 1200; // one retyped chapter field (name, scene or "ends when"); generated ones are far shorter
 
 let frame = null;
 let abort = null;
@@ -68,6 +75,36 @@ function writePrefs(next) {
     ctx().saveSettingsDebounced?.();
     return readPrefs();
 }
+
+// Which model writes the fortune, and a backup tried once if it fails (Lucky, 2026-11-18: on his phone a request
+// failed and the only way to try another model was to close WeyPhone and change the chat's own model, which also
+// threw away the spread he had set up). Same shape as Copycat's: '' = use the chat's current model / no backup.
+// Kept in extension settings like the blacklist, so a choice made on the PC holds on the phone too.
+const MODEL_CHARS = 200;
+function readModels() {
+    const root = shelfStore();
+    const clean = v => String(v || '').trim().slice(0, MODEL_CHARS);
+    return { model: clean(root.model), fallback: clean(root.fallbackModel) };
+}
+function writeModels(next = {}) {
+    const root = shelfStore();
+    if ('model' in next) root.model = String(next.model || '').trim().slice(0, MODEL_CHARS);
+    if ('fallback' in next) root.fallbackModel = String(next.fallback || '').trim().slice(0, MODEL_CHARS);
+    ctx().saveSettingsDebounced?.();
+    return readModels();
+}
+function liveModel() { try { return String(ctx().getChatCompletionModel?.() || '').trim(); } catch { return ''; } }
+function modelInfo() {
+    const { model, fallback } = readModels();
+    let options = [];
+    // collectPhoneModelIds keeps an unknown saved id in the list, so a hand-typed or retired model never vanishes.
+    try { options = collectPhoneModelIds(model); if (fallback && !options.includes(fallback)) options.push(fallback); } catch { /* no list: the picker still offers "current chat model" */ }
+    return { model, fallback, live: liveModel(), options };
+}
+
+// The chat a request belongs to, so a fortune that comes back after the player left the app (or the chat) is
+// saved against the chat it was written for, never opened in another one.
+function chatId() { try { return String(ctx().getCurrentChatId?.() || ctx().chatId || ''); } catch { return ''; } }
 
 function chatState() {
     const meta = ctx().chatMetadata;
@@ -114,6 +151,9 @@ function status() {
     const st = chatState();
     return {
         hasChat: hasOpenChat(),
+        chatId: chatId(),
+        // True while a fortune is being written, so a reopened app knows the last one is still on its way.
+        busy: !!abort,
         charName: c.groupId ? (c.groups?.find(g => g.id === c.groupId)?.name || 'this group') : (ch?.name || ''),
         userName: c.name1 || '',
         story: st?.story || null,
@@ -136,10 +176,10 @@ async function generate({ question = '', cards = [], spice = 1, darkness = 1, pa
     if (!hasOpenChat()) throw new Error('Open a chat first.');
     // The phone already keeps the app shut without alpha; this stops a request from a page left open.
     if (membershipLapsed()) throw new Error('Foxfire Fortunes needs a Paw Patrol Platinum membership.');
-    if (!c.ConnectionManagerRequestService) throw new Error('Connection Manager is not available.');
-    const cm = c.extensionSettings.connectionManager || {};
-    const profileId = wp.resolveProfileId({ connectionProfileId: c.extensionSettings.WeyPhone?.connectionProfileId || '' }, cm.selectedProfile ?? '', cm.profiles);
-    const model = wp.resolveModelOverride({ settingsModel: '', liveModel: c.getChatCompletionModel?.() });
+    const profileId = wp.resolvePhoneProfileId(c, c.extensionSettings.WeyPhone?.connectionProfileId || '');
+    const picked = readModels();
+    const model = wp.resolveModelOverride({ settingsModel: picked.model, liveModel: c.getChatCompletionModel?.() });
+    const forChat = chatId();
     const recent = recentChat();
     // Named cast and places are looked up from the player's question, as the Story Machine does from its idea.
     const lore = await loreText(question, recent);
@@ -151,18 +191,24 @@ async function generate({ question = '', cards = [], spice = 1, darkness = 1, pa
         blocks: { ids: readPrefs().blocks, custom: readPrefs().customBlocks },
     });
     abort?.abort();
-    abort = new AbortController();
-    const signal = abort.signal;
+    const mine = new AbortController();
+    abort = mine;
+    const signal = mine.signal;
     // A content filter's refusal is flagged (`filtered`), so the app has Ellie answer it instead of an error box.
+    // The backup model (if the player picked one) gets one retry, the way Copycat's does; a cancel never retries.
     let result;
     try {
-        result = await wp.sendMessage({
-            sendRequest: (pid, msgs) => c.ConnectionManagerRequestService.sendRequest(pid, msgs, fortuneMaxTokens({ fork, sheet }), { signal }, model ? { model } : {}),
-            profileId, messages, model,
+        result = await wp.sendMessageWithFallback({
+            sendRequest: (pid, msgs, requestModel) => wp.phoneSendRequest(c, pid, msgs, fortuneMaxTokens({ fork, sheet }), { signal }, requestModel ? { model: requestModel } : {}),
+            profileId, messages, model, fallbackModel: picked.fallback,
         });
     } catch (err) {
         if (isFilterRefusal(err?.message || err)) { try { err.filtered = true; } catch { /* a frozen error */ } }
+        // Name the model in the error, so the player can tell which one to switch away from.
+        if (model && err?.message && !err.filtered && !String(err.message).includes(model)) { try { err.message = `${err.message} (model: ${model})`; } catch { /* a frozen error */ } }
         throw err;
+    } finally {
+        if (abort === mine) abort = null;
     }
     const text = wp.extractResponseText(result);
     if (isFilterRefusal(text, { reply: true })) {
@@ -176,6 +222,13 @@ async function generate({ question = '', cards = [], spice = 1, darkness = 1, pa
     }
     // Remembered on the story itself, so the injection knows it later (and a shelved fortune keeps it).
     if (actsForUser) story.actsForUser = true;
+    // Saved before it is handed back: if the app was closed while Ellie was looking (the iframe is gone, so nobody
+    // is waiting for this promise), the fortune still lands on the table next time the app opens in this chat.
+    // The cards travel with it, because the app fills in each chapter's card and the luck from them (dress()).
+    storePendingReading(forChat, structuredClone(story), {
+        cards: cards.map(({ id, rev }) => ({ id, rev })), darkness, spice,
+    });
+    notify();
     return story;
 }
 
@@ -215,6 +268,9 @@ const api = {
     blockLimits: () => ({ max: BLOCK_CUSTOM_MAX, chars: BLOCK_CUSTOM_CHARS }),
     getPrefs: readPrefs,
     setPrefs: writePrefs,
+    // The model picker: { model, fallback, live, options }. '' = the chat's current model / no backup.
+    getModels: modelInfo,
+    setModels: next => { writeModels(next); return modelInfo(); },
     cancel() { abort?.abort(); abort = null; },
     subscribe(fn) { subscribers.add(fn); return () => subscribers.delete(fn); },
     loadStory(story) {
@@ -234,6 +290,24 @@ const api = {
         const chapter = Math.min(Math.max(1, n | 0), totalFor(st.story, r));
         if (!forkAt || chapter <= forkAt) r = null;
         saveState({ ...st, chapter, route: r, done: false, advance: null });
+    },
+    // Retyping a chapter of the fortune this chat follows (Lucky, 2026-11-18: the review screen let you change the
+    // directions before sealing, the unfolding page didn't). Only that chapter's text changes; the chat keeps its
+    // place, route and paused/finished state, and the next reply gets the new directions (saveState re-injects).
+    // An emptied field keeps its old text, so a slip of the thumb can't send a blank chapter to the model.
+    editChapter(n, route, fields = {}) {
+        const st = chatState();
+        const c = st?.story ? chapterAt(st.story, n, route) : null;
+        if (!c) return false;
+        const next = structuredClone(st.story);
+        const target = chapterAt(next, n, route);
+        for (const key of ['name', 'scene', 'ends']) {
+            const v = String(fields[key] ?? '').replace(/\s+/g, ' ').trim().slice(0, CHAPTER_EDIT_CHARS);
+            if (v) target[key] = v;
+        }
+        if (['name', 'scene', 'ends'].every(k => target[k] === c[k])) return false;
+        saveState({ ...st, story: next });
+        return true;
     },
     finish() {
         const st = chatState();
