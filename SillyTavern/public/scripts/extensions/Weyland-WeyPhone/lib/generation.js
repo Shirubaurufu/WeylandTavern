@@ -189,6 +189,88 @@ export function resolveProfileId(settings, activeProfileId, availableProfiles = 
 }
 
 /**
+ * Stands in for a profile id when a request should go out on the player's LIVE connection.
+ * Truthy on purpose, so sendMessage's "no profile" check still only fires when there is truly nothing.
+ */
+export const LIVE_CONNECTION = '__weyphone_live_connection__';
+
+/**
+ * Where a phone/app request goes (Lucky, 2026-11-18: "the ltm engine works even if you were using openrouter or
+ * another provider... the other ones ought to").
+ *
+ * Every install ships with the "HelixMind" Connection Profile SELECTED. A player who then switches the API panel to
+ * OpenRouter (or Anthropic, a proxy, anything) keeps that profile selected, so every WeyPhone app kept posting to
+ * HelixMind, with the OpenRouter model id on top, while the main chat and LTM worked. LTM had already solved this by
+ * posting to the live Chat Completion connection, so this does the same:
+ *   1. a profile picked for the phone itself (WeyPhone settings, or a conversation's memory profile) still wins:
+ *      that is a deliberate choice for a multi-provider setup;
+ *   2. on Chat Completion: the live connection, exactly what the chat is using right now;
+ *   3. on Text Completion: the old profile lookup, because the live text-completion settings can't be posted as a
+ *      chat request (LTM asks for a profile there too).
+ * @param {{mainApi?: string, extensionSettings?: any}} context SillyTavern.getContext()
+ * @param {string} [explicitProfileId]
+ */
+export function resolvePhoneProfileId(context, explicitProfileId = '') {
+    const explicit = String(explicitProfileId || '').trim();
+    if (explicit) return explicit;
+    if (context?.mainApi === 'openai') return LIVE_CONNECTION;
+    const cm = context?.extensionSettings?.connectionManager;
+    return resolveProfileId({}, cm?.selectedProfile ?? '', cm?.profiles);
+}
+
+/**
+ * The chat-completion payload for the live connection, built the way LTM's buildRequestPayload does (source, custom
+ * URL, reverse proxy). The caller's override (model) is merged last, like ConnectionManagerRequestService does.
+ * @param {any} oai chatCompletionSettings (oai_settings)
+ */
+export function buildLiveRequestPayload({ oai, messages, maxTokens, stream = false, liveModel = '', overridePayload = {} }) {
+    const source = oai?.chat_completion_source || 'custom';
+    const payload = {
+        stream,
+        messages: Array.isArray(messages) ? messages : [{ role: 'user', content: String(messages ?? '') }],
+        max_tokens: maxTokens,
+        model: liveModel || undefined,
+        chat_completion_source: source,
+        ...(overridePayload || {}),
+    };
+    if (!payload.model) delete payload.model;
+    if (source === 'custom' && oai?.custom_url) payload.custom_url = oai.custom_url;
+    if (oai?.reverse_proxy) {
+        payload.reverse_proxy = oai.reverse_proxy;
+        payload.proxy_password = oai.proxy_password || '';
+    }
+    return payload;
+}
+
+/**
+ * Drop-in for ConnectionManagerRequestService.sendRequest(profileId, prompt, maxTokens, custom, overridePayload):
+ * the same arguments and result, but LIVE_CONNECTION posts to the live connection with the chat's own preset (the
+ * profile path applies the profile's preset, so generation settings stay equivalent). Errors are wrapped the same
+ * way ("API request failed", cause = the real error), so the error guide reads them unchanged.
+ */
+export async function phoneSendRequest(context, profileId, messages, maxTokens, custom = undefined, overridePayload = {}) {
+    if (profileId !== LIVE_CONNECTION) {
+        return context.ConnectionManagerRequestService.sendRequest(profileId, messages, maxTokens, custom, overridePayload);
+    }
+    const service = context.ChatCompletionService;
+    if (!service) throw new Error('ChatCompletionService is not available in this SillyTavern version');
+    const oai = context.chatCompletionSettings;
+    const payload = buildLiveRequestPayload({
+        oai,
+        messages,
+        maxTokens,
+        stream: !!custom?.stream,
+        liveModel: context.getChatCompletionModel?.() || '',
+        overridePayload,
+    });
+    try {
+        return await service.processRequest(payload, { presetName: oai?.preset_settings_openai || undefined }, custom?.extractData ?? true, custom?.signal ?? null);
+    } catch (error) {
+        throw new Error('API request failed', { cause: error });
+    }
+}
+
+/**
  * Which model a WeyPhone generation should run on. The caller supplies the appropriate explicit
  * setting (social-app sync, texting, or Kressa); it wins over the live main-chat model. An empty
  * result means "no override, let the connection profile decide".

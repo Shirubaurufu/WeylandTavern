@@ -106,7 +106,8 @@ test('Mien discovers every Nara outfit when the card name uses stacked Unicode m
         },
     });
     assert.deepEqual(gallery.outfits.map(outfit => outfit.label), [
-        'Regular Outfit', 'CommunityRegular Outfit', 'CommunityLingerie', 'CommunityNaked',
+        // Labels only (2026-11-18): the folders are still "CommunityRegular Outfit" etc.
+        'Regular Outfit', 'Community · Regular Outfit', 'Community · Lingerie', 'Community · Naked',
     ]);
 });
 

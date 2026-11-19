@@ -11,6 +11,7 @@ import { isMobile } from "../../RossAscends-mods.js";
 import { setPersonaLockState } from "../../personas.js";
 import { isSideCharacterShown, updateSideCharacter } from "../Side-Character-Loader/index.js";
 import { isReplyPlaceholder, portraitSignature, saysNothingAboutCostume } from "./src/portraitSignature.js";
+import { OUTFIT_PICK_VAR, OUTFIT_STICK_VAR, activeOutfitPick, cardSpriteSets, decideCostume, isCommunityOutfit, isExtraOutfit, isNsfwOutfit, outfitToShow, splitOutfitFolder } from "./src/outfitPick.js";
 import { SlashCommandParser } from "../../slash-commands/SlashCommandParser.js";
 import { SlashCommand } from "../../slash-commands/SlashCommand.js";
 import { ARGUMENT_TYPE, SlashCommandArgument } from "../../slash-commands/SlashCommandArgument.js";
@@ -786,10 +787,19 @@ async function TitleBarColors() {
             }
             await XXX();
         }
-        const costumeSave = getLocalVariable("CostmSave").split("/");
+        // An outfit the player put on in Mien wins over the story's costume (src/outfitPick.js); the old wand-menu
+        // picker's choice was lost on every reload because only CostmSave was restored here.
+        const costumeSave = outfitToShow({
+            costmSave: getLocalVariable("CostmSave"),
+            pick: getLocalVariable(OUTFIT_PICK_VAR),
+            bases: spriteSetsFor(getCurrentCharacterName()).map(set => set.base),
+        }).split("/");
         if (costumeSave?.length > 1) {
-            // Open-world cards re-show their saved character through their own slot (see OpenWorldCostumes)
-            await setCostumeAndExpression(costumeSave[0], costumeSave[1], undefined, { onCurrentCard: isOpenWorldCard(getCurrentCharacterName()) });
+            // Open-world cards re-show their saved character through their own slot (see OpenWorldCostumes); duo
+            // cards are drawn from member-named sets, whose override also belongs to the open card (see GroupCostumes)
+            const cardName = getCurrentCharacterName();
+            const onCurrentCard = isOpenWorldCard(cardName) || getGroupCardMembers(cardName).length > 0;
+            await setCostumeAndExpression(costumeSave[0], costumeSave[1], undefined, { onCurrentCard });
             const costumeSaveSide = getLocalVariable("CostmSaveSide");
             if (costumeSaveSide) {
                 const expSave = getLocalVariable("ExpSave");
@@ -1697,15 +1707,8 @@ async function GetCharacterNamesAndAliases(charName) {
         ].filter(x => typeof x === 'string' && x !== "")
     ].filter(name => !charName?.includes(name));
 
-    // Higher up is higher priority
-    const characterGroupsWithExpressions = [
-        // Groups of two
-        { output: "BlakeSerra", display: "Blake & Serra", members: ["Blake", "Serra"] },
-        { output: "LyrisVesper", display: "Lyris & Vesper", members: ["Lyris", "Vesper"] },
-        { output: "JennLucy", display: "Jenn & Lucy", members: ["Jenn", "Lucy"] },
-        // Cerberus Sisters
-        { output: "AstridNeshe", display: "Cerberus Sisters", members: ["Astrid", "Neshe"] }
-    ];
+    // Higher up is higher priority (module-level since 2026-11-18: Mien's duo-card outfits read it too)
+    const characterGroupsWithExpressions = CHARACTER_GROUPS_WITH_EXPRESSIONS;
 
     const groupsByMember = new Map();
 
@@ -2049,10 +2052,22 @@ async function GroupCostumes(charName, charMessage) {
 
         const costume = getCharacterCostumeFromText(charMessage.mes, pickedChar);
         const charCostume = `${pickedChar}/${costume}`;
-        if (costume && getLocalVariable("CostmSave") !== charCostume) {
-            setLocalVariable("CostmSave", charCostume);
-            await setCostume(charCostume);
-            DebugLog(`Set new costume: ${charCostume}`);
+        // A pick from Mien (who is shown + what they wear, src/outfitPick.js) holds until the footer asks for a
+        // different OUTFIT; the member chosen from the scene can change every reply without undoing it.
+        const decision = decideCostume({
+            storyCostume: costume ? charCostume : "",
+            costmSave: getLocalVariable("CostmSave"),
+            pick: getLocalVariable(OUTFIT_PICK_VAR),
+            stick: getLocalVariable(OUTFIT_STICK_VAR) === "true",
+            bases: spriteSetsFor(charName).map(set => set.base),
+        });
+        if (decision.saveStory) setLocalVariable("CostmSave", decision.saveStory);
+        if (decision.clearPick) deleteLocalVariable(OUTFIT_PICK_VAR);
+        // onCurrentCard: the sets are named after members, and Blake/Serra have cards of their own; the override
+        // must go on the open duo card (before 2026-11-18 a solo Blake frame was written to Blake's own card).
+        if (decision.show && getCurrentCardSpriteOverride() !== decision.show) {
+            await setCostume(decision.show, { onCurrentCard: true });
+            DebugLog(`Set new costume: ${decision.show}${decision.show === charCostume ? "" : " (picked in Mien)"}`);
         }
         DebugLog(`[P] GroupCostumes: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
     } catch (error) {
@@ -2089,11 +2104,23 @@ async function AutoCostumes(charName, charMessage) {
                 // shower came out in her crop top). Only when this character already has a costume showing; a first
                 // reply, or one right after the Phone portrait, still gets the regular outfit.
                 const keepsCostume = saysNothingAboutCostume(charMessage.mes) && getLocalVariable("CostmSave").startsWith(`${charName}/`);
+                // An outfit the player put on in Mien (src/outfitPick.js) holds until the story asks for a different
+                // costume, or for good while "Keep on" is set. Without a pick this is the same rule as before.
+                const decision = decideCostume({
+                    storyCostume: costume && !keepsCostume ? charCostume : "",
+                    costmSave: getLocalVariable("CostmSave"),
+                    pick: getLocalVariable(OUTFIT_PICK_VAR),
+                    stick: getLocalVariable(OUTFIT_STICK_VAR) === "true",
+                    characterName: charName,
+                });
                 // Keep the current sprite rather than switching to a missing folder
-                if (costume && !keepsCostume && getLocalVariable("CostmSave") !== charCostume && await spriteFolderExists(charCostume)) {
-                    setLocalVariable("CostmSave", charCostume);
-                    setCostume(charCostume);
-                    DebugLog(`Set new costume: ${charCostume}`);
+                const storyFolderExists = decision.saveStory ? await spriteFolderExists(decision.saveStory) : false;
+                if (decision.saveStory && storyFolderExists) setLocalVariable("CostmSave", decision.saveStory);
+                if (decision.clearPick && storyFolderExists) deleteLocalVariable(OUTFIT_PICK_VAR);
+                const showsStory = decision.show && decision.show === decision.saveStory;
+                if (decision.show && (showsStory ? storyFolderExists : getCurrentCardSpriteOverride() !== decision.show)) {
+                    setCostume(decision.show);
+                    DebugLog(`Set new costume: ${decision.show}${showsStory ? "" : " (kept on by the player)"}`);
                 }
             }
         }
@@ -2362,6 +2389,116 @@ async function startDoseAndRebuild(shift) {
 async function endDoseAndRebuild() {
     endDose();
     await XXX();
+}
+
+/**
+ * Combined sprite sets: when every member of a group is on screen, they are drawn together from `output`'s folder.
+ * Higher up is higher priority. Used by GetCharacterNamesAndAliases (scene detection) and by the duo-card outfits.
+ */
+const CHARACTER_GROUPS_WITH_EXPRESSIONS = [
+    // Groups of two
+    { output: "BlakeSerra", display: "Blake & Serra", members: ["Blake", "Serra"] },
+    { output: "LyrisVesper", display: "Lyris & Vesper", members: ["Lyris", "Vesper"] },
+    { output: "JennLucy", display: "Jenn & Lucy", members: ["Jenn", "Lucy"] },
+    // Cerberus Sisters
+    { output: "AstridNeshe", display: "Cerberus Sisters", members: ["Astrid", "Neshe"] }
+];
+
+/** The sprite sets the open card is drawn from (one for a normal card; members + combined sets for a duo card). */
+function spriteSetsFor(cardName) {
+    return cardSpriteSets(cardName, getGroupCardMembers(cardName), CHARACTER_GROUPS_WITH_EXPRESSIONS);
+}
+
+/**
+ * Whether Mien can dress the open card, and what it is wearing. WeyPhone's Mien reads this through
+ * globalThis.WeylandOutfits (wired at the bottom of this file), the same way PromptOS reaches WeylandDose.
+ * Duo cards (Lyris & Vesper, Blake & Serra, Cerberus Sisters) are drawn from several sprite sets (`sets`): each
+ * member's own and combined ones like "LyrisVesper"; a pick there chooses who is shown AND what they wear.
+ * Not offered in SillyTavern group chats (costumes can't be attached to a card there: no card is open) or on the
+ * open-world cards (Weybot, Mirror Weyland, Kinsbane Manor), which have their own costume systems.
+ * @param {string} cardName the card Mien is showing
+ */
+function describeOutfits(cardName) {
+    const context = SillyTavern.getContext();
+    const openCard = getCurrentCharacterName();
+    let reason = "";
+    if (context.groupId) reason = "group-chat";
+    else if (!openCard || openCard !== cardName) reason = "not-this-card";
+    else if (isOpenWorldCard(openCard)) reason = "open-world";
+    const sets = spriteSetsFor(cardName);
+    const bases = sets.map(set => set.base);
+    const costmSave = getLocalVariable("CostmSave");
+    const pick = activeOutfitPick(getLocalVariable(OUTFIT_PICK_VAR), bases);
+    return {
+        supported: !reason,
+        reason,
+        duo: sets.length > 1,
+        sets,
+        pick,
+        stick: Boolean(pick) && getLocalVariable(OUTFIT_STICK_VAR) === "true",
+        story: bases.includes(splitOutfitFolder(costmSave).character) ? costmSave : "",
+        wearing: outfitToShow({ costmSave, pick, bases }),
+        autoCostumes: getGlobalVariable("AutoCostume") !== "No",
+        // Extra outfits need Paw Patrol Plus or above (isExtraOutfit in src/outfitPick.js).
+        member: getGlobalVariable("PP1") === "true" || getGlobalVariable("PPP1") === "true",
+        nsfwHidden: getGlobalVariable("NSFW") === "true",
+    };
+}
+
+/** Nara's card name is decorated with combining marks; this is the plain-letters test for it. */
+function isNaraName(name) {
+    return String(name ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim() === "Nara";
+}
+
+/**
+ * Put an outfit on the open card (Mien's "Wear"). Keeps the current mood, like the old costume menu did.
+ * @param {string} folder "<Sprite set>/<Outfit>" ("Summer/Cheerleader", "Lyris/Casual")
+ * @param {{stick?: boolean, card?: string}} [options] stick: hold it whatever the story's outfit codes say;
+ *   card: the open card's name (needed on duo cards, whose sprite sets are named after members)
+ */
+async function wearOutfit(folder, { stick = false, card = "" } = {}) {
+    const { character, outfit } = splitOutfitFolder(folder);
+    const cardName = card || character;
+    const state = describeOutfits(cardName);
+    if (!state.supported) throw new Error("Outfits can't be changed from Mien on this card.");
+    if (!state.sets.some(set => set.base === character)) throw new Error(`${character} isn't part of ${cardName}.`);
+    if (isExtraOutfit(outfit, character) && !state.member) throw new Error("Bonus outfits are a Paw Patrol Plus perk.");
+    if (isNsfwOutfit(outfit) && state.nsfwHidden) throw new Error("NSFW outfits are hidden right now.");
+    if (!await spriteFolderExists(folder)) throw new Error(`No sprites found for ${folder}.`);
+    // Nara's Community sets are a mode, not just a folder: the footer codes add the prefix while it is on.
+    if (isNaraName(character)) {
+        if (isCommunityOutfit(outfit)) setGlobalVariable("NaraCommunity", "Community");
+        else deleteGlobalVariable("NaraCommunity");
+    }
+    // The pick holds until the story asks for something different from what it last asked for. With no costume
+    // saved for her yet (first reply, or right after the Phone portrait), take the last reply's costume as that
+    // baseline, or the very next reply would count as a change and undress the pick.
+    if (!state.story) {
+        const last = getLastMessage("char");
+        setLocalVariable("CostmSave", `${character}/${getCharacterCostumeFromText(last?.mes ?? "", character)}`);
+    }
+    setLocalVariable(OUTFIT_PICK_VAR, folder);
+    if (stick) setLocalVariable(OUTFIT_STICK_VAR, "true");
+    else deleteLocalVariable(OUTFIT_STICK_VAR);
+    // A duo card's sets are named after members, who may have cards of their own (Blake, Serra): the override
+    // belongs to the OPEN card, never to the member's card.
+    await setCostumeAndExpression(character, outfit, undefined, { onCurrentCard: state.duo });
+}
+
+/** Mien's "Keep on" switch for the outfit already picked. */
+function setOutfitStick(on) {
+    if (on) setLocalVariable(OUTFIT_STICK_VAR, "true");
+    else deleteLocalVariable(OUTFIT_STICK_VAR);
+}
+
+/** Forget the player's pick and go back to the costume the story last asked for. */
+async function takeOffOutfit(cardName) {
+    const state = describeOutfits(cardName);
+    if (!state.supported) return;
+    deleteLocalVariable(OUTFIT_PICK_VAR);
+    deleteLocalVariable(OUTFIT_STICK_VAR);
+    const { character, outfit } = splitOutfitFolder(state.story || `${state.sets[0].base}/Regular Outfit`);
+    await setCostumeAndExpression(character, outfit, undefined, { onCurrentCard: state.duo });
 }
 
 /**
@@ -2660,4 +2797,6 @@ function registerSlashCommands() {
     globalThis.WeylandIntroContext = { describe: describeIntroContext, setMode: setIntroContextMode, setVariant: setIntroVariant };
     // PromptOS's "A dose of..." button. describe() never reveals how long a dose lasts.
     globalThis.WeylandDose = { describe: describeDose, start: startDoseAndRebuild, end: endDoseAndRebuild };
+    // Mien's Wear / Keep on / Take off (see describeOutfits). describe() is synchronous.
+    globalThis.WeylandOutfits = { describe: describeOutfits, wear: wearOutfit, setStick: setOutfitStick, takeOff: takeOffOutfit };
 })();

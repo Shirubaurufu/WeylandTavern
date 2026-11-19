@@ -84,7 +84,9 @@ test('[XX] and a missing costume tag both say nothing about the costume; other c
 
 test('a reply with no costume tag keeps the costume that is showing', () => {
     assert.match(source, /const keepsCostume = saysNothingAboutCostume\(charMessage\.mes\) && getLocalVariable\("CostmSave"\)\.startsWith\(`\$\{charName\}\/`\);/);
-    assert.match(source, /if \(costume && !keepsCostume && getLocalVariable\("CostmSave"\) !== charCostume/);
+    // Since 2026-11-18 the "different from CostmSave" check lives in decideCostume (quick-reply-ext/src/outfitPick.js,
+    // tested in mienWardrobe.test.js); a reply that keeps the costume passes it no story costume at all.
+    assert.match(source, /storyCostume: costume && !keepsCostume \? charCostume : ""/);
 });
 
 // Measured 2026-11-11 with real Sonnet 5 replies, streaming on: a reroll fires MESSAGE_RECEIVED twice for the same
