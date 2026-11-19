@@ -1,4 +1,8 @@
 import { canonicalCharacterName, displayCharacterName } from './characterIdentity.js';
+// The outfit rules (which outfits are NSFW, which need Paw Patrol Plus) are quick-reply-ext's, the module that dresses
+// the character; one copy so Mien and the costume system can't disagree. Pure module, safe to import here.
+import { isExtraOutfit, isNsfwOutfit, outfitDisplayName } from '../../quick-reply-ext/src/outfitPick.js';
+export { isExtraOutfit };
 
 const REGISTRAR_MANIFEST_BASE = 'https://registrar.weybooru.com/expressions/';
 const REGISTRAR_OUTFITS = [
@@ -29,11 +33,34 @@ function avatarBaseName(avatar) {
     return String(avatar ?? '').replace(/\.[^/.]+$/, '');
 }
 
-function currentOutfitBucket(context) {
-    const message = latestAssistantMessage(context)?.mes ?? '';
+/** WT's NSFW variable is inverted: "true" means hide NSFW images ("force safe"). A chat value beats the global. */
+export function mienForceSafe(context) {
     const localNsfw = context?.chatMetadata?.variables?.NSFW;
     const globalNsfw = context?.extensionSettings?.variables?.global?.NSFW;
-    const forceSafe = truthy(localNsfw !== undefined ? localNsfw : globalNsfw);
+    return truthy(localNsfw !== undefined ? localNsfw : globalNsfw);
+}
+
+/** "Summer/Cheerleader" -> "Cheerleader"; a bare character folder (the Default set) -> "". */
+export function outfitNameOf(folderName) {
+    const text = String(folderName ?? '');
+    const slash = text.indexOf('/');
+    return slash < 0 ? '' : text.slice(slash + 1);
+}
+
+/**
+ * While NSFW images are hidden, the old wand-menu picker never offered Lingerie or Naked; Mien listed every folder
+ * and so showed nude sprites to players who had asked not to see them. Same rule now, Registrar sets included.
+ */
+export function withoutNsfwOutfits(outfits, forceSafe) {
+    if (!forceSafe || !Array.isArray(outfits)) return outfits ?? [];
+    return outfits.filter(outfit => outfit.source === 'registrar'
+        ? !['underwear', 'nude'].includes(outfit.outfit)
+        : !isNsfwOutfit(outfitNameOf(outfit.folderName)));
+}
+
+function currentOutfitBucket(context) {
+    const message = latestAssistantMessage(context)?.mes ?? '';
+    const forceSafe = mienForceSafe(context);
     if (!forceSafe && message.includes('[NK]')) return { local: 'Naked', registrar: 'nude' };
     if (!forceSafe && message.includes('[LG]')) return { local: 'Lingerie', registrar: 'underwear' };
     return { local: 'Regular Outfit', registrar: 'clothed' };
@@ -195,7 +222,10 @@ async function fetchJson(url, fetchImpl, credentials = 'omit') {
 
 function localOutfitLabel(characterName, folderName) {
     if (folderName === characterName) return 'Default';
-    return folderName.split('/').slice(1).join(' / ') || folderName;
+    const label = folderName.split('/').slice(1).join(' / ') || folderName;
+    // "Undergarments" for the characters the old costume menu worded that way, "Community · ..." for Nara's
+    // community sets (folders named "CommunityRegular Outfit" etc.). Shared with quick-reply-ext.
+    return outfitDisplayName(folderName.split('/')[0], label);
 }
 
 function outfitRecord({ source, label, folderName, outfit = '', expressions }) {
@@ -207,6 +237,8 @@ function outfitRecord({ source, label, folderName, outfit = '', expressions }) {
         outfit,
         expressions,
         expressionCount: expressions.length,
+        // Wearing it needs Paw Patrol Plus or above (extra outfits; Registrar sets can't be worn at all).
+        extra: source === 'local' && isExtraOutfit(outfitNameOf(folderName), String(folderName).split('/')[0]),
     };
 }
 
@@ -284,11 +316,14 @@ export async function loadMienGallery(context, {
     fetchImpl = globalThis.fetch,
     documentRef = globalThis.document,
     outfitId = '',
+    sets = null,
 } = {}) {
     const character = resolveMienCharacter(context);
     if (!character) return { character: null, outfits: [], selectedOutfitId: '', expressions: [], source: null, folderName: '' };
-    const localOutfits = await findLocalOutfits(context, character, fetchImpl, documentRef);
-    const outfits = localOutfits.length ? localOutfits : await findRegistrarOutfits(character, fetchImpl);
+    const safe = mienForceSafe(context);
+    if (Array.isArray(sets) && sets.length > 1) return loadDuoGallery(character, sets, { fetchImpl, outfitId, safe });
+    const localOutfits = withoutNsfwOutfits(await findLocalOutfits(context, character, fetchImpl, documentRef), safe);
+    const outfits = localOutfits.length ? localOutfits : withoutNsfwOutfits(await findRegistrarOutfits(character, fetchImpl), safe);
     const preferredRegistrarId = `registrar:${currentOutfitBucket(context).registrar}`;
     return selectMienOutfit({
         character,
@@ -298,6 +333,54 @@ export async function loadMienGallery(context, {
         folderName: '',
         outfit: '',
     }, outfitId || (localOutfits.length ? localOutfits[0]?.id : preferredRegistrarId));
+}
+
+/**
+ * A duo card ("Lyris & Vesper", "Cerberus Sisters") is drawn from several sprite sets, quick-reply-ext's
+ * WeylandOutfits.describe().sets: combined ones ("LyrisVesper") and each member's own. Every outfit is tagged with
+ * its set (`set`, `setLabel`) so the screen can show a "who's showing" switch. Sets with no sprites drop out
+ * (Fawne has none yet). The card's own name folder is never a set: duo cards don't draw from it.
+ */
+async function loadDuoGallery(character, sets, { fetchImpl, outfitId, safe }) {
+    const noDom = { querySelectorAll: () => [] };
+    const perSet = await Promise.all(sets.map(async set => {
+        const outfits = await findLocalOutfits({}, { name: set.base, avatar: '' }, fetchImpl, noDom);
+        return withoutNsfwOutfits(outfits, safe).map(outfit => ({ ...outfit, set: set.base, setLabel: set.label }));
+    }));
+    const outfits = perSet.flat();
+    return selectMienOutfit({
+        character,
+        duo: true,
+        outfits,
+        expressions: [],
+        source: null,
+        folderName: '',
+        outfit: '',
+    }, outfitId || outfits[0]?.id);
+}
+
+/**
+ * Bonus (extra) outfits are a Paw Patrol Plus perk. Without Plus, Mien still shows them, but only their neutral
+ * face is open (Lucky, 2026-11-18): the rest are marked `plusLocked` and the screen draws them as locked teasers.
+ * Base outfits and members are untouched. Returns a new gallery; the expressions are copied, not mutated.
+ */
+export function lockBonusFaces(gallery, member) {
+    if (member || !gallery?.outfits?.length) return gallery;
+    const outfits = gallery.outfits.map(outfit => outfit.extra
+        ? { ...outfit, expressions: outfit.expressions.map(expression => ({ ...expression, plusLocked: expression.label !== 'neutral' })) }
+        : outfit);
+    return selectMienOutfit({ ...gallery, outfits }, gallery.selectedOutfitId);
+}
+
+/** Where to start in an outfit's strip: the first face the player may use (neutral, in a locked bonus outfit). */
+export function firstOpenFace(expressions) {
+    const index = (expressions ?? []).findIndex(expression => !expression.plusLocked);
+    return index < 0 ? 0 : index;
+}
+
+/** The first sprite in `outfit` with this mood label, or null. Used to carry a locked face into a new outfit. */
+export function sameFaceIn(outfit, label) {
+    return outfit?.expressions?.find(expression => expression.label === label) ?? null;
 }
 
 function findExpressionImage(characterName, documentRef) {

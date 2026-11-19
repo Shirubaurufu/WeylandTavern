@@ -75,7 +75,7 @@ test('loadouts set a whole phone and report which one is active', () => {
 
     applyLoadout(settings, 'texting', BUILT_IN);
     const kept = BUILT_IN.filter(key => isAppInstalled(settings, key)).sort();
-    assert.deepEqual(kept, ['contacts', 'kressa', 'messages', 'narrative', 'settings', 'weystore']);
+    assert.deepEqual(kept, ['contacts', 'kressa', 'messages', 'mien', 'narrative', 'settings', 'weystore']);
 
     // One more change and it is the player's own mix again.
     setAppInstalled(settings, 'notes', true);
@@ -559,16 +559,16 @@ test('a membership app off the phone is never offered as a Get', () => {
 
 test('My phone mirrors the home screen: toggles for removable apps, pins for built-in ones', () => {
     const settings = fresh();
-    setAppInstalled(settings, 'mien', false);
+    setAppInstalled(settings, 'notes', false);
     // The demo ships off; add it so the ordering assertions cover the extension tile in the grid.
     setAppInstalled(settings, 'last-smoke-demo', true);
     const target = container();
     renderWeyStoreScreen(target, model(settings, { externalApps: [LAST_SMOKE] }), { tab: 'phone' });
     const html = target.innerHTML;
-    assert.match(html, /data-ws-action="toggle" data-key="mien"\s+aria-pressed="false"/);
+    assert.match(html, /data-ws-action="toggle" data-key="notes"\s+aria-pressed="false"/);
     assert.match(html, /data-ws-action="toggle" data-key="feed"\s+aria-pressed="true"/);
-    assert.doesNotMatch(html, /data-ws-action="toggle" data-key="(messages|contacts|settings|narrative)"/);
-    assert.equal((html.match(/wp-ws-mini-pin/g) ?? []).length, 5, 'Messages, Contacts, Settings, PromptOS and the store itself are pinned');
+    assert.doesNotMatch(html, /data-ws-action="toggle" data-key="(messages|contacts|settings|narrative|mien)"/);
+    assert.equal((html.match(/wp-ws-mini-pin/g) ?? []).length, 6, 'Messages, Contacts, Settings, PromptOS, Mien and the store itself are pinned');
     // The store is not on its own shelf, but its tile is on the home screen, so it must be movable here.
     assert.match(html, /data-ws-drag-key="weystore"/);
     // Same order as the launcher: every loose app (including protected system apps), then folders.

@@ -21,6 +21,16 @@ test('nothing in Foxfire imports from Muse (it is not on players\' installs)', (
     }
 });
 
+// SillyTavern refuses to load an extension whose manifest names a missing one ("Missing required extensions"),
+// and the manifest still listed Muse after the code stopped needing it (Fox caught it on 2026-11-18).
+test('the manifest does not require Muse (or anything a player may not have)', () => {
+    const manifest = JSON.parse(read(path.join(FOX, 'manifest.json')));
+    for (const key of ['dependencies', 'requires']) {
+        assert.ok(!(manifest[key] ?? []).some(x => /Muse/i.test(x)), `${key} names Muse`);
+    }
+    assert.deepEqual(manifest.dependencies, ['Weyland-WeyPhone']);
+});
+
 test('storyCore.js is Muse\'s, byte for byte, under its header note', { skip: !hasMuse && 'Muse is not installed' }, () => {
     const copy = read(path.join(FOX, 'storyCore.js'));
     const body = copy.slice(copy.indexOf('\n//\n') + 4);

@@ -20,7 +20,9 @@ import { STORE_SHELVES, storeListing } from './weystoreCatalog.js';
 /** Apps the phone cannot work without. They are listed in the store as "Built in" and never
  *  offer a remove button. Built-in means protected from uninstall, not pinned to one launcher
  *  position, with one exception: Messages and Contacts sit in the dock and stay there (DOCK below). */
-export const SYSTEM_APP_KEYS = Object.freeze(['messages', 'contacts', 'settings', 'weystore', 'narrative']);
+// Mien is built in since 2026-11-18: the chat bar's Costumes & Backgrounds button opens it to change outfits
+// (the old costume list was retired), so it can no longer be uninstalled.
+export const SYSTEM_APP_KEYS = Object.freeze(['messages', 'contacts', 'settings', 'weystore', 'narrative', 'mien']);
 
 const SYSTEM = new Set(SYSTEM_APP_KEYS);
 

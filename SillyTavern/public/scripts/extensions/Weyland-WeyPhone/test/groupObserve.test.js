@@ -42,7 +42,7 @@ function makeGroupReply(sent) {
         buildPersonaContextBlock: () => '', buildGroupSystemPrompt, joinMemoriesForInjection: () => '', getPinnedMemories: () => [],
         TEXTING_MODE_INSTRUCTIONS: 'TEXTING RULES', buildGroupContactContextBlock: () => '', TEXTING_THOUGHTS_DISABLED: '',
         resolveStoredMessageTime, formatClockTime: () => '9:00 AM', buildMessages, PHONE_THREAD_MAX_TOKENS: 10_000,
-        resolveProfileId: () => 'profile', resolveModelOverride: () => 'model', DEFAULT_MAX_TOKENS: 1000,
+        resolvePhoneProfileId: () => 'profile', resolveModelOverride: () => 'model', DEFAULT_MAX_TOKENS: 1000,
         sendMessageWithFallback: async ({ messages }) => { sent.messages = messages; return 'reply'; },
         extractResponseText: () => 'Incoming¦9:01 AM¦Jenn¦lol\nIncoming¦9:01 AM¦Lucy¦oh no',
         parseGroupReply: () => ({ messages: [{ speaker: 'Jenn', content: 'lol' }, { speaker: 'Lucy', content: 'oh no' }] }),

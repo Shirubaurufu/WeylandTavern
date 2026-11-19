@@ -16,6 +16,11 @@
     <button class="top-btn" id="btnSound" aria-label="Sound" aria-pressed="true">
       <svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="18" r="2.6" fill="currentColor"/><circle cx="17" cy="16" r="2.6" fill="currentColor"/></svg>
     </button>
+    <!-- The model picker, on every screen (Lucky, 2026-11-18: changing the model used to mean closing the phone).
+         Hidden in the sandbox, which calls no model. -->
+    <button class="top-btn" id="btnModel" aria-label="Choose the model" aria-controls="modelModal" hidden>
+      <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="10" y="10" width="4" height="4" fill="currentColor"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
     <button class="top-btn" id="btnSettings" aria-label="Settings" aria-controls="settingsPanel" aria-expanded="false">
       <svg viewBox="0 0 24 24"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.3 1a7.5 7.5 0 0 0-2.6-1.5L14.2 2.6h-4.4l-.3 2.5A7.5 7.5 0 0 0 6.9 6.6l-2.3-1-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.3-1a7.5 7.5 0 0 0 2.6 1.5l.3 2.5h4.4l.3-2.5a7.5 7.5 0 0 0 2.6-1.5l2.3 1 2-3.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
     </button>
@@ -184,6 +189,11 @@
          follow the player to every device). Built as groups so more settings can be added below later. -->
     <div class="panel" id="settingsPanel" data-panel="settings">
       <div class="uf-head"><span class="uf-title">Settings</span><button class="ghost" id="settingsBack">Back</button></div>
+      <section class="set-group" id="setModelGroup" hidden>
+        <h3 class="set-title">Model</h3>
+        <p class="set-note" id="setModelNow"></p>
+        <div class="set-add"><button class="ghost small" id="setModelOpen">Change model</button></div>
+      </section>
       <section class="set-group">
         <h3 class="set-title">Keep out of my stories</h3>
         <p class="set-note">Tap anything you never want in a fortune. It stays out even on the darkest settings, unless you ask for it in your own words on the slip.</p>
@@ -239,9 +249,21 @@
     </div>
   </div>
 
+  <!-- The model picker: which model writes the fortune, and a backup tried once if it fails (Copycat's layout).
+       Every change saves at once; it counts from the next reading. -->
+  <div class="overlay" id="modelModal" hidden>
+    <div class="modal-card kept-card model-card">
+      <div class="kept-card-head"><span class="kept-title">Model</span><button class="ghost small" id="modelClose">Done</button></div>
+      <label class="model-field"><span>Writes the fortune</span><select id="modelMain"></select></label>
+      <label class="model-field"><span>Backup <small>tried once if the first one fails</small></span><select id="modelBackup"></select></label>
+      <p class="model-note" id="modelNote"></p>
+    </div>
+  </div>
+
   <div class="overlay" id="modal" hidden><div class="modal-card"><p id="modalText"></p><div class="modal-btns" id="modalBtns"></div></div></div>
 </div>
 <script src="cards.js"></script>
+<script src="bench.js"></script>
 <script src="parlor.js"></script>
 </body>
 </html>

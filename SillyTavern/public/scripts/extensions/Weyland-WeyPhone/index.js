@@ -6,7 +6,7 @@ import { resolveMasterPrompt, resolvePostHistoryInstructions, resolveCharacterPe
 import { buildPhoneWorldInfoScanHistory, findLorebookCharacterEntry, resolveLorebookContactProfile, resolveWorldInfoTethered, resolveWorldInfoUntethered } from './lib/worldInfo.js';
 import { createConversation, getConversation, appendMessage, editMessage, deleteMessage, deleteMessages, deleteConversation, getAllConversationSummaries, genTimestamp, discardTrailingReply, createMemory, editMemory, deleteMemory, setMemoryPinned, getPinnedMemories, setMemorySettings, countExchangesSince, getMemoryWindow, getLastGeneratedMemory, setTetheredSettings, setContactHistorySettings, findOrCreateDedicatedAppConversation, getThreadsFor, pruneOrphanedChatBuckets } from './lib/storage.js';
 import { narratorSettingsSync } from '../../../script.js';
-import { buildSystemPrompt, buildTextingSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolveModelOverride, sendMessage, sendMessageWithFallback, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
+import { buildSystemPrompt, buildTextingSystemPrompt, buildGroupSystemPrompt, buildMessages, resolveProfileId, resolvePhoneProfileId, phoneSendRequest, resolveModelOverride, sendMessage, sendMessageWithFallback, reconstructHistoryAsPhoneFormat, resolveStoredMessageTime, applyMacroSubstitution, joinNonEmptySections, extractResponseText } from './lib/generation.js';
 import { createPanelMarkup, renderHousingScreen, renderMessagesScreen, renderContactsScreen, filterNewMessageContacts, renderGroupComposeScreen, renderConversationScreen, renderThreadDetailsScreen, renderMessages, renderPanelAvatar, setRegenerateMenuItemsEnabled, renderMemoryScreen, populateConnectionProfileOptions, setRoleplayModePickerState, renderPhoneAppScreen, renderTwitterFollowingScreen, renderTwitterProfileScreen, renderTwitterFeedScreen, renderSavedPostsScreen } from './lib/panel.js';
 import { formatRelativeTime, formatClockTime } from './lib/formatTime.js';
 import { closeMessageTimeEditor, initMessageTimeGestures, showMessageTimeEditor } from './lib/ui/messageTimeEditor.js';
@@ -90,7 +90,7 @@ import { renderAppHelpDialog, renderConfirmDialog, renderNoticeDialog } from './
 import { createAppTutorial, shouldShowAppTutorial } from './lib/ui/appTutorials.js';
 import { findRegistrarBookNames, loadRegistrarLorebooks, registrarRosterEntry, sampleRegistrarRoster, syncRegistrarAutoContacts } from './lib/registrarLorebook.js';
 import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
-import { applyMienExpression, loadMienGallery, lockedMienExpression, moveLockedMienExpression, resolveMienCharacter, selectMienOutfit, setLockedMienExpression } from './lib/mien.js';
+import { applyMienExpression, firstOpenFace, loadMienGallery, lockBonusFaces, lockedMienExpression, moveLockedMienExpression, resolveMienCharacter, sameFaceIn, selectMienOutfit, setLockedMienExpression } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
 import { NARRATIVE_HELP, renderNarrativeSettingsScreen } from './lib/ui/apps/narrativeSettings.js';
 import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
@@ -299,6 +299,8 @@ let wallpaperFolder = null;
 let wallpaperFolderItems = null;
 let mienLoading = false;
 let mienApplying = false;
+// Mien's Wear / Keep on / Take off is running (quick-reply-ext's WeylandOutfits does the dressing).
+let mienWardrobeBusy = false;
 let mienError = '';
 let mienAppliedLabel = '';
 let mienLoadToken = 0;
@@ -1164,8 +1166,7 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
             });
         }
 
-        const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-        const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
+        const profileId = resolvePhoneProfileId(context, settings.connectionProfileId);
         // Same model precedence as texting: explicit Settings-app model
         // > live main-chat model > the profile's own snapshot.
         const flavorModel = resolveModelOverride({
@@ -1178,7 +1179,7 @@ async function runFlavorAppGeneration({ trackingSet, trackingKey, rerender, buil
             return;
         }
         const result = await sendMessageWithFallback({
-            sendRequest: (id, msgs, model) => context.ConnectionManagerRequestService.sendRequest(id, msgs, maxTokens, undefined, model ? { model } : undefined),
+            sendRequest: (id, msgs, model) => phoneSendRequest(context, id, msgs, maxTokens, undefined, model ? { model } : undefined),
             profileId,
             messages,
             model: flavorModel,
@@ -1522,10 +1523,9 @@ async function generateMemory(conversationId, conversation, context, settings, o
             charName: character.name,
         });
 
-        const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-        const profileId = resolveProfileId({ connectionProfileId: conversation.memoryConnectionProfileId }, activeProfileId, context.extensionSettings.connectionManager?.profiles);
+        const profileId = resolvePhoneProfileId(context, conversation.memoryConnectionProfileId);
         const result = await sendMemoryRequest({
-            sendRequest: (id, msgs, model) => context.ConnectionManagerRequestService.sendRequest(
+            sendRequest: (id, msgs, model) => phoneSendRequest(context, 
                 id, msgs, DEFAULT_MEMORY_MAX_TOKENS, undefined, model ? { model } : {},
             ),
             profileId,
@@ -1625,10 +1625,10 @@ async function generateGroupReply(conversationId, conversation, context, setting
         };
         const history = conversation.messages.slice(0, -1).map(message => ({ role: message.role, content: wire(message) }));
         const messages = buildMessages({ systemPromptText: substituted, history, userMessage: wire(conversation.messages.at(-1)), historyMaxTokens: PHONE_THREAD_MAX_TOKENS });
-        const profileId = resolveProfileId(settings, context.extensionSettings.connectionManager?.selectedProfile ?? '', context.extensionSettings.connectionManager?.profiles);
+        const profileId = resolvePhoneProfileId(context, settings.connectionProfileId);
         const modelOverride = resolveModelOverride({ settingsModel: settings.textingModelOverride, liveModel: context.getChatCompletionModel?.() });
         const result = await sendMessageWithFallback({
-            sendRequest: (id, requestMessages, model) => context.ConnectionManagerRequestService.sendRequest(id, requestMessages, DEFAULT_MAX_TOKENS, undefined, model ? { model } : undefined),
+            sendRequest: (id, requestMessages, model) => phoneSendRequest(context, id, requestMessages, DEFAULT_MAX_TOKENS, undefined, model ? { model } : undefined),
             profileId,
             messages,
             model: modelOverride,
@@ -1785,8 +1785,7 @@ async function generateReply(conversationId, conversation, context, settings) {
             historyMaxTokens: PHONE_THREAD_MAX_TOKENS,
         });
 
-        const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-        const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
+        const profileId = resolvePhoneProfileId(context, settings.connectionProfileId);
         // Model precedence (see resolveModelOverride): the user's explicit Settings-app model
         // (Gemini 3.8 Flash on a fresh install)
         // beats the live main-chat model, which beats the profile's stale snapshot. Kressa is
@@ -1797,7 +1796,7 @@ async function generateReply(conversationId, conversation, context, settings) {
             ? resolveModelOverride({ settingsModel: settings.kressaModel, liveModel })
             : resolveModelOverride({ settingsModel: settings.textingModelOverride, liveModel });
         const result = await sendMessageWithFallback({
-            sendRequest: (id, msgs, model) => context.ConnectionManagerRequestService.sendRequest(id, msgs, DEFAULT_MAX_TOKENS, undefined, model ? { model } : undefined),
+            sendRequest: (id, msgs, model) => phoneSendRequest(context, id, msgs, DEFAULT_MAX_TOKENS, undefined, model ? { model } : undefined),
             profileId,
             messages,
             model: modelOverride,
@@ -2816,8 +2815,7 @@ async function runPawXaiGeneration() {
         characterDescription: isNarratorCard ? '' : (character?.description ?? ''),
         settings: settings.pawxai,
     });
-    const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-    const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
+    const profileId = resolvePhoneProfileId(context, settings.connectionProfileId);
     const model = resolveModelOverride({
         settingsModel: settings.pawxai.modelOverride,
         liveModel: context.getChatCompletionModel?.() ?? '',
@@ -2833,7 +2831,7 @@ async function runPawXaiGeneration() {
         }
         const requestPrompts = async (requestModel, messages) => {
             const response = await sendMessage({
-                sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(
+                sendRequest: (id, requestMessages) => phoneSendRequest(context, 
                     id,
                     requestMessages,
                     DEFAULT_PAWXAI_MAX_TOKENS,
@@ -3377,8 +3375,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
         thoughtsSetting,
     });
 
-    const activeProfileId = context.extensionSettings.connectionManager?.selectedProfile ?? '';
-    const profileId = resolveProfileId(settings, activeProfileId, context.extensionSettings.connectionManager?.profiles);
+    const profileId = resolvePhoneProfileId(context, settings.connectionProfileId);
     const primaryModel = resolveModelOverride({
         settingsModel: config.modelOverride,
         liveModel: context.getChatCompletionModel?.() ?? '',
@@ -3395,7 +3392,7 @@ async function runUnderstudyRewrite({ auto = false } = {}) {
     const abort = new AbortController();
     understudyAbort = abort;
     const request = (model) => sendMessage({
-        sendRequest: (id, requestMessages) => context.ConnectionManagerRequestService.sendRequest(
+        sendRequest: (id, requestMessages) => phoneSendRequest(context, 
             id,
             requestMessages,
             DEFAULT_UNDERSTUDY_MAX_TOKENS,
@@ -3839,7 +3836,118 @@ function renderMienScreenNow() {
         appliedLabel: mienAppliedLabel,
         fullscreen: mienFullscreen,
         lockedLabel: lockedMienExpression(settings, currentMienGallery?.character?.name)?.label ?? '',
+        wardrobe: mienWardrobe(),
+        nsfwHidden: !isNsfwEnabled(),
     });
+}
+
+/**
+ * Mien's 18+ switch. Runs exactly what the Costumes & Backgrounds menu's "Hide/Show NSFW Images/Costumes" runs:
+ * set the global NSFW (true = hide), then the Pic quick reply, which re-points the greeting image globals at the
+ * censored or uncensored files. Nothing writes a chat-level NSFW today, but one would override the global
+ * (isNsfwEnabled), so it is dropped to keep the button truthful. Then Mien reloads so Lingerie/Naked/Lounge appear
+ * or disappear.
+ */
+let mienNsfwBusy = false;
+async function toggleMienNsfw() {
+    if (mienNsfwBusy) return;
+    mienNsfwBusy = true;
+    const context = SillyTavern.getContext();
+    const hide = isNsfwEnabled();
+    try {
+        if (context.chatMetadata?.variables && 'NSFW' in context.chatMetadata.variables) {
+            await context.executeSlashCommandsWithOptions('/flushvar NSFW', { showOutput: false });
+        }
+        await context.executeSlashCommandsWithOptions(`/setglobalvar key=NSFW ${hide}`, { showOutput: false });
+        // Separate call: a missing Weyland.Pic must not undo the switch itself.
+        try { await context.executeSlashCommandsWithOptions('/:Weyland.Pic', { showOutput: false }); }
+        catch (error) { console.warn('[WeyPhone] Mien: the Pic quick reply did not run after the NSFW switch', error); }
+    } catch (error) {
+        console.error('[WeyPhone] Mien: could not change the NSFW setting', error);
+        toastr.error('Could not change the NSFW setting.');
+    } finally {
+        mienNsfwBusy = false;
+    }
+    await refreshMienGallery();
+}
+
+/**
+ * What Mien can do with outfits on this card: quick-reply-ext's WeylandOutfits.describe(), or null when it isn't
+ * loaded (Mien is then the plain gallery it used to be).
+ */
+/** Paw Patrol Plus or Platinum: opens every face of bonus outfits in Mien and lets them be worn. */
+function isPlusOrAbove() {
+    const tier = getTier(SillyTavern.getContext());
+    return tier.plus || tier.platinum;
+}
+
+function mienWardrobe() {
+    const characterName = currentMienGallery?.character?.name;
+    const outfits = globalThis.WeylandOutfits;
+    if (!characterName || typeof outfits?.describe !== 'function') return null;
+    try {
+        return { ...outfits.describe(characterName), busy: mienWardrobeBusy };
+    } catch (error) {
+        console.warn('[WeyPhone] Mien could not read the outfit state', error);
+        return null;
+    }
+}
+
+/**
+ * Wear / Keep on / Take off. `mode`: 'wear' puts the selected outfit on, 'stick' toggles Keep on (wearing the
+ * selected outfit first if it isn't on yet), 'off' goes back to the costume the story set.
+ */
+async function runMienWardrobe(mode) {
+    const outfits = globalThis.WeylandOutfits;
+    const gallery = currentMienGallery;
+    const characterName = gallery?.character?.name;
+    const state = mienWardrobe();
+    if (mienWardrobeBusy || !outfits || !state?.supported || !characterName) return;
+    const folder = gallery.folderName;
+    const outfitLabel = gallery.outfits?.find(outfit => outfit.id === gallery.selectedOutfitId)?.label ?? folder;
+    mienWardrobeBusy = true;
+    renderMienScreenNow();
+    try {
+        if (mode === 'off') {
+            await outfits.takeOff(characterName);
+            wpToast('info', 'Back to what the story has them wearing.', 'Mien');
+        } else if (mode === 'stick' && state.pick === folder) {
+            outfits.setStick(!state.stick);
+            wpToast('info', state.stick
+                ? `The story can change ${characterName}'s outfit again.`
+                : `${characterName} stays in ${outfitLabel} in this chat.`, 'Mien');
+        } else {
+            const stick = mode === 'stick';
+            await outfits.wear(folder, { stick, card: characterName });
+            carryMienLockInto(characterName, gallery.outfits?.find(outfit => outfit.id === gallery.selectedOutfitId));
+            wpToast('success', stick
+                ? `${characterName} stays in ${outfitLabel} in this chat.`
+                : `${characterName} is wearing ${outfitLabel}.`, 'Mien');
+        }
+        SillyTavern.getContext().saveMetadataDebounced?.();
+    } catch (error) {
+        console.error('[WeyPhone] Mien outfit change failed', error);
+        wpToast('error', error?.message || 'Could not change the outfit.', 'Mien');
+    } finally {
+        mienWardrobeBusy = false;
+        if (currentView === 'mien') renderMienScreenNow();
+    }
+}
+
+/**
+ * A locked face lives in one outfit's folder, so after a costume change it would drag her straight back into the
+ * old outfit on the next reply. Move the lock to the same mood in the new outfit, or let it go if there is none.
+ */
+function carryMienLockInto(characterName, outfit) {
+    const context = SillyTavern.getContext();
+    const settings = getSettings(context.extensionSettings);
+    const lock = lockedMienExpression(settings, characterName);
+    if (!lock || !outfit || lock.folderName === outfit.folderName) return;
+    const face = sameFaceIn(outfit, lock.label);
+    setLockedMienExpression(settings, characterName, face);
+    queueWeyPhoneSave(context);
+    if (face) void applyMienExpression(face, characterName).catch(() => { /* display not present */ });
+    else wpToast('info', `${outfit.label} has no ${lock.label} face, so the expression lock was released.`, 'Mien');
 }
 
 function resolveSubbotBook(entry) {
@@ -3897,10 +4005,20 @@ async function refreshMienGallery() {
     mienAppliedLabel = '';
     if (currentView === 'mien') renderMienScreenNow();
     try {
-        const gallery = await loadMienGallery(context, { outfitId: currentMienGallery?.selectedOutfitId ?? '' });
+        // Open on the outfit she has on (quick-reply-ext knows it); the portrait's own folder attribute can still
+        // name the previous outfit for a moment after a change, which made Mien open on the wrong one.
+        const characterName = resolveMienCharacter(context)?.name;
+        let outfits = null;
+        try { outfits = characterName ? globalThis.WeylandOutfits?.describe?.(characterName) ?? null : null; } catch { outfits = null; }
+        const wearing = outfits?.wearing ?? '';
+        const outfitId = currentMienGallery?.selectedOutfitId ?? (wearing ? `local:${wearing}` : '');
+        // Duo cards are drawn from several sprite sets (members + combined), which only quick-reply-ext knows.
+        const gallery = await loadMienGallery(context, { outfitId, sets: outfits?.duo ? outfits.sets : null });
         if (token !== mienLoadToken) return;
-        currentMienGallery = gallery;
-        currentMienIndex = Math.min(currentMienIndex, Math.max(0, gallery.expressions.length - 1));
+        // Bonus outfits show only their neutral face without Paw Patrol Plus (lockBonusFaces in lib/mien.js).
+        currentMienGallery = lockBonusFaces(gallery, isPlusOrAbove());
+        currentMienIndex = Math.min(currentMienIndex, Math.max(0, currentMienGallery.expressions.length - 1));
+        if (currentMienGallery.expressions[currentMienIndex]?.plusLocked) currentMienIndex = firstOpenFace(currentMienGallery.expressions);
     } catch (error) {
         if (token !== mienLoadToken) return;
         console.error('[WeyPhone] Mien gallery failed', error);
@@ -3925,7 +4043,7 @@ async function applyCurrentMienExpression() {
     if (mienApplying) return;
     const selection = currentMienGallery?.expressions?.[currentMienIndex];
     const characterName = currentMienGallery?.character?.name;
-    if (!selection || !characterName) return;
+    if (!selection || !characterName || selection.plusLocked) return;
     mienApplying = true;
     renderMienScreenNow();
     try {
@@ -3961,7 +4079,7 @@ function toggleMienLock() {
         wpToast('info', 'Expression unlocked. Character messages pick their own faces again.', 'Mien');
     } else {
         const selection = currentMienGallery?.expressions?.[currentMienIndex];
-        if (!selection) return;
+        if (!selection || selection.plusLocked) return;
         setLockedMienExpression(settings, characterName, selection);
         queueWeyPhoneSave(context);
         // applyCurrentMienExpression shows the "locked" toast once the face is actually on screen.
@@ -3979,6 +4097,8 @@ function reapplyMienLockSoon() {
     clearTimeout(mienLockTimer);
     mienLockTimer = setTimeout(() => {
         const context = SillyTavern.getContext();
+        // A reply may have changed her outfit: keep Mien's "wearing" marks honest if it is open.
+        if (currentView === 'mien' && currentMienGallery && !mienLoading) renderMienScreenNow();
         const character = resolveMienCharacter(context);
         if (!character?.name) return;
         const lock = lockedMienExpression(getSettings(context.extensionSettings), character.name);
@@ -4371,6 +4491,10 @@ function handleScreenBodyClick(event) {
         refreshMienGallery();
         return;
     }
+    if (event.target.closest('#wp-mien-nsfw')) {
+        void toggleMienNsfw();
+        return;
+    }
     if (event.target.closest('#wp-create-group-button')) {
         createSelectedGroup();
         return;
@@ -4417,6 +4541,30 @@ function handleScreenBodyClick(event) {
     }
     if (event.target.closest('#wp-mien-lock')) {
         toggleMienLock();
+        return;
+    }
+    const mienWear = event.target.closest('#wp-mien-wear');
+    if (mienWear) {
+        void runMienWardrobe(mienWear.dataset.mienWear === 'off' ? 'off' : 'wear');
+        return;
+    }
+    if (event.target.closest('#wp-mien-stick')) {
+        void runMienWardrobe('stick');
+        return;
+    }
+    // Duo cards: browse another sprite set (who's showing). Lands on the same outfit there if it has one.
+    const mienSet = event.target.closest('.wp-mien-cast-pill');
+    if (mienSet && currentMienGallery) {
+        const set = mienSet.dataset.mienSet;
+        const current = currentMienGallery.outfits?.find(outfit => outfit.id === currentMienGallery.selectedOutfitId);
+        const inSet = currentMienGallery.outfits?.filter(outfit => outfit.set === set) ?? [];
+        const target = inSet.find(outfit => outfit.label === current?.label) ?? inSet[0];
+        if (target) {
+            currentMienGallery = selectMienOutfit(currentMienGallery, target.id);
+            currentMienIndex = firstOpenFace(currentMienGallery.expressions);
+            mienAppliedLabel = '';
+            renderMienScreenNow();
+        }
         return;
     }
     const noteRow = event.target.closest('.wp-note-row');
@@ -5683,7 +5831,7 @@ function handleScreenBodyChange(event) {
     if (handleTetherContextRangeInput(event.target)) return;
     if (event.target.id === 'wp-mien-outfit') {
         currentMienGallery = selectMienOutfit(currentMienGallery, event.target.value);
-        currentMienIndex = 0;
+        currentMienIndex = firstOpenFace(currentMienGallery.expressions);
         mienAppliedLabel = '';
         renderMienScreenNow();
         return;
@@ -8850,6 +8998,26 @@ function initPanel() {
         if (currentView === 'home') showScreen('home');
         if (currentView === 'weystore') renderWeyStoreNow();
     });
+
+    // The chat bar's Costumes & Backgrounds menu ("Change Character's Costume", the Costume quick reply in Weyland.json)
+    // opens Mien here; its old hand-kept button list was retired on 2026-11-18 (it silently missed outfits when a
+    // card's tag was gone, couldn't keep an outfit on, and its duo-card "show only" options had stopped working).
+    // The quick reply clicks this hidden button with the core /dom command. Never a WeyPhone slash command there:
+    // STScript refuses to parse a script naming a command that doesn't exist, so the whole menu would break if
+    // WeyPhone failed to load. Muse, Kinsbane, Weybot and Mirror Weyland keep their own menus (earlier in the QR).
+    const mienMenuButton = document.createElement('button');
+    mienMenuButton.type = 'button';
+    mienMenuButton.id = 'wp-open-mien-outfits';
+    mienMenuButton.hidden = true;
+    mienMenuButton.addEventListener('click', () => {
+        if (!panel.classList.contains('wp-open')) setPanelOpen(true);
+        setLocked(false);
+        document.getElementById('wp-onboarding').style.display = 'none';
+        currentMienGallery = null;
+        currentMienIndex = 0;
+        showScreen('mien');
+    });
+    document.body.appendChild(mienMenuButton);
 
     // Error notices can take the player straight to help, even with the phone closed or locked.
     document.addEventListener(ERROR_HELP_EVENT, event => {

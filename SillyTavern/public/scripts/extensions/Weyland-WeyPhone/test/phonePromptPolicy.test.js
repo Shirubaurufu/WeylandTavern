@@ -72,17 +72,18 @@ for (const [name, entry] of ravs) {
 
 // The Gemini Bypass is injected at sendMessage / sendMemoryRequest, so it only reaches every app
 // (Chronicle, Chitter, Discorgi, Yip Yap, PawXai, Kressa, Copycat, texting) if every model request
-// in index.js goes through one of them. A new direct sendRequest call would silently skip it.
+// in index.js goes through one of them. A new direct sendRequest call would silently skip it. (Since 2026-11-18 the
+// raw call is phoneSendRequest, which follows the live connection; liveConnection.test.js bans the old direct call.)
 test('every WeyPhone model request goes through a bypass-injecting send helper', async () => {
     const { readFile } = await import('node:fs/promises');
     const source = await readFile(new URL('../index.js', import.meta.url), 'utf8');
     const lines = source.split(/\r?\n/);
     const calls = lines.map((line, index) => ({ line, index }))
-        .filter(({ line }) => /ConnectionManagerRequestService\.sendRequest\(/.test(line) && !/^\s*\/\//.test(line));
+        .filter(({ line }) => /phoneSendRequest\(context,/.test(line) && !/^\s*\/\//.test(line));
     assert.ok(calls.length >= 6, 'expected the known request sites');
     for (const { index } of calls) {
         const window = lines.slice(Math.max(0, index - 4), index + 1).join('\n');
-        assert.match(window, /send(?:Message|MemoryRequest)\(\{/, `index.js:${index + 1} sends without the bypass helper`);
+        assert.match(window, /send(?:Message(?:WithFallback)?|MemoryRequest)\(\{/, `index.js:${index + 1} sends without the bypass helper`);
     }
 });
 
