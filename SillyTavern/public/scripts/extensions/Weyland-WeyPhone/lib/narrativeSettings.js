@@ -9,7 +9,7 @@ import { specialSheetBoxes } from '../../quick-reply-ext/src/specialSheets.js';
 import { resolveNarratorStrength } from '../../quick-reply-ext/src/narratorStrength.js';
 import { narratorSelection } from '../../quick-reply-ext/src/narratorSelection.js';
 import { scenarios } from '../../quick-reply-ext/src/scenarios.js';
-import { characterThoughtsEnabled, supportsCharacterThoughtsToggle, CHARACTER_THOUGHTS_VARIABLE } from '../../quick-reply-ext/src/characterThoughts.js';
+import { chatThoughtsThinker, thoughtsSwitchOn, CHARACTER_THOUGHTS_AVAILABLE, CHARACTER_THOUGHTS_DEFAULT, CHARACTER_THOUGHTS_VARIABLE } from '../../quick-reply-ext/src/characterThoughts.js';
 
 export const NARRATIVE_TABS = Object.freeze(['essentials', 'style', 'modes', 'perspective']);
 
@@ -22,11 +22,12 @@ export const NARRATOR_OPTIONS = Object.freeze([
 
 export const PROMPT_OPTIONS = Object.freeze([
     { id: 'Current Prompt', label: 'Current', description: 'The default and recommended prompt.' },
-    // Held since 2026-10-03: the old Beta graduated to Current. The slot stays on the shelf, greyed out and not selectable,
-    // until there is a new beta to bring forward. Flip `disabled` off (and give it a description) when that day comes.
-    // (Beta Prompt 2 + the Curse Booster were pulled again on 2026-10-13, Lucky: not ready. Backed up under
+    // The Beta slot. Held (greyed out) from 2026-10-03, when the old Beta graduated to Current, until Beta 3 on 2026-11-17
+    // (quick-reply-ext/src/betaPrompt3.js). Its id is NOT 'Beta Prompt': a saved 'Beta Prompt' means Current
+    // (resolvePromptChoice). To hold the slot again, put back { id: 'Beta Prompt', ..., disabled: true }.
+    // (Beta Prompt 2 + the Curse Booster were pulled on 2026-10-13, Lucky: not ready. Backed up under
     // "Prompt Review/Beta 2 Tests/Backup - Beta 2 + Curse Booster (2026-10-13)"; its README lists the hunks to put back.)
-    { id: 'Beta Prompt', label: 'Beta', description: 'Empty slot. Nothing in testing right now.', disabled: true },
+    { id: 'Beta Prompt 3', label: 'Beta', description: 'In testing: Current with a reworked scene sheet. Fewer capital letters, a check for when characters shout, NPC name tags, and texts that can quote what you already sent.' },
     { id: 'Old Prompt 2026', label: '2026', description: 'The prompt used before Weyland’s second anniversary.' },
     { id: 'Old Prompt 2025', label: '2025', description: 'The older Sonnet 3.7-era prompt.' },
     { id: 'Mini Prompt', label: 'Mini', description: 'A very early, compact prompt brought back with modern formatting and all PromptOS options.' },
@@ -326,12 +327,14 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
         // analysis has always run unconditionally until this toggle existed, so "never set" must
         // read the same as "explicitly on" rather than silently going quiet for existing users.
         analysisEnabled,
-        // Summer and Belle have always shipped with thoughts enabled. Their per-chat control is
-        // only exposed for those two cards, and an unset value preserves the historical default.
-        characterThoughts: hasChat && supportsCharacterThoughtsToggle(characterName) ? {
-            characterName,
-            enabled: characterThoughtsEnabled(characterName, getLocal(CHARACTER_THOUGHTS_VARIABLE)),
-        } : null,
+        // Every intro that turns thoughts on gets a per-chat switch (2026-11-19). quick-reply-ext's XXX
+        // records who thinks in this chat (Fawne for Cerberus Sisters, Jenn on her drunk night...), so
+        // `characterName` here is that thinker, not always the card. An unset switch follows the chat's
+        // default, which XXX stores (on, except Vera's non-original intros). See quick-reply-ext/src/characterThoughts.js.
+        characterThoughts: (() => {
+            const thinker = hasChat ? chatThoughtsThinker(characterName, getLocal(CHARACTER_THOUGHTS_AVAILABLE)) : '';
+            return thinker ? { characterName: thinker, enabled: thoughtsSwitchOn(getLocal(CHARACTER_THOUGHTS_VARIABLE), getLocal(CHARACTER_THOUGHTS_DEFAULT)) } : null;
+        })(),
         thinking,
         globalNarrator,
         narratorStrength: resolveNarratorStrength(getGlobal('NarratorStrength')),

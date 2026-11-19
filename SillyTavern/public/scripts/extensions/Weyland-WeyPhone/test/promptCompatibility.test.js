@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { ravs } from '../../quick-reply-ext/src/promptRegistry.js';
 import { preparePromptBase } from '../../quick-reply-ext/src/promptAssembly.js';
-import { GEMINI_BYPASS_PROMPT, withThoughtRules } from '../../quick-reply-ext/src/promptModifiers.js';
+import { CHAPTER_CHECK_LINE, GEMINI_BYPASS_PROMPT, withThoughtRules } from '../../quick-reply-ext/src/promptModifiers.js';
 import { PROMPT_OPTIONS, SHIFT_OPTIONS } from '../lib/narrativeSettings.js';
 import { resolveMasterPrompt, resolvePostHistoryInstructions } from '../lib/promptResolution.js';
 import { renderNarrativeSettingsScreen } from '../lib/ui/apps/narrativeSettings.js';
@@ -43,7 +43,12 @@ test('every choice receives byte-identical shared analysis / feedback / Gemini l
                     // think-before-responding check) instead of the shared scene sheet (see promptChoice.test.js); every other
                     // combination gets the byte-identical shared layers.
                     if ((name === 'Old Prompt 2026' || name === 'Old Prompt 2025') && analysis === 'Enabled') continue;
-                    assert.equal(locals.get('ravteg'), prefix + base.teg.replaceAll('{{getvar::LocalNarrator}}', ''), `${name}: ${analysis}/${bypass}/${option.id}`);
+                    // Beta 3 brings its own version of the scene sheet (betaPrompt3.test.js pins it); with Analysis off it is
+                    // checked here like everyone else.
+                    if (name === 'Beta Prompt 3' && analysis === 'Enabled') continue;
+                    // Hard Mode's bridge line is part of the sheet, so Beta 3 sends its own wording of it.
+                    const ownPrefix = base.sheet ? prefix.replace(beta.bridgeLine, () => base.sheet.bridgeLine) : prefix;
+                    assert.equal(locals.get('ravteg'), ownPrefix + base.teg.replaceAll('{{getvar::LocalNarrator}}', ''), `${name}: ${analysis}/${bypass}/${option.id}`);
                     assert.doesNotMatch(locals.get('ravteg') + locals.get('postrav'), /WEYLAND RESPONSE ANALYSIS PROCEDURE|REASONING HARD CAP|THINK BEFORE RESPONDING/);
                     assert.equal(locals.get('ravteg').includes('[WEYLAND SCENE SHEET'), analysis === 'Enabled');
                     assert.equal(locals.get('postrav').includes('¦Weyland Tavern client note:'), analysis === 'Enabled');
@@ -56,7 +61,7 @@ test('every choice receives byte-identical shared analysis / feedback / Gemini l
 test('Beta analysis adds the POV/tense check and otherwise preserves the scene sheet and client note', async () => {
     const { locals } = await assemble('Rosa', { PromptChoice: 'Beta Prompt' });
     const body = beta.body.replace(/RECOGNITION \[0\/6\][\s\S]*?(?=SPARK \[1\/6\])/, '').replace(' (Technically Seven)', '');
-    const checkedBody = body.replace('- Are character thoughts ENABLED or DISABLED?', line => `${line}\n${"- POV + TENSE CHECK: Confirm the active character/player POV (e.g. 3rd/2nd = she/you). Narrate in present tense unless explicitly overridden or describing a requested time skip; don’t inherit POV or tense errors from previous replies."}\n- Remember to respond to the latest user message in the chatlog.`);
+    const checkedBody = body.replace('- Are character thoughts ENABLED or DISABLED?', line => `${line}\n${"- POV + TENSE CHECK: Confirm the active character/player POV (e.g. 3rd/2nd = she/you). Narrate in present tense unless explicitly overridden or describing a requested time skip; don’t inherit POV or tense errors from previous replies."}\n- Remember to respond to the latest user message in the chatlog.\n${CHAPTER_CHECK_LINE}`);
     assert.equal(locals.get('ravteg'), [beta.frameTop, beta.objectionValve, beta.bridgeLine, checkedBody, beta.teg.replaceAll('{{getvar::LocalNarrator}}', '')].filter(Boolean).join('\n\n'));
     const note = beta.post.match(/¦Weyland Tavern client note:[^¦]*¦\s*\n*/)[0];
     assert.equal(locals.get('postrav'), (note + '{{getvar::LocalNarrator}}\n\n' + beta.post.slice(note.length)).replace('{{pipe}}', '{{getglobalvar::RPFocus}}\n====='));

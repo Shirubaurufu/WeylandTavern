@@ -20,8 +20,10 @@ test('tiers select the intended rolling windows and admin bypass', () => {
     assert.equal(generationRateTier(context({ LuckyAdminKey: true, PPP1: true })), 'admin');
 });
 
-test('standard allows two requests in fifteen minutes and blocks the third', () => {
+test('standard allows three requests in fifteen minutes and blocks the fourth', () => {
     const events = [event('one', 4 * 60_000), event('two', 2 * 60_000)];
+    assert.equal(generationAllowance(events, 'standard', NOW).remaining, 1);
+    events.push(event('three', 60_000));
     const allowance = generationAllowance(events, 'standard', NOW);
     assert.equal(allowance.allowed, false);
     assert.equal(allowance.remaining, 0);
@@ -29,7 +31,7 @@ test('standard allows two requests in fifteen minutes and blocks the third', () 
 });
 
 test('Plus and Platinum have progressively shorter windows', () => {
-    const events = [event('one', 11 * 60_000), event('two', 2 * 60_000)];
+    const events = [event('one', 11 * 60_000), event('two', 2 * 60_000), event('three', 60_000)];
     assert.equal(generationAllowance(events, 'standard', NOW).allowed, false);
     assert.equal(generationAllowance(events, 'plus', NOW).allowed, true);
     assert.equal(generationAllowance(events, 'platinum', NOW).allowed, true);
@@ -39,7 +41,7 @@ test('expired events fall out of a rolling window', () => {
     const events = [event('old', 16 * 60_000), event('recent', 60_000)];
     const allowance = generationAllowance(events, 'standard', NOW);
     assert.equal(allowance.allowed, true);
-    assert.equal(allowance.remaining, 1);
+    assert.equal(allowance.remaining, 2);
 });
 
 test('admin allowance is never enforced but keeps a display counter that may go negative', () => {
@@ -47,7 +49,7 @@ test('admin allowance is never enforced but keeps a display counter that may go 
     const allowance = generationAllowance(events, 'admin', NOW);
     assert.equal(allowance.allowed, true);
     assert.equal(allowance.enforced, false);
-    assert.equal(allowance.remaining, -18);
+    assert.equal(allowance.remaining, -17);
 });
 
 test('recording and merging deduplicates device event ledgers', () => {

@@ -12,7 +12,7 @@ import { narratorBuildState, narratorSelection } from '../../../quick-reply-ext/
 import { greetingThoughtSet, withThoughtRules } from '../../../quick-reply-ext/src/promptModifiers.js';
 import { scenarios } from '../../../quick-reply-ext/src/scenarios.js';
 import { BAPHOMET_VAR, baphometHidden, baphometThoughts } from '../../../quick-reply-ext/src/baphomet.js';
-import { CHARACTER_THOUGHTS_VARIABLE, characterThoughtsEnabled, supportsCharacterThoughtsToggle } from '../../../quick-reply-ext/src/characterThoughts.js';
+import { CHARACTER_THOUGHTS_AVAILABLE, CHARACTER_THOUGHTS_DEFAULT, CHARACTER_THOUGHTS_VARIABLE, NO_THOUGHTS, characterThoughtsEnabled, hasAlwaysOnThoughts, supportsCharacterThoughtsToggle, thoughtsSwitchOn } from '../../../quick-reply-ext/src/characterThoughts.js';
 
 const source = readFileSync(new URL('../../../quick-reply-ext/index.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 function between(start, end) {
@@ -43,6 +43,7 @@ export async function assemble(charName = 'Rosa', globalExtras = {}, localExtras
         greetingThoughtSet, scenarios, getFirstMessage: () => ({ swipe_id: greetingSwipe }),
         BAPHOMET_VAR, baphometHidden, baphometThoughts,
         CHARACTER_THOUGHTS_VARIABLE, characterThoughtsEnabled, supportsCharacterThoughtsToggle,
+        CHARACTER_THOUGHTS_AVAILABLE, CHARACTER_THOUGHTS_DEFAULT, NO_THOUGHTS, hasAlwaysOnThoughts, thoughtsSwitchOn,
         console: { error: (...args) => { throw new Error(args.join(' ')); } },
     };
     runInNewContext(`${custom}\n${shiftBuilder}\n${assembler}\nthis.assemble = XXX;`, context);

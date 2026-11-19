@@ -15,7 +15,7 @@ import {
 } from '../lib/pawxai.js';
 
 test('PawXai clamps prompt count to one through ten', () => {
-    assert.equal(normalizePawXaiSettings({}).promptCount, 5);
+    assert.equal(normalizePawXaiSettings({}).promptCount, 4);
     assert.equal(normalizePawXaiSettings({ promptCount: 0 }).promptCount, 1);
     assert.equal(normalizePawXaiSettings({ promptCount: 99 }).promptCount, PAWXAI_MAX_PROMPTS);
     assert.equal(normalizePawXaiSettings({ promptCount: '4' }).promptCount, 4);

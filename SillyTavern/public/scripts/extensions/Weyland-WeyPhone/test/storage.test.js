@@ -370,23 +370,20 @@ test('migrateMemoryFields backfills missing memory fields on a pre-milestone-5 c
     assert.equal(conversation.memoryBackupModel, DEFAULT_MEMORY_BACKUP_MODEL);
 });
 
-test('migrateStaleModelNames rewrites a renamed model id everywhere it can be stored', () => {
+// 2026-11-14: Google restored Gemini 3.8 Flash, so it is no longer rewritten anywhere.
+test('migrateStaleModelNames keeps a saved gemini-3.8-flash everywhere it can be stored', () => {
     const settings = {
-        modelOverride: 'gemini-3-pro-preview',
-        textingModelOverride: 'gemini-3-pro-preview',
-        kressaModel: 'gemini-3-pro-preview',
-        pawxai: { modelOverride: 'gemini-3-pro-preview' },
+        modelOverride: 'gemini-3.8-flash',
+        textingModelOverride: 'gemini-3.8-flash',
+        kressaModel: 'gemini-3.8-flash',
+        pawxai: { modelOverride: 'gemini-3.8-flash' },
         conversations: {
-            conv_1: { id: 'conv_1', charName: 'Rosa', memoryPrimaryModel: 'gemini-3-pro-preview', memoryBackupModel: 'gemini-3-pro-preview' },
+            conv_1: { id: 'conv_1', charName: 'Rosa', memoryPrimaryModel: 'gemini-3.8-flash', memoryBackupModel: 'gemini-3.8-flash' },
         },
     };
+    const before = JSON.stringify(settings);
     migrateStaleModelNames(settings);
-    assert.equal(settings.modelOverride, 'gemini-3.8-flash');
-    assert.equal(settings.textingModelOverride, 'gemini-3.8-flash');
-    assert.equal(settings.kressaModel, 'gemini-3.8-flash');
-    assert.equal(settings.pawxai.modelOverride, 'gemini-3.8-flash');
-    assert.equal(settings.conversations.conv_1.memoryPrimaryModel, 'gemini-3.8-flash');
-    assert.equal(settings.conversations.conv_1.memoryBackupModel, 'gemini-3.8-flash');
+    assert.equal(JSON.stringify(settings), before);
 });
 
 test('migrateStaleModelNames leaves unrelated model ids untouched and is idempotent', () => {
@@ -401,21 +398,16 @@ test('migrateStaleModelNames leaves unrelated model ids untouched and is idempot
     assert.equal(settings.conversations.conv_1.memoryBackupModel, 'gemini-3.8-flash');
 });
 
-test('migrateStaleModelNames replaces both retired GLM ids and is stable on a second load', () => {
+test('migrateStaleModelNames preserves both available GLM 4.7 ids across repeated loads', () => {
     const settings = {
         modelOverride: 'glm-4.7', textingModelOverride: 'glm-4.7-thinking', kressaModel: 'glm-4.7',
         pawxai: { modelOverride: 'glm-4.7-thinking' },
         conversations: { c: { memoryPrimaryModel: 'glm-4.7-thinking', memoryBackupModel: 'glm-4.7' } },
     };
+    const before = structuredClone(settings);
     migrateStaleModelNames(settings);
-    assert.deepEqual(settings, {
-        modelOverride: 'gemini-3.8-flash', textingModelOverride: 'gemini-3.8-flash', kressaModel: 'gemini-3.8-flash',
-        pawxai: { modelOverride: 'gemini-3.8-flash' },
-        conversations: { c: { memoryPrimaryModel: 'gemini-3.8-flash', memoryBackupModel: 'gemini-3.8-flash' } },
-    });
-    const after = structuredClone(settings);
     migrateStaleModelNames(settings);
-    assert.deepEqual(settings, after);
+    assert.deepEqual(settings, before);
 });
 
 test('migrateMemoryFields does not overwrite existing memory data', () => {

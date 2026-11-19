@@ -265,7 +265,9 @@ div:has(> #extensions_url),
 #persona_pagination_container .paginationjs-nav,
 div:has(> #persona_description_position),
 div:has(+ div > #persona_description_position) h4,
-div:has(> div > label > #persona_show_notifications),
+/* Global Settings: only "Auto-lock a chosen persona to the chat" stays visible (Lucky, 2026-11-19: players asked for it;
+   it stays OFF by default, this only lets them find it). The other two rows stay hidden as before. */
+.persona_management_global_settings > .range-block:not(:has(#persona_auto_lock)),
 #persona_connections_list,
 h4:has(+ #persona_description),
 h4:has(+ #persona_connections_buttons)

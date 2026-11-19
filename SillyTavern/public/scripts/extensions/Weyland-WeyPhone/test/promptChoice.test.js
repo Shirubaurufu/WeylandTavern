@@ -25,10 +25,16 @@ test('a saved Beta Prompt is corrected to Current Prompt when the prompt is buil
     assert.ok(locals.get('ravteg').includes('[WEYLAND SCENE SHEET'), 'Current builds from Beta, so it carries the scene sheet');
 });
 
-test('the Beta slot is held: listed, disabled, and the only disabled option', () => {
-    const beta = PROMPT_OPTIONS.find(option => option.id === 'Beta Prompt');
-    assert.equal(beta.disabled, true);
-    assert.deepEqual(PROMPT_OPTIONS.filter(option => option.disabled).map(option => option.id), ['Beta Prompt']);
+test('the Beta slot holds Beta 3: selectable, never recommended, and a saved "Beta Prompt" still means Current', () => {
+    // Held from 2026-10-03 until Beta 3 (2026-11-17, quick-reply-ext/src/betaPrompt3.js).
+    const beta = PROMPT_OPTIONS.find(option => option.id === 'Beta Prompt 3');
+    assert.ok(beta && !beta.disabled);
+    assert.equal(beta.label, 'Beta');
+    assert.doesNotMatch(beta.description, /recommended/i);
+    assert.ok(!PROMPT_OPTIONS.some(option => option.id === 'Beta Prompt'), "'Beta Prompt' is Current's saved id, never a cartridge");
+    assert.deepEqual(PROMPT_OPTIONS.filter(option => option.disabled).map(option => option.id), []);
+    assert.ok(ravs.has('Beta Prompt 3'));
+    assert.deepEqual(resolvePromptChoice(ravs, 'Beta Prompt 3'), { saved: 'Beta Prompt 3', key: 'Beta Prompt 3' });
     assert.match(PROMPT_OPTIONS.find(option => option.id === 'Current Prompt').description, /default and recommended/i);
     // Beta Prompt 2 + the Curse Booster were pulled 2026-10-13: nothing registers or lists it until it is restored on purpose.
     assert.ok(!PROMPT_OPTIONS.some(option => option.id === 'Beta Prompt 2'));

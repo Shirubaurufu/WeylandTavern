@@ -157,7 +157,7 @@ test('the actual request hook recognizes every released journal code with Aiko p
     const context = vm.createContext({
         applyKinsbaneCommand, getCurrentCharacterName: () => cardName,
         getGlobalVariable: () => ooc ? 'Enabled' : 'Disabled', isOocModeEnabled: () => ooc,
-        applyGeminiBypassForModel: () => ({}), stripCardExtrasForOoc: () => 0, isGeminiModel: () => false, swapGeminiNoAnalysis: () => 0,
+        applyGeminiBypassForModel: () => ({}), stripCardExtrasForOoc: () => 0, isGeminiModel: () => false, swapGeminiNoAnalysis: () => 0, dropChapterCheckUnlessStory: () => false,
         SillyTavern: { getContext: () => ({ substituteParams: text => text.replaceAll('{{user}}', 'Jin') }) },
         DebugLog: () => {}, console: { error: (...args) => assert.fail(args.join(' ')) },
         // The start-switch time skip block (2026-11-15) reads its chat variable on every request; none is pending here.

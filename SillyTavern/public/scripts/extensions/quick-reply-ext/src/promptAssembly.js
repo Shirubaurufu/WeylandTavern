@@ -1,7 +1,7 @@
 // PromptOS owns the optional layers; a prompt choice owns its storytelling prose.
 // Keep rav.js's historical sources intact. Only adapt obsolete UI syntax, missing setting
 // slots and competing preparation procedures here. Beta remains the shared layer source.
-import { addNarratorGreenRoom, addShiftRouteLine, applyGeminiBypass } from './promptModifiers.js';
+import { addChapterCheck, addNarratorGreenRoom, addShiftRouteLine, applyGeminiBypass } from './promptModifiers.js';
 import { PREP_SHEET_2025 } from './prepSheet2025.js';
 import { resolveNarratorStrength } from './narratorStrength.js';
 
@@ -120,13 +120,16 @@ export function assemblePromptLayers(base, beta, {
 } = {}) {
     const early = resolveNarratorStrength(narratorStrength) === 'Low';
     const sceneSheet = usesSceneSheet(base, analysisOn);
+    // A prompt may bring its own version of the sheet ({ frameTop, objectionValve, bridgeLine, body }; Beta 3 does, see
+    // src/betaPrompt3.js). Everything else still comes from Beta: shift items, the client note.
+    const sheet = base.sheet ?? beta;
     let teg;
     if (sceneSheet) {
         // No feedback means no RECOGNITION box. Keep the existing Beta conditional edits,
         // including the route reminder for an active shift. Box 6 is always built whole: with
         // Gemini Bypass on, its explicit warm-up is cut at SEND time for every model except Claude
         // (applyGeminiBypassForModel in promptModifiers.js), because only then is the model known.
-        let body = shiftItem ? beta.body : beta.body
+        let body = shiftItem ? sheet.body : sheet.body
             .replace(/RECOGNITION \[0\/6\][\s\S]*?(?=SPARK \[1\/6\])/, '')
             .replace(' (Technically Seven)', '');
         // Check output settings in BOARD; avoid duplication if Fox adds this to the upstream prompt master.
@@ -138,14 +141,15 @@ export function assemblePromptLayers(base, beta, {
         if (!body.includes(latestMessageReminder)) {
             body = body.replace(/- POV \+ TENSE CHECK:[^\n]*/, line => `${line}\n${latestMessageReminder}`);
         }
+        body = addChapterCheck(body);
         if (shiftItem) body = addShiftRouteLine(body, shiftScope);
         // A selected narrator (Lauren/Salem/Lucky, by name) takes over box 1 as their green room.
         body = addNarratorGreenRoom(body, narrator, early);
-        teg = [beta.frameTop, shiftItem, beta.objectionValve, beta.bridgeLine, body, base.teg].filter(Boolean).join('\n\n');
+        teg = [sheet.frameTop, shiftItem, sheet.objectionValve, sheet.bridgeLine, body, base.teg].filter(Boolean).join('\n\n');
     } else if (shift === 'Hard Mode') {
         // Beta's bridge line says "fill out your modified scene sheet", so a prompt running its own reasoning (2026, Analysis on)
         // never gets it. With Analysis off every prompt is treated alike, as before.
-        teg = analysisOn && base.ownAnalysis ?`${shiftItem}\n\n${base.teg}` : `${shiftItem}\n\n${beta.bridgeLine}\n\n${base.teg}`;
+        teg = analysisOn && base.ownAnalysis ?`${shiftItem}\n\n${base.teg}` : `${shiftItem}\n\n${sheet.bridgeLine}\n\n${base.teg}`;
     } else if (shiftItem) {
         teg = `${shiftItem}\n\n${base.teg}`;
     } else {

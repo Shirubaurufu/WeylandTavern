@@ -18,7 +18,7 @@ import {
 } from '../lib/narrativeSettings.js';
 import { renderNarrativeSettingsScreen } from '../lib/ui/apps/narrativeSettings.js';
 import { applyGeminiBypass, GEMINI_BOX6_EXPLICIT, GEMINI_BYPASS_PROMPT, stripGeminiExplicitBox } from '../../quick-reply-ext/src/promptModifiers.js';
-import { CHARACTER_THOUGHTS_VARIABLE, characterThoughtsEnabled } from '../../quick-reply-ext/src/characterThoughts.js';
+import { CHARACTER_THOUGHTS_AVAILABLE, CHARACTER_THOUGHTS_VARIABLE, NO_THOUGHTS, characterThoughtsEnabled } from '../../quick-reply-ext/src/characterThoughts.js';
 import { scenarios } from '../../quick-reply-ext/src/scenarios.js';
 
 function canonicalNarrativeScript() {
@@ -119,10 +119,17 @@ test('Summer, Belle and Loona get a per-chat thoughts toggle that defaults on', 
         locals.clear();
     }
 
-    const other = readNarrativeSnapshot({ getGlobal: () => undefined, getLocal: () => undefined, hasChat: true, characterName: 'Hannah' });
-    const noChat = readNarrativeSnapshot({ getGlobal: () => undefined, getLocal: () => undefined, hasChat: false, characterName: 'Summer' });
-    assert.equal(other.characterThoughts, null);
-    assert.equal(noChat.characterThoughts, null);
+    // Since 2026-11-19 every thought-enabled intro has the switch. XXX records who thinks (CHARACTER_THOUGHTS_AVAILABLE);
+    // before it has run, only the always-on characters fall back to showing it.
+    const snap = (characterName, values, hasChat = true) => readNarrativeSnapshot({
+        getGlobal: () => undefined, getLocal: key => values[key] ?? '', hasChat, characterName });
+    assert.deepEqual(snap('Hannah', {}).characterThoughts, { characterName: 'Hannah', enabled: true });
+    assert.deepEqual(snap('Cerberus Sisters', { [CHARACTER_THOUGHTS_AVAILABLE]: 'Fawne' }).characterThoughts, { characterName: 'Fawne', enabled: true });
+    assert.deepEqual(snap('Jenn', { [CHARACTER_THOUGHTS_AVAILABLE]: 'Jenn', [CHARACTER_THOUGHTS_VARIABLE]: 'Disabled' }).characterThoughts, { characterName: 'Jenn', enabled: false });
+    assert.equal(snap('Jenn', {}).characterThoughts, null, 'not rebuilt yet, and not an always-on character');
+    assert.equal(snap('Summer', { [CHARACTER_THOUGHTS_AVAILABLE]: NO_THOUGHTS }).characterThoughts, null);
+    assert.equal(snap('Rosa', { [CHARACTER_THOUGHTS_AVAILABLE]: NO_THOUGHTS }).characterThoughts, null);
+    assert.equal(snap('Summer', {}, false).characterThoughts, null);
 });
 
 test('Character Thoughts control renders only for supported open chats and is wired to the prompt rebuild', () => {
@@ -139,7 +146,7 @@ test('Character Thoughts control renders only for supported open chats and is wi
     const phoneSource = readFileSync(fileURLToPath(new URL('../index.js', import.meta.url)), 'utf8');
     const promptSource = readFileSync(fileURLToPath(new URL('../../quick-reply-ext/index.js', import.meta.url)), 'utf8');
     assert.match(phoneSource, /action === 'toggle-character-thoughts'[\s\S]*local\.set\(CHARACTER_THOUGHTS_VARIABLE,[\s\S]*rebuildNarrativePrompts\('XXX'\)/);
-    assert.match(promptSource, /supportsCharacterThoughtsToggle\(charName\)[\s\S]*characterThoughtsEnabled\(charName, getLocalVariable\(CHARACTER_THOUGHTS_VARIABLE\)\)/);
+    assert.match(promptSource, /setLocalVariable\(CHARACTER_THOUGHTS_AVAILABLE, thinker \|\| NO_THOUGHTS\);\s*setLocalVariable\(CHARACTER_THOUGHTS_DEFAULT, thoughtsDefault\);\s*setLocalVariable\("ThoughtSet", thoughts && thoughtsSwitchOn\(getLocalVariable\(CHARACTER_THOUGHTS_VARIABLE\), thoughtsDefault\) \? thoughts : noThoughtsLine\);/);
 });
 
 test('Roleplay Shift: HardToggle always wins, and a stale or unknown value reads as None', () => {
@@ -309,14 +316,14 @@ test('Narrative renders a phone-native control surface without embedding prompt 
     assert.match(target.innerHTML, /<dt>Prompt<\/dt><dd>Current<\/dd>/);
     assert.match(target.innerHTML, /System Prompt Selection:/);
     assert.match(target.innerHTML, /wp-narrative-cart is-in" data-narrative-action="set-prompt" data-value="Current Prompt"/);
-    for (const id of ['Old Prompt 2026', 'Old Prompt 2025', 'Mini Prompt']) {
+    for (const id of ['Beta Prompt 3', 'Old Prompt 2026', 'Old Prompt 2025', 'Mini Prompt']) {
         assert.match(target.innerHTML, new RegExp(`class="wp-narrative-cart" data-narrative-action="set-prompt" data-value="${id}"`));
     }
-    // Beta is a held slot: drawn, greyed out, and with no action to click. Only the four real cartridges are counted.
+    // The Beta slot holds Beta 3 since 2026-11-17 (it was a held, greyed-out slot before), so five cartridges are counted.
     // (Beta Prompt 2 + the Curse Booster were pulled on 2026-10-13; see the backup folder under "Prompt Review/Beta 2 Tests".)
-    assert.match(target.innerHTML, /class="wp-narrative-cart is-held" disabled/);
+    assert.doesNotMatch(target.innerHTML, /class="wp-narrative-cart is-held" disabled/);
     assert.doesNotMatch(target.innerHTML, /data-value="Beta Prompt"/);
-    assert.match(target.innerHTML, /4 Promptcarts&trade; detected/);
+    assert.match(target.innerHTML, /5 Promptcarts&trade; detected/);
     assert.doesNotMatch(target.innerHTML, /Beta recommended/);
     assert.doesNotMatch(target.innerHTML, /Curse Booster/);
     // Analysis card wording (2026-10-13): ~40s either side, and the models that gain most.
