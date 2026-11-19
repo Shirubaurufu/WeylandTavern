@@ -289,7 +289,7 @@ function geminiBypassCard(snapshot) {
 }
 
 // Cartridge labels for the System Prompt Selection bay (8-bit font, so short).
-const PROMPT_CART_LABELS = { 'Current Prompt': 'CURRENT', 'Beta Prompt': 'BETA', 'Old Prompt 2026': '2026', 'Old Prompt 2025': '2025', 'Mini Prompt': 'MINI' };
+const PROMPT_CART_LABELS = { 'Current Prompt': 'CURRENT', 'Beta Prompt': 'BETA', 'Beta Prompt 3': 'BETA','Old Prompt 2026': '2026', 'Old Prompt 2025': '2025', 'Mini Prompt': 'MINI' };
 
 /** "Current Setup:" on a dot-matrix screen (it replaced the "Current roleplay recipe" box). Same
  * readings as before; chat-only overrides and an active shift light up. */
@@ -461,7 +461,7 @@ function characterThoughtsCard(snapshot) {
     return `
     <section class="wp-narrative-card wp-narrative-character-thoughts${on ? ' is-on' : ''}">
         <div class="wp-narrative-card-heading"><div><span>This chat only</span><h3>Character Thoughts</h3></div><i class="fa-solid fa-brain"></i></div>
-        <p>${escapeHtml(control.characterName)} can include short, bracketed inner thoughts that contrast with what she says aloud. Turn them off here if you prefer dialogue and narration only.</p>
+        <p>${escapeHtml(control.characterName)} can include short, bracketed inner thoughts alongside what they say aloud. Turn them off here if you prefer dialogue and narration only.</p>
         <button type="button" class="wp-narrative-gemini-toggle" data-narrative-action="toggle-character-thoughts" aria-pressed="${on}">
             <span><strong>Thoughts: ${on ? 'Enabled' : 'Disabled'}</strong><small>${on ? 'Bracketed inner thoughts may appear' : 'Bracketed inner thoughts are suppressed'}</small></span>
             <span class="wp-narrative-switch${on ? ' is-on' : ''}" aria-hidden="true"><i></i></span>

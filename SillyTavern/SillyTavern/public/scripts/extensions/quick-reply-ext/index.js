@@ -1,0 +1,2875 @@
+import { assembleRoleplayShiftItem } from './src/roleplayShiftItem.js';
+import { resetMentalDirectivesOnce } from './src/mentalDirectives.js';
+import { quickReplyApi } from "../quick-reply/index.js";
+import { executeSlashCommandsWithOptions } from "../../slash-commands.js";
+
+import { getGlobalVariable, getLocalVariable } from "../../variables.js";
+import { chat, chat_metadata, doNewChat, eventSource, event_types, getCurrentChatId, narratorSettingsSync } from "../../../script.js";
+import { narratorBuildState, narratorSelection } from './src/narratorSelection.js';
+import { selected_world_info, onWorldInfoChange } from "../../world-info.js";
+import { isMobile } from "../../RossAscends-mods.js";
+import { setPersonaLockState } from "../../personas.js";
+import { isSideCharacterShown, updateSideCharacter } from "../Side-Character-Loader/index.js";
+import { isReplyPlaceholder, portraitSignature, saysNothingAboutCostume } from "./src/portraitSignature.js";
+import { OUTFIT_PICK_VAR, OUTFIT_STICK_VAR, activeOutfitPick, cardSpriteSets, decideCostume, isCommunityOutfit, isExtraOutfit, isNsfwOutfit, outfitToShow, splitOutfitFolder } from "./src/outfitPick.js";
+import { SlashCommandParser } from "../../slash-commands/SlashCommandParser.js";
+import { SlashCommand } from "../../slash-commands/SlashCommand.js";
+import { ARGUMENT_TYPE, SlashCommandArgument } from "../../slash-commands/SlashCommandArgument.js";
+
+import { getRandomInt, getCurrentCharacterName, getCurrentUserName, setLLModel, setBackground, applyBackgroundFile, tagExists, tagAdd, tagRemove, getPersonaBook, getCurrentCharacterWorldbook, setCostume, setExpression, setCostumeAndExpression, isOpenWorldCard, getCurrentCardSpriteOverride, getCharacterCostumeFromText, getCurrentCharacterVersion, getCurrentCharacterPersonality, getCurrentCharacterDescription, getCurrentCharacterFirstMes } from "./src/general.js";
+import { deleteGlobalVariable, deleteLocalVariable, deleteLocalVariables, flushInject, inject, setGlobalVariable, setLocalVariable } from "./src/variables.js"
+import { findLoreBookEntry, getEntryField, setEntryField } from "./src/lorebook.js";
+import { doButtons, doPopup } from "./src/popups.js";
+import { closeChat, editSwipe, getFirstMessage, getLastMessage, unhideMessages } from "./src/chat.js";
+import strings from "./src/strings.js";
+import { scenarios, tails } from "./src/scenarios.js";
+import { charPer, specialChar } from "./src/charper.js";
+import { ravs } from "./src/promptRegistry.js";
+import { SHIFT_BODIES, SHIFT_FRAME, SHIFT_SCOPES } from "./src/roleplayShifts.js";
+import { applyLoonaStart, askLoonaDrunkStart, describeIntroContext, INTRO_CONTEXT_STATE_VARS, introHadScenario, setIntroContextMode, setIntroVariant } from "./src/introContext.js";
+import { addTimeSkipNote, isCustomStartGreeting, readTimeSkip, TIME_SKIP_VAR, timeSkipNote, timeSkipState } from "./src/introSwitch.js";
+import { activeDoseShift, applyDoseForGeneration, describeDose, endDose, startDose } from "./src/dose.js";
+import { detector } from "./src/similarity.js";
+import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
+import { applyOocToCardSlots, buildOocPostHistory, buildOocSystemPrompt, cardPostHistoryExtras, cardSystemPromptExtras, isOocModeEnabled, stripFromMessages } from "./src/oocMode.js";
+import { NARRATOR_SUBBOTS, NARRATOR_SUBBOT_NAMES } from "./src/narratorSubbots.js";
+import { analysisDelta, applyGeminiBypassForModel, dropChapterCheckUnlessStory, isGeminiModel, swapPromptTexts, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
+import { BAPHOMET_VAR, applyBaphometToRequest, baphometHidden, baphometThoughts } from "./src/baphomet.js";
+import { applyKinsbaneCommand } from "./src/kinsbaneCommands.js";
+import { braillePlayerMessage, cleanReplyBraille } from "./src/brailleSpaces.js";
+import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.js";
+import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
+import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
+import { pickBackgroundForReply } from "./src/autoBackground.js";
+import { CHARACTER_THOUGHTS_AVAILABLE, CHARACTER_THOUGHTS_DEFAULT, CHARACTER_THOUGHTS_VARIABLE, NO_THOUGHTS, characterThoughtsEnabled, hasAlwaysOnThoughts, thoughtsSwitchOn } from "./src/characterThoughts.js";
+import { isLoonaDrunkStart, LOONA_DRUNK_DEFAULT_CHOICE, loonaDrunkIdFromChoice, loonaGreetingRecord, stripDrunkThoughtsFromRequest } from "./src/loonaGreetings.js";
+
+const debug = true;
+
+/**
+ * Debug Logs
+ * @param {string} message
+ * @param {any} object
+ */
+function DebugLog(message, object=undefined) {
+    if (!debug) return;
+    if (object !== undefined) {
+        console.log(`[WQR] ${message}`, object);
+    } else {
+        console.log(`[WQR] ${message}`);
+    }
+}
+
+// Non-Persistent checks, use sparingly
+const checks = {
+    skipChatChange: false,
+    lastChatID: ""
+};
+
+// EVENTS
+//#region
+
+async function OnStartup() {
+    try {
+        resetMentalDirectivesOnce(getGlobalVariable, setGlobalVariable);
+        DebugLog(`OnStartup called.`);
+    } catch (error) {
+        console.error(`[WQR] OnStartup Error:`, error);
+    }
+}
+
+/**
+ * @param {{ chat: []; dryRun: Boolean; }} args
+ */
+async function OnBeforeGeneration(args) {
+    try {
+        DebugLog(`OnBeforeGeneration called.`);
+        await quickReplyApi.executeQuickReply("Weyland","~");
+        await quickReplyApi.executeQuickReply("Weyland","ExtCheck");
+        if (args.dryRun) return; // Avoid running scripts on dry runs
+        // DebugLog(`chat:`, args.chat);
+    } catch (error) {
+        console.error(`[WQR] OnBeforeGeneration Error:`, error);
+    }
+}
+
+/**
+ * Last stop before a chat-completion request is sent: `data` is the exact payload, with the model
+ * Weyland-Router rolled for THIS attempt already in data.model. With Gemini Bypass on, Claude models
+ * get the bypass text cut out and keep box 6 whole; every other model keeps the text and loses box
+ * 6's explicit warm-up (see applyGeminiBypassForModel in src/promptModifiers.js). With the toggle
+ * off nothing changes. Cheap: a substring check per message.
+ */
+function OnRequestReady(data) {
+    try {
+        if (!data) return;
+        // Gemini Bypass on + a Gemini model: send the Analysis-off build XXX kept in ravtegGemini/postravGemini.
+        // Matched on the EXPANDED text, since the card's {{getvar::ravteg}} slot was filled before the Router rolled.
+        if (isGeminiModel(data.model) && String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled') {
+            const swapped = swapGeminiNoAnalysis(data.messages);
+            if (swapped) DebugLog(`Gemini Bypass: Analysis skipped for ${data.model} (${swapped})`);
+        }
+        const { bypassRemoved, box6Cut } = applyGeminiBypassForModel(data.messages, data.model);
+        if (bypassRemoved) DebugLog(`Gemini Bypass left out for ${data.model}`);
+        if (box6Cut) DebugLog(`Gemini Bypass: box 6 warm-up cut for ${data.model}`);
+    } catch (error) {
+        console.error(`[WQR] OnRequestReady Error:`, error);
+    }
+    // The sheet's chapter check only goes out while a Foxfire storyline is injected (Lucky, 2026-11-19).
+    try {
+        if (data && dropChapterCheckUnlessStory(data.messages)) DebugLog(`Chapter check left out: no storyline in this chat`);
+    } catch (error) {
+        console.error(`[WQR] OnRequestReady chapter check Error:`, error);
+    }
+    // Its own try: a failure above must not leave the card's roleplay directions in an OOC chat.
+    try {
+        if (data && isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const cut = stripCardExtrasForOoc(data.messages);
+            if (cut) DebugLog(`OOC Mode: the card's own text after the prompt slots was left out (${cut})`);
+        }
+    } catch (error) {
+        console.error(`[WQR] OOC card-text cut Error:`, error);
+    }
+    // Bap's Baphomet Visibility (PromptOS). Also its own try, and skipped in OOC Mode, which already replaces her prompt slots.
+    try {
+        if (data && getCurrentCharacterName() === "Bap" && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const context = SillyTavern.getContext();
+            const card = context.characters?.[context.characterId];
+            const post = cardPostHistoryExtras(card?.data?.post_history_instructions);
+            const { muteCut, cuts } = applyBaphometToRequest(data.messages, {
+                hidden: baphometHidden(getLocalVariable(BAPHOMET_VAR)),
+                description: card?.data?.description,
+                postHistoryExtras: post,
+                personality: getLocalVariable("ArchAngel"),
+                scenarios: [getLocalVariable("ConstantScenario"), getLocalVariable("Scenario")],
+                substitute: (text) => context.substituteParams(text),
+            });
+            if (muteCut || cuts) DebugLog(`Baphomet: cut ${cuts} piece(s) and the !Mute paragraph (${muteCut})`);
+        }
+    } catch (error) {
+        console.error(`[WQR] Baphomet cut Error:`, error);
+    }
+    // Loona with Character Thoughts off (PromptOS): her drunk start context has its own section on how her drunk
+    // thoughts sound, which would keep them coming. Cut it from this request only. See src/loonaGreetings.js.
+    try {
+        if (data && getCurrentCharacterName() === "Loona" && !characterThoughtsEnabled("Loona", getLocalVariable(CHARACTER_THOUGHTS_VARIABLE))) {
+            const cut = stripDrunkThoughtsFromRequest(data.messages);
+            if (cut) DebugLog(`Loona: drunk thoughts section left out, Character Thoughts is off (${cut})`);
+        }
+    } catch (error) {
+        console.error(`[WQR] Loona thoughts cut Error:`, error);
+    }
+    // A PromptOS start switch (Loona / Belle): the reply right after the new greeting, and its rerolls, get a one-time
+    // time skip note so the model leaves the old timeline. Spent after that; see src/introSwitch.js. Skipped in OOC
+    // Mode (no roleplay reply is being written), but not cleared there, so it still applies once OOC is off.
+    try {
+        const raw = getLocalVariable(TIME_SKIP_VAR);
+        if (data && raw) {
+            const state = timeSkipState(raw, SillyTavern.getContext().chat?.length ?? 0);
+            if (state === 'spent') deleteLocalVariable(TIME_SKIP_VAR);
+            else if (state === 'active' && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+                if (addTimeSkipNote(data.messages, timeSkipNote(readTimeSkip(raw)?.name))) DebugLog(`Start switch: time skip note added`);
+            }
+        }
+    } catch (error) {
+        console.error(`[WQR] Time skip note Error:`, error);
+    }
+    // !Look and journal codes in Kinsbane Manor / Aiko chats: the command changes the prompt for this one message
+    // (and its rerolls). See src/kinsbaneCommands.js. Skipped in OOC Mode, where the scene sheet isn't sent anyway.
+    try {
+        const name = getCurrentCharacterName();
+        if (data && (name === "Kinsbane Manor" || name === "Aiko") && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const { kind, changed } = applyKinsbaneCommand(data.messages, {
+                kinsbane: name === "Kinsbane Manor",
+                substitute: (text) => SillyTavern.getContext().substituteParams(text),
+            });
+            if (kind) DebugLog(`Command message (${kind}): prompt changed in ${changed} place(s)`);
+        }
+    } catch (error) {
+        console.error(`[WQR] Command message Error:`, error);
+    }
+    // Gemini Bypass + a Gemini model: the player's latest message goes out with braille blanks instead of spaces, which
+    // makes Gemini's replies more varied (Lucky, 2026-11-19). Request only, never the chat. LAST on purpose: the command
+    // check above reads the message with normal spaces. See src/brailleSpaces.js.
+    try {
+        if (data && isGeminiModel(data.model) && String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled') {
+            const player = [...(chat || [])].reverse().find(m => m && !m.is_system);
+            if (player?.is_user && typeof player.mes === 'string') {
+                const swapped = braillePlayerMessage(data.messages, [player.mes, SillyTavern.getContext().substituteParams(player.mes)]);
+                if (swapped) brailleRequested = true;
+                DebugLog(swapped ? `Gemini Bypass: ${swapped} braille space(s) in the latest message` : `Gemini Bypass: latest message not found for braille spaces`);
+            }
+        }
+    } catch (error) {
+        console.error(`[WQR] Braille spaces Error:`, error);
+    }
+}
+
+// Set when a request carried braille blanks; spent by the next finished character reply. Only set, never cleared, by
+// requests: a quiet request (summary, phone) between the roleplay request and its reply must not cancel the cleanup.
+let brailleRequested = false;
+
+/**
+ * Runs FIRST on MESSAGE_RECEIVED: a Gemini reply to a brailled request may copy the braille blanks, which no regex counts
+ * as whitespace (the Formatter's header, mood/costume tags and word wrap would break). Turns them back into spaces in the
+ * message and its current swipe before anything else reads it. Other replies (greetings, other models) are left alone.
+ */
+function OnReplyBraille(messageId) {
+    try {
+        if (!brailleRequested) return;
+        const message = chat?.[messageId];
+        if (!message || message.is_user) return;
+        // A streamed reroll fires MESSAGE_RECEIVED once with ST's "..." placeholder first; wait for the real text.
+        if (isReplyPlaceholder(message.mes)) return;
+        brailleRequested = false;
+        const cleaned = cleanReplyBraille(message.mes);
+        if (cleaned === message.mes) return;
+        message.mes = cleaned;
+        if (Array.isArray(message.swipes) && typeof message.swipes[message.swipe_id] === 'string') {
+            message.swipes[message.swipe_id] = cleanReplyBraille(message.swipes[message.swipe_id]);
+        }
+        DebugLog(`Gemini Bypass: braille blanks in the reply turned back into spaces`);
+    } catch (error) {
+        console.error(`[WQR] Braille reply cleanup Error:`, error);
+    }
+}
+
+/**
+ * Swaps the analysis part of ravteg/postrav for XXX's Analysis-off build in a request's messages. Only the chunk that
+ * differs is swapped (analysisDelta), because the rest can hold random macros that would expand differently a second
+ * time. Each chunk is expanded the way ST expanded the card fields (macros, \r removed, newlines collapsed when that
+ * setting is on), twice, because a value's own macros can be filled in a second pass. Kris's Krisrav holds the same
+ * text as postrav, so it matches too.
+ * @returns {number} replacements made (0 = nothing to do, or the text wasn't found)
+ */
+function swapGeminiNoAnalysis(messages) {
+    const context = SillyTavern.getContext();
+    const expand = (text) => {
+        let out = context.substituteParams(context.substituteParams(text)).replace(/\r/g, '');
+        if (context.powerUserSettings?.collapse_newlines) out = out.replace(/\n+/g, '\n'); // ST's collapseNewlines
+        return out;
+    };
+    const pairs = [];
+    for (const [normal, gemini] of [["ravteg", "ravtegGemini"], ["postrav", "postravGemini"]]) {
+        if (!getLocalVariable(gemini)) continue;
+        const delta = analysisDelta(getLocalVariable(normal), getLocalVariable(gemini));
+        if (!delta) continue;
+        const from = expand(delta.from), to = expand(delta.to);
+        // A chunk at the very start/end of a card field was trimmed with it, so fall back to the trimmed text.
+        pairs.push(messages.some(m => typeof m?.content === 'string' && m.content.includes(from)) ? { from, to } : { from: from.trim(), to: to.trim() });
+    }
+    if (!pairs.length) return 0;
+    const swapped = swapPromptTexts(messages, pairs);
+    if (!swapped) console.warn('[WQR] Gemini Bypass: the Analysis-on prompt was not found in the request, so Gemini still got the analysis.');
+    return swapped;
+}
+
+/**
+ * OOC Mode replaces the {{getvar::postrav}} and {{getvar::ravteg}} slots, but some cards append their
+ * own text after them: Yue-Lin's post-history ("[YUE LIN REASONING MODIFIER]"), Loona's system prompt
+ * ({{getvar::DrunkCoach}}). src/oocMode.js explains. That text is cut from the outgoing request here,
+ * once the macros are expanded, so what is removed is exactly what would have been sent. No-op in group
+ * chats (no single card) and for cards that don't use the slots.
+ * @param {Array} messages data.messages of the final request
+ * @returns {number} How many pieces were cut (0-2)
+ */
+function stripCardExtrasForOoc(messages) {
+    const context = SillyTavern.getContext();
+    const card = context.characters?.[context.characterId];
+    let cut = 0;
+    const post = cardPostHistoryExtras(card?.data?.post_history_instructions);
+    if (post) cut += stripFromMessages(messages, context.substituteParams(post));
+    // The system prompt is the first message; search from there so a later chat message can't be hit first.
+    const system = cardSystemPromptExtras(card?.data?.system_prompt);
+    if (system) cut += stripFromMessages(messages, context.substituteParams(system), { fromStart: true });
+    return cut;
+}
+
+/**
+ * @param {number} messageID
+ */
+async function OnUser(messageID) {
+    try {
+        DebugLog(`OnUser called.`);
+        // DebugLog(`OnUser chat:`, chat);
+        // DebugLog(`OnUser chat message:`, chatMessage);
+        // DebugLog(`OnUser messageID`, messageID);
+
+        /** @type {import("./src/chat.js").ChatMessage | undefined} */ const chatMessage = chat[messageID];
+
+        const userText = chatMessage?.mes;
+        const userName = chatMessage?.name;
+
+        if (!userName || !chatMessage?.send_date) return;
+        
+        const currentUserMessID = `${userName}_${messageID}_${chatMessage?.send_date}`
+        const newMessage = currentUserMessID !== getLocalVariable("lastUserMessID");
+
+        if (newMessage) {
+            if (!userText) return; // Empty message, scripts below this require message contents
+
+            DebugLog(`UserMessageID: ${currentUserMessID} !== ${getLocalVariable("lastUserMessID")}`);
+
+            const characterName = getCurrentCharacterName();
+
+            // Setup Script
+            if (getLocalVariable("ScenarioSet") !== "true") {
+                let anyFail = false;
+                if (getLocalVariable("ravteg") === "") {
+                    await AutoStart();
+                }
+
+                setLocalVariable("newchatstarted", "true");
+
+                // Scenarios Script
+                const scenariosResult = await Scenarios(userText);
+                if (scenariosResult !== undefined) anyFail = true;
+
+                if (getLocalVariable("PastRP") === "") {
+                    const rosterSBResult = await RosterSB(characterName);
+                    if (rosterSBResult !== undefined) anyFail = true;
+                    const sterSchoolYearResult = await SetSchoolYear();
+                    if (sterSchoolYearResult !== undefined) anyFail = true;
+                }
+                
+                const charPerResult = await CharPer(characterName);
+                if (charPerResult !== undefined) anyFail = true;
+                
+                setLocalVariable("ScenarioSet", "true");
+            }
+
+            // Make sure the Weyland lorebook is on
+            if (!selected_world_info.includes("Weyland")) {
+                onWorldInfoChange({ state: 'on', silent: 'true' }, 'Weyland');
+            }
+
+            // Refresh Check
+            if (userText.includes("!Refresh")) {
+                await SetupCostumesAndTags(characterName);
+                await CharPer(characterName);
+                await RosterSB(characterName);
+                await SetSchoolYear();
+            }
+
+            // Weybot
+            if (characterName === "Weybot") {
+                await Relationships();
+            }
+
+            // LTMRav?
+            if (getLocalVariable("MIP") !== "true") {
+                if (getLocalVariable("LTMRav") === "true") {
+                    setLocalVariable("LTMRav", "false");
+                    await XXX();
+                    onWorldInfoChange({ state: 'on', silent: 'true' }, 'Weyland');
+                    if (characterName === "Kris") {
+                        setLocalVariable("Krisrav", getLocalVariable("temprav"));
+                    }
+                    await quickReplyApi.executeQuickReply("Weyland","Framework");
+                    await unhideMessages({start: 0, end: messageID+2});
+                    const ModelSwitched = getGlobalVariable("ModelSwitched");
+                    if (ModelSwitched !== "") {
+                        await setLLModel(ModelSwitched);
+                        deleteGlobalVariable("ModelSwitched");
+                    }
+                    if (getLocalVariable("EntryNumber") > 1) {
+                        setLocalVariable("LTMDisabler", "false");
+                        await quickReplyApi.executeQuickReply("Weyland","LTMDisabler");
+                    }
+                }
+            }
+
+            // MuseFirst: the popup explains her scripted experiment (day codes, evening cutscenes), so it is skipped on
+            // her custom start, where the story is whatever the player asked for. Muse1st stays unset there, so the
+            // player still gets the explanation the first time they play the real experiment.
+            if (characterName === "Muse" && getGlobalVariable("Muse1st") !== "true"
+                && !isCustomStartGreeting(getFirstMessage("char")?.mes)) {
+                await doPopup({large: true, wide: true}, strings.musF);
+                setGlobalVariable("Muse1st", "true");
+            }
+
+            setLocalVariable("lastUserMessID", currentUserMessID); // Update lastUserMessID to check if message has changed next call
+        } else {
+            DebugLog(`UserMessageID: ${currentUserMessID} === ${getLocalVariable("lastUserMessID")}`);
+        }
+
+    } catch (error) {
+        console.error(`[WQR] OnUser Error:`, error);
+    }
+    
+}
+
+/**
+ * @param {number} messageID
+ */
+async function OnAi(messageID) {
+    try {
+        DebugLog(`OnAi called.`);
+        // DebugLog(`OnAi chat:`, chat);
+        // DebugLog(`OnAi chat message:`, chatMessage);
+        // DebugLog(`OnAi messageID`, messageID);
+
+        /** @type {import("./src/chat.js").ChatMessage | undefined} */ const chatMessage = chat[messageID];
+
+        const charText = chatMessage?.mes;
+        const charName = chatMessage?.name;
+
+        if (!charText || !charName) return; // Empty message or invalid sender, scripts below this require those
+
+        // With streaming on, a reroll is announced TWICE: once when the stream opens, as the placeholder "...", and
+        // once with the finished reply. Both carry the same message number and swipe number. Reading the placeholder
+        // made the finished reply look like one we had already handled, so a streamed reroll kept the previous
+        // swipe's face (and, having no costume tag, put her back in the regular outfit). Found 2026-11-11 with real
+        // Sonnet replies. The placeholder says nothing, so it is skipped and the real text is the first look.
+        if (isReplyPlaceholder(charText)) return;
+
+        // Other MESSAGE_RECEIVED listeners run after this one and may still change the text (see OnReplyRendered).
+        recheckAfterRender = messageID;
+ 
+        const charSwipeID = chatMessage?.swipe_id;
+
+        const currentMessID = `${charName}_${messageID}_${chatMessage?.send_date}_${charSwipeID}`
+        const newMessage = currentMessID !== getLocalVariable("lastMessID");
+
+        if (newMessage) {
+            DebugLog(`CharMessageID: ${currentMessID} !== ${getLocalVariable("lastMessID")}`);
+            
+            // Set Analysis for Prompt Type based on RUBY
+            if (/[\(\[]RUBY[\]\)]/.test(charText)) {
+                setLocalVariable("AnalysisLayer", strings.RubyAnalysis);
+            } else {
+                setLocalVariable("AnalysisLayer", strings.NorAnalysis);
+            }
+
+            // AngelDevil Script
+            AngelDevil();
+
+            // CostumeChangeforBot Script
+            CostumeChangeBot(chatMessage, charName);
+
+            // AutoBG Script
+            AutoBG(chatMessage);
+
+            // Cleanup ContextTimer: once the chat passes the greeting's ContextTimer, drop its
+            // ConstantContext (Belle's party intro keeps Emily, Remy and Kiera around until then).
+            // The original QR flushed ConstantContext here; the 07-01 JS port deleted ContextTimer
+            // instead, so the context never left. Fixed 2026-10-01. A missing ContextTimer (e.g. the
+            // user pinned the intro "On" in PromptOS) means no expiry.
+            const contextTimer = getLocalVariable("ContextTimer");
+            if (getLocalVariable("ConstantContext") !== "" && contextTimer !== "" && messageID >= Number(contextTimer)) {
+                deleteLocalVariable("ConstantContext");
+                deleteLocalVariable("ContextTimer");
+            }
+
+            // Set AZERTY
+            if (getRandomInt(1, 4) === 4) {
+                setLocalVariable("AZERTY", `- Chance to send jumbled messages without realizing when forgetting to switch keyboard layouts after gaming sessions (e.g., "Qhere is ,y qrt?" instead of "Where is my art?") (never realizes slipup in same message; never fixes keyboard in the same message; apologizes ONLY in a new keyboard-fixed message)`);
+            } else {
+                deleteLocalVariable("AZERTY");
+            }
+
+            // Set Random Drama
+            switch(getRandomInt(1, 11)) {
+                case 1:
+                default:
+                    setLocalVariable("ChosenDrama", "Unexpected good news");
+                    break;
+                case 2:
+                    setLocalVariable("ChosenDrama", "Invitations to exclusive events");
+                    break;
+                case 3:
+                    setLocalVariable("ChosenDrama", "Spontaneous road trips");
+                    break;
+                case 4:
+                    setLocalVariable("ChosenDrama", "Exciting campus event");
+                    break;
+                case 5:
+                    setLocalVariable("ChosenDrama", "Urgent texts from exes or family");
+                    break;
+                case 6:
+                    setLocalVariable("ChosenDrama", "Friends needing serious help");
+                    break;
+                case 7:
+                    setLocalVariable("ChosenDrama", "Revealed secrets or confessions");
+                    break;
+                case 8:
+                    setLocalVariable("ChosenDrama", "Rival situations");
+                    break;
+                case 9:
+                    setLocalVariable("ChosenDrama", "Emergency situations");
+                    break;
+                case 10:
+                    setLocalVariable("ChosenDrama", "Unexpected visitors");
+                    break;
+                case 11:
+                    setLocalVariable("ChosenDrama", "Suspicious activities");
+                    break;
+            }
+
+            // Flush Aethel
+            if (charName === "Aethel") {
+                if (getLocalVariable("N3k0Flush") === "") {
+                    setLocalVariable("N3k0Flush", 0);
+                }
+                if (!chatMessage.mes.includes("✧･ﾟ")) {
+                    if (getLocalVariable("N3k0Flush") === 2) {
+                        flushInject("N3k0")
+                    } else {
+                        setLocalVariable("N3k0Flush", getLocalVariable("N3k0Flush")+1);
+                    }
+                } else {
+                    setLocalVariable("N3k0Flush", 0);
+                }
+            }
+
+            // Set DieRoll
+            if (chatMessage.mes.includes(":__")) {
+                setLocalVariable("DieRoll", getRandomInt(6, 16));
+            } else {
+                setLocalVariable("DieRoll", getRandomInt(3, 8));
+            }
+
+            await Clear();
+
+            setLocalVariable("lastMessID", currentMessID); // Update lastMessID to check if message has changed next call
+        } else if (portraitSignature(charText) !== lastPortraitSignature) {
+            // Same message and swipe, but it now says something else about the portraits. That is a reply that was
+            // cut off and then finished with Continue: its footer was not there the first time we looked, so the face
+            // stayed on the previous reply's mood (and the costume fell back). Only the portraits and the background
+            // are redone; the once-per-message rolls above stay as they were.
+            DebugLog(`OnAi: same reply, new footer; redrawing portraits.`);
+            CostumeChangeBot(chatMessage, charName);
+            AutoBG(chatMessage);
+        }
+    } catch (error) {
+        console.error(`[WQR] OnAI Error:`, error);
+    }
+}
+
+/**
+ * The portrait signature (see src/portraitSignature.js) of the reply the portraits were last drawn from.
+ * Kept in memory only: after a reload the chat-open code redraws from the saved variables anyway.
+ */
+let lastPortraitSignature = "";
+
+/** The message OnAi just handled; OnReplyRendered looks at it once more. -1 = nothing pending. */
+let recheckAfterRender = -1;
+
+/**
+ * CHARACTER_MESSAGE_RENDERED, which SillyTavern fires once every MESSAGE_RECEIVED listener is done.
+ * OnAi is one of those listeners and not the last: a later one (reply cleanup) can still cut the reply down.
+ * Seen 2026-11-11 with a real Continue on a reply that was already complete: the model appended a whole second
+ * reply ending "[Nervousness]", OnAi drew Nervousness, then the extra reply was cut away again, leaving a reply
+ * whose footer says "[Caring]" under a nervous face. So the reply is compared once more when it is final.
+ * Only for the message OnAi just handled: this event also fires for every message while a chat loads, and those
+ * must not redraw anything (chat open restores the saved costume, which may be one the player picked by hand).
+ * @param {number} messageID
+ */
+async function OnReplyRendered(messageID) {
+    if (messageID !== recheckAfterRender) return;
+    recheckAfterRender = -1;
+    await OnReplyChanged();
+}
+
+/**
+ * A reply was edited, or a message was deleted: if the last character reply now says something different about
+ * the portraits than what is on screen, draw from it. Before this the portrait kept showing a reply that had been
+ * deleted, or the mood from before an edit, until the next reply arrived.
+ */
+async function OnReplyChanged() {
+    try {
+        const charMessage = getLastMessage("char");
+        if (!charMessage?.mes || !charMessage.name) return;
+        if (portraitSignature(charMessage.mes) === lastPortraitSignature) return;
+        DebugLog(`OnReplyChanged: last reply reads differently; redrawing portraits.`);
+        await CostumeChangeBot(charMessage, charMessage.name);
+    } catch (error) {
+        console.error(`[WQR] OnReplyChanged Error:`, error);
+    }
+}
+
+/**
+ * @param {number} messageID
+ */
+async function OnSwipe(messageID) {
+    try {
+        DebugLog(`OnSwipe called.`);
+        const charMessage = chat[messageID];
+
+        const charName = charMessage?.name;
+        const newSwipe = charMessage?.swipe_id === undefined || !Array.isArray(charMessage?.swipes) ? true : charMessage.swipe_id >= charMessage.swipes.length
+
+        if (charName && !newSwipe) {
+            if (charName === "Cerberus Sisters" && messageID === 0 && charMessage.swipe_id < 4) {
+                setLocalVariable("CerberusSister", ["Fawne", "Neshe", "Astrid", "3rd"][charMessage.swipe_id])
+            }
+            // Swiping between Vera's or Cerberus's intros changes whether (and with what default) thoughts are on, and
+            // PromptOS reads that from XXX. Rebuild so the Character Thoughts switch matches the intro being shown
+            // (no switch on Cerberus's custom start, Vera's default per intro).
+            if (messageID === 0 && (charName === "Vera" || charName === "Cerberus Sisters")) await XXX(charName);
+            await CostumeChangeBot(charMessage);
+            await AutoBG(charMessage);
+        }
+    } catch (error) {
+        console.error(`[WQR] OnSwipe Error:`, error);
+    }
+}
+
+/**
+ * Runs the card check (the "Descr" quick reply: is this one of Weyland's cards, by a phrase in its description).
+ *
+ * The check's verdict lives in the CHAT variable KickOut. On a fail the script sets it to true, shows the "not one of
+ * Lucky's creations" popup, sets it back to false and reloads the page one second later, which is usually before that
+ * last change has been saved. So the chat file kept KickOut = true, and nothing in the script clears it on a pass: every
+ * later open of that chat passed the check and was kicked anyway, even after the card and Weyland Tavern were both fixed
+ * (a player, 2026-11-11: Summer, right after the update; reinstalling the card could not help, only a new chat did).
+ * A verdict belongs to one run, so each run starts clean.
+ */
+async function runCardCheck() {
+    if (getLocalVariable("KickOut") === "true") setLocalVariable("KickOut", "false");
+    await quickReplyApi.executeQuickReply("Weyland", "Descr");
+}
+
+/**
+ * @param {string} chatbookName 
+ */
+async function OnChatChanged(chatbookName) {
+    try {
+        DebugLog(`OnChatChanged called.`);
+        DebugLog(`Chatbook: `, chatbookName);
+        if (checks.skipChatChange) {
+            checks.skipChatChange = false;
+            return;
+        }
+        const charName = chatbookName?.split(" ")?.[0]?.trim() || getCurrentCharacterName();
+        await quickReplyApi.executeQuickReply("Weyland","~");
+        await quickReplyApi.executeQuickReply("Weyland","ExtCheck");
+        if (checks.lastChatID !== chatbookName) {
+            await runCardCheck();
+            await quickReplyApi.executeQuickReply("Weyland", "PP&PPPLimiters");
+            if (chat.length === 1) {
+                if (!chat[0]?.swipe_id) {
+                    switch (charName) {
+                        case "Rosa":
+                            setLocalVariable("CostmSave", "Rosa/Intro");
+                            await setCostume("Rosa/Intro");
+                            break;
+                        case "Mirror Weyland":
+                        case "Weybot":
+                            if (chat[0]?.mes !== getCurrentCharacterFirstMes()) break;
+                            await AutoStart();
+                            break;
+                    }
+                }
+            }
+            // TitleBarColors Script
+            await TitleBarColors();
+            checks.lastChatID = chatbookName;
+        }
+    } catch (error) {
+        console.error(`[WQR] OnChatChanged Error:`, error);
+    }
+}
+
+/**
+ * @param {any} args 
+ */
+async function OnNewChat(args) {
+    // This is called when a person creates a chat without deleting the previous one
+    try {
+        DebugLog(`OnNewChat called.`);
+
+        if (getGlobalVariable("AltGreetingMessage") !== "true") {
+            doPopup({wide: true}, `<font size="5"><strong>Did you know this tip?</strong></font><br><br>You can access alternate greetings for Lucky's characters by starting a new chat and clicking on the left or right arrows at the bottom of the opening message!<br>You can also press the left or right arrows to shift between them freely.<br><br>We hope you're enjoying your stay here at Weyland University!</a>`);
+            setGlobalVariable("AltGreetingMessage", "true");
+        }
+    } catch (error) {
+        console.error(`[WQR] OnNewChat Error:`, error);
+    }
+}
+//#endregion
+
+// SCRIPTS
+//#region
+/**
+ * @param {string} [charName]
+ */
+async function AutoStart(charName) {
+    const PerformanceStart = performance.now();
+    try {
+        const charVer = getCurrentCharacterVersion();
+        if (!charVer) throw new Error("No character version");
+        const qrVer = getGlobalVariable("QRVersion");
+        if ((typeof qrVer === 'string' ? parseInt(qrVer) : qrVer) >= charVer) {
+            if (getLocalVariable("Run") === "true") return;
+            charName = charName || getCurrentCharacterName();
+            if (!charName) return;
+            const isMirrorWeyland = charName === "Mirror Weyland";
+            if (isMirrorWeyland) setLocalVariable("MirrorBegun", "");
+            setLocalVariable("Run", "true");
+            setLocalVariable("StartingYear", "false");
+            setLocalVariable("ExpHid", "true");
+            setLocalVariable("LocalNarrator", getGlobalVariable("Narrator"));
+            setLocalVariable("PhoneCom", isMirrorWeyland ? getGlobalVariable("CommandPhone") : getGlobalVariable("PhoneCommand"));
+            if (charName === "Weybot") {
+                await quickReplyApi.executeQuickReply("Weyland", "WeybotStart");
+            }
+            if (fCheck() && charName === "Kressa") {
+                await setCostume("Kressa/Lounge");
+            }
+            if (!/Kinsbane Manor|Weybot|Kressa/.test(charName) && getLocalVariable("POVType") === "1st") {
+                setGlobalVariable("MessageModeSet", "true");
+                inject({id: "MM", position: "chat", depth: "0"}, strings.firstpov);
+            }
+            if (getCurrentCharacterWorldbook() === "Weyland Characters") {
+                switch (charName) {
+                    case "Aiko": {
+                        const OutfitCodesUID = await findLoreBookEntry("Aiko's Manor", "comment", `Aiko Outfit Codes`);
+                        const content = await getEntryField("Aiko's Manor", OutfitCodesUID);
+                        setLocalVariable("ClothingCodeP", content);
+                        break;
+                    }
+                    case "Muse": {
+                        const OutfitCodesUID = await findLoreBookEntry("Muse Experiment", "comment", `Muse Outfit Codes`);
+                        const content = await getEntryField("Muse Experiment", OutfitCodesUID);
+                        setLocalVariable("ClothingCodeP", content);
+                        break;
+                    }
+                    default:
+                        setLocalVariable("ClothingCodeP", "===");
+                        break;
+                }
+            }
+            setLocalVariable("ravgte", strings.ravgte);
+            setLocalVariable("OrderNumber", "1000");
+            if (!getGlobalVariable("LTMHowMany")) setGlobalVariable("LTMHowMany", "10");
+            if (!getGlobalVariable("LTMMessages")) setGlobalVariable("LTMMessages", "50");
+            if (!getGlobalVariable("LTMTokens")) setGlobalVariable("LTMTokens", "300");
+            setLocalVariable("NewGroup", charName);
+            setLocalVariable("AddChar", charName);
+            setLocalVariable("GroupWarning", "0");
+            setLocalVariable("Warning", strings.warning);
+            await runCardCheck();
+            await XXX();
+            setLocalVariable("PostRavMem", getLocalVariable("postrav"));
+            setLocalVariable("PostRavCount", "0");
+            if (isMirrorWeyland) {
+                await quickReplyApi.executeQuickReply("WeylandUni", "MirrorStart");
+            }
+            AutoCostumes(charName);
+            if (/Kinsbane Manor|Muse|Aethel|Kressa/.test(charName)) {
+                await SpecialChar(charName);
+            }
+        }
+        DebugLog(`[P] AutoStart: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] AutoStart Error:`, error);
+        if (fCheck()) {
+            toastr.info(`Character Crashing. Update WTVersion.`);
+        } else {
+            toastr.info(`You need to update your WeylandTavern version to use this character.`);
+            closeChat();
+        }
+    }
+}
+
+/**
+ * The "Scenario" WI entry is shared by every chat, so its sticky is set per chat, the same way its
+ * keys are. Intros fade 20 messages after their CharKeys stop showing up (the entry's shipped value);
+ * a greeting can ask for longer with a ScenarioSticky field in scenarios.js (Lyris & Vesper's
+ * Halloween intro uses 50). Re-applied on every chat open, or one chat's value would leak into the
+ * next. Skips the world-file save when the value already matches.
+ * @param {number|string} uid
+ */
+async function applyScenarioSticky(uid) {
+    if (uid === "" || uid === undefined) return;
+    const sticky = Number(getLocalVariable("ScenarioSticky")) || 20;
+    if (Number(await getEntryField("Weyland Characters", uid, "sticky")) === sticky) return;
+    await setEntryField({file: "Weyland Characters", uid, field: "sticky"}, sticky);
+}
+
+/**
+ * TitleBarColors Script
+ * OnChatChanged
+ * @returns {Promise<string | undefined>}
+ */
+async function TitleBarColors() {
+    const PerformanceStart = performance.now();
+    try {
+        const charName = getCurrentCharacterName();
+        if (!charName) return "{{char}} undefined"
+        const charBookWC = getCurrentCharacterWorldbook() === "Weyland Characters";
+        if (/Lurkle|Weybot|Indigo/.test(charName)) {
+            if (getGlobalVariable(`RegexOn${charName}`) === "") {
+                setGlobalVariable(`RegexOn${charName}`, "true");
+                await executeSlashCommandsWithOptions('/regex-toggle state=on quiet=true Assistant');
+            }
+        }
+        const scenarioUID = await findLoreBookEntry("Weyland Characters", "automationId", "Scenario");
+        await setEntryField({file: "Weyland Characters", uid: scenarioUID, field: "key"}, getLocalVariable("CharKeys"));
+        await applyScenarioSticky(scenarioUID);
+        setLocalVariable("JennLucyRoom", getLocalVariable("EarlyStart") === "true" ? strings.LSRoom : strings.JLRoom);
+        //Happens if Chat Has already Setup
+        if (getLocalVariable("Run") === "true") {
+            let clothingCodeP = "===";
+            if (charBookWC) {
+                const OutfitCodesUID = await findLoreBookEntry("Weyland Characters", "comment", `${charName} Outfit Codes`);
+                const content = await getEntryField("Weyland Characters", OutfitCodesUID);
+                if (content) clothingCodeP = content;
+            } else {
+                switch (charName) {
+                    case "Aiko": {
+                        const OutfitCodesUID = await findLoreBookEntry("Aiko's Manor", "comment", `Aiko Outfit Codes`);
+                        const content = await getEntryField("Aiko's Manor", OutfitCodesUID);
+                        if (content) clothingCodeP = content;
+                        break;
+                    }
+                    case "Muse": {
+                        const OutfitCodesUID = await findLoreBookEntry("Muse Experiment", "comment", `Muse Outfit Codes`);
+                        const content = await getEntryField("Muse Experiment", OutfitCodesUID);
+                        if (content) clothingCodeP = content;
+                        break;
+                    }
+                }
+            }
+            setLocalVariable("ClothingCodeP", clothingCodeP);
+            if (getLocalVariable("AnalysisLayer") === "") {
+                setLocalVariable("AnalysisLayer", strings.NorAnalysis);
+            }
+            if (getLocalVariable("LocalN") === "") {
+                setLocalVariable("LocalNarrator", getGlobalVariable("Narrator"));
+                
+            }
+            await XXX();
+        }
+        // An outfit the player put on in Mien wins over the story's costume (src/outfitPick.js); the old wand-menu
+        // picker's choice was lost on every reload because only CostmSave was restored here.
+        const costumeSave = outfitToShow({
+            costmSave: getLocalVariable("CostmSave"),
+            pick: getLocalVariable(OUTFIT_PICK_VAR),
+            bases: spriteSetsFor(getCurrentCharacterName()).map(set => set.base),
+        }).split("/");
+        if (costumeSave?.length > 1) {
+            // Open-world cards re-show their saved character through their own slot (see OpenWorldCostumes); duo
+            // cards are drawn from member-named sets, whose override also belongs to the open card (see GroupCostumes)
+            const cardName = getCurrentCharacterName();
+            const onCurrentCard = isOpenWorldCard(cardName) || getGroupCardMembers(cardName).length > 0;
+            await setCostumeAndExpression(costumeSave[0], costumeSave[1], undefined, { onCurrentCard });
+            const costumeSaveSide = getLocalVariable("CostmSaveSide");
+            if (costumeSaveSide) {
+                const expSave = getLocalVariable("ExpSave");
+                if (!expSave) await Expressions(undefined, undefined, true);
+                await setExpression(getLocalVariable("ExpSave"));
+                // Same mood as the main character; without it she came back neutral on every reload
+                setLocalVariable("SideExpSave", getLocalVariable("ExpSave") || "neutral");
+                await updateSideCharacter({character: costumeSaveSide, expression: getLocalVariable("ExpSave")});
+            } else {
+                clearSideCharacter();
+            }
+        } else {
+            await CostumeChangeBot(undefined, undefined);
+        }
+        if (getGlobalVariable("AutoBG") !== "false" && !chatHasLockedBackground()) {
+            const bg = getLocalVariable("BGFound");
+            if (!bg) {
+                await AutoBG();
+            } else {
+                applyBackgroundFile(bg);
+            }
+        }
+        if (charName === "Kinsbane Manor" && getLocalVariable("KinsbaneFort") === "") {
+            await quickReplyApi.executeQuickReply("Weyland","History");
+        }
+        if (chat.length === 1) {
+            const newChatCheck = document.querySelector(`[data-i18n="[title]Chat Lore Alt+Click to open the lorebook"]`)?.['className'];
+            if (newChatCheck === "chat_lorebook_button menu_button fa-solid fa-passport interactable world_set") {
+                await doNewChat({ deleteCurrentChat: false });
+            }
+        }
+        if (charName === "Mirror Weyland") {
+            setLocalVariable("PhoneCom", getGlobalVariable("CommandPhone"));
+            if (getLocalVariable("MirrorBegun") === "") {
+                setLocalVariable("MirrorBegun", "true");
+                await AutoStart();
+            } else {
+                if (getLocalVariable("ConstantScenario") === "") {
+                    await Scenarios();
+                }
+            }
+        } else {
+            setLocalVariable("PhoneCom", getGlobalVariable("PhoneCommand"));
+        }
+        DebugLog(`[P] TitleBarColors: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (err) {
+        console.error(`[WQR] TitleBarColors Error:`, err);
+        return `Error`;
+    }
+}
+
+/**
+ * Expressions Script
+ * OnChatChanged & OnSwipe
+ * @param {string} [charName]
+ * @param {import("./src/chat.js").ChatMessage} [charMessage]
+ * @param {boolean} [disableSetting]
+ */
+async function Expressions(charName, charMessage, disableSetting=false) {
+    const PerformanceStart = performance.now();
+    try {
+        if (charMessage === undefined) charMessage = getLastMessage("char");
+        if (charMessage === undefined) {
+            DebugLog("[E] Expressions: charMessage missing");
+            return "charMessage missing"
+        }
+        if (!charName) charName = getCurrentCharacterName();
+        if (!charName) {
+            DebugLog("[E] Expressions: {{char}} undefined");
+            return "{{char}} undefined"
+        }
+        const expressions = [
+            "admiration", "amusement", "anger", "annoyance", "approval",
+            "caring", "confusion", "curiosity",
+            "desire", "disappointment", "disapproval", "disgust",
+            "embarrassment", "excitement",
+            "fear",
+            "gratitude", "grief",
+            "joy",
+            "love", 
+            "nervousness", "neutral",
+            "optimism",
+            "pride",
+            "realization", "relief", "remorse",
+            "sadness", "surprise"
+        ];
+        const expressionMatches = charMessage.mes.match(/(?<=\[)[a-zA-Z]+(?=\])/g)?.reverse().map(exp => exp.toLowerCase());
+        if (expressionMatches !== undefined) {
+            for (const expression of expressionMatches) {
+                if (expressions.includes(expression)) {
+                    DebugLog(`Expressions: Found: ${expression}`);
+                    setLocalVariable("ExpSave", expression);
+                    if (!disableSetting) { 
+                        await setExpression(expression)
+                    }
+                    break;
+                }
+            }
+        } else if (!getLocalVariable("ExpSave")) {
+            DebugLog(`Expressions: No last expression`);
+            setLocalVariable("ExpSave", "neutral");
+            if (!disableSetting) {
+                await setExpression("neutral");
+            }
+        }
+        DebugLog(`[P] Expressions: ${(performance.now() - PerformanceStart).toFixed(4)}ms`)
+    } catch (err) {
+        console.error(`[WQR] Expressions Error:`, err);
+        return `Error`;
+    }
+}
+
+/** @type {Map<string, Promise<boolean>>} */
+const spriteFolderCache = new Map();
+
+/**
+ * Checks whether a sprite folder (e.g. "Neshe/Naked") contains any sprites.
+ * Results are cached for the page load; newly uploaded folders need a reload.
+ * @param {string} folder
+ * @returns {Promise<boolean>}
+ */
+function spriteFolderExists(folder) {
+    if (!spriteFolderCache.has(folder)) {
+        const check = fetch(`/api/sprites/get?name=${encodeURIComponent(folder)}`)
+            .then(res => res.ok ? res.json() : [])
+            .then(sprites => Array.isArray(sprites) && sprites.length > 0)
+            .catch(() => {
+                // Don't cache network failures
+                spriteFolderCache.delete(folder);
+                return false;
+            });
+        spriteFolderCache.set(folder, check);
+    }
+    return spriteFolderCache.get(folder);
+}
+
+/**
+ * Keeps only the names whose sprite folder exists.
+ * @param {string[]} names
+ * @param {(name: string) => string} getFolder Maps a name to the sprite folder it would use
+ * @returns {Promise<string[]>}
+ */
+async function filterBySpriteFolder(names, getFolder) {
+    const exists = await Promise.all(names.map(name => spriteFolderExists(getFolder(name))));
+    return names.filter((_, i) => exists[i]);
+}
+
+/**
+ * Draws the side character, but only when something about her changed: her folder (a new person or costume) OR the
+ * mood she should show. The folder check on its own left her frozen on the expression she was introduced with: a
+ * second character who stayed in the scene kept message 1's face for the rest of the chat (reported 2026-11-02:
+ * main character annoyed, side character still excited), and a neutral first appearance stuck as neutral.
+ * The mood last drawn is kept in the chat variable SideExpSave.
+ * @param {string} spriteFolder e.g. "Luna/Regular Outfit"
+ * @param {string} [expression] defaults to neutral, like /sidecharacter
+ * @returns {Promise<string> | null} the draw, or null when the side character already shows this
+ */
+function refreshSideCharacter(spriteFolder, expression) {
+    expression = expression || "neutral";
+    // "Already showing this" also needs her to actually be on screen: the variables are the chat's, the picture is the page's.
+    if (getLocalVariable("CostmSaveSide") === spriteFolder && getLocalVariable("SideExpSave") === expression && isSideCharacterShown()) return null;
+    setLocalVariable("CostmSaveSide", spriteFolder);
+    setLocalVariable("SideExpSave", expression);
+    return updateSideCharacter({character: spriteFolder, expression: expression});
+}
+
+/**
+ * Takes the side character off the screen and forgets her for this chat.
+ * It checks the PAGE as well as the chat variable. The variable alone missed two cases where a side character stayed
+ * for good (2026-11-11: Dash, naked, stuck on the right for a whole Belle chat after a greeting swipe): a draw that
+ * finished after the clear, and a side character left over from the chat that was open before. In both the variable
+ * was already empty, so every later message skipped the clear.
+ * @returns {boolean} whether there was anything to clear
+ */
+function clearSideCharacter() {
+    if (getLocalVariable("CostmSaveSide") === "" && !isSideCharacterShown()) return false;
+    setLocalVariable("CostmSaveSide", "");
+    updateSideCharacter({clear: 'true'});
+    return true;
+}
+
+/**
+ * SideCharacters Script
+ * OnChatChanged & OnSwipe
+ * @param {string} [charName]
+ * @param {import("./src/chat.js").ChatMessage} [charMessage]
+ */
+async function SideCharacters(charName, charMessage) {
+    const PerformanceStart = performance.now();
+    try {
+        if (isMobile() && clearSideCharacter()) {
+            DebugLog(`SideCharacters: Cleared side-character from mobile browser.`);
+        }
+        if (isMobile() || getGlobalVariable("AutoCostume") === "No") return "Aborted";
+        if (charMessage === undefined) charMessage = getLastMessage("char");
+        if (charMessage === undefined) return "charMessage missing";
+        if (!charName) charName = getCurrentCharacterName();
+        if (!charName) return "{{char}} undefined";
+
+        const {charactersWithExpressions, characterGroupsWithExpressions, aliasLookup} = await GetCharacterNamesAndAliases();
+
+        const foundCharacters = [...new Set(
+            [...charMessage.mes.matchAll(/_{0,2}(?:Mirror )?(.+?):_{1,2}/g)]
+                .map(m => aliasLookup.get(m[1]) ?? m[1])
+                .filter(name => charactersWithExpressions.includes(name))
+            )];
+            
+        const group = characterGroupsWithExpressions.find(g =>
+            g.output === charName || g.display === charName
+        );
+
+        // Members of a multi-character card always show combined on the left, never on the right
+        const excluded = new Set([...(group ? group.members : [charName]), ...getGroupCardMembers(charName)]);
+
+        // Drop anyone without a sprite folder for the costume they would use
+        const availableCharacters = await filterBySpriteFolder(
+            foundCharacters.filter(name => !excluded.has(name)),
+            name => `${name}/${getCharacterCostumeFromText(charMessage.mes, name, false)}`
+        );
+
+        if (!availableCharacters.length) {
+            DebugLog(`SideCharacters: No valid side-character found.`);
+            if (clearSideCharacter()) {
+                DebugLog(`SideCharacters: Cleared side-character.`);
+            }
+            return;
+        }
+
+        DebugLog(`SideCharacters: Discovered: ${availableCharacters.length}`);
+
+        const pickedChar = availableCharacters.length > 1 ? availableCharacters[Math.floor(Math.random() * availableCharacters.length)] : availableCharacters[0];
+        const costume = getCharacterCostumeFromText(charMessage.mes, pickedChar, false);
+        const spriteFolder = `${pickedChar}/${costume}`;
+
+        DebugLog(`SideCharacters: Picked "${pickedChar}"`);
+
+        refreshSideCharacter(spriteFolder, getLocalVariable("ExpSave"))?.then(result => {
+            if (result) DebugLog(`SideCharacters: Update:`, result);
+        }).catch(err => {
+            console.error(`[WQR] SideCharacters Error:`, err);
+        });
+        DebugLog(`[P] SideCharacters: ${(performance.now() - PerformanceStart).toFixed(4)}ms`)
+    } catch (err) {
+        console.error(`[WQR] SideCharacters Error:`, err);
+        return `Error`;
+    }
+}
+
+/**
+ * AutoBG Script
+ * OnChatChanged, OnSwipe & OnAI
+ * @param {import("./src/chat.js").ChatMessage} [charMessage]
+ * @returns {Promise<string | undefined>}
+ */
+async function AutoBG(charMessage) {
+    const PerformanceStart = performance.now();
+    try {
+        if (!charMessage) charMessage = getLastMessage("char");
+        if (!charMessage) return "No char message to extract BG from";
+        // PhoneBG (a one-message skip set by the retired "whose phone" QR flow) was removed
+        // 2026-11-04: nothing sets it anymore.
+        if (getGlobalVariable("AutoBG") !== "false" && !chatHasLockedBackground()) {
+            BG(charMessage.mes, charMessage.name).then(() => {
+                DebugLog(`[P] AutoBG: BG: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+            }).catch(() => {});
+        }
+    } catch (err) {
+        console.error(`[WQR] AutoBG Error:`, err);
+        return `Error`
+    }
+}
+
+/**
+ * Scenarios Script
+ * OnChatChanged & OnUser
+ * @param {string} [userMessage]
+ * @returns {Promise<string | undefined>}
+ */
+async function Scenarios(userMessage) {
+    if (!userMessage) userMessage = getLastMessage("user")?.mes;
+    if (!userMessage || getLocalVariable("newchatstarted") === "") return "Aborted";
+    const PerformanceStart = performance.now();
+    let waitDeduction = 0;
+    try {
+        if (userMessage.includes("[Early Start]")) {
+            toastr.info(`Early Start Activated`);
+            setLocalVariable("EarlyStart", "true");
+        }
+        if (userMessage.includes("[New Roommate]")) {
+            toastr.info(`New Roommate Acquired`);
+            setLocalVariable("DumpingBlake", "true");
+        }
+
+        const greeting = getFirstMessage("char");
+        const greetingText = greeting?.mes;
+        let greetingSwipe = greeting?.swipe_id;
+
+        // Mirror Weyland has a single greeting; MirrorStart picks the start location instead
+        if (getCurrentCharacterName() === "Mirror Weyland") {
+            greetingSwipe = {
+                "Lecture Hall": 0,
+                "Sakurai Cafe": 1,
+                "Dormitory Commons": 2,
+            }[getLocalVariable("MirrorStart")];
+        }
+
+        if (!greetingText || greetingSwipe === undefined) {
+            console.error(`[WQR] Missing greeting.`);
+            return "Missing greeting"
+        }
+
+        if (isCustomStartGreeting(greetingText)) {
+            inject({id: "ooc", ephemeral: "true", role: "user", depth: "0", position: "chat"}, strings.oocI);
+        }
+
+        const charName = getCurrentCharacterName();
+        // A fresh greeting setup starts PromptOS's "Roleplay intro context" back on Auto.
+        deleteLocalVariables(INTRO_CONTEXT_STATE_VARS);
+
+        // Tails
+        if (greetingText.includes("Tavern Tails")) {
+            try {
+                for (const [comparison, tailGreeting] of tails) {
+                    if (tailGreeting && greetingText.includes(comparison)) {
+                        const keys = Object.keys(tailGreeting);
+                        if (keys.length) {
+                            const lastKey = keys[keys.length-1];
+                            for (const key of keys) {
+                                setLocalVariable(key, tailGreeting[key], key !== lastKey)
+                                if (key === "CharKeys") {
+                                    const scenarioID = await findLoreBookEntry("Weyland Characters", "automationId", "Scenario");
+                                    await setEntryField({file: "Weyland Characters", uid: scenarioID, field: "key"}, tailGreeting[key]);
+                                }
+                            }
+                        }
+                        if (comparison === "Greeting message straight from Kowloon" && getPersonaBook() === "Walled City") {
+                            await setPersonaLockState(true, "chat");
+                        }
+                        break;
+                    }
+                }
+            } catch (error) {
+                console.error(`[WQR] Scenarios Error: Failed to set tail greeting for "${charName}"`, error);
+            }
+        }
+        // Regular
+        else {
+            // Do Special Setup
+            const SpecialSetupTime = performance.now();
+            switch (charName) {
+                case "Loona": {
+                    // The drunk greeting, wherever it sits on the card (see src/loonaGreetings.js).
+                    if (isLoonaDrunkStart(greetingText)) {
+                        // The same popup and variables PromptOS's mid-chat switch uses (src/introContext.js), so the
+                        // two can't drift apart. Closing it without a pick still means turbo drunk, turned him down.
+                        applyLoonaStart((await askLoonaDrunkStart()) ?? loonaDrunkIdFromChoice(LOONA_DRUNK_DEFAULT_CHOICE));
+                    }
+                    break;
+                }
+                case "Willow": {
+                    if (getLocalVariable("WeepingWillow") === "") {
+                        const result = await doPopup({result: true, okButton: "Expressive", cancelButton: "Normal"}, `Would you like Willow in her base or expressive version?<br><br>
+Base Willow<br>
+- Red, unnerving dotted eyes. Eyes do not change shape.<br><br>
+Expressive Willow <br>
+- Red eyes that change shape depending on Willow's mood.`);
+                        setLocalVariable("WeepingWillow", result === "1" ? "true" : "false");
+                    }
+                    break;
+                }
+                case "Kris": {
+                    const result = await doPopup({result: true, okButton: "Hard Mode", cancelButton: "Standard"}, `Standard Kris and Hard Mode Kris contain functionally the same bot.
+However, Hard Mode Kris essentially has a voice in his head demanding he not hold back, and be more of an asshole.<br><br>
+This is our sort of rough approach of forcing down the LLM Niceness barrier with the current generation of models.`);
+                    setLocalVariable("Krisrav", result === "1" ? strings.krirav : getLocalVariable("postrav"));
+                    break;
+                }
+            }
+            waitDeduction = performance.now()-SpecialSetupTime;
+
+            // Do Regular Setup
+            const charScenarios = scenarios.get(charName);
+            if (charScenarios === undefined) {
+                console.error(`[WQR] Scenarios Error: Scenarios for "${charName}" not found.`);
+                return;
+            }
+
+            await SetupCostumesAndTags(charName, charScenarios);
+
+            if (charScenarios.specialVars !== undefined) {
+                try {
+                    const keys = Object.keys(charScenarios.specialVars);
+                    if (keys.length) {
+                        const lastKey = keys[keys.length-1];
+                        for (const key of keys) {
+                            setLocalVariable(key, charScenarios.specialVars[key], key !== lastKey)
+                        }
+                    }
+                } catch {
+                    console.error(`[WQR] Scenarios Error: Failed to set special vars for "${charName}"`, charScenarios.specialVars);
+                }
+            }
+
+            if (charScenarios.greetings !== undefined && charScenarios.greetings.length) {
+                try {
+                    // Loona's record is matched to the greeting itself, so the card's greeting order and this
+                    // list's order no longer have to agree (see src/loonaGreetings.js).
+                    const greetingObj = charName === "Loona"
+                        ? loonaGreetingRecord(charScenarios.greetings, greetingText, greetingSwipe)
+                        : charScenarios.greetings[greetingSwipe];
+                    if (greetingObj !== undefined) {
+                        const keys = Object.keys(greetingObj);
+                        if (keys.length) {
+                            const lastKey = keys[keys.length-1];
+                            for (const key of keys) {
+                                setLocalVariable(key, greetingObj[key], key !== lastKey)
+                                if (key === "CharKeys") {
+                                    const scenarioID = await findLoreBookEntry("Weyland Characters", "automationId", "Scenario");
+                                    await setEntryField({file: "Weyland Characters", uid: scenarioID, field: "key"}, greetingObj[key]);
+                                }
+                            }
+                            // After the loop: ScenarioSticky may come after CharKeys in the greeting.
+                            await applyScenarioSticky(await findLoreBookEntry("Weyland Characters", "automationId", "Scenario"));
+                        }
+                    }
+                } catch (error) {
+                    console.error(`[WQR] Scenarios Error: Failed to set greeting vars for "${charName}"`, error);
+                }
+            }
+        } 
+        
+        setLocalVariable("AnalysisLayer", strings.NorAnalysis);
+
+        if (getLocalVariable("SpecialThoughts") === "true" || charName === "Vera") {
+            await XXX();
+        }
+
+        DebugLog(`[P] Scenario: ${(performance.now() - (PerformanceStart-waitDeduction)).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] Scenarios Error:`, error);
+    }
+}
+
+/**
+ * RosterSB Script
+ * OnUser
+ * @param {string} [charName] 
+ * @returns {Promise<string | undefined>}
+ * */
+async function RosterSB(charName) {
+    if (!charName) charName = getCurrentCharacterName();
+    const PerformanceStart = performance.now();
+    try {
+        const dumpingBlake = getLocalVariable("DumpingBlake") === "true";
+        let earlyStart = getLocalVariable("EarlyStart") === "true";
+        const mcyIsFreshman = getLocalVariable("MCY") === "Freshman";
+        const startingMonth = getLocalVariable("StartingMonth");
+
+        setLocalVariable("WeylandSetting", strings.rsbWeyS, true);
+        if (charName === "Weybot") {
+            if (getLocalVariable("StartingYear") === "Freshman") {
+                if (startingMonth === "July") {
+                    setLocalVariable("EarlyStart", "true", true);
+                    earlyStart = true;
+                }
+                if (startingMonth === "August") {
+                    setLocalVariable("EarlyStart", "true", true);
+                    earlyStart = true;
+                }
+            }
+        }
+        if (earlyStart) {
+            setLocalVariable("NewSchool", strings.rsbNewSchool, true);
+            setLocalVariable("NewPhone", "- {{user}} is very new to Weyland University, and does not know most characters yet. DO NOT use Named NPC's for messages unless {{user}} has met them during this roleplay session.", true);
+            setLocalVariable("JennRoomSit", `Unassigned: Jenn
+Room 268: Lucy (solo)`, true);
+        } else {
+            setLocalVariable("JennRoomSit", "Room 268: Lucy & Jenn", true);
+        }
+        if (!mcyIsFreshman) {
+            setLocalVariable("FreshRoom", `Room 290: Bianca (solo)
+Room 311: Karmen & NPC
+Room 376: Lentyl & NPC
+Room 109: Ellie & NPC
+Room 315: Rosa & NPC
+Room 313: Sofya & NPC`, true);
+        } else {
+            setLocalVariable("FreshRoom", "Room 290: Bianca & Herra", true);
+        }
+        if (dumpingBlake) {
+            setLocalVariable("BlakeRoommateSit", "Room 271: Blake & NPC", true);
+        } else {
+            setLocalVariable("BlakeRoommateSit", "Room 271: Blake & {{user}}", true);
+        }
+        setLocalVariable("Roommates", strings.rsbRoommates, true);
+        setLocalVariable("R268", earlyStart ? "looking for new dorm" : "room 268", true);
+        setLocalVariable("RT", withRosterHeader(strings.rsbRT), true);
+        setLocalVariable("WTavern", strings.rsbWTavern, true);
+        setLocalVariable("KinsbaneLoc", "[KINSBANE MANOR] Potential Location: The Kinsbane Manor\nOnce-grand Victorian mansion that now stands as a testament to neglect and time's relentless march. The manor has long since been abandoned, though rumors surround the place of it possibly being haunted. Most will not approach the mansion unless on a dare. Aiko lives here alone. [END KINSBANE MANOR]\n-----", true);
+        if (fCheck()) {
+            setLocalVariable("crush", "Has a crush on {{user}}.", true);
+        }
+        if (dumpingBlake) {
+            setLocalVariable("BlakeRoom", strings.rsbBlakeRoom, true);
+        } else {
+            setLocalVariable("BlakeRoom", strings.rsbBlakeRoomB, true);
+        }
+        setLocalVariable("AI", strings.rsbAI, true);
+        setLocalVariable("AV", strings.rsbAV, true);
+        setLocalVariable("BP", strings.rsbBP, true);
+        setLocalVariable("BE", strings.rsbBE, true);
+        setLocalVariable("BI", strings.rsbBI, true);
+        if (!mcyIsFreshman) {
+            setLocalVariable("BlakeSit", "Blake is good friends and trusting of {{user}} and Mika, but still is bratty and coarse towards them. Blake is highly protective of her little sister Serra and those she considers her own.", true);
+        } else {
+            if (earlyStart) {
+                setLocalVariable("BlakeSit", strings.rsbBlakeSit, true);
+            } else {
+                setLocalVariable("BlakeSit", strings.rsbBlakeSitB, true);
+            }
+        }
+        if (dumpingBlake) {
+            setLocalVariable("BlakeInfoSit", "Blake Fuyuki is in room 271", true);
+        } else {
+            setLocalVariable("BlakeInfoSit", "Blake Fuyuki is {{user}}'s roommate in room 271", true);
+        }
+        setLocalVariable("BL", strings.rsbBL, true);
+        setLocalVariable("CA", strings.rsbCA, true);
+        setLocalVariable("EL", strings.rsbEL, true);
+        setLocalVariable("FA", strings.rsbFA, true);
+        setLocalVariable("GE", strings.rsbGE, true);
+        setLocalVariable("HA", strings.rsbHA, true);
+        if (!mcyIsFreshman) {
+            setLocalVariable("IN", strings.rsbIN, true);
+        } else {
+            setLocalVariable("IN", strings.rsbINB, true);
+        }
+        if (earlyStart) {
+            setLocalVariable("JennSit", "Jenn was originally supposed to be a racist catboy's (Kris) roommate, but has been kicked out, and is now working with {{user}} to find a new roommate to take her in.", true);
+        } else {
+            setLocalVariable("JennSit", strings.rsbJennSit, true);
+        }
+        setLocalVariable("JE", strings.rsbJE, true);
+        setLocalVariable("KA", strings.rsbKA, true);
+        if (fCheck()) {
+            setLocalVariable("KarmenSuc", strings.rsbKarmenSuc, true);
+        }
+        setLocalVariable("KM", strings.rsbKM, true);
+        setLocalVariable("KI", strings.rsbKI, true);
+        if (!mcyIsFreshman) {
+            setLocalVariable("KrisSit", `He was Jenn's potential roommate in room 276, but kicked her out. Hates canines and humans.
+Dated Nix during Freshman year, but got dumped early on.`, true);
+        } else {
+            if (earlyStart) {
+                setLocalVariable("KrisSit", "He was Jenn's roommate in room 276, but kicked her out. Hates canines and humans. He is currently dating Nix.", true);
+            } else {
+                setLocalVariable("KrisSit", `He was Jenn's potential roommate in room 276, but kicked her out. Hates canines and humans.
+Dated Nix at start of Freshman, but ended getting dumped.`, true);
+            }
+        }
+        setLocalVariable("KR", strings.rsbKR, true);
+        setLocalVariable("LE", strings.rsbLE, true);
+        if (earlyStart) {
+            setLocalVariable("LucySit", "Does not yet have a rooommate. Extremely shy and reclusive.", true);
+        } else {
+            setLocalVariable("LucySit", "Jenn's roommate.", true);
+        }
+        setLocalVariable("LU", strings.rsbLU, true);
+        setLocalVariable("LN", strings.rsbLN, true);
+        setLocalVariable("LK", strings.rsbLK, true);
+        setLocalVariable("LY", strings.rsbLY, true);
+        setLocalVariable("VS", strings.rsbVS, true);
+        if (dumpingBlake) {
+            setLocalVariable("BlakeMikaSit", "a wolfgirl", true);
+        } else {
+            setLocalVariable("BlakeMikaSit", "a wolfgirl that shares a room with {{user}}", true);
+        }
+        setLocalVariable("MK", strings.rsbMK, true);
+        if (earlyStart) {
+            setLocalVariable("NixSit", "Currently dating Kris. Nix has been Kris' girlfriend for over a year despite how he stands her up on dates and uses her.", true);
+        } else {
+            setLocalVariable("NixSit", strings.rsbNixSit, true);
+        }
+        setLocalVariable("NX", strings.rsbNX, true);
+        setLocalVariable("RE", strings.rsbRE, true);
+        setLocalVariable("SE", strings.rsbSE, true);
+        setLocalVariable("ST", strings.rsbST, true);
+        setLocalVariable("SU", strings.rsbSU, true);
+        setLocalVariable("VR", strings.rsbVR, true);
+        setLocalVariable("VI", strings.rsbVI, true);
+        setLocalVariable("WA", strings.rsbWA, true);
+        setLocalVariable("JR", strings.rsbJR, true);
+        if (!mcyIsFreshman) {
+            setLocalVariable("NathanSit", strings.rsbNathanSit, true);
+        } else {
+            if (earlyStart) {
+                setLocalVariable("NathanSit", "He is trying to win Blake over and convince her to go out with him. Blake will not give much resistance if approached by Nathan. He doesn't recognize {{user}}.", true);
+            } else {
+                setLocalVariable("NathanSit", strings.rsbNathanSitB, true);
+            }
+        }
+        setLocalVariable("NA", strings.rsbNA, true);
+        setLocalVariable("RI", strings.rsbRI, true);
+        setLocalVariable("DE", strings.rsbDE, true);
+        setLocalVariable("SY", strings.rsbSY, true);
+        setLocalVariable("MA", strings.rsbMA, true);
+        setLocalVariable("GN", strings.rsbGN, true);
+        setLocalVariable("TM", strings.rsbTM, true);
+        setLocalVariable("RV", strings.rsbRV, true);
+        setLocalVariable("KL", strings.rsbKL, true);
+        setLocalVariable("KO", strings.rsbKO, true);
+        setLocalVariable("AE", "not yet made", true);
+        setLocalVariable("NR", "not yet made", true);
+        setLocalVariable("WW", strings.rsbWW, true);
+        setLocalVariable("DT", strings.rsbDT, true);
+        setLocalVariable("TRN", strings.rsbTRN, true);
+        setLocalVariable("LEO", strings.rsbLEO, true);
+        setLocalVariable("EV", strings.rsbEV, true);
+        setLocalVariable("RS", strings.rsbRS, true);
+        setLocalVariable("BR", strings.rsbBR, true);
+        setLocalVariable("NS", strings.rsbNS, true);
+        setLocalVariable("AD", strings.rsbAD, true);
+        setLocalVariable("FW", strings.rsbFW, true);
+        setLocalVariable("AN", strings.rsbAN, true);
+        setLocalVariable("MS", strings.rsbMS, true);
+        setLocalVariable("TV", strings.rsbTV, true);
+        setLocalVariable("GT", strings.rsbGT, true);
+        setLocalVariable("RD", strings.rsbRD, true);
+        setLocalVariable("MG", strings.rsbMG, true);
+        setLocalVariable("DH", strings.rsbDH, true);
+        setLocalVariable("NEVEND", strings.rsbNEVEND, true);
+        setLocalVariable("MUSER", strings.rsbMUSER, true);
+        setLocalVariable("SN", strings.rsbSN, true);
+        setLocalVariable("OV", strings.rsbOV, true);
+        setLocalVariable("NV", strings.rsbNV, true);
+        setLocalVariable("YD", strings.rsbYD, true);
+        setLocalVariable("BT", strings.rsbBT, true);
+        setLocalVariable("AH", strings.rsbAH, true);
+        setLocalVariable("MU", strings.rsbMU, true);
+        setLocalVariable("MAa", strings.rsbMAa, true);
+        setLocalVariable("DEd", strings.rsbDEd, true);
+        setLocalVariable("EAd", strings.rsbEAd, true);
+        setLocalVariable("RY", strings.rsbRY, true);
+        setLocalVariable("NF", strings.rsbNF, true);
+        setLocalVariable("SK", strings.rsbSK, true);
+        setLocalVariable("KP", strings.rsbKP, true);
+        setLocalVariable("SI", strings.rsbSI, true);
+        setLocalVariable("YL", strings.rsbYL, true);
+        setLocalVariable("TESS", strings.rsbTESS, true);
+        setLocalVariable("VEN", strings.rsbVEN, true);
+        setLocalVariable("BENBOT", strings.rsbBENBOT, true);
+        setLocalVariable("LEX", strings.rsbLEX, true);
+        setLocalVariable("HIRO", strings.rsbHIRO, true);
+        setLocalVariable("CADE", strings.rsbCADE, true);
+        setLocalVariable("VESN", strings.rsbVESN, true);
+        setLocalVariable("BAST", strings.rsbBAST, true);
+        setLocalVariable("RUE", strings.rsbRUE, true);
+        setLocalVariable("KYA", strings.rsbKYA, true);
+        setLocalVariable("ZORA", strings.rsbZORA, true);
+        setLocalVariable("PAVL", strings.rsbPAVL, true);
+        setLocalVariable("LENS", strings.rsbLENS, true);
+        setLocalVariable("OKSA", strings.rsbOKSA, true);
+        setLocalVariable("MONTE", strings.rsbMONTE, true);
+        setLocalVariable("BRIET", strings.rsbBRIET, true);
+        setLocalVariable("TORY", strings.rsbTORY, true);
+        setLocalVariable("ELOW", strings.rsbELOW, true);
+        setLocalVariable("BRAM", strings.rsbBRAM, true);
+        setLocalVariable("SOF", strings.rsbSOF, true);
+        setLocalVariable("TAWN", strings.rsbTAWN, true);
+        setLocalVariable("SAM", strings.rsbSAM, true);
+		
+		if (charName === "Mirror Weyland") {
+		    await quickReplyApi.executeQuickReply("WeylandUni", "Mirror");
+		}
+
+        DebugLog(`[P] RosterSB: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] RosterSB Error:`, error);
+        return "Error"
+    }
+}
+
+/**
+ * CharPer Script
+ * OnUser
+ * @param {string} [charName] 
+ * @returns {Promise<string | undefined>}
+ * */
+async function CharPer(charName) {
+    charName = charName || getCurrentCharacterName();
+    if (!charName) return;
+    const PerformanceStart = performance.now();
+    try {
+        // Special
+        switch (charName) {
+            case "Rosa":
+            case "Eve":
+                setLocalVariable("History", "set");
+                break;
+            case "Aiko": {
+                setLocalVariable("KinsbaneBG", "true");
+                const MCY = getLocalVariable("MCY");
+                let aikoAttendance = null;
+                if (MCY !== "Freshman" && MCY !== "Sophomore") {
+                    aikoAttendance = "Aiko attends Weyland University Monday-Friday. Aiko is now starting her {{getvar::MCY-2}} year of Demonology at Weyland.";
+                }
+                const config = charPer.get("Aiko");
+                if (config !== undefined) {
+                    try {
+                        const keys = Object.keys(config.vars);
+                        if (keys.length) {
+                            const value = config.vars[`${keys[0]}`];
+                            setLocalVariable(keys[0], `${aikoAttendance ? `${aikoAttendance}\n` : ""}${value}`)
+                        }
+                    } catch {
+                        console.error(`[WQR] Scenarios Error: Failed to set charPer vars for "${charName}"`);
+                        return "Error"
+                    }
+                }
+                DebugLog(`[P] CharPer: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+                return;
+            }
+            case "Kinsbane Manor":
+                setLocalVariable("KinsbaneBG", "true");
+                break;
+            case "Willow":
+                if (getLocalVariable("WeepingWillow") === "true") {
+                    setLocalVariable("ExpressWillow", strings.expW);
+                } else {
+                    deleteLocalVariable("ExpressWillow");
+                }
+                break;
+            case "Hannah":
+                if (fCheck()) {
+                    setLocalVariable("HannahV", "She is still a virgin.");
+                } else {
+                    deleteLocalVariable("HannahV");
+                }
+                break;
+            case "Yue-Lin": {
+                // Third greeting uses an alternate personality
+                if (getFirstMessage("char")?.swipe_id === 2) {
+                    const config = charPer.get("Yue-Lin");
+                    if (config !== undefined) {
+                        setLocalVariable("M!ku", config.vars["M!kuAlt"]);
+                    }
+                    DebugLog(`[P] CharPer: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+                    return;
+                }
+                break;
+            }
+        }
+
+        //Standard
+        const config = charPer.get(charName);
+        if (config !== undefined) {
+            try {
+                const keys = Object.keys(config.vars);
+                if (keys.length) {
+                    const lastKey = keys[keys.length-1];
+                    for (const key of keys) {
+                        DebugLog(`CharPer set ${key}`);
+                        setLocalVariable(key, config.vars[key], key !== lastKey)
+                    }
+                }
+            } catch {
+                console.error(`[WQR] Failed to set charPer vars for "${charName}"`);
+                return "Error"
+            }
+        }
+        DebugLog(`[P] CharPer: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] CharPer Error:`, error);
+        return "Error"
+    }
+}
+
+/**
+ * Relationships Script
+ * OnUser
+ */
+async function Relationships(){
+    const PerformanceStart = performance.now();
+    try {
+        const lastCharMessage = getLastMessage("char")?.mes;
+        if (!lastCharMessage) return;
+        const RelationshipPrefix = "The following are characters that {{user}}";
+        /**
+         * RelationshipType, RelationshipSuffix
+         * @type {Object.<string,string>}
+         */
+        const relationshipTypes = {
+            "Acquaintance": "is acquainted with",
+            "Friend": "is friends with",
+            "Hostile": "is on negative terms with",
+            "Lover": "has as lovers"
+        };
+
+        /**
+         * Character, RelationshipType
+         * @type {Object.<string,string>}
+         */
+        const relationships = JSON.parse(getLocalVariable("WeybotRelationships") || "{}");
+        for (const relationshipType of Object.keys(relationshipTypes)) {
+            const matches = [...lastCharMessage.matchAll(new RegExp(`(?<=New ${relationshipType}:) *{?([^{}\n\\d]+)`, "g"))
+                .map(m => m[1])
+                .filter(name => name !== "None")
+            ];
+            if (!matches?.length) continue;
+            for (const name of matches) {
+                relationships[name] = relationshipType;
+            }
+        }
+
+        const ConstantScenarioLines = [];
+        for (const relationshipType of Object.keys(relationshipTypes)) {
+            const characters = Object.keys(relationships)
+                .filter(name => relationships[name] === relationshipType);
+            if (characters?.length)
+                ConstantScenarioLines.push(`${RelationshipPrefix} ${relationshipTypes[relationshipType]}: ${characters.join(", ")}.`);
+        }
+
+        setLocalVariable("WeybotRelationships", JSON.stringify(relationships) || "{}");
+
+        const constantScenario = `[{{user}} RELATIONSHIPS]\n${ConstantScenarioLines.join('\n') ?? "No relationships yet."}\n[END {{user}} RELATIONSHIPS]`
+        setLocalVariable("ConstantScenario", constantScenario);
+        DebugLog(`[P] Relationships: ${(performance.now()-PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] Relationships Error:`, error);
+    }
+}
+
+/** 
+ * @param {import("./src/chat.js").ChatMessage} [charMessage]
+ * @param {string} [charName]
+*/
+async function CostumeChangeBot(charMessage, charName) {
+    const PerformanceStart = performance.now();
+    try {
+        if (!charMessage) charMessage = getLastMessage("char");
+        if (!charMessage) return "No charMessage";
+        const charText = charMessage.mes;
+        charName = charName || charMessage.name || getCurrentCharacterName();
+        if (!charName) return "{{char}} undefined";
+        lastPortraitSignature = portraitSignature(charText);
+        await Expressions(charName, charMessage, true);
+        let openWorld = false;
+        if (/Phone Status/.test(charText)) {
+            setLocalVariable("CostmSave", "Phone");
+            await setCostume("Phone");
+            DebugLog(`Costume set to: Phone`);
+        } else if (/Weybot|Mirror Weyland|Kinsbane Manor/.test(charName)) {
+            await OpenWorldCostumes(charName, charMessage);
+            openWorld = true;
+        } else {
+            await AutoCostumes(charName, charMessage);
+        }
+        if (!openWorld) {
+            await setExpression(getLocalVariable("ExpSave") || "neutral");
+            await SideCharacters(charName, charMessage);
+        }
+        DebugLog(`[P] CostumeChangeBot: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] CostumeChangeBot Error:`, error);
+        return "Error";
+    }
+}
+
+async function AngelDevil() {
+    try {
+        DebugLog(`AngelDevil called`);
+        const angels = strings.goodConcience.length;
+        const devils = strings.badConcience.length;
+        setLocalVariable("Angel", angels ? strings.goodConcience[ Math.floor(Math.random() * angels)] || "" : "");
+        setLocalVariable("Devil", devils ? strings.badConcience[Math.floor(Math.random() * devils)] || "" : "");
+    } catch (error) {
+        console.error(`[WQR] AngelDevil Error:`, error);
+    }
+}
+//#endregion
+
+// FUNCTIONS
+//#region
+/**
+ * Helper Function
+ * SideCharacters
+ * @param {string} [charName]
+ * @returns {Promise<{
+ * listOfCharacters: string[], 
+ * charactersWithExpressions: string[],
+ * characterGroupsWithExpressions: {output: string, display: string, members: string[]}[],
+ * resolveCharacterOverride: function, 
+ * aliasLookup: Map<string,string>
+ * }>}
+ */
+async function GetCharacterNamesAndAliases(charName) {
+    if (!charName) charName = getCurrentCharacterName();
+    /** @type {string[]} */
+    const charactersWithExpressions = [
+        ...CHARACTERS_WITH_EXPRESSIONS,
+        ...[
+            getGlobalVariable("OCPick1"),
+            getGlobalVariable("OCPick2"),
+            getGlobalVariable("OCPick3")
+        ].filter(x => typeof x === 'string' && x !== "")
+    ].filter(name => !charName?.includes(name));
+
+    // Higher up is higher priority (module-level since 2026-11-18: Mien's duo-card outfits read it too)
+    const characterGroupsWithExpressions = CHARACTER_GROUPS_WITH_EXPRESSIONS;
+
+    const groupsByMember = new Map();
+
+    for (const group of characterGroupsWithExpressions) {
+        for (const member of group.members) {
+            const groups = groupsByMember.get(member) ?? [];
+            groups.push(group);
+            groupsByMember.set(member, groups);
+        }
+    }
+
+    /**
+     * @param {string} chosenName 
+     * @param {string[]} foundCharacters 
+     * @returns 
+     */
+    const resolveCharacterOverride = (chosenName, foundCharacters) => {
+        if (!foundCharacters.includes(chosenName)) foundCharacters.push(chosenName);
+        const found = new Set(foundCharacters);
+
+        // Chosen name is already a group
+        const chosenGroups = characterGroupsWithExpressions.filter(x => x.members.includes(chosenName) || x.output === chosenName);
+        if (chosenGroups?.length) {
+            let output = chosenName;
+            for (const chosenGroup of chosenGroups) {
+                DebugLog("chosenGroup: ", chosenGroup);
+                const membersFound = chosenGroup.members.filter(m => found.has(m));
+                DebugLog("membersFound: ", membersFound);
+
+                // If all members are present, use the group.
+                if (membersFound.length === chosenGroup.members.length) {
+                    DebugLog("All members present return: ", chosenGroup.output);
+                    return chosenGroup.output;
+                }
+
+                // If only one member is present, use that member.
+                if (membersFound.length === 1) {
+                    DebugLog("One member present return: ", membersFound[0]);
+                    output = membersFound[0];
+                }
+            }
+            return output;
+        }
+        
+        // Chosen name is an individual.
+        const groups = groupsByMember.get(chosenName) ?? [];
+
+        for (const group of groups) {
+            // @ts-ignore
+            if (group.members.every(m => found.has(m))) {
+                return group.output;
+            }
+        }
+
+        return chosenName;
+    }
+
+    const listOfCharacters = [
+        "Adrian", "Aethel", "Ahset", "Aiko", "Astrid", "Ava", "Baphrodel", "Bastet", "Belle", "Ben", "Bianca", "Blake", "Briar",
+        "Brietta", "Cairo", "Chaska", "Dash", "Deredra", "Derek", "Dmitri", "Ellie", "Emily", "Eve", "Fasti", "Fawne", "Garret",
+        "Gaven", "Gem", "Gemini", "Hannah", "Indigo", "Jenn", "Jericho", "Kai", "Karmen", "Kellen", "Khepri", "Kiera", "Koshizu",
+        "Kressa", "Kris", "Kyana", "Lentyl", "Leo", "Lexa", "Loona", "Loren", "Lucy", "Luna", "Lurkle", "Lyris", "Margaret", "Mark",
+        "Mason", "Mika", "Miu", "Muse", "Ṇ̶̰̼͘a̶͍̅́̒r̵̓̏̉̈́ā̸͒̔̄", "Nathan", "Navine", "Nefara", "Neshe", "Nix", "Orville", "Rein", "Remy", "Richard",
+        "Rivera", "Rivet", "Rosa", "Professor Akiyama", "Serra", "Seth", "Shani", "Skye", "Sobek", "Sofya", "Summer", "Sunny", "Tessa", 
+        "Thorne", "Tom", "Travis", "Vera", "Vesper", "Vindica", "Warren", "Willow", "Mr. Wolfy", "Yue-Lin", "Zora"
+    ].filter(name => !charName?.includes(name));
+
+    const characterAliases = CHARACTER_ALIASES;
+
+    const aliasLookup = new Map();
+
+    for (const [canonical, aliases] of Object.entries(characterAliases)) {
+        for (const alias of aliases) {
+            aliasLookup.set(alias, canonical);
+        }
+    }
+
+    return { listOfCharacters, charactersWithExpressions, characterGroupsWithExpressions, resolveCharacterOverride, aliasLookup };
+}
+
+/**
+ * BG Script (AutoBG). Picks the background from the reply header.
+ * Rewritten 2026-11-04: the matching lives in src/autoBackground.js and every background is described in
+ * src/backgroundCatalog.js (looked at one by one). The old 550-line if-ladder that lived here matched
+ * substrings in a fixed order, so "Trail" caught every "Trailer", the player's name caught "Lucky's
+ * Apartment" (Blake's dorm), and 284 of the 372 backgrounds could never come up.
+ * No match now leaves the current background alone (BGFound is no longer wiped first).
+ * @param {string} [charMessage]
+ * @param {string} [charName]
+ * @param {{ dryRun?: boolean }} [opts] dryRun: work out the pick and explain it, change nothing (/wubgwhy)
+ * @returns {Promise<string | undefined>}
+ */
+async function BG(charMessage, charName, opts = {}) {
+    try {
+        deleteLocalVariable("Aiko"); // the old ladder cleared this each run; nothing sets it now, harmless cleanup for old chats
+        if (!charMessage) charMessage = getLastMessage("char")?.mes;
+        if (!charMessage) return "No message to compare against";
+        if (!charName) charName = getCurrentCharacterName();
+
+        const previousFile = getLocalVariable("BGFound");
+        const { scene, pick } = pickBackgroundForReply(charMessage, {
+            userName: getCurrentUserName(),
+            card: charName,
+            chatId: getCurrentChatId(),
+            previousPlace: getLocalVariable("BGPlace"),   // area memory + "hold the alt that's on screen"
+            previousFile,
+        });
+        if (!scene) return "No header to compare against";
+        if (opts.dryRun) return pick ? pick.why : `No match for "${scene.location}": the background stays as it is.`;
+
+        // Fox's own install (WTCreator = FFFox) asks his "FFFox Greetings" -> BG quick reply first (except in
+        // Kinsbane Manor). That QR only knows his own home's rooms and signals a match by setting BGFound, so
+        // BGFound is cleared before it runs: still empty afterwards means no match, and the normal pick below
+        // is used. Previously the QR had the final say, and every other place kept the old background.
+        if (fCheck() && pick?.area !== "kinsbane") {
+            setLocalVariable("BGFound", "");
+            await quickReplyApi.executeQuickReply("FFFox Greetings", "BG");
+            const ownRoom = getLocalVariable("BGFound");
+            if (ownRoom) {
+                DebugLog(`BG: FFFox Greetings matched "${scene.location}" -> ${ownRoom}`);
+                setLocalVariable("BGPlace", ""); // not a catalog place, so no area memory
+                setGlobalVariable("BGFoundG", ownRoom);
+                // The QR may already have applied it with /bg; only apply when it isn't on screen yet
+                if (setBackground() !== ownRoom) applyBackgroundFile(ownRoom);
+                return ownRoom;
+            }
+            setLocalVariable("BGFound", previousFile);
+        }
+        if (!pick) {
+            DebugLog(`BG: no match for "${scene.location}", keeping the current background`);
+            return;
+        }
+
+        DebugLog(`BG: ${pick.why}`);
+        setLocalVariable("BGPlace", pick.placeId);
+        // setBackground() with no argument reports what is on screen, so a manual change gets corrected too
+        if (previousFile !== pick.file || setBackground() !== pick.file) {
+            setLocalVariable("BGFound", pick.file);
+            setGlobalVariable("BGFoundG", pick.file);
+            applyBackgroundFile(pick.file);
+        }
+        return pick.file;
+    } catch (err) {
+        console.error(`[WQR] BG Error:`, err);
+        return `Error`
+    }
+}
+
+/**
+ * The loose "Name + verb" detection must only read narration. A name inside spoken dialogue
+ * ("Because Bianca described you...") is usually someone being talked about, not someone in the
+ * scene, and it was swapping the main sprite to them. Same-line quotes only, so a stray unmatched
+ * quote can't blank out the rest of the message.
+ * @param {string} text
+ * @returns {string}
+ */
+function withoutQuotedDialogue(text) {
+    return String(text ?? '').replace(/"[^"\n]*"|“[^”\n]*”/g, ' ');
+}
+
+/** 
+ * @param {string} [charName]
+ * @param {import("./src/chat.js").ChatMessage} [charMessage]
+*/
+async function OpenWorldCostumes(charName, charMessage) {
+    const PerformanceStart = performance.now();
+    try {
+        if (!charMessage) charMessage = getLastMessage("char");
+        if (!charMessage) return;
+        const lookForSide =  !(isMobile() || getGlobalVariable("AutoCostume") === "No");
+        charName = charName || charMessage.name || getCurrentCharacterName();
+
+        const mainRegex = /_{0,2}(?:Mirror )?(.+?):_{1,2}/g;
+        const altRegex = /\b([A-Z][A-Za-z\-]{0,16})\b(?= (?:[A-Za-z]{2,}(?:s|[ie]d)\b|is[^.,!?\n]+[A-Za-z]+ing\b))/g;
+
+        const {charactersWithExpressions, aliasLookup} = await GetCharacterNamesAndAliases("Weybot");
+
+        const foundCharacters = [...new Set(
+            [...charMessage.mes.matchAll(mainRegex)]
+                .map(m => aliasLookup.get(m[1]) ?? m[1])
+                .filter(name => charactersWithExpressions.includes(name))
+            )];
+        if (foundCharacters.length < 2) {
+            foundCharacters.push(...new Set(
+                [...withoutQuotedDialogue(charMessage.mes).matchAll(altRegex)]
+                    .map(m => aliasLookup.get(m[1]) ?? m[1])
+                    .filter(name => charactersWithExpressions.includes(name) && !foundCharacters.includes(name))
+            ));
+        }
+
+        // Kinsbane Manor: the Ghost is Aiko before her reveal, so it only joins the pool when Aiko isn't named
+        const isKinsbane = charName === "Kinsbane Manor";
+        const aikoPresent = isKinsbane && foundCharacters.includes("Aiko");
+        const ghostRegex = /\b(?:ghost(?:s|ly)?|spirits?|phantoms?|apparitions?|spect(?:er|re)s?|wraiths?)\b/i;
+        if (isKinsbane && !aikoPresent && ghostRegex.test(charMessage.mes)) {
+            foundCharacters.push("Kinsbane Manor");
+        }
+
+        /** @param {string} name */
+        const getCostume = (name) => name === "Kinsbane Manor" ? "Ghost" : getCharacterCostumeFromText(charMessage.mes, name, false);
+
+        // Drop anyone without a sprite folder for the costume they would use
+        const pool = await filterBySpriteFolder(foundCharacters, name => `${name}/${getCostume(name)}`);
+        DebugLog(`OpenWorldCostumes: Discovered: ${foundCharacters.length}, usable: ${pool.length}`, pool);
+
+        let pickedCharMain = "";
+        if (pool.length) {
+            let firstPick = 0;
+            if (aikoPresent && pool.includes("Aiko")) {
+                // Aiko is always the main heroine of Kinsbane Manor
+                firstPick = pool.indexOf("Aiko");
+            } else if (pool.length > 2) {
+                firstPick = Math.floor(Math.random() * pool.length);
+            }
+            pickedCharMain = pool.splice(firstPick, 1)[0];
+        }
+        const pickedCharSide = lookForSide && pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
+
+        if (pickedCharMain === "Kinsbane Manor") {
+            setLocalVariable("ExpSave", "neutral");
+        }
+        if (getLocalVariable("ExpSave") === "") {
+            await Expressions(charName, charMessage, true);
+        }
+        const expression = getLocalVariable("ExpSave");
+
+        if (pickedCharMain) {
+            const mainCostume = getCostume(pickedCharMain);
+            const mainFolder = `${pickedCharMain}/${mainCostume}`;
+            // Also re-apply when the OPEN card's override disagrees with what we recorded: chats saved before the fix wrote
+            // the override to the character's own card, so CostmSave says Jenn while Weybot still shows its silhouette.
+            if (getLocalVariable("CostmSave") !== mainFolder || getCurrentCardSpriteOverride() !== mainFolder) {
+                setLocalVariable("CostmSave", mainFolder);
+                // onCurrentCard: this slot is the open card's, so the override goes on the open card (Weybot, Mirror, Kinsbane).
+                // registrar-expressions reads that slot as the LEFT base; if it is not updated, the character lands on the right.
+                await setCostumeAndExpression(pickedCharMain, mainCostume, expression, { onCurrentCard: true });
+                DebugLog(`OpenWorldCostumes: Set left-side to "${pickedCharMain}/${mainCostume}"`);
+            }
+        } else if (charName === "Weybot") {
+            // No usable character: show the Weybot silhouette chosen at startup
+            // Silhouette folders are lowercase; folder names are case-sensitive on Linux
+            const choice = getGlobalVariable("WeybotCostume") || "Other";
+            const silhouette = (await spriteFolderExists(`Weybot/${choice}`)) ? choice : choice.toLowerCase();
+            if (getLocalVariable("CostmSave") !== `Weybot/${silhouette}` || getCurrentCardSpriteOverride() !== `Weybot/${silhouette}`) {
+                setLocalVariable("CostmSave", `Weybot/${silhouette}`);
+                await setCostumeAndExpression("Weybot", silhouette, expression, { onCurrentCard: true });
+                DebugLog(`OpenWorldCostumes: Set left-side to silhouette "Weybot/${silhouette}"`);
+            }
+        } else {
+            DebugLog(`OpenWorldCostumes: No usable characters, keeping left-side.`);
+        }
+
+        const sideFolder = pickedCharSide ? `${pickedCharSide}/${getCostume(pickedCharSide)}` : "";
+        if (lookForSide) {
+            if (sideFolder) {
+                if (await refreshSideCharacter(sideFolder, expression)) {
+                    DebugLog(`OpenWorldCostumes: Set right-side to "${sideFolder}" (${expression || "neutral"})`);
+                }
+            } else if (clearSideCharacter()) {
+                DebugLog(`OpenWorldCostumes: Cleared right-side.`);
+            }
+        }
+        DebugLog(`[P] OpenWorldCostumes: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] OpenWorldCostumes Error:`, error);
+    }
+}
+
+/**
+ * @param {string} [charName]
+ * @param {import("./src/chat.js").ChatMessage} [charMessage]
+ */
+async function GroupCostumes(charName, charMessage) {
+    const PerformanceStart = performance.now();
+    try {
+        if (!charMessage) charMessage = getLastMessage("char");
+        if (!charMessage) return;
+        charName = charName || charMessage.name || getCurrentCharacterName();
+        if (!charName) return;
+
+        const mainRegex = /_{0,2}(?:Mirror )?(.+?):_{1,2}/g;
+        const altRegex = /\b([A-Z][A-Za-z\-]{0,16})\b(?= (?:[A-Za-z]{2,}(?:s|[ie]d)\b|is[^.,!?\n]+[A-Za-z]+ing\b))/g;
+        // Sisters without a sprite folder yet are dropped by the folder check below
+        const cerberusSisters = GROUP_CARD_MEMBERS["Cerberus Sisters"];
+
+        const {charactersWithExpressions, resolveCharacterOverride, aliasLookup} = await GetCharacterNamesAndAliases("Weybot");
+
+        const foundCharacters = [...new Set(
+            [...charMessage.mes.matchAll(mainRegex)]
+                .map(m => aliasLookup.get(m[1]) ?? m[1])
+                .filter(name => charactersWithExpressions.includes(name))
+            )];
+        if (foundCharacters.length < 2) {
+            foundCharacters.push(...new Set(
+                [...withoutQuotedDialogue(charMessage.mes).matchAll(altRegex)]
+                    .map(m => aliasLookup.get(m[1]) ?? m[1])
+                    .filter(name => charactersWithExpressions.includes(name) && !foundCharacters.includes(name))
+            ));
+        }
+
+        /** @param {string} name */
+        const folderFor = (name) => `${name}/${getCharacterCostumeFromText(charMessage.mes, name)}`;
+
+        let pickedChar = foundCharacters.length ? foundCharacters[Math.floor(Math.random() * foundCharacters.length)] : "";
+        // Single member to fall back to if the combined sprite lacks this costume
+        let singleChar = "";
+        DebugLog(`Default picked char: ${pickedChar}`, foundCharacters);
+        if (charName.includes("&")) {
+            // Dual card: both members in the scene use the combined sprite, one uses that member,
+            // and neither picks a random member
+            const members = getGroupCardMembers(charName);
+            const present = members.filter(name => foundCharacters.includes(name));
+            const pool = await filterBySpriteFolder(present.length ? present : members, folderFor);
+            singleChar = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
+            pickedChar = present.length === members.length
+                ? resolveCharacterOverride(charName.replaceAll(/ & /g, ""), foundCharacters)
+                : singleChar;
+        } else if (charName === "Cerberus Sisters") {
+            const sister = getLocalVariable("CerberusSister");
+            if (sister && sister !== "3rd") {
+                singleChar = sister;
+                pickedChar = resolveCharacterOverride(sister, foundCharacters);
+            } else {
+                // Open-ended greeting: pick a random sister in the scene, or any sister if none were detected
+                const sistersFound = foundCharacters.filter(name => cerberusSisters.includes(name));
+                const pool = await filterBySpriteFolder(sistersFound.length ? sistersFound : cerberusSisters, folderFor);
+                singleChar = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
+                pickedChar = singleChar ? resolveCharacterOverride(singleChar, foundCharacters) : "";
+            }
+        }
+        if (pickedChar && singleChar && pickedChar !== singleChar && !(await spriteFolderExists(folderFor(pickedChar)))) {
+            pickedChar = singleChar;
+        }
+        DebugLog(`Overwrite picked char: ${pickedChar}`);
+
+        // Keep the current sprite rather than switching to a missing folder
+        if (!pickedChar || !(await spriteFolderExists(folderFor(pickedChar)))) {
+            DebugLog(`GroupCostumes: No sprite folder for "${pickedChar}", keeping current costume.`);
+            return;
+        }
+
+        const costume = getCharacterCostumeFromText(charMessage.mes, pickedChar);
+        const charCostume = `${pickedChar}/${costume}`;
+        // A pick from Mien (who is shown + what they wear, src/outfitPick.js) holds until the footer asks for a
+        // different OUTFIT; the member chosen from the scene can change every reply without undoing it.
+        const decision = decideCostume({
+            storyCostume: costume ? charCostume : "",
+            costmSave: getLocalVariable("CostmSave"),
+            pick: getLocalVariable(OUTFIT_PICK_VAR),
+            stick: getLocalVariable(OUTFIT_STICK_VAR) === "true",
+            bases: spriteSetsFor(charName).map(set => set.base),
+        });
+        if (decision.saveStory) setLocalVariable("CostmSave", decision.saveStory);
+        if (decision.clearPick) deleteLocalVariable(OUTFIT_PICK_VAR);
+        // onCurrentCard: the sets are named after members, and Blake/Serra have cards of their own; the override
+        // must go on the open duo card (before 2026-11-18 a solo Blake frame was written to Blake's own card).
+        if (decision.show && getCurrentCardSpriteOverride() !== decision.show) {
+            await setCostume(decision.show, { onCurrentCard: true });
+            DebugLog(`Set new costume: ${decision.show}${decision.show === charCostume ? "" : " (picked in Mien)"}`);
+        }
+        DebugLog(`[P] GroupCostumes: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] GroupCostumes Error:`, error);
+    }
+}
+
+/** 
+ * @param {string} [charName]
+ * @param {import("./src/chat.js").ChatMessage} [charMessage]
+*/
+async function AutoCostumes(charName, charMessage) {
+    const PerformanceStart = performance.now();
+    try {
+        if (!charMessage) charMessage = getLastMessage("char");
+        if (!charMessage) return "No charMessage";
+        charName = charName || charMessage.name || getCurrentCharacterName();
+        if (!charName) return "{{char}} undefined";
+        if (getGlobalVariable("AutoCostume") !== "No") {
+            const groupCharacter = getGroupCardMembers(charName).length > 0;
+            const openWorld = [
+                "Weybot", "Mirror Weyland", "Kinsbane Manor"
+            ].includes(charName);
+            if (openWorld) return "Aborted";
+            if (groupCharacter) {
+                await GroupCostumes(charName, charMessage);
+            } else {
+                const costume = getCharacterCostumeFromText(charMessage.mes, charName);
+                const charCostume = `${charName}/${costume}`;
+                // A reply with no costume tag at all says nothing about clothes, so she keeps what she has on. It used
+                // to count as "Regular Outfit": a reply cut off before its footer (about one real reply in four has no
+                // footer) redressed her mid-scene. The same goes for [XX], the code the clothing list tells the model
+                // to use "ONLY IF NONE apply": it names no outfit we have art for (seen live: Loona in a towel after a
+                // shower came out in her crop top). Only when this character already has a costume showing; a first
+                // reply, or one right after the Phone portrait, still gets the regular outfit.
+                const keepsCostume = saysNothingAboutCostume(charMessage.mes) && getLocalVariable("CostmSave").startsWith(`${charName}/`);
+                // An outfit the player put on in Mien (src/outfitPick.js) holds until the story asks for a different
+                // costume, or for good while "Keep on" is set. Without a pick this is the same rule as before.
+                const decision = decideCostume({
+                    storyCostume: costume && !keepsCostume ? charCostume : "",
+                    costmSave: getLocalVariable("CostmSave"),
+                    pick: getLocalVariable(OUTFIT_PICK_VAR),
+                    stick: getLocalVariable(OUTFIT_STICK_VAR) === "true",
+                    characterName: charName,
+                });
+                // Keep the current sprite rather than switching to a missing folder
+                const storyFolderExists = decision.saveStory ? await spriteFolderExists(decision.saveStory) : false;
+                if (decision.saveStory && storyFolderExists) setLocalVariable("CostmSave", decision.saveStory);
+                if (decision.clearPick && storyFolderExists) deleteLocalVariable(OUTFIT_PICK_VAR);
+                const showsStory = decision.show && decision.show === decision.saveStory;
+                if (decision.show && (showsStory ? storyFolderExists : getCurrentCardSpriteOverride() !== decision.show)) {
+                    setCostume(decision.show);
+                    DebugLog(`Set new costume: ${decision.show}${showsStory ? "" : " (kept on by the player)"}`);
+                }
+            }
+        }
+        DebugLog(`[P] AutoCostumes: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] AutoCostumes Error:`, error);
+    }
+}
+
+/**
+ * @param {string} [charName]
+ * @param {import("./src/scenarios.js").Character} [charScenarios]
+ * @returns 
+ */
+async function SetupCostumesAndTags(charName, charScenarios) {
+    try {
+        charName = charName || getCurrentCharacterName();
+        DebugLog(`SetupCostumesAndTags charName: ${charName}`);
+        if (!charName) return;
+        charScenarios = charScenarios || scenarios.get(charName);
+        if (!charScenarios) return;
+        DebugLog(`SetupCostumesAndTags charScenarios:`, charScenarios);
+        if (Array.isArray(charScenarios?.tags)) {
+            try {
+                for (const tag of charScenarios.tags) {
+                    const exists = tagExists(tag, charName);
+                    DebugLog(`Add "${tag}" if not exists on "${charName}": Exists?: ${exists}`);
+                    if (!exists) {
+                        tagAdd(tag, charName);
+                    }
+                }
+            } catch {
+                console.error(`[WQR] Scenarios Error: Failed to set tags for "${charName}"`, charScenarios.tags);
+            }
+        }
+
+        if (Array.isArray(charScenarios?.removeTags)) {
+            try {
+                for (const tag of charScenarios.removeTags) {
+                    DebugLog(`Remove "${tag}" if exists on "${charName}": Exists?: ${tagExists(tag, charName)}`);
+                    if (tagExists(tag, charName)) tagRemove(tag, charName);
+                }
+            } catch {
+                console.error(`[WQR] Scenarios Error: Failed to remove tags for "${charName}"`, charScenarios.removeTags);
+            }
+        }
+
+        if (Array.isArray(charScenarios?.costumes)) {
+            try {
+                for (let costumeID = 1; costumeID <= charScenarios.costumes.length; costumeID++) {
+                    const costumeVar = `O${costumeID}`;
+                    const costume = charScenarios.costumes[costumeID-1];
+                    setLocalVariable(costumeVar, costume, costumeID !== charScenarios.costumes.length);
+                }
+            } catch {
+                console.error(`[WQR] Scenarios Error: Failed to set costumes for "${charName}"`, charScenarios.costumes);
+            }
+        }
+    } catch {}
+}
+
+/**
+ * SetSchoolYear
+ * OnUser
+ * @param {string} [startingYear]
+ * @returns {Promise<string | undefined>}
+ */
+async function SetSchoolYear(startingYear) {
+    /** @type {string} */ startingYear = startingYear || getLocalVariable("StartingYear");
+    try {
+        const offset = {
+            Freshman: 0,
+            Sophomore: 1,
+            Junior: 2,
+            Senior: 3,
+            Alumni: 4
+        }[startingYear || "Freshman"] || 0;
+
+        /** @param {number} year */
+        function MCY(year) {
+            if (startingYear === "Alumni") return "alumni";
+
+            const stages = [
+                "not yet present (future character)",
+                "Freshman",
+                "Sophomore",
+                "Junior",
+                "Senior",
+                "alumni"
+            ];
+
+            return stages[Math.max(0, Math.min(5, year + offset + 1))];
+        }
+        /** @param {number} year */
+        function GRA(year) {
+            if (startingYear === "Alumni") return "alumni";
+
+            const stage = year + offset;
+
+            if (stage <= 2)
+                return ["Freshman", "Sophomore", "Junior", "Senior"][stage];
+
+            if (stage <= 4)
+                return "Grad student";
+
+            return "alumni";
+        }
+        /** @param {number} year */
+        function PHD(year) {
+            if (startingYear === "Alumni") return "alumni";
+
+            const stage = year + offset;
+
+            if (stage <= 2)
+                return ["Freshman", "Sophomore", "Junior", "Senior"][stage];
+
+            if (stage <= 4)
+                return "Grad student";
+
+            return "Post-Grad student";
+        }
+
+        // MCY
+        setLocalVariable("MCY-3", MCY(-3), true);
+        setLocalVariable("MCY-2", MCY(-2), true);
+        setLocalVariable("MCY-1", MCY(-1), true);
+        setLocalVariable("MCY", MCY(0), true);
+        setLocalVariable("MCY1", MCY(1), true);
+        setLocalVariable("MCY2", MCY(2), true);
+        setLocalVariable("MCY3", MCY(3), true);
+        setLocalVariable("MCY4", MCY(4));
+
+        // Graduate
+        setLocalVariable("GRA1", GRA(1), true);
+        setLocalVariable("GRA2", GRA(2), true);
+        setLocalVariable("GRA3", GRA(3), true);
+        setLocalVariable("GRA4", GRA(4), true);
+        setLocalVariable("GRA5", GRA(5), true);
+        setLocalVariable("GRA6", GRA(6));
+
+        // PhD
+        setLocalVariable("PHD1", PHD(1), true);
+        setLocalVariable("PHD2", PHD(2), true);
+        setLocalVariable("PHD3", PHD(3), true);
+        setLocalVariable("PHD4", PHD(4), true);
+        setLocalVariable("PHD5", PHD(5), true);
+        setLocalVariable("PHD6", PHD(6));
+
+        // Ages
+        const ageMin = 19;
+        const ageMax = 90;
+        for (let age = ageMin; age <= ageMax; age++) {
+            setLocalVariable(`${age}YO`, age + offset, age !== ageMax);
+        }
+
+        // School year
+        const startYear = 2020 + offset;
+        setLocalVariable("SchoolYear", `${startYear}-${startYear + 1}`);
+    } catch (error) {
+        console.error(`[WQR] SetSchoolYear Error:`, error);
+        return "Error"
+    }
+}
+
+/**
+ * @param {string} [charName]
+ * @returns 
+ */
+async function SpecialChar(charName) {
+    const PerformanceStart = performance.now();
+    try {
+        charName = charName || getCurrentCharacterName();
+        if (!charName) return;
+        const specialVars = specialChar.get(charName);
+        if (specialVars?.vars) {
+            const keys = Object.keys(specialVars.vars);
+            if (keys.length) {
+                const lastKey = keys[keys.length-1];
+                for (const key of keys) {
+                    DebugLog(`SpecialChar set ${key}`);
+                    setLocalVariable(key, specialVars.vars[key], key !== lastKey);
+                }
+            }
+        }
+        const specialVarsKressa = specialChar.get("Kressa");
+        if (specialVarsKressa?.vars) {
+            const keys = Object.keys(specialVarsKressa.vars);
+            if (keys.length) {
+                const lastKey = keys[keys.length-1];
+                for (const key of keys) {
+                    DebugLog(`SpecialChar set ${key}`);
+                    setLocalVariable(key, specialVarsKressa.vars[key], key !== lastKey);
+                }
+            }
+        }
+        DebugLog(`[P] SpecialChar: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] SpecialChar Error:`, error);
+    }
+}
+
+/**
+ * PromptOS "Roleplay Shift": builds the one optional feedback item Beta injects after frameTop's
+ * item 1. Returns "" for None or anything unrecognized, so the caller can simply filter it out.
+ * The new shift texts live encoded in src/roleplayShifts.js (generated from the plaintext master
+ * in "Prompt Review/"); Hard Mode and General-Use still come from rav.js, untouched.
+ * @param {string} shift RoleplayShift value, or "Hard Mode" when HardToggle is On
+ * @param {import("./src/rav.js").Rav} rav
+ * @param {boolean} analysisOn
+ */
+function buildRoleplayShiftItem(shift, rav, analysisOn, scope = SHIFT_SCOPES[shift]) {
+    return assembleRoleplayShiftItem(shift, rav, analysisOn, scope, customShiftPreset());
+}
+
+/** Refresh the account narrator and repair cached prompt layers before any real generation. */
+async function OnNarratorCheck(_type, _options, dryRun) {
+    if (dryRun) return;
+    try {
+        await narratorSettingsSync.refresh();
+    } catch (error) {
+        console.warn('[WQR] Narrator refresh failed; using the visible local selection.', error);
+    }
+    // Old chats can carry a baked Salem block even after the default changes. Rebuild before
+    // prompt assembly, including rerolls/continues and OOC, without rerunning every setting.
+    const initialized = getLocalVariable('Run') === 'true' || Boolean(getLocalVariable('ravteg'));
+    const inheritedMismatch = !String(getLocalVariable('LocalN') ?? '').trim()
+        && getLocalVariable('LocalNarrator') !== getGlobalVariable('Narrator');
+    if (initialized && (inheritedMismatch || getLocalVariable('NarratorBuiltFrom') !== narratorBuildState(getGlobalVariable, getLocalVariable))) {
+        await XXX();
+    }
+}
+
+/** GENERATION_AFTER_COMMANDS: count a dose reply and rebuild the prompt if the dose turned on/off. */
+async function OnDoseCheck(type, _options, dryRun) {
+    try {
+        // OOC chatter isn't roleplay, so it shouldn't eat a dose's secret 2-10 replies (the dose
+        // isn't even in the prompt while OOC Mode is on).
+        if (isOocModeEnabled(getGlobalVariable("OOCMode"))) return;
+        if (applyDoseForGeneration(type, dryRun)) await XXX();
+    } catch (error) {
+        console.error(`[WQR] Dose check error:`, error);
+    }
+}
+
+/** The Custom Preset in use ({ id, name, text } in the RoleplayShiftCustom global), or null. */
+function customShiftPreset() {
+    try {
+        const preset = JSON.parse(String(getGlobalVariable("RoleplayShiftCustom") || ""));
+        return preset && typeof preset.text === "string" && preset.text.trim()
+            ? { name: String(preset.name || "Custom Preset"), text: preset.text.trim() }
+            : null;
+    } catch {
+        return null;
+    }
+}
+
+// Every shift can be dosed: Hard Mode, General-Use and the Custom Preset in use included (None has
+// nothing to dose).
+async function startDoseAndRebuild(shift) {
+    const known = ["Hard Mode", "General-Use"].includes(shift) || SHIFT_BODIES[shift] || (shift === "Custom Preset" && customShiftPreset());
+    if (!known) throw new Error(`Unknown shift for a dose: ${shift}`);
+    startDose(shift);
+    await XXX();
+}
+
+async function endDoseAndRebuild() {
+    endDose();
+    await XXX();
+}
+
+/**
+ * Combined sprite sets: when every member of a group is on screen, they are drawn together from `output`'s folder.
+ * Higher up is higher priority. Used by GetCharacterNamesAndAliases (scene detection) and by the duo-card outfits.
+ */
+const CHARACTER_GROUPS_WITH_EXPRESSIONS = [
+    // Groups of two
+    { output: "BlakeSerra", display: "Blake & Serra", members: ["Blake", "Serra"] },
+    { output: "LyrisVesper", display: "Lyris & Vesper", members: ["Lyris", "Vesper"] },
+    { output: "JennLucy", display: "Jenn & Lucy", members: ["Jenn", "Lucy"] },
+    // Cerberus Sisters
+    { output: "AstridNeshe", display: "Cerberus Sisters", members: ["Astrid", "Neshe"] }
+];
+
+/** The sprite sets the open card is drawn from (one for a normal card; members + combined sets for a duo card). */
+function spriteSetsFor(cardName) {
+    return cardSpriteSets(cardName, getGroupCardMembers(cardName), CHARACTER_GROUPS_WITH_EXPRESSIONS);
+}
+
+/**
+ * Whether Mien can dress the open card, and what it is wearing. WeyPhone's Mien reads this through
+ * globalThis.WeylandOutfits (wired at the bottom of this file), the same way PromptOS reaches WeylandDose.
+ * Duo cards (Lyris & Vesper, Blake & Serra, Cerberus Sisters) are drawn from several sprite sets (`sets`): each
+ * member's own and combined ones like "LyrisVesper"; a pick there chooses who is shown AND what they wear.
+ * Not offered in SillyTavern group chats (costumes can't be attached to a card there: no card is open) or on the
+ * open-world cards (Weybot, Mirror Weyland, Kinsbane Manor), which have their own costume systems.
+ * @param {string} cardName the card Mien is showing
+ */
+function describeOutfits(cardName) {
+    const context = SillyTavern.getContext();
+    const openCard = getCurrentCharacterName();
+    let reason = "";
+    if (context.groupId) reason = "group-chat";
+    else if (!openCard || openCard !== cardName) reason = "not-this-card";
+    else if (isOpenWorldCard(openCard)) reason = "open-world";
+    const sets = spriteSetsFor(cardName);
+    const bases = sets.map(set => set.base);
+    const costmSave = getLocalVariable("CostmSave");
+    const pick = activeOutfitPick(getLocalVariable(OUTFIT_PICK_VAR), bases);
+    return {
+        supported: !reason,
+        reason,
+        duo: sets.length > 1,
+        sets,
+        pick,
+        stick: Boolean(pick) && getLocalVariable(OUTFIT_STICK_VAR) === "true",
+        story: bases.includes(splitOutfitFolder(costmSave).character) ? costmSave : "",
+        wearing: outfitToShow({ costmSave, pick, bases }),
+        autoCostumes: getGlobalVariable("AutoCostume") !== "No",
+        // Extra outfits need Paw Patrol Plus or above (isExtraOutfit in src/outfitPick.js).
+        member: getGlobalVariable("PP1") === "true" || getGlobalVariable("PPP1") === "true",
+        nsfwHidden: getGlobalVariable("NSFW") === "true",
+    };
+}
+
+/** Nara's card name is decorated with combining marks; this is the plain-letters test for it. */
+function isNaraName(name) {
+    return String(name ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim() === "Nara";
+}
+
+/**
+ * Put an outfit on the open card (Mien's "Wear"). Keeps the current mood, like the old costume menu did.
+ * @param {string} folder "<Sprite set>/<Outfit>" ("Summer/Cheerleader", "Lyris/Casual")
+ * @param {{stick?: boolean, card?: string}} [options] stick: hold it whatever the story's outfit codes say;
+ *   card: the open card's name (needed on duo cards, whose sprite sets are named after members)
+ */
+async function wearOutfit(folder, { stick = false, card = "" } = {}) {
+    const { character, outfit } = splitOutfitFolder(folder);
+    const cardName = card || character;
+    const state = describeOutfits(cardName);
+    if (!state.supported) throw new Error("Outfits can't be changed from Mien on this card.");
+    if (!state.sets.some(set => set.base === character)) throw new Error(`${character} isn't part of ${cardName}.`);
+    if (isExtraOutfit(outfit, character) && !state.member) throw new Error("Bonus outfits are a Paw Patrol Plus perk.");
+    if (isNsfwOutfit(outfit) && state.nsfwHidden) throw new Error("NSFW outfits are hidden right now.");
+    if (!await spriteFolderExists(folder)) throw new Error(`No sprites found for ${folder}.`);
+    // Nara's Community sets are a mode, not just a folder: the footer codes add the prefix while it is on.
+    if (isNaraName(character)) {
+        if (isCommunityOutfit(outfit)) setGlobalVariable("NaraCommunity", "Community");
+        else deleteGlobalVariable("NaraCommunity");
+    }
+    // The pick holds until the story asks for something different from what it last asked for. With no costume
+    // saved for her yet (first reply, or right after the Phone portrait), take the last reply's costume as that
+    // baseline, or the very next reply would count as a change and undress the pick.
+    if (!state.story) {
+        const last = getLastMessage("char");
+        setLocalVariable("CostmSave", `${character}/${getCharacterCostumeFromText(last?.mes ?? "", character)}`);
+    }
+    setLocalVariable(OUTFIT_PICK_VAR, folder);
+    if (stick) setLocalVariable(OUTFIT_STICK_VAR, "true");
+    else deleteLocalVariable(OUTFIT_STICK_VAR);
+    // A duo card's sets are named after members, who may have cards of their own (Blake, Serra): the override
+    // belongs to the OPEN card, never to the member's card.
+    await setCostumeAndExpression(character, outfit, undefined, { onCurrentCard: state.duo });
+}
+
+/** Mien's "Keep on" switch for the outfit already picked. */
+function setOutfitStick(on) {
+    if (on) setLocalVariable(OUTFIT_STICK_VAR, "true");
+    else deleteLocalVariable(OUTFIT_STICK_VAR);
+}
+
+/** Forget the player's pick and go back to the costume the story last asked for. */
+async function takeOffOutfit(cardName) {
+    const state = describeOutfits(cardName);
+    if (!state.supported) return;
+    deleteLocalVariable(OUTFIT_PICK_VAR);
+    deleteLocalVariable(OUTFIT_STICK_VAR);
+    const { character, outfit } = splitOutfitFolder(state.story || `${state.sets[0].base}/Regular Outfit`);
+    await setCostumeAndExpression(character, outfit, undefined, { onCurrentCard: state.duo });
+}
+
+/**
+ * @param {string} [charName]
+ * @returns
+ */
+async function XXX(charName) {
+    const PerformanceStart = performance.now();
+    try {
+        resetMentalDirectivesOnce(getGlobalVariable, setGlobalVariable);
+        charName = charName || getCurrentCharacterName();
+        if (!charName) return;
+        if (getLocalVariable("RPPOVLocalSet") === "") setLocalVariable("RPPOVLocal", getGlobalVariable("RPPOV"));
+        if (/Kinsbane Manor|Aethel|Muse|Kressa/.test(charName)) await SpecialChar();
+        if (!String(getLocalVariable("LocalN") ?? '').trim()) setLocalVariable("LocalNarrator", getGlobalVariable("Narrator"));
+        const builtNarratorState = narratorBuildState(getGlobalVariable, getLocalVariable);
+        // "Current" IS the Beta prompt since 2026-10-03 (the old normal Current is retired and the Beta slot is held for the next
+        // beta). A saved "Beta Prompt" (the default since 2026-09-28), a missing choice or an unknown one lands on Current, and the
+        // saved value is corrected so PromptOS shows the right cartridge. `pc` is the rav.js entry to build from.
+        const { saved: savedChoice, key: pc } = resolvePromptChoice(ravs, getGlobalVariable("PromptChoice"));
+        if (getGlobalVariable("PromptChoice") !== savedChoice) setGlobalVariable("PromptChoice", savedChoice);
+        const rav = ravs.get(pc);
+        if (!rav) throw new Error("No rav found");
+        const geminiBypassEnabled = String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled';
+        // Thoughts: first work out whether this chat's intro turns them on (and who is thinking), then let the per-chat
+        // Character Thoughts switch in PromptOS turn them off. The switch covers every thought-enabled intro since 2026-11-19
+        // (src/characterThoughts.js lists them). XXX is the only place that knows the greeting, the scenario stash and
+        // Cerberus's sister, so it records the thinker's name in CHARACTER_THOUGHTS_AVAILABLE for PromptOS to read.
+        const thoughtsOffLine = "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]";
+        let thoughts = "";          // this intro's thoughts block, "" when it has none
+        let thinker = "";           // who the switch is about, shown in PromptOS
+        let noThoughtsLine = thoughtsOffLine;
+        let thoughtsDefault = "on"; // what the switch means while the player has never touched it
+        if (charName === "Bap" && rav.thinkYes) {
+            // Baphomet is the only voice in Bap's thought brackets (see src/baphomet.js). With his visibility Disabled
+            // (PromptOS), nobody hears him, so no thoughts at all. That switch is Bap's thoughts switch, so Bap gets no
+            // Character Thoughts switch on top of it.
+            noThoughtsLine = baphometHidden(getLocalVariable(BAPHOMET_VAR)) ? thoughtsOffLine : baphometThoughts(rav.thinkYes);
+        } else if (hasAlwaysOnThoughts(charName) && rav.thinkYes) {
+            thoughts = withThoughtRules(rav.thinkYes);
+            thinker = charName;
+        } else if (charName === "Vera" && rav.thinkYes) {
+            // Lucky, 2026-11-19: Vera gets the switch on all three intros. Thoughts stay ON by default where they always
+            // were (the original lecture-hall greeting, or a chat with a start scenario) and OFF by default on the others
+            // (the secret-dating dinner, whose thoughts would only echo what she shows, and the custom start), so nothing
+            // changes for a player who never touches the switch.
+            thoughts = withThoughtRules(rav.thinkYes);
+            thinker = "Vera";
+            if (!(Number(getFirstMessage("char")?.swipe_id) === 0 || getLocalVariable("Scenario") || introHadScenario())) thoughtsDefault = "off";
+        } else if (charName === "Cerberus Sisters" && getLocalVariable("CerberusSister") === "Fawne" && rav.thinkYes) {
+            thoughts = withThoughtRules(rav.thinkYes);
+            thinker = "Fawne";
+        } else if (getLocalVariable("SpecialThoughts") && rav.thinkSpec) {
+            // The greeting's own thoughts block (drunk Jenn and the like, see greetingThoughtSet); rav.thinkSpec is only the
+            // "thoughts disabled" line, kept as the fallback for a greeting that has none (then there is nothing to switch).
+            // After a PromptOS start switch the chat's first message is still the OLD greeting, so the record the switch
+            // applied (chat variable IntroRecordIndex, src/introSwitch.js INTRO_RECORD_VAR) decides which block this is.
+            const switchedRecord = String(getLocalVariable("IntroRecordIndex") ?? "").trim();
+            const thoughtRecord = switchedRecord !== "" ? Number(switchedRecord) : getFirstMessage("char")?.swipe_id;
+            thoughts = greetingThoughtSet(scenarios.get(charName), thoughtRecord);
+            thinker = thoughts ? charName : "";
+            noThoughtsLine = rav.thinkSpec;
+        }
+        setLocalVariable(CHARACTER_THOUGHTS_AVAILABLE, thinker || NO_THOUGHTS);
+        setLocalVariable(CHARACTER_THOUGHTS_DEFAULT, thoughtsDefault);
+        setLocalVariable("ThoughtSet", thoughts && thoughtsSwitchOn(getLocalVariable(CHARACTER_THOUGHTS_VARIABLE), thoughtsDefault) ? thoughts : noThoughtsLine);
+        if (/Weybot|Mirror Weyland|Kinsbane Manor/.test(charName)) {
+            setLocalVariable("ExpAltShow", "true");
+        }
+        const beta = ravs.get("Beta Prompt");
+        let base = safePreparePromptBase(pc, rav, beta);
+        // Preserve 2025's explicit Muse/memory exception without restoring obsolete footer syntax.
+        if (pc === "Old Prompt 2025" && (charName === "Muse" || getLocalVariable("LTMRav") === "true")) {
+            const memory = charName !== "Muse" && getLocalVariable("LTMRav") === "true";
+            base = { ...base, teg: base.teg.replace(memory
+                ? /\[HEADER FORMATTING\][\s\S]*?\[END Proper Weyland Tavern formatting\]/
+                : /\[FOOTER FORMATTING\][\s\S]*?\[END Proper Weyland Tavern formatting\]/,
+            memory ? "Do not use the roleplay header or footer in your memory creation." : "") };
+        }
+        const analysisOn = String(getGlobalVariable("AnalysisToggle") || "Enabled").trim().toLowerCase() === "enabled";
+        const hardOn = getGlobalVariable("HardToggle") === "On";
+        const savedShift = String(getGlobalVariable("RoleplayShift") || "None");
+        const regularShift = hardOn ? "Hard Mode" : (savedShift === "Hard Mode" ? "None" : savedShift);
+        // A chat's live dose replaces the regular feedback on every prompt, with its own framing.
+        const shift = activeDoseShift() || regularShift;
+        const shiftScope = shift === "Hard Mode" ? "reroll" : (SHIFT_SCOPES[shift] || "restarted");
+        // Shifts are written around Beta's scene sheet; a prompt with its own reasoning (2026) gets their no-scene-sheet form.
+        const shiftItem = buildRoleplayShiftItem(shift, beta, usesSceneSheet(base, analysisOn), shiftScope);
+        // The chat's narrator by name ('' for Default); Beta's box 1 becomes their green room (promptModifiers.js).
+        const selectedNarrator = narratorSelection(getLocalVariable("LocalNarrator"), getGlobalVariable);
+        const activeNarrator = ['Default', 'Custom'].includes(selectedNarrator) ? '' : selectedNarrator;
+        const assembled = assemblePromptLayers(base, beta, { analysisOn, shift, shiftItem, shiftScope, geminiBypassEnabled, narrator: activeNarrator, narratorStrength: getGlobalVariable("NarratorStrength") });
+        // Kinsbane Manor, Mirror Weyland and Muse don't read ravteg; they open their own system prompt with
+        // their own scene sheet, which always runs. A shift reaches them through two chat vars those sheets
+        // carry (src/specialSheets.js), always in its scene-sheet form, whatever the Analysis toggle says.
+        const specialBoxes = specialSheetBoxes(charName);
+        if (specialBoxes) {
+            const special = buildSpecialSheetShift({
+                shift, scope: shiftScope, boxes: specialBoxes, betaBody: beta.body,
+                sheetItem: buildRoleplayShiftItem(shift, beta, true, shiftScope),
+            });
+            setLocalVariable("SpecialShift", special.item);
+            setLocalVariable("SpecialRecognition", special.recognition);
+        }
+        setLocalVariable("CCPromptCodes", /Weybot|Mirror Weyland/.test(charName) ? base.CCPCA : base.CCPC);
+        setLocalVariable("ravteg", assembled.teg);
+        // Built-in prompts and OOC bring their own voice; do not inject an extra roleplay narrator.
+        setLocalVariable("NarratorEarly", specialBoxes || isOocModeEnabled(getGlobalVariable("OOCMode")) ? "" : assembled.narratorEarly.replaceAll("{{getvar::LocalNarrator}}", getLocalVariable("LocalNarrator")));
+        // A greeting may need a last-word reminder that belongs to its intro context. PromptOS's
+        // intro On/Off control owns this variable alongside ConstantScenario, so disabling that
+        // context removes the reminder too. Appending here keeps it at the very end of postrav.
+        const introPostHistory = String(getLocalVariable("IntroPostHistory") ?? "").trim();
+        const finishPost = (post) => {
+            const resolved = resolvePromptPost({ ...base, post }, {
+                focus: getLocalVariable("ExpAltShow") === "true" ? base.expaltshow : "{{getglobalvar::RPFocus}}",
+                htmlEnabled: getGlobalVariable("HTML!") === "Enabled",
+                htmlInstructions: strings.whtml,
+            });
+            return introPostHistory ? `${resolved.trimEnd()}\n\n${introPostHistory}` : resolved;
+        };
+        const resolvedPost = finishPost(assembled.post);
+        setLocalVariable("postrav", resolvedPost);
+        // Gemini Bypass + Analysis on: also build this prompt exactly as Analysis OFF would, so OnRequestReady can send that
+        // version to Gemini models only (isGeminiModel in src/promptModifiers.js). Empty = nothing to swap. Same inputs as
+        // above except analysisOn, and the shift item in its no-scene-sheet form, like the real Analysis switch.
+        let geminiTeg = "", geminiPost = "";
+        if (geminiBypassEnabled && analysisOn && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const plain = assemblePromptLayers(base, beta, {
+                analysisOn: false, shift, shiftScope, geminiBypassEnabled, narrator: activeNarrator, narratorStrength: getGlobalVariable("NarratorStrength"),
+                shiftItem: buildRoleplayShiftItem(shift, beta, false, shiftScope),
+            });
+            const plainPost = finishPost(plain.post);
+            if (plain.teg !== assembled.teg || plainPost !== resolvedPost) {
+                geminiTeg = plain.teg;
+                geminiPost = plainPost;
+            }
+        }
+        setLocalVariable("ravtegGemini", geminiTeg);
+        setLocalVariable("postravGemini", geminiPost);
+        // OOC Mode (PromptOS -> Modes -> Experimental) replaces the whole Weyland base prompt for
+        // every prompt choice, so it runs after shared assembly: the card, lorebooks and chat stay, the
+        // narrator comes along inside the OOC prompt (src/oocMode.js explains the wording). No
+        // Gemini Bypass here: its only job is cutting Beta's analysis, and there's none to cut.
+        if (isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+            const narrator = getLocalVariable("LocalNarrator");
+            setLocalVariable("ravteg", buildOocSystemPrompt(narrator));
+            setLocalVariable("postrav", buildOocPostHistory(narrator));
+        }
+        // Kinsbane Manor, Mirror Weyland and Muse never read ravteg/postrav; swap their own variables too (and put the
+        // originals back when OOC is off). src/oocMode.js explains the stash.
+        {
+            const oocOn = isOocModeEnabled(getGlobalVariable("OOCMode"));
+            const narrator = getLocalVariable("LocalNarrator");
+            applyOocToCardSlots(charName, oocOn, { get: getLocalVariable, set: setLocalVariable },
+                oocOn ? { system: buildOocSystemPrompt(narrator), post: buildOocPostHistory(narrator) } : {});
+        }
+        // Narrator subbots (src/narratorSubbots.js, generated from "Prompt Review/Narrator Subbots -
+        // MASTER.txt"): only the narrator selected for THIS chat gets their in-world sheet; the
+        // other two NSB_ vars are emptied. Their Weyland lorebook entries ({{getvar::NSB_<Name>}},
+        // keyed on the name and !command) fire normally but inject nothing unless that narrator is
+        // active, so Lauren can step into a scene only while Lauren is the one narrating.
+        for (const name of NARRATOR_SUBBOT_NAMES) {
+            setLocalVariable(`NSB_${name}`, name === activeNarrator ? NARRATOR_SUBBOTS[name] : "");
+        }
+        // Kris's card post-history is {{getvar::Krisrav}}. Hard Mode sets it to strings.krirav;
+        // Standard used to be a one-time copy of postrav taken by his greeting popup, so it went
+        // stale after a prompt switch, and came out empty (no post-history at all) if postrav
+        // wasn't built yet. Keep Standard pointed at the current postrav on every rebuild.
+        if (charName === "Kris" && getLocalVariable("Krisrav") !== strings.krirav) {
+            setLocalVariable("Krisrav", getLocalVariable("postrav"));
+        }
+        // Record what was actually assembled before Clear yields; a pick made during that await
+        // must still cause the next generation to rebuild.
+        setLocalVariable('NarratorBuiltFrom', builtNarratorState);
+        await Clear();
+        DebugLog(`[P] XXX: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] XXX Error:`, error);
+    }
+}
+
+/**
+ * @param {import("./src/chat.js").ChatMessage} [charMessage]
+ */
+async function Clear(charMessage) {
+    const PerformanceStart = performance.now();
+    try {
+        charMessage = charMessage || getLastMessage("char");
+        if (!charMessage?.mes) return;
+        detector.updateTarget("teg", getLocalVariable("ravteg"));
+        detector.updateTarget("post", getLocalVariable("postrav"));
+        detector.updateTarget("per", getCurrentCharacterPersonality() || "");
+        detector.updateTarget("des", getCurrentCharacterDescription() || "");
+        const check = detector.check(charMessage.mes, {threshold: 0.375});
+        if (check.tooSimilar) {
+            await editSwipe("");
+            if (debug) console.warn(`[WQR] Too similar "${check.highestRisk}", score ${check.results[check.highestRisk].score}`);
+        }
+        DebugLog(`[P] Clear: ${(performance.now() - PerformanceStart).toFixed(4)}ms`);
+    } catch (error) {
+        console.error(`[WQR] Clear Error:`, error);
+    }
+}
+
+function fCheck() {
+    return getGlobalVariable("WTCreator") === "FFFox";
+}
+
+/**
+ * True when the player locked a background to this chat (ST's lock button, saved as
+ * chat_metadata.custom_background by backgrounds.js). AutoBG has to stay out of those chats:
+ * it applies a background by clicking it in the BG menu, and ST's click handler re-locks the
+ * chat to whatever was clicked while a lock exists, so every reply (and reopening the chat)
+ * silently replaced the player's pick. Unlocking hands the chat back to AutoBG.
+ * /wubg is a manual command and is not gated.
+ * @returns {boolean}
+ */
+function chatHasLockedBackground() {
+    return Boolean(chat_metadata?.custom_background);
+}
+//#endregion
+
+// SETUP
+
+function registerSlashCommands() {
+    try {
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wuxxx',
+            callback: async () => {await XXX();return '';}
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wurostersb',
+            callback: async () => {await RosterSB();return '';}
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wucharper',
+            callback: async () => {await CharPer();return '';}
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wuspecialchar',
+            callback: async () => {await SpecialChar();return '';}
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wubg',
+            callback: async () => {await BG();return '';}
+        }));
+        // Debug: which background the last reply would get, and why (catalog place, matched words, variant).
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wubgwhy',
+            callback: async () => { const why = await BG(undefined, undefined, { dryRun: true }); toastr.info(String(why), 'Auto-background', { timeOut: 12000 }); return String(why ?? ''); },
+            helpString: 'Explains which background the last reply would get, without changing it',
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wuautocostumes',
+            callback: async () => {await AutoCostumes();return '';}
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wuexpressions',
+            callback: async () => {await Expressions();return '';}
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wuopenworldcostumes',
+            callback: async () => {await OpenWorldCostumes();return '';}
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wusidecharacters',
+            callback: async () => {await SideCharacters();return '';}
+        }));
+        SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+            name: 'wusetschoolyear',
+            callback: async (args, startingyear) => {
+                if (typeof startingyear === 'string') {
+                    await SetSchoolYear(startingyear);
+                } else {
+                    await SetSchoolYear();
+                }
+                return '';
+            },
+            unnamedArgumentList: [
+                SlashCommandArgument.fromProps({
+                    description: 'startingyear',
+                    typeList: [ARGUMENT_TYPE.STRING],
+                }),
+            ],
+        }));
+    } catch (err) {
+        DebugLog('Slash command registration failed', err);
+    }
+}
+
+(async function () {
+    installGroupAddMenuItem();
+    eventSource.on(event_types.APP_READY, OnStartup);
+    eventSource.on(event_types.CHAT_COMPLETION_PROMPT_READY, OnBeforeGeneration);
+    eventSource.on(event_types.CHAT_COMPLETION_SETTINGS_READY, OnRequestReady);
+    eventSource.on(event_types.MESSAGE_SENT, OnUser);
+    eventSource.on(event_types.MESSAGE_RECEIVED, OnAi);
+    eventSource.makeFirst(event_types.MESSAGE_RECEIVED, OnReplyBraille);
+    eventSource.on(event_types.CHAT_CHANGED, OnChatChanged);
+    eventSource.on(event_types.CHAT_CREATED, OnNewChat);
+    eventSource.on(event_types.MESSAGE_SWIPED, OnSwipe);
+    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, OnReplyRendered);
+    eventSource.on(event_types.MESSAGE_EDITED, OnReplyChanged);
+    eventSource.on(event_types.MESSAGE_DELETED, OnReplyChanged);
+    // Doses count replies, so this has to run before EVERY generation's prompt is built (XXX
+    // otherwise only runs on setup and settings changes). AFTER_COMMANDS rather than STARTED so a
+    // slash-command-only send doesn't use up a dose. Only rebuilds when the dose turns on or off.
+    eventSource.on(event_types.GENERATION_AFTER_COMMANDS, OnNarratorCheck);
+    eventSource.on(event_types.GENERATION_AFTER_COMMANDS, OnDoseCheck);
+    DebugLog("Setup");
+    registerSlashCommands();
+    // PromptOS (WeyPhone) reads and drives "Roleplay intro context" through this, the same way it
+    // reaches Weyland's Quick Replies through globalThis.quickReplyApi. describe() is synchronous.
+    globalThis.WeylandIntroContext = { describe: describeIntroContext, setMode: setIntroContextMode, setVariant: setIntroVariant };
+    // PromptOS's "A dose of..." button. describe() never reveals how long a dose lasts.
+    globalThis.WeylandDose = { describe: describeDose, start: startDoseAndRebuild, end: endDoseAndRebuild };
+    // Mien's Wear / Keep on / Take off (see describeOutfits). describe() is synchronous.
+    globalThis.WeylandOutfits = { describe: describeOutfits, wear: wearOutfit, setStick: setOutfitStick, takeOff: takeOffOutfit };
+})();

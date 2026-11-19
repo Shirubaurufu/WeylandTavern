@@ -3152,6 +3152,11 @@
 .wp-mien-apply:disabled { opacity: .65; }
 .wp-mien-hint,.wp-mien-applied { min-height: 28px; padding: 7px 5px 4px; box-sizing: border-box; text-align: center; color: var(--wp-mien-dim); font-size: 10px; line-height: 1.35; }
 .wp-mien-applied { color: #f3bfd1; }
+.wp-mien-credit { display: flex; align-items: flex-start; gap: 7px; margin: -3px 3px 9px; color: var(--wp-mien-dim); font-size: 10px; line-height: 1.4; }
+.wp-mien-credit i { flex: 0 0 auto; margin-top: 2px; color: #e28ba8; font-size: 9px; }
+.wp-mien-credit strong { color: #f3bfd1; font-weight: 700; }
+.wp-mien-credit-text { flex: 1 1 auto; min-width: 0; }
+.wp-mien-credit-line { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wp-mien-applied i { margin-right: 4px; }
 .wp-mien-strip { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; margin-top: 6px; }
 .wp-mien-thumb { min-width: 0; padding: 5px; border: 2px solid transparent; border-radius: 12px; background: var(--wp-mien-surface); color: var(--wp-mien-dim); font: inherit; cursor: pointer; }

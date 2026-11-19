@@ -192,6 +192,7 @@ export function renderMienScreen(container, {
         <span class="wp-mien-count">${gallery.expressions.length} expression${gallery.expressions.length === 1 ? '' : 's'}</span>
     </div>
     <div class="wp-mien-meta"><span>${escapeHtml(sourceLabel)}</span><span>${pickerOutfits.length} outfit${pickerOutfits.length === 1 ? '' : 's'}</span></div>
+    ${creditLine(gallery.duo ? gallery.setCredits?.[outfits.find(outfit => outfit.id === gallery.selectedOutfitId)?.set] ?? gallery.credit : gallery.credit)}
     ${wardrobeMarkup(gallery, wardrobe, outfits.find(outfit => outfit.id === gallery.selectedOutfitId))}
     <div class="wp-mien-stage" data-mien-stage>
         <button type="button" class="wp-mien-step" id="wp-mien-prev" aria-label="Previous expression"${gallery.expressions.length < 2 ? ' disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>
@@ -228,4 +229,18 @@ export function renderMienScreen(container, {
         </button>`).join('')}
     </div>
 </div>`;
+}
+
+// "Expressions by @artist" (and who removed the backgrounds), from the card's creator notes. Nothing when the card has none.
+// It sits under the outfit/count rows, not after the thumbnail grid: down there it was ~1,000 px below the fold.
+// On duo cards it is the credit of the set being browsed (one sister, one artist). Each line stays on one line;
+// anything too long ends in "…" and the full text is in the tooltip.
+function creditLine(credit) {
+    if (!credit?.artist) return '';
+    const main = `Expressions by ${credit.artist}`;
+    const extra = credit.backgrounds ? `Backgrounds removed by ${credit.backgrounds}` : '';
+    return `<div class="wp-mien-credit"><i class="fa-solid fa-paintbrush" aria-hidden="true"></i><span class="wp-mien-credit-text">`
+        + `<span class="wp-mien-credit-line" title="${escapeHtml(main)}">Expressions by <strong>${escapeHtml(credit.artist)}</strong></span>`
+        + (extra ? `<span class="wp-mien-credit-line wp-mien-credit-extra" title="${escapeHtml(extra)}">Backgrounds removed by <strong>${escapeHtml(credit.backgrounds)}</strong></span>` : '')
+        + '</span></div>';
 }

@@ -25,7 +25,8 @@ function findPlainReplyHeader(text) {
             .replace(/^(\*{1,3}|_{1,2})(.*?)\1$/, '$2')
             .replace(/^[¦|│]+[ \t]*|[ \t]*[¦|│]+$/g, '').trim();
         if (line.length > 300 || /[¦*"`<>]/.test(line)) continue;
-        const parts = line.replace(/~\s*$/, '').split('~').map(part => part.trim());
+        // Foxfire's chapter flag ("(Ch 2)", "(Fin)") is not a field; drop it so "(ONYX) (Ch 2)" still reads as the mode.
+        const parts = line.replace(/\s*[(\[](?:Ch(?:apter)?\.?\s*\d+[A-Z]?|Fin)[)\]]/gi, '').replace(/~\s*$/, '').split('~').map(part => part.trim());
         if (parts.length < 3 || parts.length > 4 || parts.some(part => !part)) continue;
         const date = parts.findIndex(part => PLAIN_DATE.test(part) || /^\d{1,4}[/-]\d{1,2}[/-]\d{1,4}$/.test(part));
         const time = parts.findIndex(part => PLAIN_TIME.test(part));

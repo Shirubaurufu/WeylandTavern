@@ -168,7 +168,8 @@ test('PromptOS locks the prompt cartridges and the Analysis toggle in a built-in
     renderNarrativeSettingsScreen(target, { snapshot: { ...read('Mirror Weyland'), modes: {}, mental: {} }, tab: 'essentials' });
     const html = target.innerHTML;
     assert.doesNotMatch(html, /data-narrative-action="set-prompt"/, 'no cartridge can be inserted');
-    assert.equal((html.match(/wp-narrative-cart is-held is-locked" disabled/g) || []).length, 4);
+    // Five real cartridges since Beta 3 took the Beta slot (2026-11-17).
+    assert.equal((html.match(/wp-narrative-cart is-held is-locked" disabled/g) || []).length, 5);
     assert.doesNotMatch(html, /data-narrative-action="toggle-analysis"/);
     assert.match(html, /Always on<\/strong><small>Built into this character/);
     assert.match(html, /Mirror Weyland runs its own built-in system prompt/);

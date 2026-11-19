@@ -82,5 +82,5 @@ test('PromptOS selects Mini and exposes the shared Analysis toggle', () => {
     assert.match(target.innerHTML, /wp-narrative-cart is-in" data-narrative-action="set-prompt" data-value="Mini Prompt"/);
     assert.match(target.innerHTML, /Analysis · Recommended/);
     assert.match(target.innerHTML, /data-narrative-action="toggle-analysis"/);
-    assert.match(target.innerHTML, /4 Promptcarts/);
+    assert.match(target.innerHTML, /5 Promptcarts/);
 });

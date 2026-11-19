@@ -1013,6 +1013,10 @@ function headerV2MarkdownExt(){
                     // field, and the whole header falls back to plain dark-red text (Fox's report, 2026-10-19).
                     // An inner bar run is just a field separator, so treat it as "~".
                     p1 = p1.replace(/\s*¦+\s*/g, ` ~ `).replace(/(?:\s*~\s*){2,}/g, ` ~ `).trim();
+                    // Foxfire's chapter flag ("(Ch 2)", "(Ch 4B)", "(Fin)") is a silent marker for the extension, not
+                    // something to show. Models write it right after the mode ("~ (ONYX) (Ch 2)"), which made the mode
+                    // field fail the whole-field check below, so the mode vanished from the header (Discord, 2026-11-19).
+                    p1 = p1.replace(/\s*[(\[](?:Ch(?:apter)?\.?\s*\d+[A-Z]?|Fin)[)\]]/gi, ``).replace(/(?:\s*~\s*)+$/, ``).trim();
                     const split = p1.split(`~`);
                     // Match a mode field, not a location such as Ruby Hall or Onyx Lounge.
                     let modeIndex = split.findIndex(x => /^\s*(?:\((?:SAPH|ONYX|RUBY)\)|\[(?:SAPH|ONYX|RUBY)\]|(?:SAPH|ONYX|RUBY))\s*$/i.test(x));

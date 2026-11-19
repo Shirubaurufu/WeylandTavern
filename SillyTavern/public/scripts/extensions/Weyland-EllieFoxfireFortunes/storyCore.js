@@ -409,7 +409,9 @@ export function buildInjection(story, chapter, route = null) {
     }
 
     const flagLines = [];
-    flagLines.push(`README! Silently end the header of every response with (Ch ${label}), e.g. "¦¦ ... ~ Location ~ (Ch ${label})¦¦". This is your flag for where the story is.`);
+    // Users saw models stuck on (Ch 1): the history of identical headers outweighed one mention. Muse's route
+    // lorebook gets header changes followed by naming the exact moment the header changes, so this line says it per response.
+    flagLines.push(`README! Silently end the header of every response with (Ch ${label}), after the mode if there is one, e.g. "¦¦ ... ~ Location ~ (ONYX) (Ch ${label})¦¦". This is your flag for where the story is. HEADER CHECK, every response: did this chapter's ending already happen on the page in an earlier response? If yes, this response's header carries the NEXT flag below, not the old one from the headers above.`);
     // Live test 2026-11-12 (Gemini 3.8 Flash): with chapter 2 injected, a reroll still copied "(Ch 1)" from the headers above it.
     if (n > 1) flagLines.push(`Earlier messages show older flags. Those chapters are OVER. Do not copy their flag: from now on it is (Ch ${label}).`);
     if (atFork) {

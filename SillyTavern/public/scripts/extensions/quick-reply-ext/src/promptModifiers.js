@@ -93,6 +93,47 @@ export function addShiftRouteLine(body, scope = 'restarted') {
     return source.replace(SHIFT_ROUTE_ANCHOR, () => line + SHIFT_ROUTE_ANCHOR);
 }
 
+// Story chapters (Lucky, 2026-11-19): Foxfire Fortunes and Muse's Story Machine give a chat explicit chapters, and the
+// model kept the old chapter number in its header after finishing one. Current's sheet lives in rav.js, which Fox
+// regenerates from his masters, so the line is added here at assembly time (like the POV / latest-message lines in
+// assemblePromptLayers) and covers Beta 3's own sheet the same way. It goes last in BOARD [2/6], right before ICEBERG
+// [3/6]; if those headers move it warns and changes nothing. Skipped if the master ever gains the line itself.
+// The line is only SENT while a storyline is injected (dropChapterCheckUnlessStory, at request time), so it can speak
+// to that story directly. Its wording matches the flag rules in Foxfire's storyCore.js: the flag moves on the response
+// AFTER the one where the ending happened, and the old flag in the headers above must not be copied (models stuck on Ch 1).
+export const CHAPTER_CHECK_LINE = '- CHAPTER CHECK (custom storyline): Did the current chapter\'s ending already happen on the page in an earlier response? Tell me here. If yes, this response\'s header carries the next chapter flag from the storyline, never the old one copied from the headers above.';
+const BOARD_END = /(BOARD \[2\/6\][\s\S]*?)(\s*)(?=ICEBERG \[3\/6\])/;
+// The opening line of the storyline Foxfire Fortunes (and Muse's Story Machine) injects; present only while a story runs.
+export const STORYLINE_MARKER = '[READ FIRST: ROLEPLAY CONTEXT - CUSTOM STORYLINE';
+
+/**
+ * Request time: cut the chapter check from the outgoing messages unless a storyline is in them. XXX builds the sheet
+ * once, but a story can be loaded, finished or ejected between generations, so the payload decides. Returns true if cut.
+ */
+export function dropChapterCheckUnlessStory(messages) {
+    if (!Array.isArray(messages)) return false;
+    const text = message => (typeof message?.content === 'string' ? message.content : '');
+    if (messages.some(message => text(message).includes(STORYLINE_MARKER))) return false;
+    let cut = false;
+    for (const message of messages) {
+        if (!text(message).includes(CHAPTER_CHECK_LINE)) continue;
+        message.content = message.content.split(`\n${CHAPTER_CHECK_LINE}`).join('').split(CHAPTER_CHECK_LINE).join('');
+        cut = true;
+    }
+    return cut;
+}
+
+export function addChapterCheck(body) {
+    const source = String(body ?? '');
+    if (source.includes(CHAPTER_CHECK_LINE)) return source;
+    if (!BOARD_END.test(source)) {
+        console.warn('[WQR] Chapter check: BOARD [2/6] ... ICEBERG [3/6] not found in the sheet, so the chapter line was NOT added.');
+        return source;
+    }
+    // Keep the blank lines that separated BOARD from ICEBERG; the new line goes right after BOARD's last item.
+    return source.replace(BOARD_END, (_, board, gap) => `${board}\n${CHAPTER_CHECK_LINE}${gap}`);
+}
+
 // With a narrator selected (Lauren/Salem/Lucky), box 1 becomes the narrator's green room. Before
 // this, the sheet's only narrator check was one line at the end of box 5 ("What narrator are you this
 // message"), and Sonnet answered it in passing, after the beat was already planned in a neutral voice:
@@ -133,7 +174,8 @@ export function stripGeminiExplicitBox(body) {
     return source
         .replace(GEMINI_BOX6_EXPLICIT, '$1')
         // The three-paths line points back at the cursing that was just removed.
-        .replace(' (we are STILL cussing!)', '');
+        // Case-insensitive: Beta 3's sheet writes it "(we are still cussing!)" (src/betaPrompt3.js trims mid-sentence caps).
+        .replace(/ \(we are still cussing!\)/i, '');
 }
 
 /**
