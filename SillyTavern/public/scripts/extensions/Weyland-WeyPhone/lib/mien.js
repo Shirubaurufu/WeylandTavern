@@ -89,6 +89,79 @@ export function resolveMienCharacter(context) {
     return { name, avatar: character?.avatar ?? '', message: latest };
 }
 
+/**
+ * Who drew a character's expressions. Every Weyland card says so in its creator notes, in one fixed sentence:
+ * "Character expressions for {{char}} were made with love by @artist, and backgrounds removed by @other!"
+ * (a few use "with" instead of ", and", Aiko's has "b" for "by"). Returns { artist, backgrounds } or null.
+ * An empty handle ("by @!", left on Kinsbane, Nara, Shani, Tawny) counts as no credit, so nothing half-empty shows.
+ */
+export function expressionCredit(notes) {
+    const text = String(notes ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+    // A handle may hold dots ("@senp.ai"), so the sentence only ends at . or ! followed by a space or the end.
+    const found = text.match(/expressions? for .{0,60}?were made(?: with love)? by?\s+(.+?)(?:[.!](?:\s|$)|$)/i);
+    if (!found) return null;
+    const [first, ...rest] = found[1].split(/,?\s*(?:and|with)\s+backgrounds? removed by\s+/i);
+    const clean = value => String(value ?? '').trim().replace(/^[,\s]+|[,\s]+$/g, '');
+    const hasName = value => /[\p{L}\p{N}]/u.test(String(value ?? '').replace(/@/g, ''));
+    const artist = clean(first);
+    const backgrounds = clean(rest.join(' '));
+    if (!hasName(artist)) return null;
+    const credit = { artist, backgrounds: hasName(backgrounds) ? backgrounds : '' };
+    // "@fdigl (Fawne) and @heissenbadger (Neshe & Astrid)": who drew which member, so a duo card can credit the one shown.
+    const byMember = {};
+    for (const [, who, names] of artist.matchAll(/([^()]+?)\s*\(([^)]+)\)/g)) {
+        const handle = clean(who.replace(/^\s*(?:and|&|,)\s+/i, ''));
+        if (!hasName(handle)) continue;
+        for (const name of names.split(/\s*(?:&|,|\band\b)\s*/i)) if (name.trim()) byMember[name.trim().toLowerCase()] = handle;
+    }
+    if (Object.keys(byMember).length) credit.byMember = byMember;
+    return credit;
+}
+
+/**
+ * The credit for one sprite set of a duo card. The card's own per-member list wins ("(Fawne)"), then a member's own
+ * credit (override or their own card: Blake's set inside Blake & Serra is Barco's redraw), else the card's line.
+ * Combined sets ("Astrid & Neshe") list each artist once. Keeps lines short: one set, its own artist.
+ */
+export function creditForSet(context, cardCredit, set) {
+    const members = Array.isArray(set?.members) ? set.members : [];
+    const byMember = cardCredit?.byMember;
+    if (byMember && members.length) {
+        const artists = [...new Set(members.map(member => byMember[String(member).toLowerCase()]).filter(Boolean))];
+        if (artists.length) {
+            return { artist: artists.join(' & '), backgrounds: cardCredit.backgrounds ?? '' };
+        }
+    }
+    if (members.length === 1) {
+        const own = creditForCharacter(context, { name: members[0], avatar: '' });
+        if (own) return own;
+    }
+    return cardCredit ?? null;
+}
+
+/**
+ * Characters whose whole expression set was redrawn after their card was written (Lucky's 2026-11 announcement:
+ * Summer 325 by FFFox, Blake 194 by Barco, Loona 295 by Lucky). These win over the card's creator notes, which
+ * still name the old artist, so the credit is right without re-uploading the cards. Remove an entry once the
+ * card itself says the same. Briar's new set is by heissenbadger, who the card already names.
+ */
+export const EXPRESSION_CREDIT_OVERRIDES = Object.freeze({
+    Summer: { artist: 'FFFox', backgrounds: '' },
+    Blake: { artist: '@Barco', backgrounds: '' },
+    Loona: { artist: 'Lucky Paw', backgrounds: '' },
+    // Same artist as her card, but the new set had no background cleanup (Lucky: @trafficcone472 only did v1).
+    Bianca: { artist: "@heissenbadger", backgrounds: "" },
+});
+
+/** The credit for the card being shown (group chats: the card of the character who spoke last). */
+function creditForCharacter(context, character) {
+    const override = EXPRESSION_CREDIT_OVERRIDES[character?.name];
+    if (override) return { ...override };
+    const card = context?.characters?.find(entry => entry?.avatar && entry.avatar === character.avatar)
+        ?? context?.characters?.find(entry => entry?.name === character.name);
+    return expressionCredit(card?.data?.creator_notes || card?.creatorcomment || '');
+}
+
 function visibleSpriteFolder(characterName, documentRef) {
     const normalized = characterName.toLowerCase();
     const images = Array.from(documentRef?.querySelectorAll?.('img.expression[data-sprite-folder-name]') ?? []);
@@ -172,10 +245,15 @@ function fileNameFromPath(path) {
     try { return decodeURIComponent(raw); } catch { return raw; }
 }
 
-export function normalizeLocalSprites(sprites, folderName) {
+export function normalizeLocalSprites(sprites, folderName, validLabels = null) {
     if (!Array.isArray(sprites)) return [];
+    // The expressions extension can only draw a file whose label is one of its mood names. A leftover misnamed file
+    // ("Embarrassed.avif" next to the real "embarrassment.avif", 2026-11-19) is listed by the server but toasts
+    // "Couldn't find sprite file" when picked, so it must not be offered. null = no list known, keep everything.
+    const allowed = Array.isArray(validLabels) ? new Set(validLabels.map(label => String(label).toLowerCase())) : null;
     return sprites
         .filter(sprite => sprite && typeof sprite.path === 'string' && typeof sprite.label === 'string')
+        .filter(sprite => !allowed || allowed.has(sprite.label.toLowerCase()))
         .map(sprite => ({
             label: sprite.label,
             path: sprite.path,
@@ -242,7 +320,7 @@ function outfitRecord({ source, label, folderName, outfit = '', expressions }) {
     };
 }
 
-async function findLocalOutfits(context, character, fetchImpl, documentRef) {
+async function findLocalOutfits(context, character, fetchImpl, documentRef, validLabels = null) {
     const preferredFolders = mienFolderCandidates(context, character, documentRef);
     // Enumerates a character's REAL outfit subfolders. This is what surfaces non-conventional
     // outfits (Summer/Baker, Mika/Santa, Weybot/female, …) that no name-guess list can cover.
@@ -258,7 +336,7 @@ async function findLocalOutfits(context, character, fetchImpl, documentRef) {
     const folderNames = [...new Set([...preferredFolders, ...discoveredFolders])];
     const outfits = await Promise.all(folderNames.map(async folderName => {
         const data = await fetchJson(`/api/sprites/get?name=${encodeURIComponent(folderName)}`, fetchImpl, 'same-origin');
-        const expressions = normalizeLocalSprites(data, folderName);
+        const expressions = normalizeLocalSprites(data, folderName, validLabels);
         if (!expressions.length) return null;
         return outfitRecord({
             source: 'local',
@@ -317,16 +395,22 @@ export async function loadMienGallery(context, {
     documentRef = globalThis.document,
     outfitId = '',
     sets = null,
+    validLabels = null,
 } = {}) {
     const character = resolveMienCharacter(context);
     if (!character) return { character: null, outfits: [], selectedOutfitId: '', expressions: [], source: null, folderName: '' };
     const safe = mienForceSafe(context);
-    if (Array.isArray(sets) && sets.length > 1) return loadDuoGallery(character, sets, { fetchImpl, outfitId, safe });
-    const localOutfits = withoutNsfwOutfits(await findLocalOutfits(context, character, fetchImpl, documentRef), safe);
+    if (Array.isArray(sets) && sets.length > 1) {
+        const credit = creditForCharacter(context, character);
+        const setCredits = Object.fromEntries(sets.map(set => [set.base, creditForSet(context, credit, set)]));
+        return loadDuoGallery(character, sets, { fetchImpl, outfitId, safe, validLabels, credit, setCredits });
+    }
+    const localOutfits = withoutNsfwOutfits(await findLocalOutfits(context, character, fetchImpl, documentRef, validLabels), safe);
     const outfits = localOutfits.length ? localOutfits : withoutNsfwOutfits(await findRegistrarOutfits(character, fetchImpl), safe);
     const preferredRegistrarId = `registrar:${currentOutfitBucket(context).registrar}`;
     return selectMienOutfit({
         character,
+        credit: creditForCharacter(context, character),
         outfits,
         expressions: [],
         source: null,
@@ -341,15 +425,17 @@ export async function loadMienGallery(context, {
  * its set (`set`, `setLabel`) so the screen can show a "who's showing" switch. Sets with no sprites drop out
  * (Fawne has none yet). The card's own name folder is never a set: duo cards don't draw from it.
  */
-async function loadDuoGallery(character, sets, { fetchImpl, outfitId, safe }) {
+async function loadDuoGallery(character, sets, { fetchImpl, outfitId, safe, validLabels = null, credit = null, setCredits = {} }) {
     const noDom = { querySelectorAll: () => [] };
     const perSet = await Promise.all(sets.map(async set => {
-        const outfits = await findLocalOutfits({}, { name: set.base, avatar: '' }, fetchImpl, noDom);
+        const outfits = await findLocalOutfits({}, { name: set.base, avatar: '' }, fetchImpl, noDom, validLabels);
         return withoutNsfwOutfits(outfits, safe).map(outfit => ({ ...outfit, set: set.base, setLabel: set.label }));
     }));
     const outfits = perSet.flat();
     return selectMienOutfit({
         character,
+        credit,
+        setCredits,
         duo: true,
         outfits,
         expressions: [],

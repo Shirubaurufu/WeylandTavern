@@ -33,14 +33,14 @@ import { detector } from "./src/similarity.js";
 import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
 import { applyOocToCardSlots, buildOocPostHistory, buildOocSystemPrompt, cardPostHistoryExtras, cardSystemPromptExtras, isOocModeEnabled, stripFromMessages } from "./src/oocMode.js";
 import { NARRATOR_SUBBOTS, NARRATOR_SUBBOT_NAMES } from "./src/narratorSubbots.js";
-import { analysisDelta, applyGeminiBypassForModel, isGeminiModel, swapPromptTexts, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
+import { analysisDelta, applyGeminiBypassForModel, dropChapterCheckUnlessStory, isGeminiModel, swapPromptTexts, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
 import { BAPHOMET_VAR, applyBaphometToRequest, baphometHidden, baphometThoughts } from "./src/baphomet.js";
 import { applyKinsbaneCommand } from "./src/kinsbaneCommands.js";
 import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.js";
 import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
 import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
 import { pickBackgroundForReply } from "./src/autoBackground.js";
-import { CHARACTER_THOUGHTS_VARIABLE, characterThoughtsEnabled, supportsCharacterThoughtsToggle } from "./src/characterThoughts.js";
+import { CHARACTER_THOUGHTS_AVAILABLE, CHARACTER_THOUGHTS_DEFAULT, CHARACTER_THOUGHTS_VARIABLE, NO_THOUGHTS, characterThoughtsEnabled, hasAlwaysOnThoughts, thoughtsSwitchOn } from "./src/characterThoughts.js";
 import { isLoonaDrunkStart, LOONA_DRUNK_DEFAULT_CHOICE, loonaDrunkIdFromChoice, loonaGreetingRecord, stripDrunkThoughtsFromRequest } from "./src/loonaGreetings.js";
 
 const debug = true;
@@ -113,6 +113,12 @@ function OnRequestReady(data) {
         if (box6Cut) DebugLog(`Gemini Bypass: box 6 warm-up cut for ${data.model}`);
     } catch (error) {
         console.error(`[WQR] OnRequestReady Error:`, error);
+    }
+    // The sheet's chapter check only goes out while a Foxfire storyline is injected (Lucky, 2026-11-19).
+    try {
+        if (data && dropChapterCheckUnlessStory(data.messages)) DebugLog(`Chapter check left out: no storyline in this chat`);
+    } catch (error) {
+        console.error(`[WQR] OnRequestReady chapter check Error:`, error);
     }
     // Its own try: a failure above must not leave the card's roleplay directions in an OOC chat.
     try {
@@ -552,6 +558,10 @@ async function OnSwipe(messageID) {
             if (charName === "Cerberus Sisters" && messageID === 0 && charMessage.swipe_id < 4) {
                 setLocalVariable("CerberusSister", ["Fawne", "Neshe", "Astrid", "3rd"][charMessage.swipe_id])
             }
+            // Swiping between Vera's or Cerberus's intros changes whether (and with what default) thoughts are on, and
+            // PromptOS reads that from XXX. Rebuild so the Character Thoughts switch matches the intro being shown
+            // (no switch on Cerberus's custom start, Vera's default per intro).
+            if (messageID === 0 && (charName === "Vera" || charName === "Cerberus Sisters")) await XXX(charName);
             await CostumeChangeBot(charMessage);
             await AutoBG(charMessage);
         }
@@ -2523,31 +2533,48 @@ async function XXX(charName) {
         const rav = ravs.get(pc);
         if (!rav) throw new Error("No rav found");
         const geminiBypassEnabled = String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled';
+        // Thoughts: first work out whether this chat's intro turns them on (and who is thinking), then let the per-chat
+        // Character Thoughts switch in PromptOS turn them off. The switch covers every thought-enabled intro since 2026-11-19
+        // (src/characterThoughts.js lists them). XXX is the only place that knows the greeting, the scenario stash and
+        // Cerberus's sister, so it records the thinker's name in CHARACTER_THOUGHTS_AVAILABLE for PromptOS to read.
+        const thoughtsOffLine = "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]";
+        let thoughts = "";          // this intro's thoughts block, "" when it has none
+        let thinker = "";           // who the switch is about, shown in PromptOS
+        let noThoughtsLine = thoughtsOffLine;
+        let thoughtsDefault = "on"; // what the switch means while the player has never touched it
         if (charName === "Bap" && rav.thinkYes) {
             // Baphomet is the only voice in Bap's thought brackets (see src/baphomet.js). With his visibility Disabled
-            // (PromptOS), nobody hears him, so no thoughts at all.
-            setLocalVariable("ThoughtSet", baphometHidden(getLocalVariable(BAPHOMET_VAR))
-                ? "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]"
-                : baphometThoughts(rav.thinkYes));
-        } else if (supportsCharacterThoughtsToggle(charName) && !characterThoughtsEnabled(charName, getLocalVariable(CHARACTER_THOUGHTS_VARIABLE))) {
-            setLocalVariable("ThoughtSet", "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]");
-        } else if (["Summer","Loona","Belle","Hannah","Seth","Lentyl","Briar","Willow","Dash"].includes(charName) && rav.thinkYes) {
-            setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
-        } else if (charName === "Vera" && (Number(getFirstMessage("char")?.swipe_id) === 0 || getLocalVariable("Scenario") || introHadScenario()) && rav.thinkYes) {
-            setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
+            // (PromptOS), nobody hears him, so no thoughts at all. That switch is Bap's thoughts switch, so Bap gets no
+            // Character Thoughts switch on top of it.
+            noThoughtsLine = baphometHidden(getLocalVariable(BAPHOMET_VAR)) ? thoughtsOffLine : baphometThoughts(rav.thinkYes);
+        } else if (hasAlwaysOnThoughts(charName) && rav.thinkYes) {
+            thoughts = withThoughtRules(rav.thinkYes);
+            thinker = charName;
+        } else if (charName === "Vera" && rav.thinkYes) {
+            // Lucky, 2026-11-19: Vera gets the switch on all three intros. Thoughts stay ON by default where they always
+            // were (the original lecture-hall greeting, or a chat with a start scenario) and OFF by default on the others
+            // (the secret-dating dinner, whose thoughts would only echo what she shows, and the custom start), so nothing
+            // changes for a player who never touches the switch.
+            thoughts = withThoughtRules(rav.thinkYes);
+            thinker = "Vera";
+            if (!(Number(getFirstMessage("char")?.swipe_id) === 0 || getLocalVariable("Scenario") || introHadScenario())) thoughtsDefault = "off";
         } else if (charName === "Cerberus Sisters" && getLocalVariable("CerberusSister") === "Fawne" && rav.thinkYes) {
-            setLocalVariable("ThoughtSet", withThoughtRules(rav.thinkYes));
+            thoughts = withThoughtRules(rav.thinkYes);
+            thinker = "Fawne";
         } else if (getLocalVariable("SpecialThoughts") && rav.thinkSpec) {
             // The greeting's own thoughts block (drunk Jenn and the like, see greetingThoughtSet); rav.thinkSpec is only the
-            // "thoughts disabled" line, kept as the fallback for a greeting that has none.
+            // "thoughts disabled" line, kept as the fallback for a greeting that has none (then there is nothing to switch).
             // After a PromptOS start switch the chat's first message is still the OLD greeting, so the record the switch
             // applied (chat variable IntroRecordIndex, src/introSwitch.js INTRO_RECORD_VAR) decides which block this is.
             const switchedRecord = String(getLocalVariable("IntroRecordIndex") ?? "").trim();
             const thoughtRecord = switchedRecord !== "" ? Number(switchedRecord) : getFirstMessage("char")?.swipe_id;
-            setLocalVariable("ThoughtSet", greetingThoughtSet(scenarios.get(charName), thoughtRecord) || rav.thinkSpec);
-        } else {
-            setLocalVariable("ThoughtSet", "[CHARACTER THOUGHTS: DISABLED BY DEFAULT. DO NOT SEND EXPLICITLY STATED CHARACTER THOUGHTS WITH RESPONSES UNLESS {{user}} REQUESTS THEM TO BE ENABLED.]");
+            thoughts = greetingThoughtSet(scenarios.get(charName), thoughtRecord);
+            thinker = thoughts ? charName : "";
+            noThoughtsLine = rav.thinkSpec;
         }
+        setLocalVariable(CHARACTER_THOUGHTS_AVAILABLE, thinker || NO_THOUGHTS);
+        setLocalVariable(CHARACTER_THOUGHTS_DEFAULT, thoughtsDefault);
+        setLocalVariable("ThoughtSet", thoughts && thoughtsSwitchOn(getLocalVariable(CHARACTER_THOUGHTS_VARIABLE), thoughtsDefault) ? thoughts : noThoughtsLine);
         if (/Weybot|Mirror Weyland|Kinsbane Manor/.test(charName)) {
             setLocalVariable("ExpAltShow", "true");
         }

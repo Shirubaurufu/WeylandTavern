@@ -4013,7 +4013,10 @@ async function refreshMienGallery() {
         const wearing = outfits?.wearing ?? '';
         const outfitId = currentMienGallery?.selectedOutfitId ?? (wearing ? `local:${wearing}` : '');
         // Duo cards are drawn from several sprite sets (members + combined), which only quick-reply-ext knows.
-        const gallery = await loadMienGallery(context, { outfitId, sets: outfits?.duo ? outfits.sets : null });
+        // Only offer faces the expressions extension can draw (a misnamed leftover file would toast "Sprite Not Found").
+        let validLabels = null;
+        try { validLabels = await (await import('../expressions/index.js')).getExpressionsList(); } catch { validLabels = null; }
+        const gallery = await loadMienGallery(context, { outfitId, sets: outfits?.duo ? outfits.sets : null, validLabels });
         if (token !== mienLoadToken) return;
         // Bonus outfits show only their neutral face without Paw Patrol Plus (lockBonusFaces in lib/mien.js).
         currentMienGallery = lockBonusFaces(gallery, isPlusOrAbove());

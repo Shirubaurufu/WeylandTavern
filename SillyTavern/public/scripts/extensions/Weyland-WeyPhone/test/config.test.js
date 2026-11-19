@@ -1,4 +1,3 @@
-import { RETIRED_MODEL_SWAP_ID } from '../../../weyland-retired-models.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MODULE_NAME, defaultSettings, getSettings, resetSettings } from '../lib/config.js';
@@ -23,8 +22,6 @@ test('getSettings creates the settings object on first call', () => {
     assert.deepEqual(settings, {
         ...defaultSettings,
         ui: { ...defaultSettings.ui, rpClockEnabled: true, clockDefaultTimeMode: 'rp' },
-        // written on first load so the one-time DeepSeek/MiniMax swap never runs again (weyland-retired-models.js)
-        retiredModelSwap: RETIRED_MODEL_SWAP_ID,
     });
     assert.equal(extensionSettings[MODULE_NAME], settings);
     assert.equal(settings.contactRenames.Loona, '[REDACTED]');
@@ -48,21 +45,21 @@ test('getSettings backfills newly-added default keys without clobbering existing
     assert.equal(settings.phoneHardModeEnabled, false);
     assert.deepEqual(settings.generationRateLimitEvents, []);
     assert.equal(settings.kressaHardModeEnabled, false);
-    assert.equal(settings.pawxai.promptCount, 5);
+    assert.equal(settings.pawxai.promptCount, 4);
+    // 2026-11-14: 3.8 Flash first again, each app's previous first pick as backup.
     assert.equal(settings.pawxai.modelOverride, 'gemini-3.8-flash');
-    assert.equal(settings.pawxai.fallbackModel, 'gemini-3.8-flash');
+    assert.equal(settings.pawxai.fallbackModel, 'glm-4.7-thinking');
     assert.equal(settings.pawxai.palette, 'orchid-night');
-    // Primary defaults moved to 3.8-flash; HelixMind retired MiniMax M3 (2026-11), so the retry-once fallback is 3.8-flash too.
     assert.equal(settings.modelOverride, 'gemini-3.8-flash');
     assert.equal(settings.textingModelOverride, 'gemini-3.8-flash');
-    assert.equal(settings.fallbackModelOverride, 'gemini-3.8-flash');
-    assert.equal(settings.textingFallbackModel, 'gemini-3.8-flash');
-    assert.equal(settings.kressaFallbackModel, 'gemini-3.8-flash');
+    assert.equal(settings.fallbackModelOverride, 'gemma-4-31b-it');
+    assert.equal(settings.textingFallbackModel, 'deepseek-v4.1-flash');
+    assert.equal(settings.kressaFallbackModel, 'deepseek-v4.1-flash');
 });
 
-test('getSettings migrates PawXai original defaults to five prompts without clobbering later choices', () => {
+test('getSettings preserves saved PawXai prompt counts', () => {
     const legacy = { [MODULE_NAME]: { conversations: {}, pawxai: { promptCount: 3 } } };
-    assert.equal(getSettings(legacy).pawxai.promptCount, 5);
+    assert.equal(getSettings(legacy).pawxai.promptCount, 3);
 
     const customized = { [MODULE_NAME]: { conversations: {}, pawxai: { promptCount: 3, palette: 'bluebell' } } };
     assert.equal(getSettings(customized).pawxai.promptCount, 3);

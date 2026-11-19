@@ -345,3 +345,16 @@ test('a specific sprite file missing from the kept list makes expressions re-rea
     const body = source.slice(start, source.indexOf('chooseSpriteForExpression(spriteFolderName, expression', start));
     assert.match(body, /if \(overrideSpriteFile && !spriteCache\[spriteFolderName\]\?\.some\(x => x\.files\.some\(file => file\.fileName === overrideSpriteFile\)\)\) \{\s*delete spriteCache\[spriteFolderName\];\s*await validateImages\(spriteFolderName\);/);
 });
+
+// 2026-11-19: Bianca kept a leftover misnamed "Embarrassed.avif" beside the real "embarrassment.avif". The server lists
+// both, but the expressions extension can only draw real mood labels, so picking it toasted "Sprite Not Found".
+test('Mien only offers faces whose label the expressions extension knows', () => {
+    const sprites = [
+        { label: 'embarrassed', path: '/characters/Bianca/Regular Outfit/Embarrassed.avif' },
+        { label: 'embarrassment', path: '/characters/Bianca/Regular Outfit/embarrassment.avif' },
+        { label: 'anger', path: '/characters/Bianca/Regular Outfit/Anger-2.avif' },
+    ];
+    const labels = normalizeLocalSprites(sprites, 'Bianca/Regular Outfit', ['embarrassment', 'Anger']).map(face => face.label);
+    assert.deepEqual(labels, ['embarrassment', 'anger']);
+    assert.equal(normalizeLocalSprites(sprites, 'Bianca/Regular Outfit').length, 3, 'no list known keeps everything');
+});
