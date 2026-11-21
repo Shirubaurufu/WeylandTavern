@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { narratorBuildState, narratorSelection } from '../../quick-reply-ext/src/narratorSelection.js';
 import { createNarratorSettingsSync, mergeNarratorSettings, narratorSettingsValues } from '../../../narrator-settings-sync.js';
-import { readNarrativeSnapshot } from '../lib/narrativeSettings.js';
+import { extractNarratorPrompt, NARRATOR_OPTIONS, readNarrativeSnapshot } from '../lib/narrativeSettings.js';
 import { renderNarrativeSettingsScreen } from '../lib/ui/apps/narrativeSettings.js';
 import { assemble } from './helpers/promptAssemblyHarness.js';
 
@@ -35,6 +35,45 @@ test('a chat override is visible next to the global picker and can be cleared', 
     renderNarrativeSettingsScreen(container, { snapshot: snapshot(defaults, { LocalN: '- Set to Salem', LocalNarrator: OLD_SALEM }), tab: 'style' });
     assert.match(container.innerHTML, /Salem is selected for this chat/);
     assert.match(container.innerHTML, /data-narrative-action="reset-local-narrator"/);
+});
+
+test('both PromptOS pickers load canonical narrator text when the account has no templates yet', async () => {
+    const source = readFileSync(new URL('../index.js', import.meta.url), 'utf8');
+    const helper = source.slice(source.indexOf('function narratorPromptForOption('), source.indexOf('async function runWeylandQuickReply('));
+    const handler = source.slice(source.indexOf('async function handleNarrativeAction('), source.indexOf('/** One readable Settings-log'));
+    const quickReplies = JSON.parse(readFileSync(new URL('../../../../../data/default-user/QuickReplies/Weyland.json', import.meta.url), 'utf8'));
+    const newEntries = quickReplies.qrList.find(reply => reply.label === 'NewEntries');
+    assert.ok(newEntries?.message);
+
+    for (const scope of ['global', 'local']) {
+        for (const option of NARRATOR_OPTIONS) {
+            const globals = {};
+            const locals = {};
+            const rebuilds = [];
+            const access = store => ({ get: key => store[key], set: (key, value) => { store[key] = value; } });
+            const context = {
+                extractNarratorPrompt, NARRATOR_OPTIONS, NARRATOR_MOTION_MS: 0,
+                narrativeActionPending: false, narrativeAnchorKey: '', narrativeNarratorPreview: null,
+                currentView: 'narrative', narratorSettingsSync: { markChanged() {} },
+                SillyTavern: { getContext: () => ({ variables: { global: access(globals), local: access(locals) } }) },
+                narrativeSnapshot: () => snapshot(globals, locals), narrativeQuickReplyScript: () => '',
+                quickReplyApi: { getQrByLabel: (set, label) => set === 'Weyland' && label === 'NewEntries' ? newEntries : undefined },
+                rebuildNarrativePrompts: async (...commands) => rebuilds.push(commands),
+                describeNarrativeChange: () => '', renderNarrativeScreenNow: () => {},
+                wpToast: (_kind, message) => assert.fail(message), console,
+            };
+            runInNewContext(helper + '\n' + handler + '\nthis.pick = handleNarrativeAction;', context);
+            await context.pick({ dataset: { narrativeAction: 'set-' + scope + '-narrator', value: option.id }, classList: { add() {} } });
+
+            const prompt = globals[option.globalKey];
+            if (option.id === 'Default') assert.equal(prompt, DEFAULT);
+            else assert.ok(prompt.includes('[END CRITICAL - NARRATOR - ' + option.id.toUpperCase() + ']'));
+            assert.equal(locals.LocalNarrator, prompt);
+            assert.equal(globals.Narrator, scope === 'global' ? prompt : undefined);
+            assert.equal(locals.LocalN, scope === 'local' ? '- Set to ' + option.id : undefined);
+            assert.deepEqual(rebuilds, [['XXX']]);
+        }
+    }
 });
 
 function tab(globals, fetchValues) {

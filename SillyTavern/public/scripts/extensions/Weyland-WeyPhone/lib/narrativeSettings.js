@@ -195,6 +195,15 @@ export function normalizePromptText(value) {
         .trim();
 }
 
+/** Read a narrator template from NewEntries without running the rest of that Quick Reply. */
+export function extractNarratorPrompt(script, key) {
+    const assignments = String(script ?? '').matchAll(/^\/setglobalvar[ \t]+key=(\w+)[ \t]+((?:\\[\s\S]|[^\\|])*)\|/gm);
+    for (const [, variable, prompt] of assignments) {
+        if (variable === key) return normalizePromptText(prompt.replace(/\\\|/g, '|'));
+    }
+    return '';
+}
+
 /** Pull the manually-enabled Hard Mode directive from its canonical Quick Reply. */
 export function extractHardModeDirective(script) {
     const source = String(script ?? '');
@@ -321,6 +330,8 @@ export function readNarrativeSnapshot({ getGlobal, getLocal, hasChat = false, in
         dose: hasChat ? dose : null,
         customPreset: readCustomPreset(getGlobal('RoleplayShiftCustom')),
         geminiBypass: enabled(getGlobal('GeminiBypassToggle')),
+        // Unset = on: the bypass always skipped the analysis for Gemini before this switch existed (2026-11-20).
+        geminiSkipAnalysis: enabled(getGlobal('GeminiSkipAnalysis') || 'Enabled'),
         // Off unless turned on. Read at prompt time by lib/yearNudge.js.
         addYear: enabled(getGlobal('AddYearToggle')),
         // Unset (a fresh account, or anyone who hasn't touched this yet) defaults to On — the

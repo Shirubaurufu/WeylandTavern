@@ -90,3 +90,19 @@ test('OnRequestReady only swaps for Gemini with the bypass on', async () => {
     const source = readFileSync(new URL('../../quick-reply-ext/index.js', import.meta.url), 'utf8');
     assert.match(source, /isGeminiModel\(data\.model\) && String\(getGlobalVariable\("GeminiBypassToggle"\)/);
 });
+
+// Lucky, 2026-11-20: skipping the analysis is its own switch under Gemini Bypass (global GeminiSkipAnalysis).
+test('Skip analysis on Gemini: unset or Enabled skips, Disabled keeps the analysis for Gemini', async () => {
+    const { geminiSkipsAnalysis } = await import('../../quick-reply-ext/src/promptModifiers.js');
+    for (const v of [undefined, '', 'Enabled', 'enabled']) assert.equal(geminiSkipsAnalysis(v), true, String(v));
+    assert.equal(geminiSkipsAnalysis('Disabled'), false);
+    const unset = (await assemble('Rosa', { ...CURRENT, GeminiBypassToggle: 'Enabled' })).locals;
+    assert.ok(unset.get('ravtegGemini'), 'unset keeps the old skip');
+    const kept = (await assemble('Rosa', { ...CURRENT, GeminiBypassToggle: 'Enabled', GeminiSkipAnalysis: 'Disabled' })).locals;
+    assert.equal(kept.get('ravtegGemini'), '', 'nothing to swap, Gemini gets the analysis');
+    assert.equal(kept.get('postravGemini'), '');
+    assert.equal(kept.get('ravteg'), unset.get('ravteg'), 'the normal prompt (box 6 cut happens at send time) is unchanged');
+    const { readFileSync } = await import('node:fs');
+    const source = readFileSync(new URL('../../quick-reply-ext/index.js', import.meta.url), 'utf8');
+    assert.match(source, /geminiSkipsAnalysis\(getGlobalVariable\("GeminiSkipAnalysis"\)\)\) \{\s*const swapped = swapGeminiNoAnalysis/);
+});

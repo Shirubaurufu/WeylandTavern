@@ -27,6 +27,10 @@
     <button class="top-btn" id="btnBranch" aria-label="The wishing branch">
       <svg viewBox="0 0 24 24"><path d="M3 8c6-1 12 0 18 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 8v9l2-2 2 2V9M15 10v7l1.5-1.5L18 17v-6" fill="currentColor" opacity=".9"/></svg>
     </button>
+    <!-- The guide for whatever screen is showing (Lucky, 2026-11-19). Words live in help.js. -->
+    <button class="top-btn" id="btnHelp" aria-label="How this screen works" aria-controls="helpModal">
+      <svg viewBox="0 0 24 24"><path d="M9 9.2a3 3 0 1 1 4.3 2.7c-.8.4-1.3 1.1-1.3 2v.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="18.2" r="1.4" fill="currentColor"/></svg>
+    </button>
   </header>
 
   <!-- THE ROOM: one painted frame (1280x720 units). The camera moves over it. -->
@@ -81,6 +85,11 @@
         <span class="who-amp">&amp;</span>
         <input id="inUser" value="Lucky" maxlength="24" aria-label="You" spellcheck="false">
       </div>
+      <!-- Kinsbane Manor and Muse on their base greeting: their own scripted story is running (parlor.js syncOwnStory). -->
+      <div class="own-story" id="ownStory" hidden>
+        <b>There is already a story unfolding..</b>
+        <span>This start tells its own tale, so Ellie won't lay cards over it. A custom start, where the card has one, can take a fortune.</span>
+      </div>
       <label class="slip">
         <span class="slip-label">Write down what your mind holds..</span>
         <span class="slip-label slip-label-after">... or nothing at all.</span>
@@ -125,13 +134,15 @@
         <button class="omen" id="omEmber"><span class="ember"><i></i></span><b>Spice</b><small id="valEmber"></small></button>
         <button class="omen" id="omIncense"><span class="incense"><i></i><u></u></span><b>Pace</b><small id="valIncense"></small></button>
         <!-- Connection: the red thread of fate between the two of them. One drawing per step, named by its id:
-             unset = slack and dashed, platonic = pale, casual = one loose loop (not tied), complicated = a tangle,
+             unset = slack and dashed, platonic = pale, interested = reaching out and not met, casual = one loose loop (not tied), complicated = a tangle,
              dating = a wave, partnered = a knot, breaking = frayed in the middle, broken = cut. parlor.css shows the
              one matching data-c. -->
         <button class="omen conn" id="omConn" data-c="unset"><span class="thread"><svg viewBox="0 6 34 22" aria-hidden="true">
           <circle cx="5" cy="17" r="3.6" class="ring"/><circle cx="29" cy="17" r="3.6" class="ring"/>
           <path class="t t-unset" d="M8.6 17Q17 27 25.4 17"/>
           <path class="t t-platonic" d="M8.6 17Q17 21 25.4 17"/>
+          <!-- interested: a thread reaches out from one ring and stops short of the other, which has none (2026-11-19). -->
+          <path class="t t-interested" d="M8.6 17Q12.5 12.5 15.6 15T19.4 15.6"/>
           <path class="t t-casual" d="M8.6 17Q13 18 15.4 14.6A2.7 2.7 0 1 1 18.4 16.6Q21 18.4 25.4 17"/>
           <path class="t t-complicated" d="M8.6 17Q12 13.5 14 18T18.5 13.8Q21.5 19.5 15.8 19.4Q12.6 15.6 19.4 15Q22 17 25.4 17"/>
           <path class="t t-dating" d="M8.6 17Q12.5 25 17 17T25.4 17"/>
@@ -194,6 +205,16 @@
         <p class="set-note" id="setModelNow"></p>
         <div class="set-add"><button class="ghost small" id="setModelOpen">Change model</button></div>
       </section>
+      <!-- What the planner is shown from the chat (Lucky, 2026-11-21). Both on by default; saved with the other
+           settings, so they follow the player to every device. -->
+      <section class="set-group">
+        <h3 class="set-title">What Ellie reads</h3>
+        <p class="set-note">What she looks at in your chat before she reads the cards.</p>
+        <div class="switches">
+          <button class="switch" id="swMemory" aria-pressed="true"><i></i><span><b>Latest memory</b></span></button>
+          <button class="switch" id="swMoreChat" aria-pressed="true"><i></i><span><b>Last 10 messages</b><small>when off, only the last 5</small></span></button>
+        </div>
+      </section>
       <section class="set-group">
         <h3 class="set-title">Keep out of my stories</h3>
         <p class="set-note">Tap anything you never want in a fortune. It stays out even on the darkest settings, unless you ask for it in your own words on the slip.</p>
@@ -231,6 +252,8 @@
         <span class="held-pos" id="heldPos"></span>
         <h3 id="heldName"></h3>
         <p id="heldMeaning"></p>
+        <!-- The same "ways it can play out" list as the ? guide, for the side that is showing. -->
+        <details class="held-more" id="heldMore"><summary>What it can mean</summary><ul id="heldReads"></ul></details>
         <div class="held-btns">
           <button class="ghost" id="heldTurn">Turn it around</button>
           <button class="ghost" id="heldSwap">Take it out</button>
@@ -260,9 +283,18 @@
     </div>
   </div>
 
+  <!-- The guide: one paper card, a heading per topic that opens on tap (<details>), filled by parlor.js. -->
+  <div class="overlay" id="helpModal" hidden>
+    <div class="modal-card kept-card help-card" role="dialog" aria-labelledby="helpTitle">
+      <div class="kept-card-head"><span class="kept-title" id="helpTitle">How it works</span><button class="ghost small" id="helpClose">Done</button></div>
+      <div class="help-list" id="helpList"></div>
+    </div>
+  </div>
+
   <div class="overlay" id="modal" hidden><div class="modal-card"><p id="modalText"></p><div class="modal-btns" id="modalBtns"></div></div></div>
 </div>
 <script src="cards.js"></script>
+<script src="help.js"></script>
 <script src="bench.js"></script>
 <script src="parlor.js"></script>
 </body>

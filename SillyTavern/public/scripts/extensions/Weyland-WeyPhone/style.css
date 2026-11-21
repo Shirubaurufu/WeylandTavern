@@ -3457,7 +3457,7 @@
     padding: 8px 10px;
     max-height: 180px;
     overflow-y: auto;
-    font-family: Consolas, 'Courier New', monospace;
+    font-family: var(--weyland-webview-mono, Consolas), 'Courier New', monospace;
     font-size: 10.5px;
     line-height: 1.5;
     color: var(--wp-text-dim);
@@ -5556,7 +5556,31 @@ html body .st-modal-overlay#wbv-modal-overlay {
 .wp-narrative-gemini-toggle > span:first-child { display: grid; gap: 2px; }
 .wp-narrative-gemini-toggle strong { font-size: 12px; }
 .wp-narrative-gemini-toggle small { color: var(--wn-ink-muted); font-size: 9px; }
-.wp-narrative-gemini-card.is-on .wp-narrative-switch { background: #4f7fc4; }
+/* .is-on on the switch too, so the "Skip analysis" switch below stays grey when it is off (2026-11-20). */
+.wp-narrative-gemini-card.is-on .wp-narrative-switch.is-on { background: #4f7fc4; }
+/* "Skip Analysis" is an option OF the bypass, so it hangs off the main switch: indented, a little lighter and tighter,
+   with an elbow line from the switch above, instead of reading as a second equal switch. */
+.wp-narrative-gemini-skip {
+    position: relative;
+    width: calc(100% - 18px);
+    margin: 7px 0 0 18px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, .12);
+}
+.wp-narrative-gemini-skip::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: -8px;
+    width: 9px;
+    height: calc(50% + 8px);
+    border-left: 1.5px solid color-mix(in srgb, #4f7fc4 45%, var(--wn-line));
+    border-bottom: 1.5px solid color-mix(in srgb, #4f7fc4 45%, var(--wn-line));
+    border-bottom-left-radius: 6px;
+    pointer-events: none;
+}
+.wp-narrative-gemini-skip.is-disabled { opacity: .55; cursor: not-allowed; }
+.wp-narrative-gemini-skip.is-disabled:hover { background: rgba(255, 255, 255, .12); }
 /* "Add Year to RP" under the School Year card's primary button: same toggle shape, card colors. */
 .wp-narrative-year-toggle { margin-top: 10px; border-color: var(--wn-line); }
 .wp-narrative-year-toggle:hover { background: rgba(58, 18, 6, .05); }

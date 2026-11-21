@@ -29,7 +29,7 @@
             M('control cracks', 'The Crown Slips', '{char} pushes back against the person holding the rules, and for once they are the one who blinks.'),
             'An empty throne, on top of a mountain. He is very... sure of himself.'),
         C(5, 'V', 'The Hierophant', '<path d="M0-28v56M-8-18h16M-13-6h26M-18 6h36"/><circle cx="-14" cy="24" r="4" class="a"/><circle cx="14" cy="24" r="4" class="a"/>',
-            M('what family expects', 'The Old Way', 'What {char} was raised to want walks into the room, and the weight of doing it properly comes in with it.'),
+            M('what tradition expects', 'The Old Way', 'What {char} was raised to want walks into the room, and the weight of doing it properly comes in with it.'),
             M('breaking tradition', 'Not Allowed', '{char} wants the one thing the family said never to want, and stops pretending otherwise.'),
             'I... like this one. The old gate, the old keys. Sorry, that is boring.'),
         C(6, 'VI', 'The Lovers', '<circle cx="-8" cy="2" r="15"/><circle cx="8" cy="2" r="15"/><path d="M0-30c-5-7-14 1 0 9c14-8 5-16 0-9z" class="a"/>',

@@ -228,6 +228,15 @@ export function isGeminiModel(model) {
 }
 
 /**
+ * Whether Gemini Bypass also sends Gemini the Analysis-off prompt (global GeminiSkipAnalysis, PromptOS switch inside the
+ * bypass card, Lucky 2026-11-20). Only an explicit "Disabled" turns the skip off: unset means on, because the skip was
+ * unconditional before the switch existed and existing players should keep what they had.
+ */
+export function geminiSkipsAnalysis(value) {
+    return String(value ?? '').trim().toLowerCase() !== 'disabled';
+}
+
+/**
  * The part of an Analysis-on prompt that the Analysis-off build replaces, cut at whole lines: everything before the first
  * line that differs and after the last one is shared. Swapping only this chunk (expanded on its own) matters because the
  * rest of a prompt can hold random macros (the post-history's "EXACTLY {{random}} thought sections"): expanding the whole

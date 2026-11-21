@@ -19,8 +19,9 @@ import {
 } from './storyCore.js';
 // The planner's view of the chat (card text with the charPer fallback, named cast and places): Muse's
 // helpers, copied (see chatContext.js). test/storyCoreCopy.test.mjs checks the copies against Muse's.
-import { hasOpenChat, oocModeOn, currentCharacter, cardText, recentChat, loreText } from './chatContext.js';
-import { buildFortuneMessages, parseFortune, fortuneMaxTokens, isFilterRefusal, ACTS_FOR_USER_NOTE, BLOCK_OPTIONS, BLOCK_CUSTOM_MAX, BLOCK_CUSTOM_CHARS } from './fortuneCore.js';
+import { hasOpenChat, oocModeOn, currentCharacter, cardText, loreText } from './chatContext.js';
+import { loadWorldInfo, METADATA_KEY as CHAT_BOOK_KEY } from '../../world-info.js';
+import { buildFortuneMessages, parseFortune, fortuneMaxTokens, isFilterRefusal, tellsOwnStory, recentChatText, latestMemory, RECENT_MESSAGES_MORE, RECENT_MESSAGES_FEWER, ACTS_FOR_USER_NOTE, BLOCK_OPTIONS, BLOCK_CUSTOM_MAX, BLOCK_CUSTOM_CHARS } from './fortuneCore.js';
 // The model list WeyPhone's own pickers use (Copycat's included), so Foxfire offers exactly the same models.
 import { collectPhoneModelIds } from '../Weyland-WeyPhone/lib/ui/apps/settings.js';
 // The workbench store (app/bench.js) is a plain script shared with the app page; importing it runs it, and it
@@ -66,6 +67,9 @@ function readPrefs() {
         blocks: (Array.isArray(p.blocks) ? p.blocks : []).filter(id => known.has(id)),
         customBlocks: (Array.isArray(p.customBlocks) ? p.customBlocks : [])
             .map(s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, BLOCK_CUSTOM_CHARS)).filter(Boolean).slice(0, BLOCK_CUSTOM_MAX),
+        // "What Ellie reads" (Lucky, 2026-11-21): both on unless the player switched them off.
+        memory: p.memory !== false,
+        moreChat: p.moreChat !== false,
     };
 }
 function writePrefs(next) {
@@ -122,9 +126,32 @@ function membershipLapsed() {
 // 2026-11-17): no injection, no chapter moves, and a Story Machine storyline can replace one without
 // deleting it. Nothing is erased, so upgrading again picks each chat up where it was. This is checked at
 // every generation (GENERATION_AFTER_COMMANDS re-runs applyInjection), so a change of membership counts at once.
+// Kinsbane Manor and Muse on their base greetings tell their own scripted story (rules in fortuneCore.js
+// tellsOwnStory). While that is true no fortune is written and none steers the chat.
+function ownStoryRunning() {
+    try {
+        const c = ctx();
+        return tellsOwnStory({ cardName: currentCharacter()?.name, firstMessage: c.chat?.[0]?.mes, inGroup: !!c.groupId });
+    } catch { return false; }
+}
+
+// The newest Long-Term Memory of the open chat. LTM keeps memories in the chat's own lorebook (the chat-bound book
+// SillyTavern stores under chat metadata "world_info"). No book, no memories or a failed load = no memory section.
+async function latestMemoryText() {
+    try {
+        const book = ctx().chatMetadata?.[CHAT_BOOK_KEY];
+        if (!book) return '';
+        const mem = latestMemory((await loadWorldInfo(book))?.entries);
+        return mem ? [mem.title, mem.content].filter(Boolean).join('\n') : '';
+    } catch (err) {
+        console.warn('[Foxfire Fortunes] could not read the chat memory', err);
+        return '';
+    }
+}
+
 function applyInjection() {
     const st = chatState();
-    let text = st?.story && st.active && !st.done && !oocModeOn() && !membershipLapsed() ? buildInjection(st.story, st.chapter, st.route || null) : '';
+    let text = st?.story && st.active && !st.done && !oocModeOn() && !membershipLapsed() && !ownStoryRunning() ? buildInjection(st.story, st.chapter, st.route || null) : '';
     // A fortune planned with "Writer can act for me" may say what {{user}} does; without this line the
     // roleplay's own "never act as {{user}}" rule would read that as a mistake in the plan.
     if (text && st.story.actsForUser) text += `\n${ACTS_FOR_USER_NOTE}`;
@@ -162,6 +189,7 @@ function status() {
         active: !!st?.active,
         done: !!st?.done,
         ooc: oocModeOn(),
+        ownStory: ownStoryRunning(),   // the app still needs to show "There is already a story unfolding.." for this
         shelf: shelfStore().shelf.slice(),
         prompts: shelfStore().prompts.slice(),
     };
@@ -176,19 +204,22 @@ async function generate({ question = '', cards = [], spice = 1, darkness = 1, pa
     if (!hasOpenChat()) throw new Error('Open a chat first.');
     // The phone already keeps the app shut without alpha; this stops a request from a page left open.
     if (membershipLapsed()) throw new Error('Foxfire Fortunes needs a Paw Patrol Platinum membership.');
+    if (ownStoryRunning()) throw new Error('There is already a story unfolding... This start tells its own story. A custom start, where the card has one, can take a fortune.');
     const profileId = wp.resolvePhoneProfileId(c, c.extensionSettings.WeyPhone?.connectionProfileId || '');
     const picked = readModels();
     const model = wp.resolveModelOverride({ settingsModel: picked.model, liveModel: c.getChatCompletionModel?.() });
     const forChat = chatId();
-    const recent = recentChat();
+    const prefs = readPrefs();
+    const recent = recentChatText(c.chat, prefs.moreChat ? RECENT_MESSAGES_MORE : RECENT_MESSAGES_FEWER);
+    const memory = prefs.memory ? await latestMemoryText() : '';
     // Named cast and places are looked up from the player's question, as the Story Machine does from its idea.
     const lore = await loreText(question, recent);
     const messages = buildFortuneMessages({
-        charName: status().charName, userName: c.name1 || '', cardText: await cardText(), recentChat: recent,
+        charName: status().charName, userName: c.name1 || '', cardText: await cardText(), recentChat: recent, memoryText: memory,
         castText: lore.cast, placesText: lore.places,
         question, cards, spice, darkness, pace, connection, fork, sheet, actsForUser,
         // Read from storage here, not passed in by the app, so the saved list is always the one that counts.
-        blocks: { ids: readPrefs().blocks, custom: readPrefs().customBlocks },
+        blocks: { ids: prefs.blocks, custom: prefs.customBlocks },
     });
     abort?.abort();
     const mine = new AbortController();
