@@ -103,7 +103,7 @@
 .rg-summary { font-size: 11px; line-height: 1.55; color: #6c6256; margin: 7px 0 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .rg-card-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: 9px; color: #7c6d5a; }
 .rg-card-foot > span:last-child { font-size: 17px; color: #77392e; }
-.rg-index { position: absolute; right: 8px; top: 5px; font: 700 9px 'Courier New', monospace; color: #6b5a42; }
+.rg-index { position: absolute; right: 8px; top: 5px; font: 700 9px var(--weyland-webview-mono, 'Courier New'), monospace; color: #6b5a42; }
 .rg-stamp { display: inline-block; border: 1px solid #947255; padding: 1px 4px; color: #7b5336; font-size: 8px; letter-spacing: .06em; transform: rotate(-2deg); font-weight: normal; }
 .rg-app .rg-card-location { border-left: 3px solid #9c8356; }
 .rg-card-location .rg-art { width: 64px; flex-basis: 64px; }

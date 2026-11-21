@@ -87,8 +87,8 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 /* Blush sits on her cheeks in the painting. Stand-in for the expression layers (EFF-03). */
 #blush { position: absolute; left: 438px; top: 270px; width: 170px; height: 62px; pointer-events: none; opacity: 0; transition: opacity .6s; mix-blend-mode: multiply;
     background: radial-gradient(ellipse 44px 22px at 24% 50%, #ff5f7ecc, #ff5f7e00 100%); }
-#scene[data-mood="shy"] #blush, #scene[data-spice="2"] #blush { opacity: .55; }
-#scene[data-mood="fluster"] #blush, #scene[data-spice="3"] #blush { opacity: 1; }
+#scene[data-mood="shy"] #blush, #scene[data-spice="3"] #blush { opacity: .55; }
+#scene[data-mood="fluster"] #blush, #scene[data-spice="4"] #blush { opacity: 1; }
 #emote { position: absolute; left: 640px; top: 96px; font: 700 64px/1 var(--jp); color: #fff; text-shadow: 0 0 18px var(--fox), 0 3px 0 #0008; pointer-events: none; animation: emote 2.2s both; }
 @keyframes emote { 0% { transform: translateY(20px) scale(.4); opacity: 0; } 12% { transform: translateY(0) scale(1.15); opacity: 1; } 20% { transform: scale(1); } 80% { opacity: 1; } 100% { transform: translateY(-16px); opacity: 0; } }
 #visions { position: absolute; inset: 0; pointer-events: none; }
@@ -141,6 +141,11 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 #app[data-screen="dark"] [data-panel="dark"], #app[data-screen="ask"] [data-panel="ask"], #app[data-screen="draw"] [data-panel="draw"],
 #app[data-screen="gaze"] [data-panel="gaze"], #app[data-screen="unfold"] [data-panel="unfold"], #app[data-screen="branch"] [data-panel="branch"],
 #app[data-screen="settings"] [data-panel="settings"] { display: flex; }
+/* "There is already a story unfolding..": a plain note on the velvet, the gold of the other headings. */
+.own-story { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; border: 1px solid #d7a84a66; background: #1a060bcc; text-align: center; }
+.own-story[hidden] { display: none; }
+.own-story b { font: 600 17px/1.2 var(--body); color: var(--gold); }
+.own-story span { font: italic 500 14px/1.3 var(--body); color: #f3e6c8cc; }
 .whisper { margin: 4px 0; text-align: center; font-style: italic; color: #f3e6c8cc; }
 .hint { margin: 0; text-align: center; font: 600 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--gold); animation: breathe 2.4s infinite; }
 @keyframes breathe { 50% { opacity: .45; } }
@@ -231,6 +236,42 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 .model-field small { font-weight: 500; opacity: .7; }
 .model-field select { width: 100%; padding: 9px 10px; border-radius: 4px; border: 1px solid #8a5a1c88; background: #fff8; color: var(--ink); font: 600 15px/1.2 var(--body); }
 .model-note { margin: 0; font: italic 500 14px/1.3 var(--body); color: #2a1a2ecc; }
+/* The guide (#helpModal): the kept-slips paper card, with one tap-to-open topic per heading. The deck inside
+   "The cards" is a second level of the same thing, each card opening to its face and its two meanings. */
+/* text-align: .modal-card (further down) centres, and it wins over .kept-card's left at the same specificity. */
+.help-list { text-align: left; display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow-y: auto; padding: 2px 2px 6px; }
+.help-list details { border-radius: 5px; border: 1px solid #8a5a1c44; background: #fff4; }
+.help-list summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; padding: 9px 11px; font: 600 15.5px/1.2 var(--body); color: var(--ink); }
+.help-list summary::-webkit-details-marker { display: none; }
+.help-list summary::after { content: '+'; margin-left: auto; font: 600 17px/1 var(--body); color: #8a5a1c; }
+.help-list details[open] > summary::after { content: '\2212'; }
+.help-list .help-sec > p, .help-list .help-sec > ul { margin: 0 12px 9px; font: 500 15px/1.35 var(--body); color: #2a1a2e; }
+.help-list .help-sec > ul { padding-left: 18px; }
+.help-sec li + li { margin-top: 5px; }
+.help-deck { display: flex; flex-direction: column; gap: 5px; margin: 2px 8px 10px; }
+.help-deck details { background: #fff5; }
+.help-deck summary { padding: 7px 10px; font-size: 15px; }
+/* The mood dials in the guide: a row per setting, the dial's icon on a dark chip so it reads as it does on the table. */
+.help-levels { display: flex; flex-direction: column; gap: 8px; padding: 2px 12px 10px; }
+.help-level { display: flex; align-items: center; gap: 10px; }
+.help-list .help-omen { flex: 0 0 56px; height: 42px; padding: 0; border: 0; border-radius: 8px; background: #1a060bdd; justify-content: center; }
+/* The icon keeps the size it has on the table: as a flex item of the chip it was squeezed (the moon came out an oval). */
+.help-list .help-omen > span { flex: none; }
+.help-list p.help-intro { margin: 0 12px 10px; font: 500 14.5px/1.35 var(--body); color: #2a1a2e; }
+.help-list .help-level p { margin: 0; font: 500 14.5px/1.3 var(--body); color: #2a1a2e; }
+.help-level b { display: block; font-weight: 700; color: #5a2a18; }
+.help-num { min-width: 30px; font: 600 11px/1 var(--display); letter-spacing: .08em; color: #8a5a1c; }
+.help-cardbody { display: flex; gap: 10px; align-items: flex-start; padding: 0 10px 10px; }
+.help-face { flex: 0 0 64px; height: 102px; border-radius: 4px; overflow: hidden; box-shadow: 0 3px 8px #0005; }
+.help-sides { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.help-side h4 { margin: 0 0 3px; font: 700 14px/1.25 var(--body); color: #5a2a18; }
+.help-side ul { margin: 0; padding-left: 17px; font: 500 14px/1.3 var(--body); color: #2a1a2e; }
+.help-side li + li { margin-top: 2px; }
+/* The fortune paper (#reading) covers the top bar. While it is out, the bar comes up over it so "?" can still be
+   tapped, but only "?": the other buttons would close the paper behind the player's back (the branch button
+   drops an unsealed fortune without asking). */
+#app:has(#reading:not([hidden])) .top { z-index: 21; }
+#app:has(#reading:not([hidden])) .top-btn:not(#btnHelp) { pointer-events: none; opacity: .35; }
 /* The error box can carry a second paragraph ("your cards are still on the table"). */
 #modalText { white-space: pre-line; }
 .kept-card .kept-empty { margin: 0; font: italic 500 15px/1.3 var(--body); color: #2a1a2e99; }
@@ -288,15 +329,16 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 .c-glyph .bolt { stroke: #2f7fe0; stroke-width: 3; }
 
 .slots { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
-.slot { position: relative; flex: 1 1 0; max-width: 78px; min-width: 0; display: flex; flex-direction: column; }
-.slots[data-n="3"] .slot { max-width: 92px; }
+/* Slot cards 5% smaller and the scene list 10% shorter (Lucky, 2026-11-19): on a phone the list filled the table, and
+   since it scrolls on its own, a player had to grab the table's very edge to scroll past it (kev on Discord). */
+.slot { position: relative; flex: 1 1 0; max-width: 74px; min-width: 0; display: flex; flex-direction: column; }
+.slots[data-n="3"] .slot { max-width: 87px; }
 .slot::before { content: ''; display: block; aspect-ratio: 5 / 8; border-radius: 7%; border: 1.5px dashed #d7a84a88; background: #1a060b55; }
 .slot.filled::before { border-color: #0000; background: none; }
 .slot:not(.filled):nth-child(1 of :not(.filled))::before { border-color: var(--fox2); box-shadow: 0 0 14px #4aa8ff77 inset, 0 0 10px #4aa8ff55; animation: breathe 1.8s infinite; }
 .slot-num { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 5 / 8; display: grid; place-items: center; font: 700 15px var(--display); color: #d7a84a99; }
 .slot.filled .slot-num { display: none; }
 .slot .card { position: absolute; left: 0; top: 0; }
-.slot-pos { margin-top: 5px; font: 600 8.5px/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; text-align: center; color: #f3e6c8bb; }
 .slots.crossed::after { content: 'Two endings: the story splits at the middle scene'; flex: 0 0 100%; text-align: center; font: italic 500 13px/1 var(--body); color: var(--fox2); }
 
 /* The menu: 44 plain-word tiles in two columns. Left column is a card the right way up, right column the
@@ -309,7 +351,7 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
     font: 600 9px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); pointer-events: none; opacity: 0; transition: opacity .25s; }
 .menu-more::after { content: ''; display: inline-block; margin-left: 6px; border: 4px solid transparent; border-top-color: currentColor; border-bottom: 0; vertical-align: 1px; }
 .menu-wrap.more .menu-more { opacity: 1; }
-.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; max-height: 34dvh; overflow-y: auto; padding: 6px; border-radius: 10px; border: 1px solid #d7a84a44; background: #1a060b99; scrollbar-width: thin; scrollbar-color: #d7a84a88 #0000; }
+.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; max-height: 30.5dvh; overflow-y: auto; padding: 6px; border-radius: 10px; border: 1px solid #d7a84a44; background: #1a060b99; scrollbar-width: thin; scrollbar-color: #d7a84a88 #0000; }
 .beat { position: relative; min-height: 44px; padding: 7px 26px 7px 9px; border-radius: 7px; border: 1px solid #d7a84a33; background: #2a0c1488; text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 2px; transition: background .15s, border-color .15s, opacity .15s; }
 .beat.rev { background: #14122e88; border-color: #4aa8ff33; }
 .beat b { font: 600 14.5px/1.12 var(--body); color: var(--paper); }
@@ -337,8 +379,17 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 .moon { border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 35% 35%, #fffbe6, #e3d6a4 70%); box-shadow: 0 0 calc(14px - var(--p) * 4px) #fff3b0aa; }
 .moon i { position: absolute; inset: -1px; border-radius: 50%; background: #120d24; transform: translateX(calc(108% - var(--p) * 36%)); transition: transform .5s; }
 .ember i { position: absolute; left: 50%; bottom: 3px; width: 20px; height: 26px; margin-left: -10px; border-radius: 50% 50% 50% 50% / 64% 64% 36% 36%; transform-origin: 50% 100%;
-    transform: scale(calc(.55 + var(--p) * .17)); transition: transform .4s, filter .4s; filter: hue-rotate(calc(var(--p) * -9deg)) drop-shadow(0 0 calc(2px + var(--p) * 4px) #ff7a3a);
+    transform: scale(calc(.45 + var(--p) * .14)); transition: transform .4s, filter .4s; filter: drop-shadow(0 0 calc(2px + var(--p) * 3px) var(--glow, #ff7a3a));
     background: radial-gradient(ellipse at 50% 80%, #fff3c4 0 16%, #ffb03a 42%, #ff4a2a 76%, #ff4a2a00 100%); animation: flicker 1.5s infinite; }
+/* Spice, one colour per step (Lucky, 2026-11-19: the steps looked too alike). data-s is the step, set by parlor.js
+   (and on the guide's copies). 0 None: the fire is out and the dial greys. 1 Sweet: pink. 2 Flirty: orange.
+   3 Steamy: red. 4 Filthy: deep crimson with a violet glow. Size still grows with --p. */
+.omen[data-s="0"] .ember i { animation: none; transform: scale(.55); filter: none; background: radial-gradient(ellipse at 50% 80%, #6b6480 0 30%, #3a3550 70%, #3a355000 100%); }
+#omEmber[data-s="0"] { opacity: .45; }
+.omen[data-s="1"] .ember i { --glow: #ff8fb8; background: radial-gradient(ellipse at 50% 80%, #fff0f5 0 16%, #ffb3cf 45%, #ff7aa8 78%, #ff7aa800 100%); }
+.omen[data-s="2"] .ember i { --glow: #ff9a3a; background: radial-gradient(ellipse at 50% 80%, #fff3c4 0 16%, #ffc04a 42%, #ff8a1e 76%, #ff8a1e00 100%); }
+.omen[data-s="3"] .ember i { --glow: #ff3a2a; background: radial-gradient(ellipse at 50% 80%, #ffe0b0 0 14%, #ff6a2a 40%, #e0141e 76%, #e0141e00 100%); }
+.omen[data-s="4"] .ember i { --glow: #c21aff; background: radial-gradient(ellipse at 50% 80%, #ffd0f0 0 12%, #ff2a6a 38%, #a0106a 72%, #6a0a8a00 100%); }
 .incense i { position: absolute; left: 50%; bottom: 0; width: 3px; margin-left: -1.5px; height: calc(30px - var(--p) * 8px); background: linear-gradient(#ff9a4a 0 3px, #6b4a2c 3px); border-radius: 2px; transition: height .4s; }
 .incense u { position: absolute; left: 50%; bottom: calc(30px - var(--p) * 8px); width: 12px; height: 12px; margin-left: -3px; border-left: 1.5px solid #ffffff88; border-radius: 50%; animation: smoke 2.6s infinite; transition: bottom .4s; }
 @keyframes smoke { from { transform: translateY(4px) scale(.6); opacity: 0; } 40% { opacity: .9; } to { transform: translateY(-8px) scale(1.2) rotate(30deg); opacity: 0; } }
@@ -355,12 +406,13 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 .thread .t { display: none; fill: none; stroke: #e0303a; stroke-width: 1.5; stroke-linecap: round; filter: drop-shadow(0 0 3px #ff4a5a88); }
 .thread .t-unset { stroke: #f3e6c877; stroke-dasharray: 2 2.5; filter: none; }
 .thread .t-platonic { stroke: var(--paper); filter: none; }
+.thread .t-interested { stroke: #ff6a7a; stroke-width: 1.3; }
 .thread .t-casual { stroke: #ff8a9a; stroke-width: 1.2; }
 .thread .t-complicated { stroke-width: 1.2; }
 .thread .t-partnered circle { fill: var(--seal); stroke: #ff9aa2; stroke-width: 1; }
 .thread .t-partnered { filter: drop-shadow(0 0 5px #ff4a5acc); }
 .thread .t-breaking .fray { stroke-width: .8; }
-.omen.conn[data-c="unset"] .t-unset, .omen.conn[data-c="platonic"] .t-platonic, .omen.conn[data-c="casual"] .t-casual,
+.omen.conn[data-c="unset"] .t-unset, .omen.conn[data-c="platonic"] .t-platonic, .omen.conn[data-c="interested"] .t-interested, .omen.conn[data-c="casual"] .t-casual,
 .omen.conn[data-c="complicated"] .t-complicated, .omen.conn[data-c="dating"] .t-dating, .omen.conn[data-c="partnered"] .t-partnered,
 .omen.conn[data-c="breaking"] .t-breaking, .omen.conn[data-c="broken"] .t-broken { display: inline; }
 .omen.conn[data-c="unset"] { opacity: .5; }
@@ -463,6 +515,8 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 .ch { display: grid; grid-template-columns: 50px 1fr; gap: 11px; padding: 10px 0; border-top: 1px dashed #8a6a2c66; animation: inkin .6s both; }
 @keyframes inkin { from { opacity: 0; filter: blur(4px); transform: translateY(6px); } }
 .ch.here { background: #4aa8ff1c; margin: 0 -8px; padding: 10px 8px; border-radius: 6px; box-shadow: inset 3px 0 0 var(--fox); }
+/* The card beside a chapter is a button: tapping it opens the read-only close-up (viewCard in parlor.js). */
+.ch-card { display: block; align-self: start; }
 .ch h3 { margin: 3px 0 2px; font: 600 20px/1.1 var(--body); }
 .ch p { margin: 2px 0; }
 .ch-ends b, .finale b { font: 700 9px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: #8a5a1c; font-style: normal; }
@@ -501,12 +555,21 @@ body::before { content: ''; position: fixed; left: -6%; right: -6%; top: -4%; he
 .overlay { position: absolute; inset: 0; z-index: 30; display: flex; overflow-y: auto; padding: 18px; background: #07050fe0; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: fade .2s both; }
 /* margin:auto centres it when it fits and lets the top stay reachable when the picker makes it taller than the screen. */
 .held { width: 100%; margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.held-card { width: min(46vw, 190px); flex: none; animation: heldin .45s cubic-bezier(.2, 1.3, .4, 1) both; filter: drop-shadow(0 0 26px #4aa8ff88); }
+/* Bigger held card (Lucky, 2026-11-19): about two thirds of a phone's width, capped by height so the buttons
+   and the "What it can mean" dropdown still fit under it. */
+.held-card { width: min(64vw, 270px, 32dvh); flex: none; animation: heldin .45s cubic-bezier(.2, 1.3, .4, 1) both; filter: drop-shadow(0 0 26px #ff5a1e99); }   /* red-orange (Lucky, 2026-11-19; was foxfire blue) */
 @keyframes heldin { from { transform: translateY(60px) scale(.5) rotate(-8deg); opacity: 0; } }
 .held-info { text-align: center; }
 .held-pos { font: 700 10px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
 .held-info h3 { margin: 5px 0 2px; font: 600 25px/1.1 var(--body); }
 .held-info p { margin: 0 0 10px; font-style: italic; color: #f3e6c8cc; }
+.held-more { max-width: 330px; margin: 0 auto 12px; text-align: left; border-radius: 8px; border: 1px solid #d7a84a55; background: #1a060b88; }
+.held-more summary { cursor: pointer; list-style: none; padding: 7px 12px; text-align: center; font: 600 15px/1.2 var(--body); color: var(--gold); }
+.held-more summary::-webkit-details-marker { display: none; }
+.held-more summary::after { content: " +"; }
+.held-more[open] summary::after { content: " \2212"; }
+.held-more ul { margin: 0; padding: 0 14px 10px 30px; font: 500 15px/1.35 var(--body); color: #f3e6c8; }
+.held-more li + li { margin-top: 4px; }
 .held-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
 .modal-card { width: 100%; margin: auto; padding: 18px 16px 14px; border-radius: 6px; color: var(--ink); background: linear-gradient(105deg, var(--paper), var(--paper2)); box-shadow: 0 18px 40px #000, 0 0 0 1px var(--gold2); text-align: center; }
 .modal-card p { margin: 0 0 14px; font: 600 18px/1.25 var(--body); }

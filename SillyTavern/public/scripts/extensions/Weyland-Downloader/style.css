@@ -754,7 +754,7 @@
     border: 1px solid var(--rb-border);
     flex-grow: 1;
     padding: 10px;
-    font-family: 'Consolas', 'Courier New', monospace;
+    font-family: var(--weyland-webview-mono, 'Consolas'), 'Courier New', monospace;
     font-size: 12px;
     overflow-y: auto;
     color: #ccc;

@@ -34,6 +34,7 @@
     const LINES = {
         greet: [['shy', 'Hi... You can sit, if you like.'], ['shy', 'Oh... hi again.']],
         ask: [['shy', 'Um... whenever you’re ready.']],
+        ownStory: [['shy', 'There is already a story unfolding here...']],
         ownReading: [['fluster', 'Oh... that’s me. Um, I’ll try.']],
         shuffle: [['shy', 'Just a second... I always thank the cards.'], ['shy', 'Um... pick whichever feels right.']],
         pickHint: [['shy', 'I could pick one for you... if you like.']],
@@ -41,11 +42,11 @@
         full: [['shy', 'The spread is full. You can take one out.']],
         turn: [['shy', 'Oh... the other way. Okay.']],
         moon: [['shy', 'A full moon. That feels safe.'], ['shy', 'Just a little shadow.'], ['shy', 'I could light another candle.'], ['shy', 'Um... stay close?']],
-        ember: [['soft', 'Just a little warmth.'], ['shy', 'A little flirty... okay.'], ['fluster', 'Oh. That’s... warm.'], ['fluster', 'Um... I’ll leave that part to you.']],
+        ember: [['soft', 'No fire. Just... the story.'], ['soft', 'Just a little warmth.'], ['shy', 'A little flirty... okay.'], ['fluster', 'Oh. That’s... warm.'], ['fluster', 'Um... I’ll leave that part to you.']],
         incense: [['shy', 'We have time.'], ['shy', 'Somewhere in the middle?'], ['shy', 'Oh... a short one.']],
         cross: [['shy', 'One road. Okay.'], ['shy', 'Two roads... you can choose later.']],
         // One per Connection step, Unset first (index = state.conn).
-        conn: [['shy', 'Oh... we can leave that to the cards.'], ['soft', 'Just friends. That’s nice.'], ['fluster', 'Casual... oh. Um. Okay.'], ['think', 'It’s... complicated. I see.'], ['fluster', 'Dating... um. Okay.'], ['fluster', 'Oh... together, together.'], ['shy', 'It’s... fraying. Oh.'], ['shy', 'Oh... it broke. I’m sorry.']],
+        conn: [['shy', 'Oh... we can leave that to the cards.'], ['soft', 'Just friends. That’s nice.'], ['shy', 'Oh... someone’s looking. Hm.'],['fluster', 'Casual... oh. Um. Okay.'], ['think', 'It’s... complicated. I see.'], ['fluster', 'Dating... um. Okay.'], ['fluster', 'Oh... together, together.'], ['shy', 'It’s... fraying. Oh.'], ['shy', 'Oh... it broke. I’m sorry.']],
         keptLater: [['shy', 'It’ll be on the branch... for later.']],
         gaze: [['shy', 'Um... let me look.'], ['shy', 'Just a moment.']],
         gazing: [['shy', 'I think I see it now...'], ['shy', 'A little longer, if that’s okay.']],
@@ -73,14 +74,17 @@
     // The Darkness dial. Briefly renamed "Intensity" / "Intense" on 2026-11-17 and put back the same day (Lucky
     // preferred "Dark"). The prompt explains what each step means; the label only has to read well.
     const DARK = ['Soft', 'Stakes', 'Dark', 'Brutal'];
-    const SPICE = ['Sweet', 'Flirty', 'Steamy', 'Filthy'], PACE = ['slow', 'steady', 'brisk'], PACE_NAMES = ['Slow', 'Steady', 'Brisk'];
+    // Spice gained a None step in front on 2026-11-19 (Lucky): it sends no spice line at all, so every old value
+    // moved up one (a saved spread from before is shifted in restoreSpread; fortuneCore.js SPICE matches).
+    const SPICE = ['None', 'Sweet', 'Flirty', 'Steamy', 'Filthy'], PACE = ['slow', 'steady', 'brisk'], PACE_NAMES = ['Slow', 'Steady', 'Brisk'];
     // The Connection dial (QA via Lucky, 2026-11-18): how {char} and {user} stand with each other. Step 0 is Unset:
     // nothing is sent, and the omen shows dimmed until it is tapped. The ids are what the request reads
     // (fortuneCore.js CONNECTION), so never rename one.
     // Added the same day (Lucky): Casual and Complicated after Platonic, Breaking between Partnered and Broken.
     // The omen's drawing is picked by id (data-c="casual"), not by position, so a step can be added anywhere.
-    const CONN = ['Unset', 'Platonic', 'Casual', 'Complicated', 'Dating', 'Partnered', 'Breaking', 'Broken'];
-    const CONN_IDS = [null, 'platonic', 'casual', 'complicated', 'dating', 'partnered', 'breaking', 'broken'];
+    // 2026-11-19 (Lucky): Interested between Platonic and Casual. A spread saved before it is shifted in restoreSpread.
+    const CONN = ['Unset', 'Platonic', 'Interested', 'Casual', 'Complicated', 'Dating', 'Partnered', 'Breaking', 'Broken'];
+    const CONN_IDS = [null, 'platonic', 'interested', 'casual', 'complicated', 'dating', 'partnered', 'breaking', 'broken'];
     const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
     const LUCK = [['大吉', 'Great Blessing'], ['吉', 'Blessing'], ['小吉', 'Small Blessing'], ['末吉', 'Blessing Yet to Come'], ['凶', 'Trouble']];
 
@@ -567,7 +571,7 @@
         const scr = app.dataset.screen;
         return {
             n: state.n, slots: state.slots.map(s => (s ? { id: s.id, rev: !!s.rev } : null)), question: $('question').value,
-            spice: state.spice, dark: state.dark, pace: state.pace, conn: state.conn, cross: state.cross,
+            spice: state.spice, spiceSteps: SPICE.length, dark: state.dark, pace: state.pace, conn: state.conn, connSteps: CONN.length, cross: state.cross,
             // Closed mid-gaze comes back to the cards: the request itself carries on in the parent page.
             screen: scr === 'draw' || scr === 'gaze' ? 'draw' : 'ask',
         };
@@ -607,10 +611,14 @@
                 return { id: s.id, rev: !!s.rev };
             });
             if (typeof sp.question === 'string') $('question').value = sp.question.slice(0, Number($('question').maxLength) > 0 ? $('question').maxLength : 1560);
-            state.spice = int(sp.spice, 0, 3, state.spice);
+            // Saved before None existed (no spiceSteps): Sweet was 0, so shift it up to where Sweet is now.
+            const spice = sp.spiceSteps === SPICE.length || !Number.isInteger(sp.spice) ? sp.spice : sp.spice + 1;
+            state.spice = int(spice, 0, SPICE.length - 1, state.spice);
             state.dark = int(sp.dark, 0, 3, state.dark);
             state.pace = int(sp.pace, 0, 2, state.pace);
-            state.conn = int(sp.conn, 0, CONN.length - 1, state.conn);
+            // Saved before Interested existed (no connSteps): everything from Casual on moves up one.
+            const conn = sp.connSteps === CONN.length || !Number.isInteger(sp.conn) || sp.conn < 2 ? sp.conn : sp.conn + 1;
+            state.conn = int(conn, 0, CONN.length - 1, state.conn);
             state.cross = !!sp.cross;
             syncOmens(); syncKept();
         } finally { restoring = false; }
@@ -691,6 +699,69 @@
     }
     function openKept() { touch(); snd.fx('unroll'); renderKept(); $('keptModal').hidden = false; $('keptList').scrollTop = 0; }
     function closeKept() { $('keptModal').hidden = true; }
+
+    // ---------- the guide (the "?" button, Lucky 2026-11-19) ----------
+    // Opens on the guide for whatever is in front of the player: the fortune paper when it is out, otherwise the
+    // screen. The words live in help.js. Each topic is a <details>, so it opens and closes on tap with no code and
+    // works from a keyboard. A card's row is filled in only when it is first opened, so opening the guide does not
+    // load 22 painted card faces.
+    const HELP = window.EFFHelp || null;
+    const helpScreen = () => (!$('reading').hidden ? 'reading' : app.dataset.screen);
+    function cardHelp(c) {
+        const row = el('details', { class: 'help-cardrow' }, el('summary', {}, el('span', { class: 'help-num', text: c.num }), el('span', { text: c.name })));
+        row.addEventListener('toggle', () => {
+            if (!row.open || row.dataset.filled) return;
+            row.dataset.filled = '1';
+            const side = (m, rev) => el('div', { class: 'help-side' },
+                el('h4', { text: `${rev ? 'Reversed' : 'Upright'}: ${m.key}` }),
+                el('ul', {}, ...(HELP.READS[c.id]?.[rev ? 'rev' : 'up'] || []).map(t => el('li', { text: t }))));
+            row.append(el('div', { class: 'help-cardbody' }, el('div', { class: 'help-face', html: cardFace(c) }),
+                el('div', { class: 'help-sides' }, side(c.up, false), side(c.rev, true))));
+        });
+        return row;
+    }
+    // One mood dial in the guide: a row per setting, each with the dial's own icon drawn at that setting. The icon is
+    // a copy of the one on the table, wrapped in the attributes its CSS keys on (--p and data-s for the moon, ember
+    // and incense, data-c for the thread, aria-pressed for the crossed sticks), so it can never drift from the real one.
+    const CONN_HELP_IDS = ['unset', ...CONN_IDS.slice(1)];
+    function moodHelp(m) {
+        const row = el('details', { class: 'help-cardrow help-mood' }, el('summary', {}, el('span', { text: m.h })));
+        row.addEventListener('toggle', () => {
+            if (!row.open || row.dataset.filled) return;
+            row.dataset.filled = '1';
+            const src = $(m.dial)?.querySelector(':scope > span');
+            if (m.intro) row.append(el('p', { class: 'help-intro', text: m.intro }));
+            row.append(el('div', { class: 'help-levels' }, ...m.levels.map(([name, text], i) => {
+                const conn = m.dial === 'omConn';
+                const icon = el('span', { class: `omen help-omen${conn ? ' conn' : ''}`, style: `--p:${i}`, 'data-s': i,
+                    'data-c': conn ? CONN_HELP_IDS[i] : null, 'aria-pressed': m.dial === 'omCross' ? String(i === 1) : null }, src ? src.cloneNode(true) : null);
+                return el('div', { class: 'help-level' }, icon, el('p', {}, el('b', { text: name }), ` ${text}`));
+            })));
+        });
+        return row;
+    }
+    function openHelp() {
+        if (!HELP) return;
+        const page = HELP.SCREENS[helpScreen()] || HELP.SCREENS.ask;
+        touch(); snd.fx('tap');
+        $('helpTitle').textContent = page.title;
+        // A page with one topic opens it straight away: there is nothing to choose between.
+        const single = page.sections.length === 1;
+        $('helpList').replaceChildren(...page.sections.map(s => el('details', { class: 'help-sec', open: single },
+            el('summary', { text: s.h }),
+            ...(s.p || []).map(t => el('p', { text: t })),
+            s.list ? el('ul', {}, ...s.list.map(t => el('li', { text: t }))) : false,
+            s.cards ? el('div', { class: 'help-deck' }, ...ARCANA.map(cardHelp)) : false,
+            s.mood ? el('div', { class: 'help-deck' }, ...(HELP.MOOD || []).map(moodHelp)) : false)));
+        $('helpModal').hidden = false;
+        $('helpList').scrollTop = 0;
+    }
+    function closeHelp() { $('helpModal').hidden = true; }
+    function setupHelp() {
+        $('btnHelp').addEventListener('click', openHelp);
+        $('helpClose').addEventListener('click', () => { snd.fx('tap'); closeHelp(); });
+        $('helpModal').addEventListener('click', e => { if (e.target === $('helpModal')) closeHelp(); });
+    }
     // Keep is only useful for new text: grey it out when the slip is empty or already kept, and ring the kept one.
     function syncKept() {
         const t = keptText(), list = api.status().prompts || [];
@@ -713,6 +784,7 @@
     function shuffle() {
         touch();
         if (!api.status().hasChat) { snd.fx('nope'); say(LINES.noChat[0], { required: true }); return; }
+        if (api.status().ownStory) { snd.fx('nope'); say(LINES.ownStory[0], { required: true }); return; }
         if (!LIVE) api.rename($('inChar').value, $('inUser').value);
         else if (/^ellie$/i.test(api.status().charName.trim()) && !state.toldOwn) { state.toldOwn = true; say(LINES.ownReading[0]); }
         // Going back to change the request keeps the cards already picked (Lucky, 2026-11-17). A different
@@ -734,8 +806,10 @@
         const box = $('slots');
         box.dataset.n = state.n;
         box.replaceChildren(...state.slots.map((s, i) => {
-            const b = el('button', { class: `slot${s ? ' filled' : ''}`, 'data-i': i, 'aria-label': `${POSITIONS[state.n][i]}${s ? `: ${ARCANA[s.id].name}${s.rev ? ', reversed' : ''}` : ', empty'}` },
-                el('span', { class: 'slot-num', text: ROMAN[i] }), s ? cardNode(s, 'flipped') : null, el('span', { class: 'slot-pos', text: POSITIONS[state.n][i] }));
+            // No position name under the slot any more ("What stirs"...; Lucky, 2026-11-19): it never reached the
+            // model, and the line cost height on phones. The numeral says which chapter a slot is.
+            const b = el('button', { class: `slot${s ? ' filled' : ''}`, 'data-i': i, 'aria-label': `Scene ${i + 1}${s ? `: ${ARCANA[s.id].name}${s.rev ? ', reversed' : ''}` : ', empty'}` },
+                el('span', { class: 'slot-num', text: ROMAN[i] }), s ? cardNode(s, 'flipped') : null);
             b.addEventListener('click', () => { if (state.slots[i]) openHeld(i); else snd.fx('tick'); });
             return b;
         }));
@@ -833,17 +907,31 @@
     function clearSlots() { if (state.busy) return; touch(); state.slots = Array(state.n).fill(null); snd.fx('slide'); buildSlots(); }
 
     // One card, held up close: read it, turn it, or choose a different one.
+    // The same close-up opens read-only from a fortune (the paper and the unfolding chapter; Lucky, 2026-11-19):
+    // state.viewing holds that card, and the turn / take-out buttons are hidden because the fortune is already
+    // written. Closing it leaves the spread on the table alone.
     function openHeld(i) {
-        touch(); state.held = i; snd.fx('flip');
+        touch(); state.held = i; state.viewing = null; snd.fx('flip');
+        renderHeld();
+        $('cardModal').hidden = false;
+    }
+    function viewCard(card, scene) {
+        touch(); state.viewing = { card: { id: card.id, rev: !!card.rev }, scene }; snd.fx('flip');
         renderHeld();
         $('cardModal').hidden = false;
     }
     function renderHeld() {
-        const s = state.slots[state.held], c = ARCANA[s.id], m = s.rev ? c.rev : c.up;
+        const v = state.viewing, s = v ? v.card : state.slots[state.held], c = ARCANA[s.id], m = s.rev ? c.rev : c.up;
+        $('heldTurn').hidden = $('heldSwap').hidden = !!v;
+        $('heldOk').textContent = v ? 'Close' : 'Keep it';
         $('heldCard').replaceChildren(cardNode(s, 'flipped big'));
-        $('heldPos').textContent = `${ROMAN[state.held]} · ${POSITIONS[state.n][state.held]}`;
+        $('heldPos').textContent = `Scene ${v ? v.scene : ROMAN[state.held]}`;
         $('heldName').textContent = `${c.name}${s.rev ? ', reversed' : ''}`;
         $('heldMeaning').textContent = `In a story: ${m.key}.`;
+        // Turning the card around redraws this list for the other side; the dropdown stays open or shut as it was.
+        const reads = window.EFFHelp?.READS[c.id]?.[s.rev ? 'rev' : 'up'] || [];
+        $('heldMore').hidden = !reads.length;
+        $('heldReads').replaceChildren(...reads.map(t => el('li', { text: t })));
     }
     function setupHeld() {
         $('heldTurn').addEventListener('click', () => { const s = state.slots[state.held]; s.rev = !s.rev; snd.fx('flip'); renderHeld(); say(LINES.turn[0]); });
@@ -852,7 +940,11 @@
         $('heldOk').addEventListener('click', closeHeld);
         $('cardModal').addEventListener('click', e => { if (e.target === $('cardModal')) closeHeld(); });
     }
-    function closeHeld() { $('cardModal').hidden = true; snd.fx('place'); buildSlots(); }
+    function closeHeld() {
+        $('cardModal').hidden = true;
+        if (state.viewing) { state.viewing = null; snd.fx('tap'); return; }
+        snd.fx('place'); buildSlots();
+    }
 
     // ---------- omens: the dials, as things on the table ----------
     // Kept outside setupOmens so restoring a saved spread (restoreSpread) can redraw the dials too.
@@ -860,7 +952,7 @@
     function setupOmens() {
         const sync = syncOmens = () => {
             $('omMoon').style.setProperty('--p', state.dark); $('valMoon').textContent = DARK[state.dark];
-            $('omEmber').style.setProperty('--p', state.spice); $('valEmber').textContent = SPICE[state.spice];
+            $('omEmber').style.setProperty('--p', state.spice); $('omEmber').dataset.s = state.spice; $('valEmber').textContent = SPICE[state.spice];
             $('omIncense').style.setProperty('--p', state.pace); $('valIncense').textContent = PACE_NAMES[state.pace];
             $('omConn').dataset.c = CONN_IDS[state.conn] || 'unset'; $('valConn').textContent = CONN[state.conn];
             $('omCross').setAttribute('aria-pressed', String(state.cross)); $('valCross').textContent = state.cross ? 'On' : 'Off';
@@ -869,7 +961,7 @@
             saveBench();
         };
         $('omMoon').addEventListener('click', () => { touch(); state.dark = (state.dark + 1) % 4; sync(); snd.fx('tap'); say(LINES.moon[state.dark]); });
-        $('omEmber').addEventListener('click', () => { touch(); state.spice = (state.spice + 1) % 4; sync(); snd.fx('tap'); if (state.spice > 1) fire.burst(12); say(LINES.ember[state.spice]); });
+        $('omEmber').addEventListener('click', () => { touch(); state.spice = (state.spice + 1) % SPICE.length; sync(); snd.fx('tap'); if (state.spice > 2) fire.burst(12); say(LINES.ember[state.spice]); });
         $('omIncense').addEventListener('click', () => { touch(); state.pace = (state.pace + 1) % 3; sync(); snd.fx('tap'); say(LINES.incense[state.pace]); });
         // Unset -> Platonic -> Casual -> Complicated -> Dating -> Partnered -> Breaking -> Broken -> Unset.
         $('omConn').addEventListener('click', () => { touch(); state.conn = (state.conn + 1) % CONN.length; sync(); snd.fx(state.conn ? 'knot' : 'tap'); say(LINES.conn[state.conn]); });
@@ -916,6 +1008,9 @@
     function closeSettings() { snd.fx('tap'); const back = state.beforeSettings; state.beforeSettings = null; back ? show(back) : home(); }
     function renderSettings() {
         const prefs = api.getPrefs(), on = new Set(prefs.blocks);
+        // "What Ellie reads": undefined (an older api) counts as on, the same default the api uses.
+        $('swMemory').setAttribute('aria-pressed', String(prefs.memory !== false));
+        $('swMoreChat').setAttribute('aria-pressed', String(prefs.moreChat !== false));
         $('blockChips').replaceChildren(...api.blockOptions().map(o => {
             const b = el('button', { class: 'chip', 'aria-pressed': String(on.has(o.id)), text: o.label });
             b.addEventListener('click', () => {
@@ -953,7 +1048,7 @@
         const reset = await confirmModal('Restore sound and writing defaults, clear your story filters and blow out the candles so you can light them again?', 'Reset settings', 'Cancel');
         if (!reset) return;
         blowOutCandles();
-        api.setPrefs({ blocks: [], customBlocks: [] });
+        api.setPrefs({ blocks: [], customBlocks: [], memory: true, moreChat: true });
         state.sheet = true;
         state.acts = false;
         try {
@@ -982,6 +1077,10 @@
         $('settingsBack').addEventListener('click', closeSettings);
         $('settingsReset').addEventListener('click', resetSettings);
         $('blockAdd').addEventListener('click', addBlock);
+        // "What Ellie reads": saved through the api at once, like the chips.
+        const flipPref = key => () => { touch(); snd.fx('tap'); api.setPrefs({ [key]: api.getPrefs()[key] === false }); renderSettings(); };
+        $('swMemory').addEventListener('click', flipPref('memory'));
+        $('swMoreChat').addEventListener('click', flipPref('moreChat'));
         $('blockInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addBlock(); } });
     }
 
@@ -1034,6 +1133,8 @@
         // A second tap while the camera is still zooming in would start a second request.
         if (nextEmpty() !== -1 || app.classList.contains('gaze-in')) return;
         touch();
+        // The chat may have switched to Kinsbane's or Muse's own story while the cards were out.
+        if (api.status().ownStory) { snd.fx('nope'); say(LINES.ownStory[0], { required: true }); show('ask'); return; }
         const token = ++state.gazeToken, alive = () => token === state.gazeToken;
         closeReading(true);
         const slotEls = [...$('slots').children].map(centre);
@@ -1180,9 +1281,9 @@
             const card = ARCANA[c.card.id];
             const here = mode === 'view' && s.story && s.chapter === num && (route || null) === (f && num > f ? s.route : null) && !s.done;
             return el('section', { class: `ch${here ? ' here' : ''}`, 'data-i': idx, 'data-route': route || '', style: `animation-delay:${0.5 + order++ * 0.1}s` },
-                el('div', { class: 'ch-card' }, cardNode(c.card, 'flat flipped')),
+                el('button', { class: 'ch-card', 'aria-label': `About ${card.name}${c.card.rev ? ', reversed' : ''}`, onclick: () => viewCard(c.card, label(story, num, route)) }, cardNode(c.card, 'flat flipped')),
                 el('div', { class: 'ch-body' },
-                    el('span', { class: 'ch-meta', text: `${label(story, num, route)} · ${c.pos} · ${card.name}${c.card.rev ? ', reversed' : ''}${here ? ' · YOU ARE HERE' : ''}` }),
+                    el('span', { class: 'ch-meta', text: `${label(story, num, route)} · ${card.name}${c.card.rev ? ', reversed' : ''}${here ? ' · YOU ARE HERE' : ''}` }),
                     el('h3', { 'data-f': 'name', ...ce, text: c.name }),
                     el('p', { class: 'ch-scene', 'data-f': 'scene', ...ce, text: c.scene }),
                     el('p', { class: 'ch-ends' }, el('b', { text: 'Ends when ' }), el('span', { 'data-f': 'ends', ...ce, text: c.ends }))));
@@ -1292,8 +1393,9 @@
         const story = s.story, f = forkAt(story), route = f && s.chapter > f ? (s.route || 'A') : null, total = totalFor(story, route);
         $('ufTitle').textContent = story.title;
         // OOC Mode swaps out the whole roleplay prompt, so the parent holds the fortune back while it is on.
-        $('ufTag').textContent = s.done ? 'FULFILLED' : !s.active ? 'PAUSED' : s.ooc ? 'WAITING (OOC MODE)' : 'UNFOLDING';
-        $('ufTag').classList.toggle('off', !s.active || s.done || !!s.ooc);
+        // A fortune sealed in before the chat went back to Kinsbane's or Muse's own story waits too (index.js stops it).
+        $('ufTag').textContent = s.done ? 'FULFILLED' : !s.active ? 'PAUSED' : s.ooc ? 'WAITING (OOC MODE)' : s.ownStory ? 'WAITING (ITS OWN STORY)' : 'UNFOLDING';
+        $('ufTag').classList.toggle('off', !s.active || s.done || !!s.ooc || !!s.ownStory);
         const mini = (c, n, r) => {
             const cls = s.done || n < s.chapter ? 'past' : n === s.chapter ? 'now' : 'future';
             const b = el('button', { class: `uf-card ${cls}`, title: c.name }, cardNode(c.card, cls === 'future' ? 'flat' : 'flat flipped'), el('span', { text: label(story, n, r) }));
@@ -1326,7 +1428,7 @@
         $('ufChapter').classList.toggle('done', s.done);
         $('ufChapter').dataset.n = String(s.chapter); $('ufChapter').dataset.route = route || '';
         $('ufChapter').replaceChildren(
-            el('span', { class: 'ch-meta', text: `Card ${label(story, s.chapter, route)} of ${total} · ${c.pos} · ${card.name}${c.card.rev ? ', reversed' : ''}` }),
+            el('span', { class: 'ch-meta', text: `Card ${label(story, s.chapter, route)} of ${total} · ${card.name}${c.card.rev ? ', reversed' : ''}` }),
             el('h3', { 'data-f': 'name', ...ce, text: c.name }), el('p', { 'data-f': 'scene', ...ce, text: c.scene }),
             el('p', { class: 'ch-ends' }, el('b', { text: 'Ends when ' }), el('span', { 'data-f': 'ends', 'data-shown': endsShown, ...ce, text: endsShown })),
             f && s.chapter === f && !s.done ? el('p', { class: 'uf-fork', text: `Then the crossing: ${story.fork.choice}` }) : '',
@@ -1445,6 +1547,7 @@
     // the way the on-screen buttons would.
     function stepBack() {
         if (!$('modal').hidden) { $('modalBtns').firstElementChild?.click(); return true; } // first button is always the "no"/cancel
+        if (!$('helpModal').hidden) { closeHelp(); return true; }
         if (!$('keptModal').hidden) { closeKept(); return true; }
         if (!$('modelModal').hidden) { closeModels(); return true; }
         if (!$('cardModal').hidden) { closeHeld(); return true; }
@@ -1484,7 +1587,7 @@
     function noteOf(cards, spice) {
         const n = cards.length, revs = cards.filter(c => c.rev).length, has = id => cards.some(c => c.id === id);
         if (has(16)) return 'Oh... the Tower. I hope it’s gentle with you.';
-        if (spice === 3) return 'Um... I’ll leave the warm part to you.';
+        if (spice === 4) return 'Um... I’ll leave the warm part to you.';
         if (!revs) return 'They all came out upright. Oh... that’s nice.';
         if (revs > n / 2) return 'A few turns... maybe give it time.';
         if (has(6)) return 'Oh... the Lovers. Um.';
@@ -1561,10 +1664,10 @@
             renamePrompt(i, name) { const p = data.prompts[i]; if (!p) return; const n = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40); if (n) p.name = n; else delete p.name; save(); },
             blockOptions: () => BLOCKS.map(([id, label]) => ({ id, label })),
             blockLimits: () => ({ max: 12, chars: 80 }),
-            getPrefs: () => ({ blocks: (data.prefs?.blocks || []).slice(), customBlocks: (data.prefs?.customBlocks || []).slice() }),
+            getPrefs: () => ({ blocks: (data.prefs?.blocks || []).slice(), customBlocks: (data.prefs?.customBlocks || []).slice(), memory: data.prefs?.memory !== false, moreChat: data.prefs?.moreChat !== false }),
             setPrefs(next) {
                 const p = { blocks: [], customBlocks: [], ...data.prefs, ...next };
-                data.prefs = { blocks: p.blocks, customBlocks: p.customBlocks.map(s => String(s).trim().slice(0, 80)).filter(Boolean).slice(0, 12) };
+                data.prefs = { blocks: p.blocks, customBlocks: p.customBlocks.map(s => String(s).trim().slice(0, 80)).filter(Boolean).slice(0, 12), memory: p.memory !== false, moreChat: p.moreChat !== false };
                 save(); return this.getPrefs();
             },
             rename(c, u) { data.charName = c.trim() || 'Belle'; data.userName = u.trim() || 'you'; save(); },
@@ -1608,6 +1711,14 @@
     function showNames() {
         const s = api.status();
         $('inChar').value = s.hasChat ? s.charName : 'nobody yet'; $('inUser').value = s.userName || 'you';
+        syncOwnStory(s);
+    }
+    // Kinsbane Manor and Muse on their base greeting tell their own story (index.js ownStoryRunning), so the
+    // writing screen says so and the button that leads to a reading is off. Their custom start is not affected.
+    function syncOwnStory(s = api.status()) {
+        const own = !!s.ownStory;
+        $('ownStory').hidden = !own;
+        $('btnShuffle').disabled = own;
     }
     function setSound(on) {
         snd.setOn(on);
@@ -1624,7 +1735,7 @@
         idleLoop.start();   // the dark room shows her too (dimmed), and show() isn't called for it
         showNames();
         if (LIVE) { app.classList.add('live'); $('inChar').readOnly = true; $('inUser').readOnly = true; $('inChar').tabIndex = -1; $('inUser').tabIndex = -1; }
-        setupCandles(); setupAsk(); setupHeld(); setupOmens(); setupReading(); setupUnfold(); setupSettings(); setupModels();
+        setupCandles(); setupAsk(); setupHeld(); setupOmens(); setupReading(); setupUnfold(); setupSettings(); setupModels(); setupHelp();
         $('btnGaze').addEventListener('click', gaze);
         $('btnFate').addEventListener('click', fate);
         $('btnClear').addEventListener('click', clearSlots);
