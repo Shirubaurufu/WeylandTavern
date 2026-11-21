@@ -1095,9 +1095,11 @@ class NoirShow {
             }));
         } else {
             d.classList.add("spot");
-            d.append(el("i", "dim"), el("i", "beam"), el("b", "huge", {
-                textContent: face
-            }));
+            d.setAttribute("aria-label", blind ? "?" : E.KIND_NAMES[c.kind]);
+            const symbol = el("b", "huge", { textContent: face });
+            symbol.dataset.face = face;
+            symbol.setAttribute("aria-hidden", "true");
+            d.append(el("i", "dim"), el("i", "beam"), symbol);
             if (name) d.append(el("em", "nm", {
                 textContent: name
             }));

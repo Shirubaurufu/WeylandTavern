@@ -273,16 +273,33 @@ function analysisCardLocked(snapshot) {
  * label in sync with lib/ui/geminiBlockNotice.js). It uses data-narrative-guide rather than
  * data-narrative-action because opening a static page doesn't need handleNarrativeAction's busy
  * spinner or "settings updated" toast. */
+/** The bypass's "skip the analysis for Gemini" part, as its own switch (Lucky, 2026-11-20: the player decides; the box 6
+ * cut and the rest of the bypass stay). Greyed out while the bypass is off, since it does nothing then, and it says so
+ * when Analysis itself is off, because there is no analysis to skip. */
+function geminiSkipAnalysisToggle(snapshot) {
+    const usable = snapshot.geminiBypass;
+    const on = usable && snapshot.geminiSkipAnalysis;
+    const hint = !usable ? 'Turn on Gemini Bypass to use this'
+        : !snapshot.analysisEnabled ? 'Analysis is off, so there is nothing to skip'
+        : on ? 'Gemini writes without the analysis' : 'Gemini fills out the analysis like other models';
+    return `
+        <button type="button" class="wp-narrative-gemini-toggle wp-narrative-gemini-skip${usable ? '' : ' is-disabled'}"${usable ? ' data-narrative-action="toggle-gemini-skip-analysis"' : ' disabled aria-disabled="true"'} aria-pressed="${on}">
+            <span><strong>Skip Analysis: ${on ? 'Enabled' : 'Disabled'}</strong><small>${hint}</small></span>
+            <span class="wp-narrative-switch${on ? ' is-on' : ''}" aria-hidden="true"><i></i></span>
+        </button>`;
+}
+
 function geminiBypassCard(snapshot) {
     const on = snapshot.geminiBypass;
     return `
     <section class="wp-narrative-card wp-narrative-gemini-card${on ? ' is-on' : ''}">
         <div class="wp-narrative-card-heading"><div><h3>Gemini Bypass (Beta)</h3></div><i class="fa-solid fa-bolt"></i></div>
-        <p>Adds an experimental layer that may improve the reliability of Gemini-based models including Gemini 3.8 Flash and Gemma. On the Beta prompt it also removes the explicit warm-up section that Gemini refuses to work with.</p>
+        <p>Adds an experimental layer that may improve the reliability of Gemini-based models including Gemini 3.8 Flash and Gemma. On the Beta prompt it also removes the explicit warm-up section that Gemini refuses to work with, and it can have Gemini skip the analysis.</p>
         <button type="button" class="wp-narrative-gemini-toggle" data-narrative-action="toggle-gemini-bypass" aria-pressed="${on}">
             <span><strong>${on ? 'Enabled' : 'Disabled'}</strong><small>Gemini reasoning-loop safeguard</small></span>
             <span class="wp-narrative-switch${on ? ' is-on' : ''}" aria-hidden="true"><i></i></span>
         </button>
+        ${geminiSkipAnalysisToggle(snapshot)}
         <div class="wp-narrative-note wp-narrative-gemini-note"><i class="fa-solid fa-circle-info"></i><span>Getting "The prompt could not be submitted"? This toggle can't fix that one. The guide below explains what can.</span></div>
         <button type="button" class="wp-narrative-readme" data-narrative-guide="open"><i class="fa-solid fa-book-open" aria-hidden="true"></i> READ ME - Gemini Filter Guide</button>
     </section>`;

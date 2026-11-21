@@ -18,7 +18,7 @@ test('Unset (null) sends no Connection line', () => {
 });
 
 test('each step sends its own line, right after Pacing, with the names filled in', () => {
-    for (const id of ['platonic', 'casual', 'complicated', 'dating', 'partnered', 'breaking', 'broken']) {
+    for (const id of ['platonic', 'interested', 'casual', 'complicated', 'dating', 'partnered', 'breaking', 'broken']) {
         const text = userText(id);
         const line = connectionLine(id, 'Belle', 'Lucky');
         assert.ok(line.startsWith(`Connection: ${id}:`), id);
@@ -31,6 +31,6 @@ test('each step sends its own line, right after Pacing, with the names filled in
 
 test('the app sends exactly these ids', () => {
     const app = fs.readFileSync(path.join(here, '..', 'app', 'parlor.js'), 'utf8');
-    assert.match(app, /CONN_IDS = \[null, 'platonic', 'casual', 'complicated', 'dating', 'partnered', 'breaking', 'broken'\]/);
+    assert.match(app, /CONN_IDS = \[null, 'platonic', 'interested', 'casual', 'complicated', 'dating', 'partnered', 'breaking', 'broken'\]/);
     assert.match(app, /connection: CONN_IDS\[state\.conn\]/);
 });

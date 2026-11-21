@@ -22,9 +22,13 @@ const LUCK_READ = [[/GREAT/i, 0], [/YET|COME/i, 3], [/SMALL/i, 2], [/TROUBLE|CUR
 
 // The dials say what they mean ON THE PAGE. Muse's short labels ("brutal, nothing is safe") were read as
 // a mood: a Brutal fortune came back as a romance with one sad scene.
+// Index = the app's Spice dial. 0 is None (Lucky, 2026-11-19): no spice line at all, so the card and the chat
+// decide. It was added in front, so Sweet is 1 (the default) and the old steps each moved up one. Sweet used to say
+// "none: fade to black"; Lucky's descriptions for the dial are gentle / overt flirtatiousness, overtly / obscenely sexual.
 const SPICE = [
-    'none: if it comes up, fade to black.',
-    'flirty: heat, tension and touching, nothing explicit.',
+    null,
+    'sweet: gentle flirting at most. If sex comes up, fade to black.',
+    'flirty: open flirting, heat, tension and touching, nothing explicit.',
     'steamy: when the story gets there, the sex happens on the page.',
     'filthy: sex happens on the page more than once in this story, written explicitly and without apology.',
 ];
@@ -43,9 +47,12 @@ const DARK = [
 // other. Unset (null) sends nothing, so the card and the chat decide as before. Ids come from the app; never rename one.
 // {char} and {you} are filled in by connectionLine().
 const CONNECTION = {
-    platonic: 'platonic: {char} and {you} are not romantic or sexual with each other in this story. Whatever is between them is friendship, family or something else that is not romance.',
+    // 2026-11-19 (Lucky): Platonic also means a non-romance story, not just "these two don't date".
+    platonic: 'platonic: {char} and {you} are not romantic or sexual with each other in this story. Whatever is between them is friendship, family or something else that is not romance. This is not a romance story: do not build any of it around romance or attraction.',
+    // Added 2026-11-19 (Lucky), between Platonic and Casual.
+    interested: 'interested: one or both of {char} and {you} are interested in the other, but neither has acted on it yet.',
     // Casual and Complicated added the same day (Lucky), after Platonic.
-    casual: 'casual: {char} and {you} hook up or sleep together, but they are not a couple and neither of them has promised the other anything.',
+    casual: 'casual: {char} and {you} hook up, sleep together or share affection, but they are not a couple and neither of them has promised the other anything.',
     complicated: 'complicated: there are real feelings between {char} and {you}, but something stands in the way (history, timing, other people, or one of them not ready), and neither knows where they stand.',
     dating:'dating: {char} and {you} are dating. It is still fairly new: they are together, but still finding out what they are to each other.',
     partnered: 'partnered: {char} and {you} are in a committed, settled relationship (a long-term couple, living together or married).',
@@ -53,6 +60,17 @@ const CONNECTION = {
     breaking: 'breaking: {char} and {you} are still together, but the relationship is coming apart. Something has gone wrong between them and it is getting worse.',
     broken:'broken: {char} and {you} were together and it fell apart. They are not a couple now, and what broke between them is still there.',
 };
+// Cards whose base greetings run their own scripted story (Kinsbane's dead ends, Muse's 14-day experiment), so a
+// fortune would fight it (Lucky, 2026-11-19). Their custom start ([CS]) builds a brand new scenario, and Foxfire is
+// allowed there. It is recognised by the same OOC sentence quick-reply-ext's isCustomStartGreeting keys on, so the
+// two always agree on what a custom start is. Weybot and Mirror Weyland are fine: their replies carry the header.
+export const OWN_STORY_CARDS = ['Kinsbane Manor', 'Muse'];
+const CUSTOM_START = /Following your character information and personality as a basis/;
+export function tellsOwnStory({ cardName = '', firstMessage = '', inGroup = false } = {}) {
+    if (inGroup || !OWN_STORY_CARDS.includes(String(cardName))) return false;
+    return !CUSTOM_START.test(String(firstMessage ?? ''));
+}
+
 export function connectionLine(id, charName, you) {
     const t = CONNECTION[id];
     return t ? `Connection: ${t.replaceAll('{char}', charName || 'the character').replaceAll('{you}', you)} The story is built on this, even where the card or the chat so far suggests something else.` : '';
@@ -89,6 +107,41 @@ export function blockList({ ids = [], custom = [] } = {}) {
     return [...new Set([...known, ...own])];
 }
 
+// ---------- what the planner reads from the chat (Settings -> "What Ellie reads", Lucky 2026-11-21) ----------
+// Both are on by default. "Last 10 messages" off = the last 5. The latest memory is the newest Long-Term Memory the
+// LTM extension wrote into this chat's own lorebook; it tells the planner what happened before the recent messages.
+export const RECENT_MESSAGES_MORE = 10;
+export const RECENT_MESSAGES_FEWER = 5;
+const RECENT_MESSAGE_CHARS = 900;
+// Real memories ran 1.9k-5.2k characters (2026-11-21), so this keeps a whole one and only stops a runaway entry.
+export const MEMORY_MAX_CHARS = 8000;
+
+// The same lines chatContext.js recentChat() builds (that function is a checked copy of Muse's, so it stays at
+// Muse's six and Foxfire uses this one instead).
+export function recentChatText(chat, count) {
+    const msgs = (Array.isArray(chat) ? chat : []).filter(m => m && !m.is_system && m.mes).slice(-Math.max(1, count | 0));
+    return msgs.map(m => `${m.name}: ${String(m.mes).replace(/\s+/g, ' ').slice(0, RECENT_MESSAGE_CHARS)}`).join('\n');
+}
+
+// Weyland-LTM's own test for "this lorebook entry is a memory" (entryLooksLikeLTM in Weyland-LTM/index.js): new
+// entries carry automationId "ltm:<uuid>"; ones from the old STScript pipeline have a numeric id AND look like one.
+// Copied rather than imported, so Foxfire never loads LTM's module (importing it would run that extension again).
+export function isMemoryEntry(entry) {
+    const autoId = String(entry?.automationId ?? '');
+    if (autoId.startsWith('ltm:')) return true;
+    if (/^\d+$/.test(autoId)) return /MEMORY ENTRY|LTM/i.test(entry.comment || '') || /MEMORY:/i.test(entry.content || '');
+    return false;
+}
+
+// The most recently created memory: LTM gives each new memory the book's highest order + 1. Memories the player
+// switched off in LTM are skipped (they are off for the roleplay too).
+export function latestMemory(entries) {
+    const list = Object.values(entries || {}).filter(e => isMemoryEntry(e) && !e.disable && String(e.content || '').trim());
+    if (!list.length) return null;
+    const newest = list.reduce((a, b) => ((b.order ?? 0) > (a.order ?? 0) ? b : a));
+    return { title: String(newest.comment || '').trim(), content: String(newest.content).trim().slice(0, MEMORY_MAX_CHARS) };
+}
+
 export const SHEET_START = 'FORTUNE SHEET';
 export const SHEET_END = 'END OF FORTUNE SHEET';
 
@@ -96,6 +149,20 @@ function clampChapters(n) {
     const v = Math.round(Number(n));
     return Number.isFinite(v) ? Math.min(7, Math.max(3, v)) : 5;
 }
+
+// The model's wording for a card meaning, where the player's wording reads wrong to a model. The app's tiles keep
+// the short version; only the request changes. A comma list on a tile reads to a person as "something like this",
+// but the planner reads it as a checklist: "a race, a rival" made it stage a literal race AND bring in a rival
+// character (Lucky, 2026-11-19). Keyed by the card's exact `key` from app/cards.js (test/beatWording.test.mjs
+// fails if a key here no longer exists there); a key that isn't listed is sent as written.
+export const BEAT_WORDING = {
+    'a race, a rival': 'a race, a challenge or a rival',
+    // Same day (Lucky): the tile's "a soft night" made it a night scene. The model gets only the feeling.
+    'hope, a soft night': 'hope, solace',
+    // The tile says "tradition" alone; the model also gets "family", the most common form it takes.
+    'what tradition expects': 'what family or tradition expects',
+};
+export const beatForModel = key => BEAT_WORDING[key] ?? key;
 
 /**
  * What the player wants: their question (if any) and one beat per chapter.
@@ -115,8 +182,8 @@ export function fortuneIdea({ question = '', cards = [], fork = false } = {}) {
         ? 'The player\'s words above are the story you are planning. The beats below are optional flavor for the chapters. Use a beat in a chapter when it fits what the player asked for, and skip any beat that does not fit. A beat never changes what the player asked for.'
         : 'The player picked one beat per chapter, in order: chapter 1 is built on beat 1, chapter 2 on beat 2, and so on. Each beat is the theme of its chapter, not an event to copy. You decide what actually happens in each chapter, as long as it matches that chapter\'s theme and fits this character.');
     cards.forEach((c, i) => {
-        const b = fork && c.otherKey ? ` (on route B instead: ${c.otherKey})` : '';
-        lines.push(`Beat ${i + 1}: ${c.key}${b}`);
+        const b = fork && c.otherKey ? ` (on route B instead: ${beatForModel(c.otherKey)})` : '';
+        lines.push(`Beat ${i + 1}: ${beatForModel(c.key)}${b}`);
     });
     if (fork) lines.push('Chapters after the fork use their beat as written on route A, and the "on route B instead" reading on route B. Chapters before the fork ignore the route B reading.');
     return lines.join('\n');
@@ -175,7 +242,7 @@ function sheetText({ charName, you, actsForUser, fork, hasQuestion, hasBlocks })
  * @param {boolean} [o.sheet] open with the FORTUNE SHEET (the app's "Plan it out first" switch)
  * @param {boolean} [o.actsForUser] the plan may decide what {{user}} does (the app's "Writer can act for me", off by default)
  */
-export function buildFortuneMessages({ charName = '', userName = '', cardText = '', recentChat = '', castText = '', placesText = '',
+export function buildFortuneMessages({ charName = '', userName = '', cardText = '', recentChat = '', memoryText = '', castText = '', placesText = '',
     question = '', cards = [], spice = 1, darkness = 1, pace = 'steady', connection = null, fork = false, sheet = true, actsForUser = false,
     blocks = null } = {}) {
     const n = clampChapters(cards.length || 5);
@@ -250,12 +317,14 @@ export function buildFortuneMessages({ charName = '', userName = '', cardText = 
         '',
         castText ? `[OTHER CHARACTERS NAMED IN THE ASK OR THE SCENE]\nThis is who they are. They stay exactly in character too. Use them as the story needs.\n${String(castText).trim()}\n` : '',
         placesText ? `[PLACES NAMED IN THE ASK OR WHERE THE SCENE IS]\nThis is what these places are like. Use what fits the story.\n${String(placesText).trim()}\n` : '',
+        // Before the recent messages, so the plan reads earlier events first and the current scene last.
+        memoryText ? `[WHAT HAPPENED EARLIER IN THIS ROLEPLAY] (the chat's latest memory)\n${String(memoryText).trim()}\n` : '',
         recentChat ? `[WHERE THE ROLEPLAY IS RIGHT NOW]\n${String(recentChat).trim()}\n` : '[THE ROLEPLAY HAS NOT STARTED YET]\n',
         '[WHAT THE PLAYER WANTS]',
         fortuneIdea({ question, cards, fork }) + '\n',
         '[THE MOOD THE PLAYER SET] (the player chose these, so the story must reach this intensity)',
         `Darkness: ${DARK[darkness] ?? DARK[1]}`,
-        `Spice: ${SPICE[spice] ?? SPICE[1]}`,
+        spice === 0 ? '' : `Spice: ${SPICE[spice] ?? SPICE[1]}`,   // None: '' is dropped by the filter below
         `Pacing: ${PACE[pace] ?? PACE.steady}`,
         connectionLine(connection, charName, you),   // '' when Unset, and the filter below drops it
         fork

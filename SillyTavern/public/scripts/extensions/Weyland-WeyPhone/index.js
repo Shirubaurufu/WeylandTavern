@@ -93,7 +93,7 @@ import { toggleSaved, unsave, getSaved, savedIdSet } from './lib/savedPosts.js';
 import { applyMienExpression, firstOpenFace, loadMienGallery, lockBonusFaces, lockedMienExpression, moveLockedMienExpression, resolveMienCharacter, sameFaceIn, selectMienOutfit, setLockedMienExpression } from './lib/mien.js';
 import { renderMienScreen } from './lib/ui/apps/mien.js';
 import { NARRATIVE_HELP, renderNarrativeSettingsScreen } from './lib/ui/apps/narrativeSettings.js';
-import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractPovDirective, FOCUS_OPTIONS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
+import { cleanCustomFeedback, cleanCustomName, customShiftExample, DOSE_OPTIONS, OOC_MODE_VARIABLE, extractClothingDirective, extractHardModeDirective, extractHardModeOffDirective, extractLanguageDirective, extractNarratorPrompt, extractPovDirective, FOCUS_OPTIONS, NARRATOR_OPTIONS, POV_OPTIONS, PROMPT_OPTIONS, readCustomPreset, readNarrativeSnapshot, SHIFT_OPTIONS } from './lib/narrativeSettings.js';
 import { renderCustomShiftScreen } from './lib/ui/apps/customShift.js';
 import { renderGeminiFilterGuide } from './lib/ui/apps/geminiFilterGuide.js';
 import { renderErrorHelpScreen, updateErrorHelpSearch } from './lib/ui/apps/errorHelp.js';
@@ -6818,6 +6818,18 @@ function narrativeQuickReplyScript() {
     return String(globalThis.quickReplyApi?.getQrByLabel?.('Weyland', 'NarrativeSettings')?.message ?? '');
 }
 
+function narratorPromptForOption(option, global) {
+    const savedPrompt = global.get(option.globalKey);
+    if (String(savedPrompt ?? '').trim()) return savedPrompt;
+
+    // A fresh profile can open PromptOS before NewEntries has seeded the narrator variables.
+    const script = globalThis.quickReplyApi?.getQrByLabel?.('Weyland', 'NewEntries')?.message;
+    const prompt = extractNarratorPrompt(script, option.globalKey);
+    if (!prompt) throw new Error('The narrator templates could not be loaded from Weyland’s NewEntries Quick Reply.');
+    global.set(option.globalKey, prompt);
+    return prompt;
+}
+
 async function runWeylandQuickReply(label) {
     if (typeof globalThis.executeQuickReplyByName !== 'function') {
         throw new Error('Weyland Quick Replies are not ready.');
@@ -7139,6 +7151,11 @@ async function handleNarrativeAction(button) {
         } else if (action === 'toggle-gemini-bypass') {
             global.set('GeminiBypassToggle', before.geminiBypass ? 'Disabled' : 'Enabled');
             await rebuildNarrativePrompts('XXX');
+        } else if (action === 'toggle-gemini-skip-analysis') {
+            // Only means something while the bypass is on (the card greys it out otherwise).
+            if (!before.geminiBypass) return;
+            global.set('GeminiSkipAnalysis', before.geminiSkipAnalysis ? 'Disabled' : 'Enabled');
+            await rebuildNarrativePrompts('XXX');
         } else if (action === 'toggle-add-year') {
             // Read at send time by lib/yearNudge.js, so there is no prompt to rebuild.
             global.set('AddYearToggle', before.addYear ? 'Disabled' : 'Enabled');
@@ -7150,8 +7167,7 @@ async function handleNarrativeAction(button) {
         } else if (action === 'set-global-narrator') {
             const option = NARRATOR_OPTIONS.find(item => item.id === value);
             if (!option) return;
-            const narratorPrompt = global.get(option.globalKey);
-            if (!String(narratorPrompt ?? '').trim()) throw new Error(`The ${option.label} narrator prompt is not available.`);
+            const narratorPrompt = narratorPromptForOption(option, global);
             // Draw the pick right now. The prompt rebuild below takes seconds, and the picker's whole job is the
             // reveal, so waiting on it would make the art arrive long after the tap. If the rebuild fails, the
             // finally block redraws from the real variables, which rolls the picker back.
@@ -7166,8 +7182,7 @@ async function handleNarrativeAction(button) {
         } else if (action === 'set-local-narrator') {
             const option = NARRATOR_OPTIONS.find(item => item.id === value);
             if (!option || !before.hasChat) return;
-            const narratorPrompt = global.get(option.globalKey);
-            if (!String(narratorPrompt ?? '').trim()) throw new Error(`The ${option.label} narrator prompt is not available.`);
+            const narratorPrompt = narratorPromptForOption(option, global);
             local.set('LocalNarrator', narratorPrompt);
             local.set('LocalN', `- Set to ${option.id}`);
             await rebuildNarrativePrompts('XXX');
@@ -7290,6 +7305,7 @@ function describeNarrativeChange(action, value, variable, before) {
         case 'toggle-analysis': return `Analysis ${onOff(before.analysisEnabled)}`;
         case 'toggle-character-thoughts': return `Character Thoughts ${onOff(before.characterThoughts?.enabled)}`;
         case 'toggle-gemini-bypass': return `Gemini Bypass ${onOff(before.geminiBypass)}`;
+        case 'toggle-gemini-skip-analysis': return `Gemini Skip Analysis ${onOff(before.geminiSkipAnalysis)}`;
         case 'toggle-add-year': return `Add Year to RP ${onOff(before.addYear)}`;
         case 'set-narrator-strength': return `narrator strength set to ${value}`;
         case 'set-global-narrator': return `narrator set to ${value}`;

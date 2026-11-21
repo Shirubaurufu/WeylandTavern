@@ -33,9 +33,10 @@ import { detector } from "./src/similarity.js";
 import { assemblePromptLayers, resolvePromptChoice, resolvePromptPost, safePreparePromptBase, usesSceneSheet } from "./src/promptAssembly.js";
 import { applyOocToCardSlots, buildOocPostHistory, buildOocSystemPrompt, cardPostHistoryExtras, cardSystemPromptExtras, isOocModeEnabled, stripFromMessages } from "./src/oocMode.js";
 import { NARRATOR_SUBBOTS, NARRATOR_SUBBOT_NAMES } from "./src/narratorSubbots.js";
-import { analysisDelta, applyGeminiBypassForModel, dropChapterCheckUnlessStory, isGeminiModel, swapPromptTexts, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
+import { analysisDelta, applyGeminiBypassForModel, dropChapterCheckUnlessStory, geminiSkipsAnalysis, isGeminiModel, swapPromptTexts, greetingThoughtSet, withRosterHeader, withThoughtRules } from "./src/promptModifiers.js";
 import { BAPHOMET_VAR, applyBaphometToRequest, baphometHidden, baphometThoughts } from "./src/baphomet.js";
 import { applyKinsbaneCommand } from "./src/kinsbaneCommands.js";
+import { braillePlayerMessage, cleanReplyBraille } from "./src/brailleSpaces.js";
 import { buildSpecialSheetShift, specialSheetBoxes } from "./src/specialSheets.js";
 import { CHARACTERS_WITH_EXPRESSIONS, CHARACTER_ALIASES, GROUP_CARD_MEMBERS, getGroupCardMembers } from "./src/expressionCharacters.js";
 import { installGroupAddMenuItem } from "./src/groupMenuItem.js";
@@ -104,7 +105,9 @@ function OnRequestReady(data) {
         if (!data) return;
         // Gemini Bypass on + a Gemini model: send the Analysis-off build XXX kept in ravtegGemini/postravGemini.
         // Matched on the EXPANDED text, since the card's {{getvar::ravteg}} slot was filled before the Router rolled.
-        if (isGeminiModel(data.model) && String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled') {
+        // The skip is its own PromptOS switch since 2026-11-20 (GeminiSkipAnalysis, unset = on, the old behavior).
+        if (isGeminiModel(data.model) && String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled'
+            && geminiSkipsAnalysis(getGlobalVariable("GeminiSkipAnalysis"))) {
             const swapped = swapGeminiNoAnalysis(data.messages);
             if (swapped) DebugLog(`Gemini Bypass: Analysis skipped for ${data.model} (${swapped})`);
         }
@@ -186,6 +189,50 @@ function OnRequestReady(data) {
         }
     } catch (error) {
         console.error(`[WQR] Command message Error:`, error);
+    }
+    // Gemini Bypass + a Gemini model: the player's latest message goes out with braille blanks instead of spaces, which
+    // makes Gemini's replies more varied (Lucky, 2026-11-19). Request only, never the chat. LAST on purpose: the command
+    // check above reads the message with normal spaces. See src/brailleSpaces.js.
+    try {
+        if (data && isGeminiModel(data.model) && String(getGlobalVariable("GeminiBypassToggle") ?? '').trim().toLowerCase() === 'enabled') {
+            const player = [...(chat || [])].reverse().find(m => m && !m.is_system);
+            if (player?.is_user && typeof player.mes === 'string') {
+                const swapped = braillePlayerMessage(data.messages, [player.mes, SillyTavern.getContext().substituteParams(player.mes)]);
+                if (swapped) brailleRequested = true;
+                DebugLog(swapped ? `Gemini Bypass: ${swapped} braille space(s) in the latest message` : `Gemini Bypass: latest message not found for braille spaces`);
+            }
+        }
+    } catch (error) {
+        console.error(`[WQR] Braille spaces Error:`, error);
+    }
+}
+
+// Set when a request carried braille blanks; spent by the next finished character reply. Only set, never cleared, by
+// requests: a quiet request (summary, phone) between the roleplay request and its reply must not cancel the cleanup.
+let brailleRequested = false;
+
+/**
+ * Runs FIRST on MESSAGE_RECEIVED: a Gemini reply to a brailled request may copy the braille blanks, which no regex counts
+ * as whitespace (the Formatter's header, mood/costume tags and word wrap would break). Turns them back into spaces in the
+ * message and its current swipe before anything else reads it. Other replies (greetings, other models) are left alone.
+ */
+function OnReplyBraille(messageId) {
+    try {
+        if (!brailleRequested) return;
+        const message = chat?.[messageId];
+        if (!message || message.is_user) return;
+        // A streamed reroll fires MESSAGE_RECEIVED once with ST's "..." placeholder first; wait for the real text.
+        if (isReplyPlaceholder(message.mes)) return;
+        brailleRequested = false;
+        const cleaned = cleanReplyBraille(message.mes);
+        if (cleaned === message.mes) return;
+        message.mes = cleaned;
+        if (Array.isArray(message.swipes) && typeof message.swipes[message.swipe_id] === 'string') {
+            message.swipes[message.swipe_id] = cleanReplyBraille(message.swipes[message.swipe_id]);
+        }
+        DebugLog(`Gemini Bypass: braille blanks in the reply turned back into spaces`);
+    } catch (error) {
+        console.error(`[WQR] Braille reply cleanup Error:`, error);
     }
 }
 
@@ -2635,7 +2682,9 @@ async function XXX(charName) {
         // version to Gemini models only (isGeminiModel in src/promptModifiers.js). Empty = nothing to swap. Same inputs as
         // above except analysisOn, and the shift item in its no-scene-sheet form, like the real Analysis switch.
         let geminiTeg = "", geminiPost = "";
-        if (geminiBypassEnabled && analysisOn && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
+        // Lucky, 2026-11-20: skipping the analysis is the player's call (PromptOS switch under Gemini Bypass, global
+        // GeminiSkipAnalysis). Off = Gemini keeps the analysis; the rest of the bypass (text, box 6 cut, braille) still applies.
+        if (geminiBypassEnabled && geminiSkipsAnalysis(getGlobalVariable("GeminiSkipAnalysis")) && analysisOn && !isOocModeEnabled(getGlobalVariable("OOCMode"))) {
             const plain = assemblePromptLayers(base, beta, {
                 analysisOn: false, shift, shiftScope, geminiBypassEnabled, narrator: activeNarrator, narratorStrength: getGlobalVariable("NarratorStrength"),
                 shiftItem: buildRoleplayShiftItem(shift, beta, false, shiftScope),
@@ -2806,6 +2855,7 @@ function registerSlashCommands() {
     eventSource.on(event_types.CHAT_COMPLETION_SETTINGS_READY, OnRequestReady);
     eventSource.on(event_types.MESSAGE_SENT, OnUser);
     eventSource.on(event_types.MESSAGE_RECEIVED, OnAi);
+    eventSource.makeFirst(event_types.MESSAGE_RECEIVED, OnReplyBraille);
     eventSource.on(event_types.CHAT_CHANGED, OnChatChanged);
     eventSource.on(event_types.CHAT_CREATED, OnNewChat);
     eventSource.on(event_types.MESSAGE_SWIPED, OnSwipe);

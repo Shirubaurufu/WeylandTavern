@@ -9,7 +9,7 @@ import { assembleRoleplayShiftItem } from '../../../quick-reply-ext/src/roleplay
 import { applyOocToCardSlots, buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName } from '../../../quick-reply-ext/src/oocMode.js';
 import { buildSpecialSheetShift, specialSheetBoxes } from '../../../quick-reply-ext/src/specialSheets.js';
 import { narratorBuildState, narratorSelection } from '../../../quick-reply-ext/src/narratorSelection.js';
-import { greetingThoughtSet, withThoughtRules } from '../../../quick-reply-ext/src/promptModifiers.js';
+import { geminiSkipsAnalysis, greetingThoughtSet, withThoughtRules } from '../../../quick-reply-ext/src/promptModifiers.js';
 import { scenarios } from '../../../quick-reply-ext/src/scenarios.js';
 import { BAPHOMET_VAR, baphometHidden, baphometThoughts } from '../../../quick-reply-ext/src/baphomet.js';
 import { CHARACTER_THOUGHTS_AVAILABLE, CHARACTER_THOUGHTS_DEFAULT, CHARACTER_THOUGHTS_VARIABLE, NO_THOUGHTS, characterThoughtsEnabled, hasAlwaysOnThoughts, supportsCharacterThoughtsToggle, thoughtsSwitchOn } from '../../../quick-reply-ext/src/characterThoughts.js';
@@ -40,7 +40,7 @@ export async function assemble(charName = 'Rosa', globalExtras = {}, localExtras
         SpecialChar: async () => {}, Clear: async () => {}, DebugLog: () => {},
         strings: { whtml: 'HTML INSTRUCTIONS', krirav: 'KRIS HARD MODE' },
         applyOocToCardSlots, buildOocPostHistory, buildOocSystemPrompt, isOocModeEnabled, narratorName, narratorBuildState, narratorSelection, NARRATOR_SUBBOT_NAMES: [], withThoughtRules,
-        greetingThoughtSet, scenarios, getFirstMessage: () => ({ swipe_id: greetingSwipe }),
+        greetingThoughtSet, geminiSkipsAnalysis, scenarios, getFirstMessage: () => ({ swipe_id: greetingSwipe }),
         BAPHOMET_VAR, baphometHidden, baphometThoughts,
         CHARACTER_THOUGHTS_VARIABLE, characterThoughtsEnabled, supportsCharacterThoughtsToggle,
         CHARACTER_THOUGHTS_AVAILABLE, CHARACTER_THOUGHTS_DEFAULT, NO_THOUGHTS, hasAlwaysOnThoughts, thoughtsSwitchOn,

@@ -616,7 +616,7 @@
 
 /* Last Smoke: the bar sign from its own Play tile. Black, cream, one red, and no round corners. */
 .wp-ws-p-last-smoke-demo { --p-ink: #111014; --p-edge: #efeadf; --p-radius: 0px; }
-.wp-ws-p-last-smoke-demo .wp-ws-wordmark { font-family: 'Courier New', ui-monospace, monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; }
+.wp-ws-p-last-smoke-demo .wp-ws-wordmark { font-family: var(--weyland-webview-mono, 'Courier New'), ui-monospace, monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; }
 .wp-ws-poster.wp-ws-p-last-smoke-demo .wp-ws-wordmark { font-size: 20px; color: #efeadf; text-shadow: 2px 2px 0 #d1263a; }
 .wp-ws-last-smoke-logo { display: inline-block; width: min(100%, 184px); line-height: 0; }
 .wp-ws-last-smoke-logo svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -664,7 +664,7 @@
    each) have to fit on one line. */
 .wp-ws-poster.wp-ws-p-last-smoke-demo { container-type: inline-size; }
 .wp-ws-poster.wp-ws-p-last-smoke-demo .wp-ws-poster-tagline {
-    font-family: 'Courier New', ui-monospace, monospace;
+    font-family: var(--weyland-webview-mono, 'Courier New'), ui-monospace, monospace;
     font-weight: 700;
     font-size: 11px;
     font-size: clamp(8px, calc((62cqi - 14px) / 19), 11px);
